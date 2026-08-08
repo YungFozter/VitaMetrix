@@ -199,6 +199,20 @@
         </main>
     </div>
 
+    <!-- UI: TOASTS & MODALS -->
+    <div id="toast-container"></div>
+
+    <div id="custom-modal" class="modal-overlay hidden">
+        <div class="modal-box bento-card">
+            <h3 id="modal-title">Confirmación</h3>
+            <p id="modal-message">¿Estás seguro?</p>
+            <div class="modal-actions">
+                <button id="modal-btn-cancel" class="btn-secondary">Cancelar</button>
+                <button id="modal-btn-confirm" class="btn-danger">Confirmar</button>
+            </div>
+        </div>
+    </div>
+
     <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>

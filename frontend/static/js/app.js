@@ -7,6 +7,59 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchDashboardStats();
 });
 
+// --- 0. TOASTS & MODALS ---
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    if(!container) return;
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    
+    // Icon
+    let icon = 'ℹ️';
+    if(type === 'success') icon = '✅';
+    if(type === 'error') icon = '❌';
+    
+    toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 3s
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+function showConfirm(title, message, onConfirm) {
+    const modal = document.getElementById('custom-modal');
+    if(!modal) return;
+    
+    document.getElementById('modal-title').textContent = title;
+    document.getElementById('modal-message').textContent = message;
+    
+    const btnCancel = document.getElementById('modal-btn-cancel');
+    const btnConfirm = document.getElementById('modal-btn-confirm');
+    
+    // Reset listeners by cloning
+    const newCancel = btnCancel.cloneNode(true);
+    const newConfirm = btnConfirm.cloneNode(true);
+    btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+    btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+    
+    const closeModal = () => modal.classList.add('hidden');
+    
+    newCancel.addEventListener('click', closeModal);
+    newConfirm.addEventListener('click', () => {
+        closeModal();
+        onConfirm();
+    });
+    
+    modal.classList.remove('hidden');
+}
+
 // --- 1. CLOCK ---
 function initClock() {
     const timeElement = document.getElementById('current-time');
@@ -111,14 +164,14 @@ function initBioForm() {
             
             // Update UI
             updateBioUI(data, payload);
-            alert("Evaluación guardada en la nube con éxito.");
+            showToast("Evaluación guardada en la nube con éxito.", "success");
             
             // Refrescar stats del dashboard
             fetchDashboardStats();
 
         } catch (error) {
             console.error('Error calculating:', error);
-            alert('Error al conectar con el servidor.');
+            showToast('Error al conectar con el servidor.', 'error');
         } finally {
             btn.textContent = originalText;
             btn.disabled = false;
@@ -269,7 +322,8 @@ function initClients() {
         editingClientId = null;
         btnSave.textContent = 'Guardar Cliente';
         btnCancel.classList.add('hidden-view');
-        form.querySelector('h3').textContent = 'Registrar Cliente';
+        const h3 = form.previousElementSibling;
+        if(h3) h3.textContent = 'Registrar Cliente';
     });
 
     // Guardar o Actualizar cliente
@@ -298,13 +352,13 @@ function initClients() {
             if(result.success) {
                 btnCancel.click(); // Resetear formulario y modo
                 fetchClients(); // recargar tabla
-                alert(editingClientId ? 'Cliente actualizado' : 'Cliente guardado exitosamente con el código ' + result.data.code);
+                showToast(editingClientId ? 'Cliente actualizado exitosamente' : 'Cliente guardado con el código ' + result.data.code, 'success');
             } else {
-                alert('Error al guardar: ' + result.error);
+                showToast('Error al guardar: ' + result.error, 'error');
             }
         } catch(err) {
             console.error(err);
-            alert('Error de conexión.');
+            showToast('Error de conexión.', 'error');
         } finally {
             btnSave.textContent = originalText;
             btnSave.disabled = false;
@@ -350,20 +404,26 @@ async function fetchClients() {
     }
 }
 
-async function deleteClient(id) {
-    if(!confirm('¿Estás seguro de que deseas eliminar este cliente? Su código será reasignado al próximo cliente nuevo.')) return;
-    
-    try {
-        const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
-        const result = await res.json();
-        if(result.success) {
-            fetchClients();
-        } else {
-            alert('Error al eliminar: ' + result.error);
+function deleteClient(id) {
+    showConfirm(
+        'Eliminar Cliente', 
+        '¿Estás seguro de que deseas eliminar este cliente? Su código será reasignado al próximo cliente nuevo.',
+        async () => {
+            try {
+                const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if(result.success) {
+                    showToast('Cliente eliminado correctamente', 'success');
+                    fetchClients();
+                } else {
+                    showToast('Error al eliminar: ' + result.error, 'error');
+                }
+            } catch(err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            }
         }
-    } catch(err) {
-        console.error(err);
-    }
+    );
 }
 
 function editClient(id, name, phone, email) {
