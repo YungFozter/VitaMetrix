@@ -113,8 +113,10 @@
                         <div class="tab-group">
                             <button class="dash-tab active">New</button>
                             <button class="dash-tab">In Progress</button>
-                            <button class="dash-tab">Awaiting Result 00</button>
-                            <button class="dash-tab">Completed</button>
+                            <button class="dash-tab">Awaiting Result</button>
+                                <button type="submit" id="btn-save-client" class="btn-primary">Guardar Cliente</button>
+                                <button type="button" id="btn-cancel-client" class="btn-secondary hidden-view" style="margin-top: 0.5rem; width: 100%;">Cancelar Edición</button>
+                            </form><button class="dash-tab">Completed</button>
                             <button class="dash-tab">Cancelled</button>
                         </div>
                         <button class="filter-btn">⚙️ Filters</button>
@@ -141,6 +143,55 @@
 
                 <!-- VIEW 2: BIOIMPEDANCIA -->
                 {% include "bioimpedancia.html" %}
+
+                <!-- VIEW 3: CLIENTES -->
+                <div id="clientes-view" class="view hidden-view">
+                    <div class="bio-layout">
+                        <!-- Formulario de Nuevo/Editar Cliente -->
+                        <div class="bio-form-panel">
+                            <h3>Registrar Cliente</h3>
+                            <form id="client-form">
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="new-client-name" required placeholder="Ej: Perez, Juan">
+                                </div>
+                                <div class="form-group">
+                                    <label>Teléfono</label>
+                                    <input type="tel" id="new-client-phone" placeholder="Ej: +1 234 567 890">
+                                </div>
+                                <div class="form-group">
+                                    <label>Correo Electrónico</label>
+                                    <input type="email" id="new-client-email" placeholder="Ej: juan@email.com">
+                                </div>
+                                <button type="submit" id="btn-save-client" class="btn-primary">Guardar Cliente</button>
+                                <button type="button" id="btn-cancel-client" class="btn-secondary hidden-view" style="margin-top: 0.5rem; width: 100%;">Cancelar Edición</button>
+                            </form>
+                        </div>
+
+                        <!-- Lista de Clientes -->
+                        <div class="bento-grid" style="display: block;">
+                            <section class="bento-card" style="min-height: 500px;">
+                                <div class="card-header">Base de Datos de Clientes</div>
+                                <div class="clients-table-container">
+                                    <table class="clients-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Código</th>
+                                                <th>Nombre</th>
+                                                <th>Contacto</th>
+                                                <th>Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="clients-tbody">
+                                            <!-- Rows will be populated by JS -->
+                                            <tr><td colspan="4" style="text-align: center; padding: 2rem;">Cargando clientes...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </main>

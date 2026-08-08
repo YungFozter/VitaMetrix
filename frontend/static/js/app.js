@@ -231,6 +231,8 @@ function drawBIVAVector(R, Xc) {
 }
 
 // --- 5. CLIENTES ---
+let editingClientId = null;
+
 function initClients() {
     const form = document.getElementById('client-form');
     if (!form) return;
@@ -238,13 +240,23 @@ function initClients() {
     // Cargar tabla inicial
     fetchClients();
 
-    // Guardar nuevo cliente
+    const btnCancel = document.getElementById('btn-cancel-client');
+    const btnSave = document.getElementById('btn-save-client');
+
+    btnCancel.addEventListener('click', () => {
+        form.reset();
+        editingClientId = null;
+        btnSave.textContent = 'Guardar Cliente';
+        btnCancel.classList.add('hidden-view');
+        form.querySelector('h3').textContent = 'Registrar Cliente';
+    });
+
+    // Guardar o Actualizar cliente
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const btn = form.querySelector('button');
-        const originalText = btn.textContent;
-        btn.textContent = 'Guardando...';
-        btn.disabled = true;
+        const originalText = btnSave.textContent;
+        btnSave.textContent = 'Guardando...';
+        btnSave.disabled = true;
 
         const payload = {
             name: document.getElementById('new-client-name').value,
@@ -252,17 +264,20 @@ function initClients() {
             email: document.getElementById('new-client-email').value
         };
 
+        const method = editingClientId ? 'PUT' : 'POST';
+        const url = editingClientId ? `/api/clients/${editingClientId}` : '/api/clients';
+
         try {
-            const res = await fetch('/api/clients', {
-                method: 'POST',
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
             const result = await res.json();
             if(result.success) {
-                form.reset();
+                btnCancel.click(); // Resetear formulario y modo
                 fetchClients(); // recargar tabla
-                alert('Cliente guardado exitosamente con el código ' + result.data.code);
+                alert(editingClientId ? 'Cliente actualizado' : 'Cliente guardado exitosamente con el código ' + result.data.code);
             } else {
                 alert('Error al guardar: ' + result.error);
             }
@@ -270,8 +285,8 @@ function initClients() {
             console.error(err);
             alert('Error de conexión.');
         } finally {
-            btn.textContent = originalText;
-            btn.disabled = false;
+            btnSave.textContent = originalText;
+            btnSave.disabled = false;
         }
     });
 }
@@ -302,6 +317,7 @@ async function fetchClients() {
                     ${c.email ? '📧 ' + c.email : ''}
                 </td>
                 <td>
+                    <button class="btn-edit" onclick="editClient('${c.id}', '${c.name.replace(/'/g, "\\'")}', '${(c.phone||'').replace(/'/g, "\\'")}', '${(c.email||'').replace(/'/g, "\\'")}')">Editar</button>
                     <button class="btn-danger" onclick="deleteClient('${c.id}')">Eliminar</button>
                 </td>
             `;
@@ -327,4 +343,18 @@ async function deleteClient(id) {
     } catch(err) {
         console.error(err);
     }
+}
+
+function editClient(id, name, phone, email) {
+    editingClientId = id;
+    
+    document.getElementById('new-client-name').value = name;
+    document.getElementById('new-client-phone').value = phone;
+    document.getElementById('new-client-email').value = email;
+    
+    document.getElementById('btn-save-client').textContent = 'Actualizar Cliente';
+    document.getElementById('btn-cancel-client').classList.remove('hidden-view');
+    
+    const h3 = document.querySelector('#client-form').previousElementSibling;
+    if(h3) h3.textContent = 'Editar Cliente';
 }

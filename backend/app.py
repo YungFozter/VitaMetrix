@@ -154,6 +154,29 @@ def add_client():
         print("Error adding client:", e)
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/clients/<string:client_id>', methods=['PUT'])
+def update_client(client_id):
+    if not supabase: return jsonify({"error": "No db"}), 500
+    data = request.json
+    name = data.get('name')
+    phone = data.get('phone', '')
+    email = data.get('email', '')
+    
+    if not name:
+        return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+    try:
+        updated_data = {
+            "name": name,
+            "phone": phone,
+            "email": email
+        }
+        res = supabase.table('clients').update(updated_data).eq('id', client_id).execute()
+        return jsonify({"success": True, "data": res.data[0] if res.data else {}})
+    except Exception as e:
+        print("Error updating client:", e)
+        return jsonify({"error": str(e)}), 500
+
 @app.route('/api/clients/<string:client_id>', methods=['DELETE'])
 def delete_client(client_id):
     if not supabase: return jsonify({"error": "No db"}), 500

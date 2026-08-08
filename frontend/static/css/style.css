@@ -678,3 +678,38 @@ body {
     background: #b94a4a;
     color: #fff;
 }
+
+.btn-edit {
+    background: #fff;
+    color: #00b4d8;
+    border: 1px solid #00b4d8;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+    margin-right: 0.5rem;
+}
+
+.btn-edit:hover {
+    background: #00b4d8;
+    color: #fff;
+}
+
+.btn-secondary {
+    background: #f4f7fc;
+    color: #5a6f8c;
+    border: 1px solid #d0d7e2;
+    padding: 1rem;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+    background: #e0e5ed;
+    color: #1e2a41;
+}
