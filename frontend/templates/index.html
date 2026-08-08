@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,117 +7,291 @@
     <!-- Tipografía Profesional (Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 
-    <div class="app-container">
-        <!-- HEADER -->
-        <header class="dashboard-header">
-            <div class="logo-area">
-                <span class="brand-icon">⚕️</span>
-                <h1>VitaMetrix</h1>
-                <span class="badge-medical">Sistema Clínico v1.0</span>
+    <div class="app-layout">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h2>VitaMetrix</h2>
             </div>
-            <div class="header-patient">
-                <span>Paciente: Demo</span>
-                <span class="date-badge">Evaluación: 08/08/2026</span>
+            
+            <div class="brand-selector">
+                <select>
+                    <option>Clinic Selector</option>
+                </select>
             </div>
-        </header>
 
-        <!-- MAIN BENTO GRID -->
-        <main class="bento-grid">
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-target="dashboard-view" data-title="Dashboard">
+                    <span class="nav-icon">📊</span>
+                    Dashboard
+                </a>
+                <a href="#" class="nav-item" data-target="bio-view" data-title="Bioimpedancia">
+                    <span class="nav-icon">⚡</span>
+                    Bioimpedancia
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📈</span>
+                    Day Summary
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📦</span>
+                    Stock Control
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">⚙️</span>
+                    Settings
+                </a>
+            </nav>
+        </aside>
 
-            <!-- CARD 1: Puntuación Global (Grande) -->
-            <section class="bento-card card-score">
-                <div class="card-header">TRU Body Score</div>
-                <div class="score-display">
-                    <span class="big-number" id="global-score">--</span>
-                    <span class="score-label">de 100</span>
+        <!-- MAIN CONTENT -->
+        <main class="main-content">
+            <!-- TOPBAR -->
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 id="page-title">Dashboard</h1>
+                    <span class="topbar-subtitle">Welcome back to VitaMetrix</span>
                 </div>
-                <div class="rank-badge" id="rank-badge">--</div>
-                <div class="score-sub">
-                    <span>🏆 Percentil élite</span>
-                </div>
-            </section>
-
-            <!-- CARD 2: Músculo y Grasa -->
-            <section class="bento-card card-muscle-fat">
-                <div class="card-header">Composición Corporal</div>
-                <div class="metric-row">
-                    <div class="metric-item">
-                        <span class="metric-label">💪 Muscle Score</span>
-                        <span class="metric-value" id="muscle-score">--</span>
-                        <span class="metric-unit">pts</span>
+                <div class="topbar-right">
+                    <div class="time-badge">🕒 <span id="current-time">00:00 AM</span></div>
+                    <div class="theme-toggle">
+                        <label class="switch">
+                            <input type="checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <span>Light</span>
                     </div>
-                    <div class="metric-item">
-                        <span class="metric-label">⚡ Fat Score</span>
-                        <span class="metric-value" id="fat-score">--</span>
-                        <span class="metric-unit">pts</span>
-                    </div>
-                </div>
-                <div class="progress-indicator">
-                    <div class="bar-container">
-                        <div class="bar-fill muscle-bar" style="width: 68%;"></div>
-                    </div>
-                    <div class="bar-container">
-                        <div class="bar-fill fat-bar" style="width: 24%;"></div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CARD 3: Vector BIVA (Gráfico + Ángulo) -->
-            <section class="bento-card card-biva">
-                <div class="card-header">Análisis Vectorial (BIVA)</div>
-                <div class="biva-container">
-                    <canvas id="bivaCanvas" width="200" height="200"></canvas>
-                    <div class="biva-stats">
-                        <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
-                        <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
-                        <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
-                        <div class="cell-status" id="cell-status">--</div>
+                    <button class="icon-btn">🔔</button>
+                    <div class="user-profile">
+                        <img src="https://ui-avatars.com/api/?name=Dr+Audrey&background=00b4d8&color=fff" alt="User">
+                        <div class="user-info">
+                            <strong>Audrey ⌄</strong>
+                            <span>Manager</span>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </header>
 
-            <!-- CARD 4: Gasto Energético (REE/TEE) -->
-            <section class="bento-card card-energy">
-                <div class="card-header">Consumo Energético (REE / TEE)</div>
-                <div class="energy-grid">
-                    <div>
-                        <span class="label-sm">En reposo (REE)</span>
-                        <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
+            <!-- VIEWS CONTAINER -->
+            <div class="views-container">
+                <!-- VIEW 1: DASHBOARD -->
+                <div id="dashboard-view" class="view active-view">
+                    <!-- Dashboard Cards -->
+                    <div class="dash-cards">
+                        <div class="dash-card">
+                            <div class="dash-icon-box">👥</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Total Patients Today</div>
+                                <div class="dash-value">000</div>
+                            </div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-icon-box">⏳</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Pending Analysis Today</div>
+                                <div class="dash-value">000</div>
+                            </div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-icon-box">💰</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Total Revenue Today</div>
+                                <div class="dash-value">000</div>
+                            </div>
+                        </div>
+                        <div class="dash-card">
+                            <div class="dash-icon-box">⭐</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Patient Feedback Today</div>
+                                <div class="dash-value">000</div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <span class="label-sm">Actividad (TEE)</span>
-                        <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
+
+                    <!-- Dashboard Tabs -->
+                    <div class="dash-tabs-container">
+                        <div class="tab-group">
+                            <button class="dash-tab active">New</button>
+                            <button class="dash-tab">In Progress</button>
+                            <button class="dash-tab">Awaiting Result 00</button>
+                            <button class="dash-tab">Completed</button>
+                            <button class="dash-tab">Cancelled</button>
+                        </div>
+                        <button class="filter-btn">⚙️ Filters</button>
+                    </div>
+
+                    <!-- Empty States -->
+                    <div class="dash-empty-states">
+                        <div class="empty-box large-box">
+                            <div class="empty-icon-wrapper">
+                                <div class="empty-doc-icon"></div>
+                                <div class="plus-badge">+</div>
+                            </div>
+                            <h3>No Patient Found</h3>
+                        </div>
+                        <div class="empty-box small-box">
+                            <div class="empty-icon-wrapper">
+                                <div class="empty-doc-icon"></div>
+                                <div class="plus-badge">+</div>
+                            </div>
+                            <h3>No Info Found</h3>
+                        </div>
                     </div>
                 </div>
-                <div class="pal-box">
-                    <span>Nivel de Actividad Física (PAL)</span>
-                    <span class="pal-number" id="pal-value">--</span>
-                </div>
-            </section>
 
-            <!-- CARD 5: Interpretación Clínica (Resumen) -->
-            <section class="bento-card card-interpretation">
-                <div class="card-header">Interpretación Clínica</div>
-                <div class="clinical-text" id="clinical-text">
-                    Cargando análisis integral...
-                </div>
-                <div class="hydration-tag" id="hydration-tag">--</div>
-            </section>
+                <!-- VIEW 2: BIOIMPEDANCIA -->
+                <div id="bio-view" class="view hidden-view">
+                    
+                    <div class="bio-layout">
+                        <!-- Formulario Interactivo -->
+                        <div class="bio-form-panel">
+                            <h3>Ingreso de Datos</h3>
+                            <form id="bio-form">
+                                <div class="form-group">
+                                    <label>IDP (Paciente)</label>
+                                    <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
+                                </div>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, MABEL ROSARIO" value="SENAS PINTO, MABEL ROSARIO">
+                                </div>
+                                <div class="form-group">
+                                    <label>Resistencia (R) - Ω</label>
+                                    <input type="number" id="input-r" step="0.1" required placeholder="Ej: 575.6" value="575.6">
+                                </div>
+                                <div class="form-group">
+                                    <label>Reactancia (Xc) - Ω</label>
+                                    <input type="number" id="input-xc" step="0.1" required placeholder="Ej: 59.0" value="59.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Peso (kg)</label>
+                                    <input type="number" id="input-weight" step="0.1" required placeholder="Ej: 75.0" value="75.0">
+                                </div>
+                                <div class="form-group">
+                                    <label>Altura (cm)</label>
+                                    <input type="number" id="input-height" step="1" required placeholder="Ej: 175" value="175">
+                                </div>
+                                <div class="form-group">
+                                    <label>Edad (años)</label>
+                                    <input type="number" id="input-age" step="1" required placeholder="Ej: 30" value="30">
+                                </div>
+                                <div class="form-group">
+                                    <label>Género</label>
+                                    <select id="input-gender">
+                                        <option value="male">Masculino</option>
+                                        <option value="female">Femenino</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Nivel Actividad (PAL)</label>
+                                    <select id="input-pal">
+                                        <option value="1.2">Sedentario (1.2)</option>
+                                        <option value="1.375">Ligero (1.375)</option>
+                                        <option value="1.55">Moderado (1.55)</option>
+                                        <option value="1.725">Activo (1.725)</option>
+                                        <option value="1.9">Muy Activo (1.9)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn-primary">Analizar Composición</button>
+                            </form>
+                        </div>
 
+                        <!-- MAIN BENTO GRID (Movido aquí) -->
+                        <div class="bento-grid">
+                            <!-- CARD 1: Puntuación Global (Grande) -->
+                            <section class="bento-card card-score">
+                                <div class="card-header">TRU Body Score</div>
+                                <div class="score-display">
+                                    <span class="big-number" id="global-score">--</span>
+                                    <span class="score-label">de 100</span>
+                                </div>
+                                <div class="rank-badge" id="rank-badge">--</div>
+                                <div class="score-sub">
+                                    <span>🏆 Percentil élite</span>
+                                </div>
+                            </section>
+
+                            <!-- CARD 2: Músculo y Grasa -->
+                            <section class="bento-card card-muscle-fat">
+                                <div class="card-header">Composición Corporal</div>
+                                <div class="metric-row">
+                                    <div class="metric-item">
+                                        <span class="metric-label">💪 Muscle Score</span>
+                                        <span class="metric-value" id="muscle-score">--</span>
+                                        <span class="metric-unit">pts</span>
+                                    </div>
+                                    <div class="metric-item">
+                                        <span class="metric-label">⚡ Fat Score</span>
+                                        <span class="metric-value" id="fat-score">--</span>
+                                        <span class="metric-unit">pts</span>
+                                    </div>
+                                </div>
+                                <div class="progress-indicator">
+                                    <div class="bar-container">
+                                        <div class="bar-fill muscle-bar" style="width: 0%;"></div>
+                                    </div>
+                                    <div class="bar-container">
+                                        <div class="bar-fill fat-bar" style="width: 0%;"></div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 3: Vector BIVA (Gráfico + Ángulo) -->
+                            <section class="bento-card card-biva">
+                                <div class="card-header">Análisis Vectorial (BIVA)</div>
+                                <div class="biva-container">
+                                    <canvas id="bivaCanvas" width="200" height="200"></canvas>
+                                    <div class="biva-stats">
+                                        <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
+                                        <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
+                                        <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
+                                        <div class="cell-status" id="cell-status">--</div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 4: Gasto Energético (REE/TEE) -->
+                            <section class="bento-card card-energy">
+                                <div class="card-header">Consumo Energético (REE / TEE)</div>
+                                <div class="energy-grid">
+                                    <div>
+                                        <span class="label-sm">En reposo (REE)</span>
+                                        <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
+                                    </div>
+                                    <div>
+                                        <span class="label-sm">Actividad (TEE)</span>
+                                        <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
+                                    </div>
+                                </div>
+                                <div class="pal-box">
+                                    <span>Nivel de Actividad Física (PAL)</span>
+                                    <span class="pal-number" id="pal-value">--</span>
+                                </div>
+                            </section>
+
+                            <!-- CARD 5: Interpretación Clínica (Resumen) -->
+                            <section class="bento-card card-interpretation">
+                                <div class="card-header">Interpretación Clínica</div>
+                                <div class="clinical-text" id="clinical-text">
+                                    Ingrese los datos y haga clic en Analizar Composición.
+                                </div>
+                                <div class="hydration-tag" id="hydration-tag">--</div>
+                            </section>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </main>
     </div>
 
-    <!-- JavaScript (Siempre al final para cargar después del HTML) -->
+    <!-- JavaScript -->
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
 </body>
-
 </html>
