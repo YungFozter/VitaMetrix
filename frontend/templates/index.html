@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitaMetrix · Medical Body Analyzer</title>
+    <!-- Tipografía Profesional (Inter) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap"
+        rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+
+    <div class="app-container">
+        <!-- HEADER -->
+        <header class="dashboard-header">
+            <div class="logo-area">
+                <span class="brand-icon">⚕️</span>
+                <h1>VitaMetrix</h1>
+                <span class="badge-medical">Sistema Clínico v1.0</span>
+            </div>
+            <div class="header-patient">
+                <span>Paciente: Demo</span>
+                <span class="date-badge">Evaluación: 08/08/2026</span>
+            </div>
+        </header>
+
+        <!-- MAIN BENTO GRID -->
+        <main class="bento-grid">
+
+            <!-- CARD 1: Puntuación Global (Grande) -->
+            <section class="bento-card card-score">
+                <div class="card-header">TRU Body Score</div>
+                <div class="score-display">
+                    <span class="big-number" id="global-score">--</span>
+                    <span class="score-label">de 100</span>
+                </div>
+                <div class="rank-badge" id="rank-badge">--</div>
+                <div class="score-sub">
+                    <span>🏆 Percentil élite</span>
+                </div>
+            </section>
+
+            <!-- CARD 2: Músculo y Grasa -->
+            <section class="bento-card card-muscle-fat">
+                <div class="card-header">Composición Corporal</div>
+                <div class="metric-row">
+                    <div class="metric-item">
+                        <span class="metric-label">💪 Muscle Score</span>
+                        <span class="metric-value" id="muscle-score">--</span>
+                        <span class="metric-unit">pts</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-label">⚡ Fat Score</span>
+                        <span class="metric-value" id="fat-score">--</span>
+                        <span class="metric-unit">pts</span>
+                    </div>
+                </div>
+                <div class="progress-indicator">
+                    <div class="bar-container">
+                        <div class="bar-fill muscle-bar" style="width: 68%;"></div>
+                    </div>
+                    <div class="bar-container">
+                        <div class="bar-fill fat-bar" style="width: 24%;"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CARD 3: Vector BIVA (Gráfico + Ángulo) -->
+            <section class="bento-card card-biva">
+                <div class="card-header">Análisis Vectorial (BIVA)</div>
+                <div class="biva-container">
+                    <canvas id="bivaCanvas" width="200" height="200"></canvas>
+                    <div class="biva-stats">
+                        <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
+                        <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
+                        <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
+                        <div class="cell-status" id="cell-status">--</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CARD 4: Gasto Energético (REE/TEE) -->
+            <section class="bento-card card-energy">
+                <div class="card-header">Consumo Energético (REE / TEE)</div>
+                <div class="energy-grid">
+                    <div>
+                        <span class="label-sm">En reposo (REE)</span>
+                        <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
+                    </div>
+                    <div>
+                        <span class="label-sm">Actividad (TEE)</span>
+                        <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
+                    </div>
+                </div>
+                <div class="pal-box">
+                    <span>Nivel de Actividad Física (PAL)</span>
+                    <span class="pal-number" id="pal-value">--</span>
+                </div>
+            </section>
+
+            <!-- CARD 5: Interpretación Clínica (Resumen) -->
+            <section class="bento-card card-interpretation">
+                <div class="card-header">Interpretación Clínica</div>
+                <div class="clinical-text" id="clinical-text">
+                    Cargando análisis integral...
+                </div>
+                <div class="hydration-tag" id="hydration-tag">--</div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- JavaScript (Siempre al final para cargar después del HTML) -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>

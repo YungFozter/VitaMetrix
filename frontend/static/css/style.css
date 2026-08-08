@@ -1,0 +1,364 @@
+/* Reset y base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f4f7fc;
+    /* Fondo con degradado sutil para resaltar el Glass */
+    background-image: radial-gradient(circle at 10% 20%, rgba(26, 42, 74, 0.03) 0%, transparent 50%);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: #1e2a41;
+}
+
+.app-container {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* HEADER */
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2.5rem;
+    padding: 0.5rem 0;
+    border-bottom: 2px solid rgba(26, 42, 74, 0.08);
+}
+
+.logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.brand-icon {
+    font-size: 2rem;
+    background: #1A2A4A;
+    color: white;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.logo-area h1 {
+    font-weight: 700;
+    font-size: 1.8rem;
+    letter-spacing: -0.5px;
+    color: #1A2A4A;
+}
+
+.badge-medical {
+    background: #e8edf5;
+    color: #1A2A4A;
+    padding: 0.2rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-left: 0.5rem;
+}
+
+.header-patient span {
+    font-size: 0.9rem;
+    color: #4a5a72;
+    font-weight: 500;
+    margin-left: 1.5rem;
+}
+
+.date-badge {
+    background: white;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+/* BENTO GRID (Estructura Maestra) */
+.bento-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    grid-auto-rows: minmax(100px, auto);
+    gap: 1.5rem;
+}
+
+/* Ubicación de cada tarjeta en la cuadrícula (Asignación de áreas) */
+.card-score {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.card-muscle-fat {
+    grid-column: span 2;
+    grid-row: span 1;
+}
+
+.card-biva {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.card-energy {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+.card-interpretation {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+/* ESTILO DE LAS TARJETAS (Glassmorphism + Profesional) */
+.bento-card {
+    background: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-radius: 28px;
+    padding: 1.8rem 1.8rem;
+    box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.bento-card:hover {
+    box-shadow: 0 30px 50px -16px rgba(26, 42, 74, 0.15);
+    transform: translateY(-2px);
+}
+
+.card-header {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600;
+    color: #5a6f8c;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    padding-bottom: 0.6rem;
+}
+
+/* CARD 1: SCORE */
+.score-display {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+    margin-top: 0.2rem;
+}
+
+.big-number {
+    font-size: 4.8rem;
+    font-weight: 700;
+    color: #1A2A4A;
+    line-height: 1;
+}
+
+.score-label {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #7a8aa0;
+}
+
+.rank-badge {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #cd7f32;
+    /* Color bronce */
+    background: rgba(205, 127, 50, 0.12);
+    padding: 0.1rem 1.2rem;
+    border-radius: 40px;
+    display: inline-block;
+    width: fit-content;
+    margin-top: 0.2rem;
+}
+
+.score-sub {
+    color: #3a8a5e;
+    font-weight: 500;
+    font-size: 0.9rem;
+}
+
+/* CARD 2: MUSCLE / FAT */
+.metric-row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 0.8rem;
+}
+
+.metric-item {
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+}
+
+.metric-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #3a4a62;
+}
+
+.metric-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1A2A4A;
+}
+
+.metric-unit {
+    font-size: 0.9rem;
+    color: #7a8aa0;
+}
+
+.progress-indicator {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.bar-container {
+    width: 100%;
+    height: 6px;
+    background: #e8edf5;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    border-radius: 20px;
+    transition: width 1s ease;
+}
+
+.muscle-bar {
+    background: #2d7a4a;
+}
+
+.fat-bar {
+    background: #b94a4a;
+}
+
+/* CARD 3: BIVA */
+.biva-container {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+#bivaCanvas {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    width: 180px;
+    height: 180px;
+}
+
+.biva-stats {
+    font-size: 0.9rem;
+    line-height: 2;
+    color: #2a3a52;
+}
+
+.biva-stats strong {
+    color: #1A2A4A;
+    font-weight: 700;
+}
+
+.cell-status {
+    margin-top: 0.5rem;
+    background: #e2f0e8;
+    color: #1a5a3a;
+    padding: 0.3rem 0.8rem;
+    border-radius: 30px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+/* CARD 4: ENERGY */
+.energy-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.label-sm {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #6a7a92;
+    letter-spacing: 0.5px;
+}
+
+.kcal-value {
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: #1A2A4A;
+}
+
+.kcal-value small {
+    font-size: 0.9rem;
+    font-weight: 400;
+    color: #6a7a92;
+}
+
+.pal-box {
+    margin-top: 1rem;
+    background: rgba(26, 42, 74, 0.06);
+    padding: 0.8rem;
+    border-radius: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.pal-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1A2A4A;
+}
+
+/* CARD 5: INTERPRETATION */
+.clinical-text {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #1e2a41;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 0.8rem;
+    border-radius: 12px;
+    border-left: 4px solid #1A2A4A;
+}
+
+.hydration-tag {
+    margin-top: 0.8rem;
+    font-weight: 600;
+    color: #1a5a3a;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .bento-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .card-score,
+    .card-biva,
+    .card-muscle-fat {
+        grid-column: span 2;
+    }
+
+    .card-energy,
+    .card-interpretation {
+        grid-column: span 2;
+        grid-row: span 1;
+    }
+}
