@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initBioForm();
     initClients();
+    initProfileDropdown();
     fetchDashboardStats();
 });
 
@@ -13,6 +14,26 @@ function initClock() {
         const now = new Date();
         timeElement.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     }, 1000);
+}
+
+// --- 1.5 PROFILE DROPDOWN ---
+function initProfileDropdown() {
+    const profileBtn = document.getElementById('user-profile-btn');
+    const dropdown = document.getElementById('profile-dropdown');
+    
+    if(profileBtn && dropdown) {
+        profileBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+        
+        // Cierra el menú al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!profileBtn.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
 }
 
 // --- 2. NAVIGATION (SPA) ---
