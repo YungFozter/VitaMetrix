@@ -620,3 +620,61 @@ body {
     .card-score, .card-biva, .card-muscle-fat { grid-column: span 2; }
     .card-energy, .card-interpretation { grid-column: span 2; grid-row: span 1; }
 }
+
+/* ====== CLIENTES VIEW ====== */
+.clients-table-container {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.clients-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.clients-table th {
+    text-align: left;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: #5a6f8c;
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.clients-table td {
+    padding: 1rem;
+    font-size: 0.95rem;
+    color: #1e2a41;
+    border-bottom: 1px solid rgba(0,0,0,0.03);
+}
+
+.clients-table tr:hover td {
+    background: rgba(255, 255, 255, 0.4);
+}
+
+.code-badge {
+    background: #e0f7fc;
+    color: #00b4d8;
+    padding: 0.3rem 0.6rem;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.btn-danger {
+    background: #fff;
+    color: #b94a4a;
+    border: 1px solid #b94a4a;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.btn-danger:hover {
+    background: #b94a4a;
+    color: #fff;
+}

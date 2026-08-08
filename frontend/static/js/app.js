@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initClock();
     initNavigation();
     initBioForm();
+    initClients();
     fetchDashboardStats();
 });
 
@@ -227,4 +228,103 @@ function drawBIVAVector(R, Xc) {
     ctx.ellipse(centerX, centerY, 100, 70, 0, 0, 2 * Math.PI);
     ctx.stroke();
     ctx.setLineDash([]);
+}
+
+// --- 5. CLIENTES ---
+function initClients() {
+    const form = document.getElementById('client-form');
+    if (!form) return;
+
+    // Cargar tabla inicial
+    fetchClients();
+
+    // Guardar nuevo cliente
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btn = form.querySelector('button');
+        const originalText = btn.textContent;
+        btn.textContent = 'Guardando...';
+        btn.disabled = true;
+
+        const payload = {
+            name: document.getElementById('new-client-name').value,
+            phone: document.getElementById('new-client-phone').value,
+            email: document.getElementById('new-client-email').value
+        };
+
+        try {
+            const res = await fetch('/api/clients', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+            if(result.success) {
+                form.reset();
+                fetchClients(); // recargar tabla
+                alert('Cliente guardado exitosamente con el código ' + result.data.code);
+            } else {
+                alert('Error al guardar: ' + result.error);
+            }
+        } catch(err) {
+            console.error(err);
+            alert('Error de conexión.');
+        } finally {
+            btn.textContent = originalText;
+            btn.disabled = false;
+        }
+    });
+}
+
+async function fetchClients() {
+    const tbody = document.getElementById('clients-tbody');
+    if(!tbody) return;
+    
+    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Cargando...</td></tr>';
+    
+    try {
+        const res = await fetch('/api/clients');
+        const clients = await res.json();
+        
+        if(!clients || clients.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: #7a8aa0;">No hay clientes registrados.</td></tr>';
+            return;
+        }
+        
+        tbody.innerHTML = '';
+        clients.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><span class="code-badge">ID-${c.code.toString().padStart(4, '0')}</span></td>
+                <td style="font-weight: 600;">${c.name}</td>
+                <td>
+                    ${c.phone ? '📞 ' + c.phone + '<br>' : ''}
+                    ${c.email ? '📧 ' + c.email : ''}
+                </td>
+                <td>
+                    <button class="btn-danger" onclick="deleteClient('${c.id}')">Eliminar</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    } catch(err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: red;">Error cargando clientes.</td></tr>';
+    }
+}
+
+async function deleteClient(id) {
+    if(!confirm('¿Estás seguro de que deseas eliminar este cliente? Su código será reasignado al próximo cliente nuevo.')) return;
+    
+    try {
+        const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+        const result = await res.json();
+        if(result.success) {
+            fetchClients();
+        } else {
+            alert('Error al eliminar: ' + result.error);
+        }
+    } catch(err) {
+        console.error(err);
+    }
 }

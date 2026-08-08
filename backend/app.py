@@ -104,5 +104,65 @@ def calculate():
     
     return jsonify(response)
 
+# --- RUTAS DE CLIENTES ---
+
+@app.route('/api/clients', methods=['GET'])
+def get_clients():
+    if not supabase: return jsonify([]), 500
+    try:
+        res = supabase.table('clients').select('*').order('code').execute()
+        return jsonify(res.data)
+    except Exception as e:
+        print("Error fetching clients:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/clients', methods=['POST'])
+def add_client():
+    if not supabase: return jsonify({"error": "No db"}), 500
+    data = request.json
+    name = data.get('name')
+    phone = data.get('phone', '')
+    email = data.get('email', '')
+    
+    if not name:
+        return jsonify({"error": "El nombre es obligatorio"}), 400
+        
+    try:
+        # Lógica de reciclaje de códigos
+        res = supabase.table('clients').select('code').execute()
+        codes = [row['code'] for row in res.data if row.get('code') is not None]
+        codes.sort()
+        
+        new_code = 1
+        for code in codes:
+            if code == new_code:
+                new_code += 1
+            elif code > new_code:
+                break
+                
+        # Guardar en Supabase
+        new_client = {
+            "code": new_code,
+            "name": name,
+            "phone": phone,
+            "email": email
+        }
+        res_insert = supabase.table('clients').insert(new_client).execute()
+        
+        return jsonify({"success": True, "data": res_insert.data[0] if res_insert.data else {}})
+    except Exception as e:
+        print("Error adding client:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/clients/<string:client_id>', methods=['DELETE'])
+def delete_client(client_id):
+    if not supabase: return jsonify({"error": "No db"}), 500
+    try:
+        supabase.table('clients').delete().eq('id', client_id).execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        print("Error deleting client:", e)
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

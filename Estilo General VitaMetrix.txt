@@ -1,0 +1,32 @@
+Estilo General y Paradigma de Diseño
+Estilo: La interfaz utiliza una estructura de Bento Grid (cuadrícula estilo caja bento), muy popular en dashboards modernos, combinada con un estilo Glassmorphism (efecto cristal).
+Sensación: Es un diseño limpio, clínico, profesional pero al mismo tiempo moderno y de alta gama.
+Fondo General: Utiliza un color grisáceo/azulado muy claro (#f4f7fc) combinado con un sutil degradado radial en el centro para darle profundidad y hacer resaltar el efecto cristal de las tarjetas.
+2. Tipografía
+Fuente Principal: Se utiliza 'Inter' como fuente principal (con -apple-system, sans-serif como respaldo).
+Jerarquía Tipográfica:
+Los números grandes de puntuación (ej. el Score de 85) tienen un tamaño masivo de 4.8rem con un grosor muy marcado (font-weight: 700) para captar la atención inmediatamente.
+Los encabezados de las tarjetas están en mayúsculas (text-transform: uppercase), con un tamaño pequeño (0.75rem) y un espaciado entre letras amplio (letter-spacing: 0.8px) para darle un toque técnico y elegante.
+3. Paleta de Colores
+La paleta de colores está cuidadosamente seleccionada para transmitir confianza médica y separar visualmente lo positivo de lo negativo:
+
+Color Primario (Azul Marino Profundo): #1A2A4A
+Uso: Es el color protagonista. Se usa para el logo, los números principales de métricas, el borde lateral izquierdo de la interpretación clínica y la línea del vector BIVA en el gráfico.
+Colores de Texto Secundario (Gris/Azul Pizarra): #5a6f8c, #7a8aa0, #4a5a72
+Uso: Se emplean para etiquetas secundarias, unidades de medida y subtítulos para no competir con los datos principales.
+Color de Salud / Músculo (Verde): #2d7a4a (verde oscuro), #3a8a5e, #1a5a3a
+Uso: Se utiliza para la barra de músculo, subtítulos positivos y las etiquetas de estado celular/hidratación óptima (junto con un fondo verde menta suave #e2f0e8).
+Color de Alerta / Grasa (Rojo Oscuro): #b94a4a
+Uso: Se usa para la barra indicadora de grasa y para el punto brillante del vector en el gráfico BIVA.
+Acento Especial (Bronce/Dorado): #cd7f32
+Uso: Exclusivo para la medalla de "Rank" (como A, B, C) con un fondo translúcido a juego, dándole un aspecto de gamificación o calificación premium.
+4. Tarjetas (Cards) y Efecto "Glassmorphism"
+Las tarjetas donde residen los datos tienen un diseño muy particular que las hace parecer cristales flotantes:
+
+Fondo: Blanco translúcido (rgba(255, 255, 255, 0.70)).
+Desfoque (Blur): Tienen un filtro de desenfoque de fondo (backdrop-filter: blur(12px)), lo que hace que cualquier elemento detrás se vea borroso, simulando un cristal esmerilado.
+Bordes: Muy redondeados (border-radius: 28px) con un borde blanco sutil de 1px para simular el reflejo de la luz en el cristal.
+Sombras (Box-Shadow): Tienen una sombra suave y profunda hacia abajo, que se intensifica sutilmente cuando pasas el ratón por encima (hover), dando la sensación de que las tarjetas "flotan" (transform: translateY(-2px)).
+5. Elementos Visuales Destacados
+Barras de Progreso: Tienen un diseño de "píldora" (bordes redondeados) sobre un fondo gris claro, con transiciones suaves de 1 segundo al cargar (transition: width 1s ease).
+Canvas BIVA (Gráfico): El gráfico vectorial tiene un fondo translúcido propio, donde se dibuja el vector en el azul primario y termina en un punto rojo (#b94a4a) que tiene un "resplandor" (shadowBlur: 10), simulando un radar o un dispositivo de escaneo de alta tecnología. Las elipses de referencia están dibujadas con líneas punteadas sutiles.
