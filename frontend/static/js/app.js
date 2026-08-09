@@ -179,16 +179,72 @@ function initBioForm() {
     });
 }
 
+let populationChart = null;
+
 async function fetchDashboardStats() {
     try {
         const response = await fetch('/api/dashboard-stats');
         if (response.ok) {
             const data = await response.json();
-            // Actualizar tarjetas del dashboard (asumiendo orden en el DOM)
-            const values = document.querySelectorAll('.dash-value');
-            if(values.length >= 2) {
-                values[0].textContent = data.total_patients;
-                values[1].textContent = data.total_evaluations;
+            
+            // 1. Update Top Cards
+            document.getElementById('dash-total-clients').textContent = data.total_clients;
+            document.getElementById('dash-total-evals').textContent = data.total_evaluations;
+            document.getElementById('dash-avg-score').textContent = data.avg_score;
+            
+            // 2. Update Recent Table
+            const tbody = document.getElementById('dash-recent-tbody');
+            if (tbody) {
+                if (data.recent.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">No hay evaluaciones recientes.</td></tr>';
+                } else {
+                    tbody.innerHTML = '';
+                    data.recent.forEach(e => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td style="font-weight: 600;">${e.name}</td>
+                            <td>${e.date}</td>
+                            <td><span class="code-badge" style="background: rgba(45,122,74,0.1); color: #2d7a4a;">${e.score} pts</span></td>
+                            <td>${e.phase_angle}°</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            }
+
+            // 3. Render Chart.js
+            const ctx = document.getElementById('dash-population-chart');
+            if (ctx && window.Chart) {
+                if (populationChart) populationChart.destroy();
+                
+                populationChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Óptimo', 'Límite', 'Bajo'],
+                        datasets: [{
+                            data: [
+                                data.population['Óptimo'] || 0,
+                                data.population['Límite'] || 0,
+                                data.population['Bajo'] || 0
+                            ],
+                            backgroundColor: [
+                                '#2d7a4a', // Verde
+                                '#cd7f32', // Bronce
+                                '#b94a4a'  // Rojo
+                            ],
+                            borderWidth: 0,
+                            hoverOffset: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, color: '#5a6f8c' } }
+                        }
+                    }
+                });
             }
         }
     } catch (e) {

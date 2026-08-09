@@ -29,23 +29,57 @@ def index():
 @app.route('/api/dashboard-stats', methods=['GET'])
 def dashboard_stats():
     if not supabase:
-        return jsonify({"total_patients": 0, "total_evaluations": 0})
+        return jsonify({"total_patients": 0, "total_evaluations": 0, "avg_score": 0, "recent": [], "population": {}})
         
     try:
-        # Get count of unique patients
-        response = supabase.table('evaluations').select('patient_idp').execute()
-        evaluations = response.data
+        # Get count of unique clients from 'clients' table
+        clients_res = supabase.table('clients').select('id', count='exact').execute()
+        total_clients = clients_res.count if clients_res.count is not None else 0
+        
+        # Get all evaluations
+        evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
+        evaluations = evals_res.data
         
         total_evaluations = len(evaluations)
-        unique_patients = len(set(e.get('patient_idp') for e in evaluations if e.get('patient_idp')))
+        
+        # Calculate Average Score
+        valid_scores = [float(e['global_score']) for e in evaluations if e.get('global_score') is not None]
+        avg_score = round(sum(valid_scores) / len(valid_scores), 1) if valid_scores else 0
+        
+        # Population stats (Cell Status)
+        cell_status_counts = {"Óptimo": 0, "Límite": 0, "Bajo": 0}
+        
+        # Format recent and calculate status
+        recent = []
+        for e in evaluations:
+            # Re-calculate phase angle / cell status since it's not in DB
+            biva_info = get_biva_interpretation(float(e.get('resistance', 0)), float(e.get('reactance', 0)))
+            c_status = biva_info['cell_status']
+            
+            # Count for population
+            if "Óptimo" in c_status: cell_status_counts["Óptimo"] += 1
+            elif "Bajo" in c_status: cell_status_counts["Bajo"] += 1
+            else: cell_status_counts["Límite"] += 1
+            
+            # Save top 5 recent
+            if len(recent) < 5:
+                recent.append({
+                    "name": e.get('patient_name', 'Unknown'),
+                    "date": e.get('created_at', '').split('T')[0],
+                    "score": e.get('global_score', 0),
+                    "phase_angle": biva_info['phase_angle']
+                })
         
         return jsonify({
-            "total_patients": unique_patients,
-            "total_evaluations": total_evaluations
+            "total_clients": total_clients,
+            "total_evaluations": total_evaluations,
+            "avg_score": avg_score,
+            "recent": recent,
+            "population": cell_status_counts
         })
     except Exception as e:
         print(f"Error fetching stats: {e}")
-        return jsonify({"total_patients": 0, "total_evaluations": 0}), 500
+        return jsonify({"total_patients": 0, "total_evaluations": 0, "avg_score": 0, "recent": [], "population": {}}), 500
 
 @app.route('/api/calculate', methods=['POST'])
 def calculate():

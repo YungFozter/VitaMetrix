@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
@@ -78,66 +80,63 @@
             <div class="views-container">
                 <!-- VIEW 1: DASHBOARD -->
                 <div id="dashboard-view" class="view active-view">
-                    <!-- Dashboard Cards -->
+                    <!-- Dashboard Cards (Bento) -->
                     <div class="dash-cards">
-                        <div class="dash-card">
-                            <div class="dash-icon-box">👥</div>
+                        <div class="dash-card bento-card">
+                            <div class="dash-icon-box" style="background: rgba(26, 42, 74, 0.1); color: #1A2A4A;">👥</div>
                             <div class="dash-info">
-                                <div class="dash-label">Total Patients Today</div>
-                                <div class="dash-value">000</div>
+                                <div class="dash-label">Total Clientes</div>
+                                <div class="dash-value" id="dash-total-clients">0</div>
                             </div>
                         </div>
-                        <div class="dash-card">
-                            <div class="dash-icon-box">⏳</div>
+                        <div class="dash-card bento-card">
+                            <div class="dash-icon-box" style="background: rgba(0, 180, 216, 0.1); color: #00b4d8;">📊</div>
                             <div class="dash-info">
-                                <div class="dash-label">Pending Analysis Today</div>
-                                <div class="dash-value">000</div>
+                                <div class="dash-label">Total Evaluaciones</div>
+                                <div class="dash-value" id="dash-total-evals">0</div>
                             </div>
                         </div>
-                        <div class="dash-card">
-                            <div class="dash-icon-box">💰</div>
+                        <div class="dash-card bento-card">
+                            <div class="dash-icon-box" style="background: rgba(45, 122, 74, 0.1); color: #2d7a4a;">🏆</div>
                             <div class="dash-info">
-                                <div class="dash-label">Total Revenue Today</div>
-                                <div class="dash-value">000</div>
+                                <div class="dash-label">Promedio TRU Score</div>
+                                <div class="dash-value" id="dash-avg-score">0</div>
                             </div>
                         </div>
-                        <div class="dash-card">
-                            <div class="dash-icon-box">⭐</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Patient Feedback Today</div>
-                                <div class="dash-value">000</div>
-                            </div>
+                        <div class="dash-card bento-card" style="display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #00b4d8;" onclick="document.querySelector('[data-target=\'bio-view\']').click()">
+                            <h3 style="color: #00b4d8; margin: 0; font-size: 1.2rem;">+ Nueva Evaluación</h3>
                         </div>
                     </div>
 
-                    <!-- Dashboard Tabs -->
-                    <div class="dash-tabs-container">
-                        <div class="tab-group">
-                            <button class="dash-tab active">New</button>
-                            <button class="dash-tab">In Progress</button>
-                            <button class="dash-tab">Awaiting Result</button>
-                            <button class="dash-tab">Completed</button>
-                            <button class="dash-tab">Cancelled</button>
-                        </div>
-                        <button class="filter-btn">⚙️ Filters</button>
-                    </div>
+                    <!-- Main Dashboard Content (Bento Grid) -->
+                    <div class="bento-grid" style="grid-template-columns: 2fr 1fr; margin-top: 2rem;">
+                        <!-- Left Panel: Recent Evals -->
+                        <section class="bento-card" style="min-height: 400px;">
+                            <div class="card-header">Últimas Evaluaciones</div>
+                            <div class="clients-table-container">
+                                <table class="clients-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Paciente</th>
+                                            <th>Fecha</th>
+                                            <th>Score</th>
+                                            <th>Ángulo Fase</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="dash-recent-tbody">
+                                        <tr><td colspan="4" style="text-align: center; padding: 2rem;">Cargando...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </section>
 
-                    <!-- Empty States -->
-                    <div class="dash-empty-states">
-                        <div class="empty-box large-box">
-                            <div class="empty-icon-wrapper">
-                                <div class="empty-doc-icon"></div>
-                                <div class="plus-badge">+</div>
+                        <!-- Right Panel: Charts -->
+                        <section class="bento-card" style="min-height: 400px; display: flex; flex-direction: column;">
+                            <div class="card-header">Estado Celular Poblacional</div>
+                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;">
+                                <canvas id="dash-population-chart" width="250" height="250"></canvas>
                             </div>
-                            <h3>No Patient Found</h3>
-                        </div>
-                        <div class="empty-box small-box">
-                            <div class="empty-icon-wrapper">
-                                <div class="empty-doc-icon"></div>
-                                <div class="plus-badge">+</div>
-                            </div>
-                            <h3>No Info Found</h3>
-                        </div>
+                        </section>
                     </div>
                 </div>
 
