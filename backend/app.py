@@ -94,10 +94,14 @@ def dashboard_stats():
         print(f"Error fetching stats: {e}")
         return jsonify({"total_patients": 0, "total_evaluations": 0, "avg_score": 0, "recent": [], "population": {}}), 500
 
-@app.route('/api/calculate', methods=['POST'])
-def calculate():
-    data = request.json
-    
+def _run_analysis(data):
+    """
+    FASE 5: Núcleo de cálculo unificado.
+    Recibe el payload del formulario, ejecuta los Módulos 1-7 (BIVA, Scores,
+    hidratación, visceral, energético, segmental, percentiles, índices, BCC)
+    y devuelve UN diccionario con todo. Lo comparten /api/calculate (compat)
+    y /api/dashboard-data (endpoint canónico del manual).
+    """
     # NUEVOS CAMPOS DEL DISPOSITIVO (Opción A) — todos opcionales
     smm = data.get('smm')           # Masa muscular esquelética (kg)
     tbw = data.get('tbw')           # Agua total corporal (L)
@@ -118,7 +122,7 @@ def calculate():
     dev_ffmi = data.get('ffmi')
     dev_fm_pct = data.get('fm_pct')
     dev_smi = data.get('smi')
-    
+
     # Validar numéricos opcionales
     def _num(v):
         try:
@@ -143,11 +147,11 @@ def calculate():
     dev_ffmi = _num(dev_ffmi)
     dev_fm_pct = _num(dev_fm_pct)
     dev_smi = _num(dev_smi)
-    
+
     # Datos paciente
     patient_idp = data.get('patient_idp', '000000')
     patient_name = data.get('patient_name', 'Unknown')
-    
+
     # Datos fisicos
     r = _num(data.get('resistance', 0)) or 0
     xc = _num(data.get('reactance', 0)) or 0
@@ -156,7 +160,7 @@ def calculate():
     age = int(_num(data.get('age', 0)) or 0)
     gender = data.get('gender', 'male')
     pal = _num(data.get('pal', 1.2)) or 1.2
-    
+
     # Cálculos - Módulos
     biva_info = get_biva_interpretation(r, xc)
     energy_info = calculate_energy(weight, height, age, gender, pal, smm=smm)
@@ -204,7 +208,7 @@ def calculate():
             "fat_pct": round(fat_mass / weight * 100, 1),
             "muscle_pct": round(smm / weight * 100, 1)
         }
-    
+
     # Guardar en Supabase (columnas nuevas son opcionales; se ignoran si no existen)
     if supabase:
         try:
@@ -230,9 +234,9 @@ def calculate():
             }).execute()
         except Exception as e:
             print(f"Error saving to supabase: {e}")
-    
-    # Respuesta unificada (Fase 5-friendly)
-    response = {
+
+    # Respuesta unificada (Módulos 1-7 + informe clínico)
+    return {
         "score": scores['score'],
         "rank": scores['rank'],
         "muscle_score": scores['muscle_score'],
@@ -252,8 +256,25 @@ def calculate():
         "composition_indices": composition_indices,
         "bcc": bcc
     }
-    
-    return jsonify(response)
+
+
+@app.route('/api/calculate', methods=['POST'])
+def calculate():
+    """Endpoint legacy (compatibilidad). Delega en el núcleo unificado."""
+    data = request.json or {}
+    return jsonify(_run_analysis(data))
+
+
+@app.route('/api/dashboard-data', methods=['POST'])
+def dashboard_data():
+    """
+    FASE 5: Endpoint unificado según el manual (Pagina2 Analyzer.md).
+    El frontend envía los datos del formulario y recibe UN JSON con los
+    Módulos 1-7 + el informe clínico concatenado. Sustituye a /api/calculate
+    como ruta canónica del flujo de la pantalla de Bioimpedancia.
+    """
+    data = request.json or {}
+    return jsonify(_run_analysis(data))
 
 # --- RUTAS DE CLIENTES ---
 
