@@ -225,15 +225,13 @@
                                 </div>
                             </div>
 
-                            <div class="pal-gauge-wrap" style="margin-top: auto; padding-top: 1.5rem; text-align: center;">
-                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
-                                    <div style="text-align: left;">
-                                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">PAL:</div>
-                                        <div class="pal-number" id="pal-value" style="font-weight: 700; color: #1A2A4A; font-size: 1.2rem;">--</div>
-                                    </div>
-                                    <div style="position: relative; width: 140px; margin: 0 auto;">
-                                        <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto; max-width:140px;"></canvas>
-                                        <span class="pal-zone" id="pal-zone" style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 0.75rem; font-weight: 600;">--</span>
+                            <div class="pal-gauge-wrap" style="margin-top: auto; padding-top: 2rem; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;">
+                                <div style="font-size: 0.75rem; font-weight: 600; color: #5a6f8c; text-transform: uppercase; letter-spacing: 0.8px;">Nivel de Actividad Física (PAL)</div>
+                                <div style="position: relative; width: 100%; max-width: 240px; margin: 0 auto; display: flex; justify-content: center;">
+                                    <canvas id="palGaugeCanvas" width="300" height="180" style="width:100%; height:auto;"></canvas>
+                                    <div style="position: absolute; bottom: -5px; left: 0; right: 0; display: flex; flex-direction: column; align-items: center;">
+                                        <span class="pal-number" id="pal-value" style="font-weight: 800; color: #1A2A4A; font-size: 1.4rem; line-height: 1.2;">--</span>
+                                        <span class="pal-zone" id="pal-zone" style="font-size: 0.85rem; font-weight: 700;">--</span>
                                     </div>
                                 </div>
                             </div>
