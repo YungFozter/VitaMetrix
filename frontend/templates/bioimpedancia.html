@@ -1,275 +1,280 @@
                 <div id="bio-view" class="view hidden-view">
-                    
-                    <div class="bio-layout" style="align-items: flex-start;">
 
-                        <!-- FORMULARIO (más ancho y en 2 columnas) -->
-                        <div class="bio-form-panel bio-glass" style="width: 400px; padding: 1.75rem; border-radius: 1.75rem;">
-                            <h3 class="text-navy font-bold text-lg mb-5" style="letter-spacing:-0.3px;">Ingreso de Datos</h3>
-                            <form id="bio-form">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
-                                    <div class="form-group mb-0">
-                                        <label>IDP (Paciente)</label>
-                                        <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Nombre Completo</label>
-                                        <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Resistencia (R) - Ω</label>
-                                        <input type="number" id="input-r" step="0.1" required placeholder="Ej: 575.6" value="575.6">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Reactancia (Xc) - Ω</label>
-                                        <input type="number" id="input-xc" step="0.1" required placeholder="Ej: 59.0" value="59.0">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Peso (kg)</label>
-                                        <input type="number" id="input-weight" step="0.1" required placeholder="Ej: 75.0" value="75.0">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Altura (cm)</label>
-                                        <input type="number" id="input-height" step="1" required placeholder="Ej: 175" value="175">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Edad (años)</label>
-                                        <input type="number" id="input-age" step="1" required placeholder="Ej: 30" value="30">
-                                    </div>
-                                    <div class="form-group mb-0">
-                                        <label>Género</label>
-                                        <select id="input-gender">
-                                            <option value="male">Masculino</option>
-                                            <option value="female">Femenino</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mb-0 sm:col-span-2">
-                                        <label>Nivel Actividad (PAL)</label>
-                                        <select id="input-pal">
-                                            <option value="1.2">Sedentario (1.2)</option>
-                                            <option value="1.375">Ligero (1.375)</option>
-                                            <option value="1.55">Moderado (1.55)</option>
-                                            <option value="1.725">Activo (1.725)</option>
-                                            <option value="1.9">Muy Activo (1.9)</option>
-                                        </select>
-                                    </div>
-                                    <div class="form-group mb-0 sm:col-span-2">
-                                        <label>Circunferencia de Cintura (cm)</label>
-                                        <input type="number" id="input-waist" step="0.1" placeholder="Ej: 85 (del dispositivo)">
-                                    </div>
-                                </div>
-
-                                <details class="device-data mt-4">
-                                    <summary>Datos del dispositivo (opcional)</summary>
-                                    <p class="form-hint">Transcribe los valores que entrega el equipo de bioimpedancia.</p>
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-3">
-                                        <div class="form-group mb-0">
-                                            <label>Masa Muscular (SMM) - kg</label>
-                                            <input type="number" id="input-smm" step="0.1" placeholder="Ej: 32.5">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Agua Total (TBW) - L</label>
-                                            <input type="number" id="input-tbw" step="0.1" placeholder="Ej: 42.0">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Agua Extracelular (ECW) - L</label>
-                                            <input type="number" id="input-ecw" step="0.1" placeholder="Ej: 17.5">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Masa Grasa - kg</label>
-                                            <input type="number" id="input-fat-mass" step="0.1" placeholder="Ej: 15.0">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Grasa Visceral - L</label>
-                                            <input type="number" id="input-visceral" step="0.1" placeholder="Ej: 1.2">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Ángulo de Fase medido (°)</label>
-                                            <input type="number" id="input-phase-dev" step="0.1" placeholder="Ej: 5.9">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Segmental - Brazo Der (kg)</label>
-                                            <input type="number" id="input-seg-arm-r" step="0.1" placeholder="Ej: 2.6">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Segmental - Brazo Izq (kg)</label>
-                                            <input type="number" id="input-seg-arm-l" step="0.1" placeholder="Ej: 2.5">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Segmental - Torso (kg)</label>
-                                            <input type="number" id="input-seg-torso" step="0.1" placeholder="Ej: 12.5">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Segmental - Pierna Der (kg)</label>
-                                            <input type="number" id="input-seg-leg-r" step="0.1" placeholder="Ej: 7.5">
-                                        </div>
-                                        <div class="form-group mb-0">
-                                            <label>Segmental - Pierna Izq (kg)</label>
-                                            <input type="number" id="input-seg-leg-l" step="0.1" placeholder="Ej: 7.4">
-                                        </div>
-                                    </div>
-                                </details>
-                                <button type="submit" class="btn-primary mt-4" style="background: #1A2A4A;">Analizar Composición</button>
-                            </form>
+                    <!-- ===== FORMULARIO HORIZONTAL (full-width, arriba) ===== -->
+                    <section class="bio-form-horizontal bio-glass">
+                        <div class="bio-form-head">
+                            <div>
+                                <h3 class="form-title">Ingreso de Datos</h3>
+                                <p class="form-sub">Completa los valores del paciente y del dispositivo de bioimpedancia.</p>
+                            </div>
+                            <button type="submit" form="bio-form" class="btn-primary btn-analyze">
+                                <span class="btn-ico">⚡</span> Analizar Composición
+                            </button>
                         </div>
 
-                        <!-- BENTO GRID (4 columnas, espacioso) -->
-                        <div class="bento-grid" style="grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1.5rem; align-items: stretch;">
-
-                            <!-- CARD 1: Puntuación Global -->
-                            <section class="bento-card bio-glass card-score" style="grid-column: span 2; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">TRU Body Score</div>
-                                <div class="flex items-baseline gap-2" style="margin-top: 0.5rem;">
-                                    <span class="big-number" id="global-score" style="font-size: 4.8rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
-                                    <span class="text-slatey" style="font-size: 1.2rem; font-weight: 500;">de 100</span>
+                        <form id="bio-form">
+                            <div class="form-fields">
+                                <div class="form-group">
+                                    <label>IDP (Paciente)</label>
+                                    <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
                                 </div>
-                                <div class="rank-badge" id="rank-badge" style="margin-top: 0.5rem;">--</div>
-                                <div class="score-sub mt-2"><span>🏆 Percentil élite</span></div>
-                            </section>
-
-                            <!-- CARD 2: Músculo y Grasa -->
-                            <section class="bento-card bio-glass card-muscle-fat" style="grid-column: span 2; grid-row: span 1;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Composición Corporal</div>
-                                <div class="metric-row mt-3">
-                                    <div class="metric-item">
-                                        <span class="metric-label">💪 Muscle Score</span>
-                                        <span class="metric-value" id="muscle-score">--</span>
-                                        <span class="metric-unit">pts</span>
-                                    </div>
-                                    <div class="metric-item">
-                                        <span class="metric-label">⚡ Fat Score</span>
-                                        <span class="metric-value" id="fat-score">--</span>
-                                        <span class="metric-unit">pts</span>
-                                    </div>
+                                <div class="form-group">
+                                    <label>Nombre Completo</label>
+                                    <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO">
                                 </div>
-                                <div class="progress-indicator mt-3">
-                                    <div class="bar-container"><div class="bar-fill muscle-bar" style="width: 0%;"></div></div>
-                                    <div class="bar-container"><div class="bar-fill fat-bar" style="width: 0%;"></div></div>
+                                <div class="form-group">
+                                    <label>Resistencia (R) - Ω</label>
+                                    <input type="number" id="input-r" step="0.1" required placeholder="Ej: 575.6" value="575.6">
                                 </div>
-                            </section>
-
-                            <!-- CARD 3: BIVA -->
-                            <section class="bento-card bio-glass card-biva" style="grid-column: span 2; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Vectorial (BIVA)</div>
-                                <div class="biva-container mt-3">
-                                    <canvas id="bivaCanvas" width="220" height="220" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);"></canvas>
-                                    <div class="biva-stats">
-                                        <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
-                                        <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
-                                        <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
-                                        <div class="cell-status" id="cell-status">--</div>
-                                    </div>
+                                <div class="form-group">
+                                    <label>Reactancia (Xc) - Ω</label>
+                                    <input type="number" id="input-xc" step="0.1" required placeholder="Ej: 59.0" value="59.0">
                                 </div>
-                            </section>
-
-                            <!-- CARD 4: Energético -->
-                            <section class="bento-card bio-glass card-energy" style="grid-column: span 1; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Consumo Energético (REE / TEE)</div>
-                                <div class="energy-grid mt-3">
-                                    <div>
-                                        <span class="label-sm">En reposo (REE)</span>
-                                        <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
-                                    </div>
-                                    <div>
-                                        <span class="label-sm">Actividad (TEE)</span>
-                                        <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
-                                    </div>
+                                <div class="form-group">
+                                    <label>Peso (kg)</label>
+                                    <input type="number" id="input-weight" step="0.1" required placeholder="Ej: 75.0" value="75.0">
                                 </div>
-                                <div class="pal-gauge-wrap mt-4">
-                                    <span class="label-sm" style="font-size:0.7rem;">Nivel de Actividad Física (PAL)</span>
-                                    <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto;"></canvas>
-                                    <div class="pal-readout">
-                                        <span class="pal-number" id="pal-value">--</span>
-                                        <span class="pal-zone" id="pal-zone">--</span>
-                                    </div>
+                                <div class="form-group">
+                                    <label>Altura (cm)</label>
+                                    <input type="number" id="input-height" step="1" required placeholder="Ej: 175" value="175">
                                 </div>
-                            </section>
-
-                            <!-- CARD 5: Interpretación -->
-                            <section class="bento-card bio-glass card-interpretation" style="grid-column: span 1; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Interpretación Clínica</div>
-                                <div class="clinical-text mt-3" id="clinical-text">Ingrese los datos y haga clic en Analizar Composición.</div>
-                                <div class="hydration-tag mt-3" id="hydration-tag">--</div>
-                            </section>
-
-                            <!-- CARD 6: Índices -->
-                            <section class="bento-card bio-glass card-composition" style="grid-column: span 1; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Índices de Composición</div>
-                                <div id="ci-na" class="card-na">Introduce SMM y masa grasa del dispositivo para ver los índices.</div>
-                                <div id="ci-grid" class="ci-grid" style="display:none;">
-                                    <div class="ci-item"><span class="ci-label">IMC</span><span class="ci-value" id="ci-imc">--</span><span class="status-chip" id="ci-imc-status">--</span></div>
-                                    <div class="ci-item"><span class="ci-label">FMI</span><span class="ci-value" id="ci-fmi">--</span><span class="status-chip" id="ci-fmi-status">--</span></div>
-                                    <div class="ci-item"><span class="ci-label">FFMI</span><span class="ci-value" id="ci-ffmi">--</span><span class="status-chip" id="ci-ffmi-status">--</span></div>
-                                    <div class="ci-item"><span class="ci-label">% Grasa</span><span class="ci-value" id="ci-fm-pct">--</span><span class="status-chip" id="ci-fm-pct-status">--</span></div>
-                                    <div class="ci-item"><span class="ci-label">SMI</span><span class="ci-value" id="ci-smi">--</span><span class="status-chip" id="ci-smi-status">--</span></div>
+                                <div class="form-group">
+                                    <label>Edad (años)</label>
+                                    <input type="number" id="input-age" step="1" required placeholder="Ej: 30" value="30">
                                 </div>
-                            </section>
-
-                            <!-- CARD 7: Segmental -->
-                            <section class="bento-card bio-glass card-segmental" style="grid-column: span 2; grid-row: span 1;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Músculo Segmental</div>
-                                <div id="seg-na" class="card-na">Introduce los valores segmentales del dispositivo.</div>
-                                <div id="seg-grid" class="seg-grid" style="display:none;">
-                                    <div class="seg-item"><span class="seg-label">🦾 Brazo Der</span><span class="seg-value" id="seg-arm-r-val">--</span><span class="status-dot" id="seg-arm-r-status"></span></div>
-                                    <div class="seg-item"><span class="seg-label">🦾 Brazo Izq</span><span class="seg-value" id="seg-arm-l-val">--</span><span class="status-dot" id="seg-arm-l-status"></span></div>
-                                    <div class="seg-item"><span class="seg-label">🧍 Torso</span><span class="seg-value" id="seg-torso-val">--</span><span class="status-dot" id="seg-torso-status"></span></div>
-                                    <div class="seg-item"><span class="seg-label">🦵 Pierna Der</span><span class="seg-value" id="seg-leg-r-val">--</span><span class="status-dot" id="seg-leg-r-status"></span></div>
-                                    <div class="seg-item"><span class="seg-label">🦵 Pierna Izq</span><span class="seg-value" id="seg-leg-l-val">--</span><span class="status-dot" id="seg-leg-l-status"></span></div>
-                                    <div id="seg-asym" class="seg-asym" style="display:none;"></div>
+                                <div class="form-group">
+                                    <label>Género</label>
+                                    <select id="input-gender">
+                                        <option value="male">Masculino</option>
+                                        <option value="female">Femenino</option>
+                                    </select>
                                 </div>
-                            </section>
+                                <div class="form-group">
+                                    <label>Nivel Actividad (PAL)</label>
+                                    <select id="input-pal">
+                                        <option value="1.2">Sedentario (1.2)</option>
+                                        <option value="1.375">Ligero (1.375)</option>
+                                        <option value="1.55">Moderado (1.55)</option>
+                                        <option value="1.725">Activo (1.725)</option>
+                                        <option value="1.9">Muy Activo (1.9)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Circunferencia de Cintura (cm)</label>
+                                    <input type="number" id="input-waist" step="0.1" placeholder="Ej: 85 (del dispositivo)">
+                                </div>
+                            </div>
 
-                            <!-- CARD 8: Percentiles -->
-                            <section class="bento-card bio-glass card-percentiles" style="grid-column: span 2; grid-row: span 2;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Percentiles (vs edad)</div>
-                                <div id="pct-na" class="card-na">Introduce SMM (y/o ángulo medido) para estimar percentiles.</div>
-                                <div id="pct-grid" style="display:none;">
-                                    <div class="pct-row">
-                                        <div class="pct-head"><span class="pct-label">Ángulo de Fase</span><span class="pct-val" id="ph-pct-val">--</span></div>
-                                        <div class="bar-container"><div class="bar-fill pct-bar" id="ph-pct-bar" style="width:0%"></div></div>
+                            <details class="device-data">
+                                <summary>Datos del dispositivo (opcional)</summary>
+                                <p class="form-hint">Transcribe los valores que entrega el equipo de bioimpedancia.</p>
+                                <div class="form-fields device-fields">
+                                    <div class="form-group">
+                                        <label>Masa Muscular (SMM) - kg</label>
+                                        <input type="number" id="input-smm" step="0.1" placeholder="Ej: 32.5">
                                     </div>
-                                    <div class="pct-row">
-                                        <div class="pct-head"><span class="pct-label">Masa Muscular (SMM)</span><span class="pct-val" id="smm-pct-val">--</span></div>
-                                        <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
+                                    <div class="form-group">
+                                        <label>Agua Total (TBW) - L</label>
+                                        <input type="number" id="input-tbw" step="0.1" placeholder="Ej: 42.0">
                                     </div>
-                                    <div class="smm-curve-wrap mt-3">
-                                        <span class="ci-label" style="font-size:0.7rem;">Curva de referencia SMM × edad</span>
-                                        <canvas id="smmCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
+                                    <div class="form-group">
+                                        <label>Agua Extracelular (ECW) - L</label>
+                                        <input type="number" id="input-ecw" step="0.1" placeholder="Ej: 17.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Masa Grasa - kg</label>
+                                        <input type="number" id="input-fat-mass" step="0.1" placeholder="Ej: 15.0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Grasa Visceral - L</label>
+                                        <input type="number" id="input-visceral" step="0.1" placeholder="Ej: 1.2">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Ángulo de Fase medido (°)</label>
+                                        <input type="number" id="input-phase-dev" step="0.1" placeholder="Ej: 5.9">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Segmental - Brazo Der (kg)</label>
+                                        <input type="number" id="input-seg-arm-r" step="0.1" placeholder="Ej: 2.6">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Segmental - Brazo Izq (kg)</label>
+                                        <input type="number" id="input-seg-arm-l" step="0.1" placeholder="Ej: 2.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Segmental - Torso (kg)</label>
+                                        <input type="number" id="input-seg-torso" step="0.1" placeholder="Ej: 12.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Segmental - Pierna Der (kg)</label>
+                                        <input type="number" id="input-seg-leg-r" step="0.1" placeholder="Ej: 7.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Segmental - Pierna Izq (kg)</label>
+                                        <input type="number" id="input-seg-leg-l" step="0.1" placeholder="Ej: 7.4">
                                     </div>
                                 </div>
-                            </section>
+                            </details>
+                        </form>
+                    </section>
 
-                            <!-- CARD 9: Hídrico -->
-                            <section class="bento-card bio-glass card-water" style="grid-column: span 1; grid-row: span 1;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Hídrico</div>
-                                <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
-                                <div id="water-grid" style="display:none;">
-                                    <div class="mini-metric"><span>TBW</span><strong id="water-tbw">--</strong><span class="unit">L</span></div>
-                                    <div class="mini-metric"><span>ECW</span><strong id="water-ecw">--</strong><span class="unit">L</span></div>
-                                    <div class="water-ratio"><span>ECW/TBW</span><strong id="water-ratio">--</strong><span class="status-chip" id="water-status">--</span></div>
+                    <!-- ===== GRID DE RESULTADOS ===== -->
+                    <div class="bio-results-grid">
+
+                        <!-- CARD 1: Puntuación Global -->
+                        <section class="bento-card bio-glass card-score" style="grid-area: score;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">TRU Body Score</div>
+                            <div class="flex items-baseline gap-2" style="margin-top: 0.5rem;">
+                                <span class="big-number" id="global-score" style="font-size: 4.8rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
+                                <span class="text-slatey" style="font-size: 1.2rem; font-weight: 500;">de 100</span>
+                            </div>
+                            <div class="rank-badge" id="rank-badge" style="margin-top: 0.5rem;">--</div>
+                            <div class="score-sub mt-2"><span>🏆 Percentil élite</span></div>
+                        </section>
+
+                        <!-- CARD 2: Músculo y Grasa -->
+                        <section class="bento-card bio-glass card-muscle-fat" style="grid-area: muscle;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Composición Corporal</div>
+                            <div class="metric-row mt-3">
+                                <div class="metric-item">
+                                    <span class="metric-label">💪 Muscle Score</span>
+                                    <span class="metric-value" id="muscle-score">--</span>
+                                    <span class="metric-unit">pts</span>
                                 </div>
-                            </section>
-
-                            <!-- CARD 10: Cintura -->
-                            <section class="bento-card bio-glass card-waist" style="grid-column: span 1; grid-row: span 1;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Cintura & Visceral</div>
-                                <div id="waist-na" class="card-na">Introduce circunferencia de cintura y/o grasa visceral.</div>
-                                <div id="waist-grid" style="display:none;">
-                                    <div class="waist-track"><div class="bar-fill waist-bar" id="waist-bar" style="width:0%"></div><div class="waist-pin" id="waist-pin"></div></div>
-                                    <div class="waist-readout"><span>Cintura</span><strong id="waist-val">--</strong><span class="unit">cm</span><span class="status-chip" id="waist-status">--</span></div>
-                                    <div class="waist-visc" id="visc-status"></div>
+                                <div class="metric-item">
+                                    <span class="metric-label">⚡ Fat Score</span>
+                                    <span class="metric-value" id="fat-score">--</span>
+                                    <span class="metric-unit">pts</span>
                                 </div>
-                            </section>
+                            </div>
+                            <div class="progress-indicator mt-3">
+                                <div class="bar-container"><div class="bar-fill muscle-bar" style="width: 0%;"></div></div>
+                                <div class="bar-container"><div class="bar-fill fat-bar" style="width: 0%;"></div></div>
+                            </div>
+                        </section>
 
-                            <!-- CARD 11: BCC -->
-                            <section class="bento-card bio-glass card-bcc" style="grid-column: span 1; grid-row: span 1;">
-                                <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">BCC (Grasa vs Músculo)</div>
-                                <div id="bcc-na" class="card-na">Requiere SMM y masa grasa del dispositivo.</div>
-                                <div id="bcc-grid" style="display:none;">
-                                    <div class="bcc-row"><span class="bcc-label">🥩 Músculo</span><div class="bar-container"><div class="bar-fill muscle-bar" id="bcc-musc-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-musc-val">--</span></div>
-                                    <div class="bcc-row"><span class="bcc-label">🍩 Grasa</span><div class="bar-container"><div class="bar-fill fat-bar" id="bcc-fat-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-fat-val">--</span></div>
+                        <!-- CARD 3: BIVA -->
+                        <section class="bento-card bio-glass card-biva" style="grid-area: biva;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Vectorial (BIVA)</div>
+                            <div class="biva-container mt-3">
+                                <canvas id="bivaCanvas" width="220" height="220" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);"></canvas>
+                                <div class="biva-stats">
+                                    <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
+                                    <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
+                                    <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
+                                    <div class="cell-status" id="cell-status">--</div>
                                 </div>
-                            </section>
+                            </div>
+                        </section>
 
-                        </div>
+                        <!-- CARD 4: Energético -->
+                        <section class="bento-card bio-glass card-energy" style="grid-area: energy;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Consumo Energético (REE / TEE)</div>
+                            <div class="energy-grid mt-3">
+                                <div>
+                                    <span class="label-sm">En reposo (REE)</span>
+                                    <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
+                                </div>
+                                <div>
+                                    <span class="label-sm">Actividad (TEE)</span>
+                                    <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
+                                </div>
+                            </div>
+                            <div class="pal-gauge-wrap mt-4">
+                                <span class="label-sm" style="font-size:0.7rem;">Nivel de Actividad Física (PAL)</span>
+                                <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto; max-width:200px;"></canvas>
+                                <div class="pal-readout">
+                                    <span class="pal-number" id="pal-value">--</span>
+                                    <span class="pal-zone" id="pal-zone">--</span>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 5: Interpretación -->
+                        <section class="bento-card bio-glass card-interpretation" style="grid-area: interp;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Interpretación Clínica</div>
+                            <div class="clinical-text mt-3" id="clinical-text">Ingrese los datos y haga clic en Analizar Composición.</div>
+                            <div class="hydration-tag mt-3" id="hydration-tag">--</div>
+                        </section>
+
+                        <!-- CARD 6: Índices -->
+                        <section class="bento-card bio-glass card-composition" style="grid-area: indices;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Índices de Composición</div>
+                            <div id="ci-na" class="card-na">Introduce SMM y masa grasa del dispositivo para ver los índices.</div>
+                            <div id="ci-grid" class="ci-grid" style="display:none;">
+                                <div class="ci-item"><span class="ci-label">IMC</span><span class="ci-value" id="ci-imc">--</span><span class="status-chip" id="ci-imc-status">--</span></div>
+                                <div class="ci-item"><span class="ci-label">FMI</span><span class="ci-value" id="ci-fmi">--</span><span class="status-chip" id="ci-fmi-status">--</span></div>
+                                <div class="ci-item"><span class="ci-label">FFMI</span><span class="ci-value" id="ci-ffmi">--</span><span class="status-chip" id="ci-ffmi-status">--</span></div>
+                                <div class="ci-item"><span class="ci-label">% Grasa</span><span class="ci-value" id="ci-fm-pct">--</span><span class="status-chip" id="ci-fm-pct-status">--</span></div>
+                                <div class="ci-item"><span class="ci-label">SMI</span><span class="ci-value" id="ci-smi">--</span><span class="status-chip" id="ci-smi-status">--</span></div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 7: Segmental -->
+                        <section class="bento-card bio-glass card-segmental" style="grid-area: segmental;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Músculo Segmental</div>
+                            <div id="seg-na" class="card-na">Introduce los valores segmentales del dispositivo.</div>
+                            <div id="seg-grid" class="seg-grid" style="display:none;">
+                                <div class="seg-item"><span class="seg-label">🦾 Brazo Der</span><span class="seg-value" id="seg-arm-r-val">--</span><span class="status-dot" id="seg-arm-r-status"></span></div>
+                                <div class="seg-item"><span class="seg-label">🦾 Brazo Izq</span><span class="seg-value" id="seg-arm-l-val">--</span><span class="status-dot" id="seg-arm-l-status"></span></div>
+                                <div class="seg-item"><span class="seg-label">🧍 Torso</span><span class="seg-value" id="seg-torso-val">--</span><span class="status-dot" id="seg-torso-status"></span></div>
+                                <div class="seg-item"><span class="seg-label">🦵 Pierna Der</span><span class="seg-value" id="seg-leg-r-val">--</span><span class="status-dot" id="seg-leg-r-status"></span></div>
+                                <div class="seg-item"><span class="seg-label">🦵 Pierna Izq</span><span class="seg-value" id="seg-leg-l-val">--</span><span class="status-dot" id="seg-leg-l-status"></span></div>
+                                <div id="seg-asym" class="seg-asym" style="display:none;"></div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 8: Percentiles -->
+                        <section class="bento-card bio-glass card-percentiles" style="grid-area: percentiles;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Percentiles (vs edad)</div>
+                            <div id="pct-na" class="card-na">Introduce SMM (y/o ángulo medido) para estimar percentiles.</div>
+                            <div id="pct-grid" style="display:none;">
+                                <div class="pct-row">
+                                    <div class="pct-head"><span class="pct-label">Ángulo de Fase</span><span class="pct-val" id="ph-pct-val">--</span></div>
+                                    <div class="bar-container"><div class="bar-fill pct-bar" id="ph-pct-bar" style="width:0%"></div></div>
+                                </div>
+                                <div class="pct-row">
+                                    <div class="pct-head"><span class="pct-label">Masa Muscular (SMM)</span><span class="pct-val" id="smm-pct-val">--</span></div>
+                                    <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
+                                </div>
+                                <div class="smm-curve-wrap mt-3">
+                                    <span class="ci-label" style="font-size:0.7rem;">Curva de referencia SMM × edad</span>
+                                    <canvas id="smmCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
+                                </div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 9: Hídrico -->
+                        <section class="bento-card bio-glass card-water" style="grid-area: water;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Hídrico</div>
+                            <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
+                            <div id="water-grid" style="display:none;">
+                                <div class="mini-metric"><span>TBW</span><strong id="water-tbw">--</strong><span class="unit">L</span></div>
+                                <div class="mini-metric"><span>ECW</span><strong id="water-ecw">--</strong><span class="unit">L</span></div>
+                                <div class="water-ratio"><span>ECW/TBW</span><strong id="water-ratio">--</strong><span class="status-chip" id="water-status">--</span></div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 10: Cintura -->
+                        <section class="bento-card bio-glass card-waist" style="grid-area: waist;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Cintura & Visceral</div>
+                            <div id="waist-na" class="card-na">Introduce circunferencia de cintura y/o grasa visceral.</div>
+                            <div id="waist-grid" style="display:none;">
+                                <div class="waist-track"><div class="bar-fill waist-bar" id="waist-bar" style="width:0%"></div><div class="waist-pin" id="waist-pin"></div></div>
+                                <div class="waist-readout"><span>Cintura</span><strong id="waist-val">--</strong><span class="unit">cm</span><span class="status-chip" id="waist-status">--</span></div>
+                                <div class="waist-visc" id="visc-status"></div>
+                            </div>
+                        </section>
+
+                        <!-- CARD 11: BCC -->
+                        <section class="bento-card bio-glass card-bcc" style="grid-area: bcc;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">BCC (Grasa vs Músculo)</div>
+                            <div id="bcc-na" class="card-na">Requiere SMM y masa grasa del dispositivo.</div>
+                            <div id="bcc-grid" style="display:none;">
+                                <div class="bcc-row"><span class="bcc-label">🥩 Músculo</span><div class="bar-container"><div class="bar-fill muscle-bar" id="bcc-musc-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-musc-val">--</span></div>
+                                <div class="bcc-row"><span class="bcc-label">🍩 Grasa</span><div class="bar-container"><div class="bar-fill fat-bar" id="bcc-fat-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-fat-val">--</span></div>
+                            </div>
+                        </section>
+
                     </div>
                 </div>

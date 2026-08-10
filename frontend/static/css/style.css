@@ -471,33 +471,104 @@ body {
 }
 
 
-/* ====== BIOIMPEDANCIA VIEW (Form + Bento Grid) ====== */
-.bio-layout {
-    display: flex;
-    gap: 2rem;
-    align-items: flex-start;
-}
+/* ====== BIOIMPEDANCIA VIEW (Form horizontal + Bento Grid) ====== */
 
-/* Panel de Formulario */
-.bio-form-panel {
-    width: 320px;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.9);
+/* --- FORMULARIO HORIZONTAL (full-width arriba) --- */
+.bio-form-horizontal {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
     border-radius: 24px;
-    padding: 1.8rem;
-    box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.08);
-    flex-shrink: 0;
+    padding: 1.4rem 1.6rem;
+    box-shadow: 0 18px 40px -16px rgba(0, 20, 40, 0.12);
+    margin-bottom: 1.6rem;
 }
 
-.bio-form-panel h3 {
-    font-size: 1.2rem;
+.bio-form-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.form-title {
+    font-size: 1.25rem;
+    font-weight: 700;
     color: #1A2A4A;
-    margin-bottom: 1.5rem;
+    letter-spacing: -0.3px;
 }
 
+.form-sub {
+    font-size: 0.82rem;
+    color: #7a8aa0;
+    margin-top: 0.15rem;
+}
+
+.btn-analyze {
+    width: auto;
+    padding: 0.85rem 1.6rem;
+    margin-top: 0;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    background: #1A2A4A;
+    box-shadow: 0 10px 24px -8px rgba(26, 42, 74, 0.5);
+}
+
+.btn-analyze:hover {
+    background: #243a63;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -8px rgba(26, 42, 74, 0.55);
+}
+
+.btn-ico { font-size: 1.05rem; }
+
+/* Rejilla de campos del formulario: auto-fit responsivo */
+.form-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.8rem 1rem;
+    align-items: end;
+}
+
+.device-data {
+    margin-top: 0.9rem;
+    background: rgba(26, 42, 74, 0.03);
+    border: 1px solid rgba(26, 42, 74, 0.07);
+    border-radius: 16px;
+    padding: 0.6rem 0.9rem;
+}
+
+.device-data summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1A2A4A;
+    font-size: 0.9rem;
+    list-style: none;
+}
+
+.device-data summary::-webkit-details-marker { display: none; }
+.device-data summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+    color: #1A2A4A;
+}
+.device-data[open] summary::before { transform: rotate(90deg); }
+
+.form-hint { font-size: 0.8rem; color: #7a8aa0; margin: 0.4rem 0 0.6rem; }
+.device-fields { margin-top: 0.6rem; }
+
+/* Mantener el grupo de form clásico como base para el resto de la app */
 .form-group {
-    margin-bottom: 1.2rem;
+    margin-bottom: 0;
 }
 
 .form-group label {
@@ -549,27 +620,32 @@ body {
 }
 
 
-/* BENTO GRID (Estructura Maestra) */
-.bento-grid {
-    flex: 1;
+/* BENTO GRID (12 columnas, áreas nombradas) */
+.bio-results-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    grid-auto-rows: minmax(100px, auto);
-    gap: 1.5rem;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: minmax(120px, auto);
+    gap: 1.4rem;
+    grid-template-areas:
+        "score       score       muscle      muscle      biva        biva        biva        biva        energy      energy      energy      energy"
+        "interp      interp      interp      interp      biva        biva        biva        biva        energy      energy      energy      energy"
+        "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
+        "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
+        "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc"
+        "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
 }
 
-/* Ubicación de cada tarjeta en la cuadrícula (Asignación de áreas) */
-.card-score { grid-column: span 2; grid-row: span 2; }
-.card-muscle-fat { grid-column: span 2; grid-row: span 1; }
-.card-biva { grid-column: span 2; grid-row: span 2; }
-.card-energy { grid-column: span 1; grid-row: span 2; }
-.card-interpretation { grid-column: span 1; grid-row: span 2; }
-.card-composition { grid-column: span 1; grid-row: span 2; }
-.card-segmental { grid-column: span 2; grid-row: span 1; }
-.card-percentiles { grid-column: span 1; grid-row: span 1; }
-.card-water { grid-column: span 1; grid-row: span 1; }
-.card-waist { grid-column: span 1; grid-row: span 1; }
-.card-bcc { grid-column: span 1; grid-row: span 1; }
+.card-score       { grid-area: score; }
+.card-muscle-fat  { grid-area: muscle; }
+.card-biva        { grid-area: biva; }
+.card-energy      { grid-area: energy; }
+.card-interpretation { grid-area: interp; }
+.card-composition { grid-area: indices; }
+.card-segmental   { grid-area: segmental; }
+.card-percentiles { grid-area: percentiles; }
+.card-water       { grid-area: water; }
+.card-waist       { grid-area: waist; }
+.card-bcc         { grid-area: bcc; }
 
 /* ESTILO DE LAS TARJETAS (Glassmorphism + Profesional) */
 .bento-card {
@@ -699,17 +775,50 @@ body {
 .hydration-tag { margin-top: 0.8rem; font-weight: 600; color: #1a5a3a; }
 
 /* Responsive */
-@media (max-width: 1200px) {
-    .bio-layout { flex-direction: column; }
-    .bio-form-panel { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .bio-form-panel h3 { grid-column: span 2; margin-bottom: 0.5rem; }
-    .bio-form-panel .btn-primary { grid-column: span 2; }
+@media (max-width: 1400px) {
+    .bio-results-grid {
+        grid-template-areas:
+            "score       score       score       muscle      muscle      muscle      biva        biva        biva        biva        biva        biva"
+            "interp      interp      interp      interp      interp      interp      biva        biva        biva        biva        biva        biva"
+            "energy      energy      energy      energy      energy      energy      indices     indices     indices     segmental   segmental   segmental"
+            "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
+            "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
+    }
 }
 
-@media (max-width: 900px) {
-    .bento-grid { grid-template-columns: 1fr 1fr; }
-    .card-score, .card-biva, .card-muscle-fat { grid-column: span 2; }
-    .card-energy, .card-interpretation { grid-column: span 2; grid-row: span 1; }
+@media (max-width: 1100px) {
+    .bio-results-grid {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-areas:
+            "score       score       score       muscle      muscle      muscle"
+            "biva        biva        biva        biva        biva        biva"
+            "energy      energy      energy      interp      interp      interp"
+            "indices     indices     indices     segmental   segmental   segmental"
+            "percentiles percentiles percentiles percentiles percentiles percentiles"
+            "water       water       water       waist       waist       waist"
+            "bcc         bcc         bcc         bcc         bcc         bcc";
+    }
+    .bio-form-head { flex-direction: column; align-items: stretch; }
+    .btn-analyze { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 760px) {
+    .bio-results-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "score"
+            "muscle"
+            "biva"
+            "energy"
+            "interp"
+            "indices"
+            "segmental"
+            "percentiles"
+            "water"
+            "waist"
+            "bcc";
+    }
+    .form-fields { grid-template-columns: 1fr 1fr; }
 }
 
 /* ====== FASE 6: GLASSMORPHISM (Tailwind + arte) ====== */
