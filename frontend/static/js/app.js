@@ -446,6 +446,11 @@ function updateBioUI(data, inputs) {
         } else if (vis.status && vis.status !== 'No disponible') {
             viscEl.style.display = 'block';
             viscEl.textContent = vis.status;
+        } else {
+            viscEl.style.display = 'none';
+        }
+    }
+
     // CARD 11: BCC
     const bcc = data.bcc;
     if (bcc && bcc.available) {
