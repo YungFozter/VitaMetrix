@@ -1,0 +1,91 @@
+{
+  "_meta": {
+    "description": "Tablas de referencia poblacional para VitaMetrix. Valores aproximados basados en literatura (NHANES, estudios seca/InBody) con fines de comparación clínica. No sustituyen el juicio profesional.",
+    "stratification": "Por sexo (male/female). Los rangos segmentales son para adultos 20-80 años.",
+    "version": "1.0"
+  },
+
+  "bmi_normal_ranges": {
+    "male":   { "low": 18.5, "normal_max": 24.9, "overweight_max": 29.9, "obese": 30.0 },
+    "female": { "low": 18.5, "normal_max": 24.9, "overweight_max": 29.9, "obese": 30.0 }
+  },
+
+  "fmi_normal_ranges": {
+    "male":   { "normal_max": 6.0,  "high": 6.0 },
+    "female": { "normal_max": 8.0,  "high": 8.0 }
+  },
+
+  "ffmi_normal_ranges": {
+    "male":   { "normal_min": 17.0, "athlete": 21.0 },
+    "female": { "normal_min": 14.0, "athlete": 18.0 }
+  },
+
+  "fm_percent_ranges": {
+    "male":   { "normal_max": 25.0, "high": 25.0 },
+    "female": { "normal_max": 35.0, "high": 35.0 }
+  },
+
+  "smi_normal_ranges": {
+    "male":   { "normal_min": 7.0,  "normal_max": 12.0 },
+    "female": { "normal_min": 5.5,  "normal_max": 9.5 }
+  },
+
+  "phase_angle_percentiles": {
+    "male": [
+      { "age": 20, "p5": 5.2, "p50": 6.8, "p95": 8.2 },
+      { "age": 30, "p5": 5.0, "p50": 6.6, "p95": 8.0 },
+      { "age": 40, "p5": 4.8, "p50": 6.3, "p95": 7.7 },
+      { "age": 50, "p5": 4.5, "p50": 6.0, "p95": 7.4 },
+      { "age": 60, "p5": 4.2, "p50": 5.7, "p95": 7.0 },
+      { "age": 70, "p5": 3.9, "p50": 5.3, "p95": 6.6 },
+      { "age": 80, "p5": 3.6, "p50": 5.0, "p95": 6.2 }
+    ],
+    "female": [
+      { "age": 20, "p5": 4.8, "p50": 6.2, "p95": 7.6 },
+      { "age": 30, "p5": 4.6, "p50": 6.0, "p95": 7.4 },
+      { "age": 40, "p5": 4.4, "p50": 5.8, "p95": 7.1 },
+      { "age": 50, "p5": 4.1, "p50": 5.5, "p95": 6.8 },
+      { "age": 60, "p5": 3.8, "p50": 5.2, "p95": 6.4 },
+      { "age": 70, "p5": 3.5, "p50": 4.9, "p95": 6.0 },
+      { "age": 80, "p5": 3.2, "p50": 4.6, "p95": 5.7 }
+    ]
+  },
+
+  "smm_age_percentiles": {
+    "male": [
+      { "age": 20, "p5": 24.0, "p25": 28.0, "p50": 32.0, "p75": 36.0, "p95": 40.0 },
+      { "age": 30, "p5": 23.0, "p25": 27.0, "p50": 31.0, "p75": 35.0, "p95": 39.0 },
+      { "age": 40, "p5": 22.0, "p25": 26.0, "p50": 30.0, "p75": 34.0, "p95": 38.0 },
+      { "age": 50, "p5": 21.0, "p25": 25.0, "p50": 29.0, "p75": 33.0, "p95": 37.0 },
+      { "age": 60, "p5": 20.0, "p25": 24.0, "p50": 28.0, "p75": 32.0, "p95": 36.0 },
+      { "age": 70, "p5": 19.0, "p25": 23.0, "p50": 27.0, "p75": 31.0, "p95": 35.0 },
+      { "age": 80, "p5": 18.0, "p25": 22.0, "p50": 26.0, "p75": 30.0, "p95": 34.0 }
+    ],
+    "female": [
+      { "age": 20, "p5": 16.0, "p25": 19.0, "p50": 22.0, "p75": 25.0, "p95": 28.0 },
+      { "age": 30, "p5": 15.5, "p25": 18.5, "p50": 21.5, "p75": 24.5, "p95": 27.5 },
+      { "age": 40, "p5": 15.0, "p25": 18.0, "p50": 21.0, "p75": 24.0, "p95": 27.0 },
+      { "age": 50, "p5": 14.5, "p25": 17.5, "p50": 20.5, "p75": 23.5, "p95": 26.5 },
+      { "age": 60, "p5": 14.0, "p25": 17.0, "p50": 20.0, "p75": 23.0, "p95": 26.0 },
+      { "age": 70, "p5": 13.5, "p25": 16.5, "p50": 19.5, "p75": 22.5, "p95": 25.5 },
+      { "age": 80, "p5": 13.0, "p25": 16.0, "p50": 19.0, "p75": 22.0, "p95": 25.0 }
+    ]
+  },
+
+  "segmental_muscle_ranges": {
+    "male": {
+      "arm_right":  { "min": 1.80, "avg": 2.60, "max": 3.50 },
+      "arm_left":   { "min": 1.75, "avg": 2.55, "max": 3.45 },
+      "torso":      { "min": 9.00, "avg": 12.50, "max": 16.00 },
+      "leg_right":  { "min": 5.50, "avg": 7.50, "max": 9.50 },
+      "leg_left":   { "min": 5.40, "avg": 7.40, "max": 9.40 }
+    },
+    "female": {
+      "arm_right":  { "min": 1.10, "avg": 1.70, "max": 2.40 },
+      "arm_left":   { "min": 1.05, "avg": 1.65, "max": 2.35 },
+      "torso":      { "min": 6.50, "avg": 9.00, "max": 12.00 },
+      "leg_right":  { "min": 3.50, "avg": 5.00, "max": 6.80 },
+      "leg_left":   { "min": 3.40, "avg": 4.90, "max": 6.70 }
+    }
+  }
+}
