@@ -324,9 +324,6 @@ function updateBioUI(data, inputs) {
         palZoneEl.style.color = (p >= 1.9) ? '#1A2A4A' : (p >= 1.6 ? '#2d7a4a' : (p >= 1.4 ? '#cd7f32' : '#b94a4a'));
     }
 
-    // 2. Barras de progreso (Muscle y Fat)
-    document.querySelector('.muscle-bar').style.width = `${data.muscle_score}%`;
-    document.querySelector('.fat-bar').style.width = `${data.fat_score}%`;
 
     // 3. Hallazgos clínicos (motor de reglas) + hidratación/visceral
     const clinicalText = document.getElementById('clinical-text');
