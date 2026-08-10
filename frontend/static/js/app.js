@@ -157,7 +157,14 @@ function initBioForm() {
             ecw: document.getElementById('input-ecw').value || null,
             fat_mass: document.getElementById('input-fat-mass').value || null,
             visceral_fat: document.getElementById('input-visceral').value || null,
-            waist: document.getElementById('input-waist').value || null
+            waist: document.getElementById('input-waist').value || null,
+            // Fase 3
+            phase_angle_dev: document.getElementById('input-phase-dev').value || null,
+            seg_arm_r: document.getElementById('input-seg-arm-r').value || null,
+            seg_arm_l: document.getElementById('input-seg-arm-l').value || null,
+            seg_torso: document.getElementById('input-seg-torso').value || null,
+            seg_leg_r: document.getElementById('input-seg-leg-r').value || null,
+            seg_leg_l: document.getElementById('input-seg-leg-l').value || null
         };
 
         try {

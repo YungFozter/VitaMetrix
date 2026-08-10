@@ -10,6 +10,12 @@ from calculations import (
     analyze_visceral_fat,
     build_clinical_report,
 )
+from reference import (
+    get_phase_angle_percentile,
+    get_smm_percentile,
+    analyze_segmental,
+    analyze_composition_indices,
+)
 
 load_dotenv()
 
@@ -99,6 +105,19 @@ def calculate():
     fat_mass = data.get('fat_mass') # Masa grasa (kg)
     visceral_fat = data.get('visceral_fat')  # Grasa visceral (L)
     waist = data.get('waist')       # Circunferencia de cintura (cm)
+    # Campos Fase 3 (opcionales, del dispositivo)
+    phase_angle_dev = data.get('phase_angle_dev')  # Ángulo de fase medido por el equipo
+    seg_arm_r = data.get('seg_arm_r')
+    seg_arm_l = data.get('seg_arm_l')
+    seg_torso = data.get('seg_torso')
+    seg_leg_r = data.get('seg_leg_r')
+    seg_leg_l = data.get('seg_leg_l')
+    # Índices ya calculados por el dispositivo (opcionales; si no, los estimamos)
+    dev_imc = data.get('imc')
+    dev_fmi = data.get('fmi')
+    dev_ffmi = data.get('ffmi')
+    dev_fm_pct = data.get('fm_pct')
+    dev_smi = data.get('smi')
     
     # Validar numéricos opcionales
     def _num(v):
@@ -113,6 +132,17 @@ def calculate():
     fat_mass = _num(fat_mass)
     visceral_fat = _num(visceral_fat)
     waist = _num(waist)
+    phase_angle_dev = _num(phase_angle_dev)
+    seg_arm_r = _num(seg_arm_r)
+    seg_arm_l = _num(seg_arm_l)
+    seg_torso = _num(seg_torso)
+    seg_leg_r = _num(seg_leg_r)
+    seg_leg_l = _num(seg_leg_l)
+    dev_imc = _num(dev_imc)
+    dev_fmi = _num(dev_fmi)
+    dev_ffmi = _num(dev_ffmi)
+    dev_fm_pct = _num(dev_fm_pct)
+    dev_smi = _num(dev_smi)
     
     # Datos paciente
     patient_idp = data.get('patient_idp', '000000')
@@ -139,6 +169,41 @@ def calculate():
         biva_info['phase_angle'],
         ecw_tbw_ratio=hydration_info.get('ecw_tbw_ratio')
     )
+
+    # --- FASE 3: Módulos 3, 6 + índices de composición (reference.py) ---
+    phase_for_percentile = phase_angle_dev if phase_angle_dev else biva_info['phase_angle']
+    phase_percentile = get_phase_angle_percentile(phase_for_percentile, age, gender)
+    smm_percentile = get_smm_percentile(smm, age, gender) if smm else None
+
+    segments = {
+        'arm_right': seg_arm_r, 'arm_left': seg_arm_l,
+        'torso': seg_torso, 'leg_right': seg_leg_r, 'leg_left': seg_leg_l
+    }
+    has_segments = any(v is not None for v in segments.values())
+    segmental_info = analyze_segmental(segments, gender) if has_segments else {"segments": {}, "asymmetries": []}
+
+    # Índices: usar los del dispositivo si se dieron, si no estimar
+    if dev_imc or dev_fmi or dev_ffmi or dev_fm_pct or dev_smi:
+        composition_indices = {
+            "available": True,
+            "imc": dev_imc, "imc_status": None,
+            "fmi": dev_fmi, "fmi_status": None,
+            "ffmi": dev_ffmi, "ffmi_status": None,
+            "fm_pct": dev_fm_pct, "fm_pct_status": None,
+            "smi": dev_smi, "smi_status": None,
+            "from_device": True
+        }
+    else:
+        composition_indices = analyze_composition_indices(weight, height, fat_mass, smm, gender)
+
+    # BCC (gráfico grasa vs músculo): posición relativa estimada
+    bcc = {"available": False}
+    if fat_mass and smm and weight:
+        bcc = {
+            "available": True,
+            "fat_pct": round(fat_mass / weight * 100, 1),
+            "muscle_pct": round(smm / weight * 100, 1)
+        }
     
     # Guardar en Supabase (columnas nuevas son opcionales; se ignoran si no existen)
     if supabase:
@@ -179,7 +244,13 @@ def calculate():
         "tee_kcal": energy_info['tee_kcal'],
         "hydration": hydration_info,
         "visceral": visceral_info,
-        "clinical_findings": clinical_findings
+        "clinical_findings": clinical_findings,
+        # Fase 3: módulos 3, 6 + índices
+        "phase_percentile": phase_percentile,
+        "smm_percentile": smm_percentile,
+        "segmental": segmental_info,
+        "composition_indices": composition_indices,
+        "bcc": bcc
     }
     
     return jsonify(response)
