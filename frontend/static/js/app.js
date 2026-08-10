@@ -291,8 +291,18 @@ function updateBioUI(data, inputs) {
     // 1. Valores numéricos base
     document.getElementById('global-score').textContent = data.score;
     document.getElementById('rank-badge').textContent = data.rank;
-    document.getElementById('muscle-score').textContent = data.muscle_score;
-    document.getElementById('fat-score').textContent = data.fat_score;
+    
+    // Circular Gauges for Muscle and Fat
+    const muscleGauge = document.getElementById('muscle-gauge');
+    const fatGauge = document.getElementById('fat-gauge');
+    if (muscleGauge) {
+        muscleGauge.style.setProperty('--muscle-pct', `${data.muscle_score}%`);
+        document.getElementById('muscle-score').textContent = data.muscle_score;
+    }
+    if (fatGauge) {
+        fatGauge.style.setProperty('--fat-pct', `${data.fat_score}%`);
+        document.getElementById('fat-score').textContent = data.fat_score;
+    }
 
     document.getElementById('res-value').textContent = inputs.resistance;
     document.getElementById('xc-value').textContent = inputs.reactance;
