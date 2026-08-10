@@ -296,6 +296,18 @@ function updateBioUI(data, inputs) {
     document.getElementById('ree-value').innerHTML = `${data.ree_kcal} <small>kcal</small>`;
     document.getElementById('tee-value').innerHTML = `${data.tee_kcal} <small>kcal</small>`;
     document.getElementById('pal-value').textContent = inputs.pal;
+    drawPALGauge(inputs.pal);
+    // Etiqueta de zona PAL
+    const palZoneEl = document.getElementById('pal-zone');
+    if (palZoneEl) {
+        const p = parseFloat(inputs.pal) || 1.2;
+        let zone = 'Sedentario';
+        if (p >= 1.9) zone = 'Intenso';
+        else if (p >= 1.6) zone = 'Moderado';
+        else if (p >= 1.4) zone = 'Ligero';
+        palZoneEl.textContent = zone;
+        palZoneEl.style.color = (p >= 1.9) ? '#1A2A4A' : (p >= 1.6 ? '#2d7a4a' : (p >= 1.4 ? '#cd7f32' : '#b94a4a'));
+    }
 
     // 2. Barras de progreso (Muscle y Fat)
     document.querySelector('.muscle-bar').style.width = `${data.muscle_score}%`;
@@ -323,8 +335,8 @@ function updateBioUI(data, inputs) {
     document.getElementById('hydration-tag').textContent = `💧 ${data.hydration_status}`;
     document.getElementById('cell-status').textContent = data.cell_status;
 
-    // 4. Dibujar el gráfico BIVA en Canvas
-    drawBIVAVector(inputs.resistance, inputs.reactance);
+    // 4. Dibujar el gráfico BIVA en Canvas (normalizado por altura)
+    drawBIVAVector(inputs.resistance, inputs.reactance, inputs.height, inputs.gender);
 
     // ===== FASE 4: tarjetas nuevas =====
 
@@ -386,6 +398,10 @@ function updateBioUI(data, inputs) {
         document.getElementById('smm-pct-bar').style.width = `${data.smm_percentile}%`;
     }
     if (pctAvailable) { pctNa.style.display = 'none'; pctGrid.style.display = 'block'; }
+    // Curva SMM × edad (Módulo 6) si hay SMM y curvas disponibles
+    if (data.smm_curves && data.smm_curves.ages) {
+        drawSMMCurve(data.smm_curves, data.inputs_echo?.age, parseFloat(inputs.smm) || null);
+    }
 
     // CARD 9: Análisis hídrico
     const hyd = data.hydration;
@@ -441,8 +457,9 @@ function updateBioUI(data, inputs) {
     }
 }
 
-function drawBIVAVector(R, Xc) {
+function drawBIVAVector(R, Xc, height, gender) {
     const canvas = document.getElementById('bivaCanvas');
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     const w = canvas.width;
     const h = canvas.height;
@@ -468,31 +485,55 @@ function drawBIVAVector(R, Xc) {
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Etiquetas de ejes
+    // --- Normalización por altura (manual Módulo 1) ---
+    const hM = (height || 170) / 100.0;
+    const rH = R / hM;
+    const xcH = Xc / hM;
+    const MIN_RH = 200, MAX_RH = 600;   // eje horizontal (Ohm/m)
+    const MIN_XCH = 20,  MAX_XCH = 100; // eje vertical (Ohm/m)
+    const pad = 18;
+    const plotW = w - 2 * pad;
+    const plotH = h - 2 * pad;
+    const toX = (val) => pad + ((val - MIN_RH) / (MAX_RH - MIN_RH)) * plotW;
+    const toY = (val) => (h - pad) - ((val - MIN_XCH) / (MAX_XCH - MIN_XCH)) * plotH;
+
+    // Etiquetas de ejes (después de definir pad/center para no romper el render)
     ctx.fillStyle = '#5a6a82';
     ctx.font = '10px Inter';
-    ctx.fillText('R', w - 15, centerY - 5);
-    ctx.fillText('Xc', centerX + 5, 20);
+    ctx.fillText('R/H →', w - 42, centerY - 5);
+    ctx.fillText('↑ Xc/H', centerX + 5, pad + 8);
 
-    // --- Escalar los datos para que quepan en el canvas ---
-    // Simulamos un rango donde el centro (centerX, centerY) es (400, 40)
-    const scaleR = (R - 400) / 400; // Si R=600 -> 0.5
-    const scaleXc = (Xc - 40) / 40; // Si Xc=60 -> 0.5
+    function ellipse(cx, cy, rxRh, ryXcH, color) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([3, 5]);
+        ctx.beginPath();
+        ctx.ellipse(
+            toX(cx), toY(cy),
+            (rxRh / (MAX_RH - MIN_RH)) * plotW,
+            (ryXcH / (MAX_XCH - MIN_XCH)) * plotH,
+            0, 0, 2 * Math.PI
+        );
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.restore();
+    }
+    ellipse(380, 55, 90, 22, 'rgba(45,122,74,0.55)');  // Población normal
+    ellipse(300, 72, 70, 18, 'rgba(205,127,50,0.6)');  // Atletas
 
-    const pixelX = centerX + (scaleR * (w / 2 - 20));
-    const pixelY = centerY - (scaleXc * (h / 2 - 20)); // Invertido porque Y va hacia abajo
-
-    // --- Dibujar el punto vectorial ---
+    // --- Punto vectorial del paciente ---
+    const px = toX(rH);
+    const py = toY(xcH);
     ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.lineTo(pixelX, pixelY);
+    ctx.moveTo(pad, h - pad);
+    ctx.lineTo(px, py);
     ctx.strokeStyle = '#1A2A4A';
     ctx.lineWidth = 3;
     ctx.stroke();
 
-    // Círculo en el punto
     ctx.beginPath();
-    ctx.arc(pixelX, pixelY, 8, 0, 2 * Math.PI);
+    ctx.arc(px, py, 8, 0, 2 * Math.PI);
     ctx.fillStyle = '#b94a4a';
     ctx.shadowColor = 'rgba(185, 74, 74, 0.4)';
     ctx.shadowBlur = 10;
@@ -501,18 +542,137 @@ function drawBIVAVector(R, Xc) {
     ctx.strokeStyle = 'white';
     ctx.lineWidth = 2;
     ctx.stroke();
+}
 
-    // Zonas de referencia (Elipses BIVA simplificadas)
-    ctx.strokeStyle = 'rgba(26, 42, 74, 0.1)';
+// --- 4b. CURVA SMM × EDAD (Módulo 6) ---
+function drawSMMCurve(curves, patientAge, patientSMM) {
+    const canvas = document.getElementById('smmCurveCanvas');
+    if (!canvas || !curves) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const ages = curves.ages;
+    const aMin = Math.min(...ages), aMax = Math.max(...ages);
+    const allVals = [].concat(curves.p5, curves.p25, curves.p50, curves.p75, curves.p95, [patientSMM || 0]);
+    const vMin = Math.min(...allVals) - 3, vMax = Math.max(...allVals) + 3;
+
+    const padL = 30, padR = 12, padT = 12, padB = 22;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const xOf = (age) => padL + ((age - aMin) / (aMax - aMin || 1)) * plotW;
+    const yOf = (val) => padT + plotH - ((val - vMin) / (vMax - vMin || 1)) * plotH;
+
+    // Ejes
+    ctx.strokeStyle = '#c0c8d8';
     ctx.lineWidth = 1;
-    ctx.setLineDash([3, 6]);
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+
+    // Curvas de referencia (P5, P25, P50, P75, P95)
+    const series = [
+        { key: 'p5',  color: 'rgba(185,74,74,0.5)' },
+        { key: 'p25', color: 'rgba(205,127,50,0.7)' },
+        { key: 'p50', color: '#1A2A4A' },
+        { key: 'p75', color: 'rgba(205,127,50,0.7)' },
+        { key: 'p95', color: 'rgba(185,74,74,0.5)' }
+    ];
+    series.forEach(s => {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = (s.key === 'p50') ? 2.2 : 1.3;
+        ctx.setLineDash(s.key === 'p50' ? [] : [4, 3]);
+        ctx.beginPath();
+        ages.forEach((age, i) => {
+            const x = xOf(age), y = yOf(curves[s.key][i]);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    // Punto del paciente
+    if (patientSMM && patientAge >= aMin && patientAge <= aMax) {
+        const px = xOf(patientAge), py = yOf(patientSMM);
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#2d7a4a';
+        ctx.shadowColor = 'rgba(45,122,74,0.5)';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = 'white';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+
+    // Etiquetas
+    ctx.fillStyle = '#5a6a82';
+    ctx.font = '9px Inter';
+    ctx.fillText(aMin + 'a', padL, h - 6);
+    ctx.fillText(aMax + 'a', padL + plotW - 18, h - 6);
+    ctx.fillText(Math.round(vMax), 4, padT + 6);
+    ctx.fillText(Math.round(vMin), 4, padT + plotH);
+}
+
+// --- 4c. VELOCÍMETRO PAL (Módulo 7) ---
+function drawPALGauge(pal) {
+    const canvas = document.getElementById('palGaugeCanvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const cx = w / 2, cy = h - 12;
+    const radius = Math.min(w / 2, h) - 14;
+    const START = Math.PI * 0.85;   // arranque del arco
+    const END = Math.PI * 2.15;     // fin del arco (semicírculo sesgado)
+    const ANG = END - START;
+
+    const PAL_MIN = 1.2, PAL_MAX = 2.5;
+    const clamp = (v) => Math.max(PAL_MIN, Math.min(PAL_MAX, v || PAL_MIN));
+    const angOf = (v) => START + ((clamp(v) - PAL_MIN) / (PAL_MAX - PAL_MIN)) * ANG;
+
+    // Zonas de color (Sedentario / Ligero / Moderado / Intenso)
+    const zones = [
+        { from: 1.2, to: 1.4,  color: 'rgba(185,74,74,0.35)' },
+        { from: 1.4, to: 1.6,  color: 'rgba(205,127,50,0.4)' },
+        { from: 1.6, to: 1.9,  color: 'rgba(45,122,74,0.4)' },
+        { from: 1.9, to: 2.5,  color: 'rgba(26,42,74,0.45)' }
+    ];
+    zones.forEach(z => {
+        ctx.beginPath();
+        ctx.arc(cx, cy, radius, angOf(z.from), angOf(z.to));
+        ctx.strokeStyle = z.color;
+        ctx.lineWidth = 12;
+        ctx.stroke();
+    });
+
+    // Arco base tenue
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY, 70, 50, 0, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, radius, START, END);
+    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
+    ctx.lineWidth = 12;
+    ctx.stroke();
+
+    // Aguja
+    const ang = angOf(pal);
+    const nx = cx + Math.cos(ang) * (radius - 6);
+    const ny = cy + Math.sin(ang) * (radius - 6);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(nx, ny);
+    ctx.strokeStyle = '#1A2A4A';
+    ctx.lineWidth = 3;
     ctx.stroke();
     ctx.beginPath();
-    ctx.ellipse(centerX, centerY, 100, 70, 0, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1A2A4A';
+    ctx.fill();
+
+    // Etiqueta de valor
+    ctx.fillStyle = '#1A2A4A';
+    ctx.font = 'bold 16px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText((pal || '--').toString(), cx, cy - 8);
+    ctx.textAlign = 'left';
 }
 
 // --- 5. CLIENTES ---

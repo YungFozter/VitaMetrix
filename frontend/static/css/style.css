@@ -678,17 +678,15 @@ body {
 .label-sm { font-size: 0.7rem; text-transform: uppercase; color: #6a7a92; letter-spacing: 0.5px; }
 .kcal-value { font-size: 2.2rem; font-weight: 700; color: #1A2A4A; }
 .kcal-value small { font-size: 0.9rem; font-weight: 400; color: #6a7a92; }
-.pal-box {
-    margin-top: 1rem; background: rgba(26, 42, 74, 0.06);
-    padding: 0.8rem; border-radius: 16px; display: flex;
-    justify-content: space-between; align-items: center;
-    transition: all 0.3s ease;
+.pal-gauge-wrap {
+    margin-top: 1rem; display: flex; flex-direction: column; align-items: center;
 }
-.pal-box:hover {
-    background: rgba(26, 42, 74, 0.1); transform: translateX(4px);
-    box-shadow: 0 4px 12px rgba(26, 42, 74, 0.05);
-}
-.pal-number { font-size: 2rem; font-weight: 700; color: #1A2A4A; }
+.pal-gauge-wrap canvas { max-width: 200px; }
+.pal-readout { margin-top: 0.2rem; display: flex; flex-direction: column; align-items: center; }
+.pal-number { font-size: 1.8rem; font-weight: 700; color: #1A2A4A; line-height: 1; }
+.pal-zone { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.1rem; }
+.smm-curve-wrap { display: flex; flex-direction: column; gap: 0.3rem; }
+.smm-curve-wrap canvas { border-radius: 12px; }
 
 /* CARD 5: INTERPRETATION */
 .clinical-text {

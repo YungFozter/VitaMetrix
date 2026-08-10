@@ -174,9 +174,13 @@
                                         <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
                                     </div>
                                 </div>
-                                <div class="pal-box mt-4">
-                                    <span>Nivel de Actividad Física (PAL)</span>
-                                    <span class="pal-number" id="pal-value">--</span>
+                                <div class="pal-gauge-wrap mt-4">
+                                    <span class="label-sm" style="font-size:0.7rem;">Nivel de Actividad Física (PAL)</span>
+                                    <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto;"></canvas>
+                                    <div class="pal-readout">
+                                        <span class="pal-number" id="pal-value">--</span>
+                                        <span class="pal-zone" id="pal-zone">--</span>
+                                    </div>
                                 </div>
                             </section>
 
@@ -215,7 +219,7 @@
                             </section>
 
                             <!-- CARD 8: Percentiles -->
-                            <section class="bento-card bio-glass card-percentiles" style="grid-column: span 1; grid-row: span 1;">
+                            <section class="bento-card bio-glass card-percentiles" style="grid-column: span 2; grid-row: span 2;">
                                 <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Percentiles (vs edad)</div>
                                 <div id="pct-na" class="card-na">Introduce SMM (y/o ángulo medido) para estimar percentiles.</div>
                                 <div id="pct-grid" style="display:none;">
@@ -226,6 +230,10 @@
                                     <div class="pct-row">
                                         <div class="pct-head"><span class="pct-label">Masa Muscular (SMM)</span><span class="pct-val" id="smm-pct-val">--</span></div>
                                         <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
+                                    </div>
+                                    <div class="smm-curve-wrap mt-3">
+                                        <span class="ci-label" style="font-size:0.7rem;">Curva de referencia SMM × edad</span>
+                                        <canvas id="smmCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
                                     </div>
                                 </div>
                             </section>

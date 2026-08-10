@@ -138,6 +138,28 @@ def analyze_segmental(segments, gender="male"):
     return {"segments": result, "asymmetries": asymmetries}
 
 
+def get_smm_age_curves(gender="male"):
+    """
+    Devuelve las curvas de referencia de SMM por edad para graficar
+    (Módulo 6 del manual: líneas P5/25/50/75/95 y punto del paciente).
+    Retorna {"ages": [...], "p5": [...], "p25": [...], "p50": [...],
+             "p75": [...], "p95": [...]} listas alineadas por edad.
+    """
+    tables = load_tables()
+    curves = tables.get("smm_age_percentiles", {}).get(gender, [])
+    if not curves:
+        return None
+    pts = sorted(curves, key=lambda c: c["age"])
+    return {
+        "ages": [c["age"] for c in pts],
+        "p5": [c["p5"] for c in pts],
+        "p25": [c["p25"] for c in pts],
+        "p50": [c["p50"] for c in pts],
+        "p75": [c["p75"] for c in pts],
+        "p95": [c["p95"] for c in pts],
+    }
+
+
 def analyze_composition_indices(weight, height, fat_mass, smm, gender="male"):
     """
     Calcula IMC, FMI, FFMI, FM%, SMI y sus semáforos.
