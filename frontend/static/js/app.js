@@ -470,78 +470,91 @@ function drawBIVAVector(R, Xc, height, gender) {
     // Limpiar
     ctx.clearRect(0, 0, w, h);
 
-    // --- Dibujar ejes ---
-    ctx.strokeStyle = '#c0c8d8';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([4, 4]);
-    // Eje X (Resistencia)
-    ctx.beginPath();
-    ctx.moveTo(20, centerY);
-    ctx.lineTo(w - 20, centerY);
-    ctx.stroke();
-    // Eje Y (Reactancia)
-    ctx.beginPath();
-    ctx.moveTo(centerX, 20);
-    ctx.lineTo(centerX, h - 20);
-    ctx.stroke();
-    ctx.setLineDash([]);
+    // --- Dibujar ejes principales (Cruz) ---
+    ctx.strokeStyle = '#9ca3af'; // Gris medio-claro
+    ctx.lineWidth = 1;
+    // Eje X (Horizontal)
+    ctx.beginPath(); ctx.moveTo(20, centerY); ctx.lineTo(w - 20, centerY); ctx.stroke();
+    // Eje Y (Vertical)
+    ctx.beginPath(); ctx.moveTo(centerX, 20); ctx.lineTo(centerX, h - 20); ctx.stroke();
 
-    // --- Normalización por altura (manual Módulo 1) ---
+    // Etiquetas de los ejes
+    ctx.fillStyle = '#4b5563'; // Gris oscuro
+    ctx.font = '12px Inter';
+    ctx.fillText('Z(R/H)', w - 60, centerY - 8);
+    ctx.fillText('Z(Xc/H)', centerX - 25, 18);
+
+    // --- Dibujar Ejes Diagonales con flechas ---
+    // Helper para flechas
+    function drawArrowLine(x1, y1, x2, y2) {
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - 8 * Math.cos(angle - Math.PI / 6), y2 - 8 * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - 8 * Math.cos(angle + Math.PI / 6), y2 - 8 * Math.sin(angle + Math.PI / 6));
+        ctx.closePath();
+        ctx.fillStyle = '#6b7280';
+        ctx.fill();
+    }
+    
+    ctx.strokeStyle = '#6b7280';
+    // Diagonal 1 (Agua): De arriba-derecha a abajo-izquierda
+    drawArrowLine(centerX + 120, centerY - 120, centerX - 120, centerY + 120);
+    // Diagonal 2 (Masa Celular): De abajo-derecha a arriba-izquierda
+    drawArrowLine(centerX + 80, centerY + 80, centerX - 110, centerY - 110);
+    
+    // Etiquetas de diagonales
+    ctx.fillText('agua', centerX - 145, centerY + 125);
+    ctx.fillText('Masa Celular', centerX - 130, centerY - 120);
+    ctx.fillText('Porcentaje', centerX + 125, centerY - 125);
+
+    // --- Dibujar Elipses (Rotadas ~45 grados) ---
+    // Ángulo de rotación típico en BIVA (aprox -45° a -50°)
+    const rot = -45 * Math.PI / 180;
+    
+    function drawEllipse(rx, ry, fillStyle, strokeStyle) {
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(rot);
+        ctx.beginPath();
+        ctx.ellipse(0, 0, rx, ry, 0, 0, 2 * Math.PI);
+        if (fillStyle) {
+            ctx.fillStyle = fillStyle;
+            ctx.fill();
+        }
+        if (strokeStyle) {
+            ctx.strokeStyle = strokeStyle;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        ctx.restore();
+    }
+
+    // 1. Elipse Exterior (solo borde)
+    drawEllipse(130, 50, null, '#9ca3af');
+    // 2. Elipse Media (relleno gris-azulado)
+    drawEllipse(100, 38, 'rgba(156, 163, 175, 0.3)', '#9ca3af');
+    // 3. Elipse Interior (relleno verde)
+    drawEllipse(70, 25, 'rgba(134, 175, 142, 0.6)', '#7a9f82');
+
+    // --- Normalización y Punto del Paciente ---
     const hM = (height || 170) / 100.0;
     const rH = R / hM;
     const xcH = Xc / hM;
-    const MIN_RH = 200, MAX_RH = 600;   // eje horizontal (Ohm/m)
-    const MIN_XCH = 20,  MAX_XCH = 100; // eje vertical (Ohm/m)
-    const pad = 18;
-    const plotW = w - 2 * pad;
-    const plotH = h - 2 * pad;
-    const toX = (val) => pad + ((val - MIN_RH) / (MAX_RH - MIN_RH)) * plotW;
-    const toY = (val) => (h - pad) - ((val - MIN_XCH) / (MAX_XCH - MIN_XCH)) * plotH;
+    
+    // Mapeo inverso de valores a píxeles (R: 200-600, Xc: 20-100)
+    // Para que el centro (centerX, centerY) coincida con los valores medios poblacionales (~400, ~50)
+    const px = centerX + ((rH - 400) / 200) * 120;
+    const py = centerY - ((xcH - 50) / 40) * 120;
 
-    // Etiquetas de ejes (después de definir pad/center para no romper el render)
-    ctx.fillStyle = '#5a6a82';
-    ctx.font = '10px Inter';
-    ctx.fillText('R/H →', w - 42, centerY - 5);
-    ctx.fillText('↑ Xc/H', centerX + 5, pad + 8);
-
-    function ellipse(cx, cy, rxRh, ryXcH, color) {
-        ctx.save();
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.2;
-        ctx.setLineDash([3, 5]);
-        ctx.beginPath();
-        ctx.ellipse(
-            toX(cx), toY(cy),
-            (rxRh / (MAX_RH - MIN_RH)) * plotW,
-            (ryXcH / (MAX_XCH - MIN_XCH)) * plotH,
-            0, 0, 2 * Math.PI
-        );
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.restore();
-    }
-    ellipse(380, 55, 90, 22, 'rgba(45,122,74,0.55)');  // Población normal
-    ellipse(300, 72, 70, 18, 'rgba(205,127,50,0.6)');  // Atletas
-
-    // --- Punto vectorial del paciente ---
-    const px = toX(rH);
-    const py = toY(xcH);
+    // Dibujar SOLO el punto oscuro (sin vector/línea)
     ctx.beginPath();
-    ctx.moveTo(pad, h - pad);
-    ctx.lineTo(px, py);
-    ctx.strokeStyle = '#1A2A4A';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(px, py, 8, 0, 2 * Math.PI);
-    ctx.fillStyle = '#b94a4a';
-    ctx.shadowColor = 'rgba(185, 74, 74, 0.4)';
-    ctx.shadowBlur = 10;
+    ctx.arc(px, py, 9, 0, 2 * Math.PI);
+    ctx.fillStyle = '#374151'; // Gris muy oscuro / negro suave
     ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.strokeStyle = 'white';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#9ca3af'; // Borde gris claro
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 }
 
