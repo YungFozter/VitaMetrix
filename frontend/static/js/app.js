@@ -650,50 +650,68 @@ function drawPALGauge(pal) {
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    const cx = w / 2, cy = h - 12;
-    const radius = Math.min(w / 2, h) - 14;
-    const START = Math.PI * 0.85;   // arranque del arco
-    const END = Math.PI * 2.15;     // fin del arco (semicírculo sesgado)
+    // Ajustamos 'cy' para que el arco (que baja del ecuador) no se corte al fondo
+    const cy = h - 45; 
+    const cx = w / 2;
+    const radius = Math.min(cx, cy) - 20;
+    
+    const START = Math.PI * 0.85;   
+    const END = Math.PI * 2.15;     
     const ANG = END - START;
 
     const PAL_MIN = 1.2, PAL_MAX = 2.5;
     const clamp = (v) => Math.max(PAL_MIN, Math.min(PAL_MAX, v || PAL_MIN));
     const angOf = (v) => START + ((clamp(v) - PAL_MIN) / (PAL_MAX - PAL_MIN)) * ANG;
 
-    // Zonas de color (Sedentario / Ligero / Moderado / Intenso)
+    // Arco base tenue (fondo)
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, START, END);
+    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.lineWidth = 14;
+    ctx.stroke();
+
+    // Zonas de color fieles al diseño
     const zones = [
-        { from: 1.2, to: 1.4,  color: 'rgba(185,74,74,0.35)' },
-        { from: 1.4, to: 1.6,  color: 'rgba(205,127,50,0.4)' },
-        { from: 1.6, to: 1.9,  color: 'rgba(45,122,74,0.4)' },
-        { from: 1.9, to: 2.5,  color: 'rgba(26,42,74,0.45)' }
+        { from: 1.2, to: 1.4,  color: '#d5adaa' }, // Sedentario
+        { from: 1.4, to: 1.6,  color: '#d9bfa2' }, // Ligero
+        { from: 1.6, to: 1.9,  color: '#9fb7a2' }, // Moderado
+        { from: 1.9, to: 2.5,  color: '#88939e' }  // Intenso
     ];
-    zones.forEach(z => {
+
+    zones.forEach((z) => {
         ctx.beginPath();
-        ctx.arc(cx, cy, radius, angOf(z.from), angOf(z.to));
+        // Se suma un pelín al ángulo final para evitar brechas de 1px entre colores
+        ctx.arc(cx, cy, radius, angOf(z.from), angOf(z.to) + 0.02);
         ctx.strokeStyle = z.color;
-        ctx.lineWidth = 12;
+        ctx.lineWidth = 14;
+        ctx.lineCap = 'butt';
         ctx.stroke();
     });
 
-    // Arco base tenue
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, START, END);
-    ctx.strokeStyle = 'rgba(0,0,0,0.08)';
-    ctx.lineWidth = 12;
-    ctx.stroke();
-
-    // Aguja
+    // Aguja (Diseño elegante tipo poligonal)
     const ang = angOf(pal);
-    const nx = cx + Math.cos(ang) * (radius - 6);
-    const ny = cy + Math.sin(ang) * (radius - 6);
+    const needleLength = radius - 15;
+    
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(ang);
     ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(nx, ny);
-    ctx.strokeStyle = '#1A2A4A';
-    ctx.lineWidth = 3;
-    ctx.stroke();
+    ctx.moveTo(0, -3.5); // base (izquierda)
+    ctx.lineTo(needleLength, 0); // punta
+    ctx.lineTo(0, 3.5); // base (derecha)
+    ctx.fillStyle = '#1A2A4A';
+    ctx.fill();
+    ctx.restore();
+
+    // Eje central (pivote con detalle blanco)
     ctx.beginPath();
-    ctx.arc(cx, cy, 5, 0, 2 * Math.PI);
+    ctx.arc(cx, cy, 6.5, 0, 2 * Math.PI);
+    ctx.fillStyle = '#1A2A4A';
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx, cy, 2, 0, 2 * Math.PI);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
     ctx.fillStyle = '#1A2A4A';
     ctx.fill();
 
