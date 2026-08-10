@@ -150,7 +150,14 @@ function initBioForm() {
             height: parseFloat(document.getElementById('input-height').value),
             age: parseInt(document.getElementById('input-age').value),
             gender: document.getElementById('input-gender').value,
-            pal: parseFloat(document.getElementById('input-pal').value)
+            pal: parseFloat(document.getElementById('input-pal').value),
+            // Campos del dispositivo (opcionales)
+            smm: document.getElementById('input-smm').value || null,
+            tbw: document.getElementById('input-tbw').value || null,
+            ecw: document.getElementById('input-ecw').value || null,
+            fat_mass: document.getElementById('input-fat-mass').value || null,
+            visceral_fat: document.getElementById('input-visceral').value || null,
+            waist: document.getElementById('input-waist').value || null
         };
 
         try {
@@ -271,14 +278,25 @@ function updateBioUI(data, inputs) {
     document.querySelector('.muscle-bar').style.width = `${data.muscle_score}%`;
     document.querySelector('.fat-bar').style.width = `${data.fat_score}%`;
 
-    // 3. Interpretación Clínica
+    // 3b. Hallazgos clínicos (motor de reglas) + hidratación/visceral
     const clinicalText = document.getElementById('clinical-text');
-    clinicalText.innerHTML = `
-        <strong>Análisis integral:</strong> La puntuación global es de ${data.score}/100. 
-        El ángulo de fase en ${data.phase_angle}° indica ${data.cell_status.toLowerCase()}. 
-        Puntuación de masa muscular: ${data.muscle_score} pts. 
-        Puntuación de masa grasa: ${data.fat_score} pts.
-    `;
+    let html = `<strong>Análisis integral:</strong> La puntuación global es de ${data.score}/100 (${data.rank}). `;
+    html += `El ángulo de fase en ${data.phase_angle}° indica ${data.cell_status.toLowerCase()}. `;
+    html += `Puntuación de masa muscular: ${data.muscle_score} pts. Puntuación de masa grasa: ${data.fat_score} pts.`;
+
+    if (data.hydration && data.hydration.available) {
+        html += `<br><br>💧 <strong>Hidratación:</strong> ${data.hydration.status}`;
+        if (data.hydration.ecw_tbw_ratio) html += ` (ECW/TBW ${data.hydration.ecw_tbw_ratio}%)`;
+    }
+    if (data.visceral && data.visceral.available) {
+        html += `<br>⚠️ <strong>Cintura/Visceral:</strong> ${data.visceral.status}`;
+    }
+
+    html += `<br><br><strong>Interpretación clínica:</strong><ul>`;
+    (data.clinical_findings || []).forEach(f => { html += `<li>${f}</li>`; });
+    html += `</ul>`;
+
+    clinicalText.innerHTML = html;
     document.getElementById('hydration-tag').textContent = `💧 ${data.hydration_status}`;
     document.getElementById('cell-status').textContent = data.cell_status;
 

@@ -50,6 +50,35 @@
                                         <option value="1.9">Muy Activo (1.9)</option>
                                     </select>
                                 </div>
+                                <div class="form-group">
+                                    <label>Circunferencia de Cintura (cm)</label>
+                                    <input type="number" id="input-waist" step="0.1" placeholder="Ej: 85 (del dispositivo)">
+                                </div>
+
+                                <details class="device-data">
+                                    <summary>Datos del dispositivo (opcional)</summary>
+                                    <p class="form-hint">Transcribe los valores que entrega el equipo de bioimpedancia.</p>
+                                    <div class="form-group">
+                                        <label>Masa Muscular (SMM) - kg</label>
+                                        <input type="number" id="input-smm" step="0.1" placeholder="Ej: 32.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Agua Total (TBW) - L</label>
+                                        <input type="number" id="input-tbw" step="0.1" placeholder="Ej: 42.0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Agua Extracelular (ECW) - L</label>
+                                        <input type="number" id="input-ecw" step="0.1" placeholder="Ej: 17.5">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Masa Grasa - kg</label>
+                                        <input type="number" id="input-fat-mass" step="0.1" placeholder="Ej: 15.0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Grasa Visceral - L</label>
+                                        <input type="number" id="input-visceral" step="0.1" placeholder="Ej: 1.2">
+                                    </div>
+                                </details>
                                 <button type="submit" class="btn-primary">Analizar Composición</button>
                             </form>
                         </div>

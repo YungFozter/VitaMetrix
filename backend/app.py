@@ -2,7 +2,14 @@ import os
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from supabase import create_client, Client
-from calculations import get_biva_interpretation, calculate_energy, calculate_scores
+from calculations import (
+    get_biva_interpretation,
+    calculate_energy,
+    calculate_scores,
+    analyze_hydration,
+    analyze_visceral_fat,
+    build_clinical_report,
+)
 
 load_dotenv()
 
@@ -85,25 +92,55 @@ def dashboard_stats():
 def calculate():
     data = request.json
     
+    # NUEVOS CAMPOS DEL DISPOSITIVO (Opción A) — todos opcionales
+    smm = data.get('smm')           # Masa muscular esquelética (kg)
+    tbw = data.get('tbw')           # Agua total corporal (L)
+    ecw = data.get('ecw')           # Agua extracelular (L)
+    fat_mass = data.get('fat_mass') # Masa grasa (kg)
+    visceral_fat = data.get('visceral_fat')  # Grasa visceral (L)
+    waist = data.get('waist')       # Circunferencia de cintura (cm)
+    
+    # Validar numéricos opcionales
+    def _num(v):
+        try:
+            return float(v) if v not in (None, "") else None
+        except (ValueError, TypeError):
+            return None
+
+    smm = _num(smm)
+    tbw = _num(tbw)
+    ecw = _num(ecw)
+    fat_mass = _num(fat_mass)
+    visceral_fat = _num(visceral_fat)
+    waist = _num(waist)
+    
     # Datos paciente
     patient_idp = data.get('patient_idp', '000000')
     patient_name = data.get('patient_name', 'Unknown')
     
     # Datos fisicos
-    r = data.get('resistance', 0)
-    xc = data.get('reactance', 0)
-    weight = data.get('weight', 0)
-    height = data.get('height', 0)
-    age = data.get('age', 0)
+    r = _num(data.get('resistance', 0)) or 0
+    xc = _num(data.get('reactance', 0)) or 0
+    weight = _num(data.get('weight', 0)) or 0
+    height = _num(data.get('height', 0)) or 0
+    age = int(_num(data.get('age', 0)) or 0)
     gender = data.get('gender', 'male')
-    pal = data.get('pal', 1.2)
+    pal = _num(data.get('pal', 1.2)) or 1.2
     
-    # Cálculos
+    # Cálculos - Módulos
     biva_info = get_biva_interpretation(r, xc)
-    energy_info = calculate_energy(weight, height, age, gender, pal)
-    scores = calculate_scores(weight, height, biva_info['phase_angle'])
+    energy_info = calculate_energy(weight, height, age, gender, pal, smm=smm)
+    scores = calculate_scores(weight, height, biva_info['phase_angle'],
+                              smm=smm, fat_mass=fat_mass, gender=gender)
+    hydration_info = analyze_hydration(tbw=tbw, ecw=ecw, weight=weight)
+    visceral_info = analyze_visceral_fat(waist_cm=waist, visceral_fat_l=visceral_fat, gender=gender)
+    clinical_findings = build_clinical_report(
+        biva_info, hydration_info, visceral_info, scores,
+        biva_info['phase_angle'],
+        ecw_tbw_ratio=hydration_info.get('ecw_tbw_ratio')
+    )
     
-    # Guardar en Supabase
+    # Guardar en Supabase (columnas nuevas son opcionales; se ignoran si no existen)
     if supabase:
         try:
             supabase.table('evaluations').insert({
@@ -118,12 +155,18 @@ def calculate():
                 "pal": pal,
                 "global_score": scores['score'],
                 "muscle_score": scores['muscle_score'],
-                "fat_score": scores['fat_score']
+                "fat_score": scores['fat_score'],
+                "smm": smm,
+                "tbw": tbw,
+                "ecw": ecw,
+                "fat_mass": fat_mass,
+                "visceral_fat": visceral_fat,
+                "waist": waist
             }).execute()
         except Exception as e:
             print(f"Error saving to supabase: {e}")
     
-    # Respuesta
+    # Respuesta unificada (Fase 5-friendly)
     response = {
         "score": scores['score'],
         "rank": scores['rank'],
@@ -133,7 +176,10 @@ def calculate():
         "cell_status": biva_info['cell_status'],
         "hydration_status": biva_info['hydration'],
         "ree_kcal": energy_info['ree_kcal'],
-        "tee_kcal": energy_info['tee_kcal']
+        "tee_kcal": energy_info['tee_kcal'],
+        "hydration": hydration_info,
+        "visceral": visceral_info,
+        "clinical_findings": clinical_findings
     }
     
     return jsonify(response)
