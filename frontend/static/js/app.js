@@ -135,10 +135,13 @@ function initBioForm() {
         e.preventDefault();
         
         // Change button state
-        const btn = form.querySelector('button[type="submit"]');
-        const originalText = btn.textContent;
-        btn.textContent = 'Calculando...';
-        btn.disabled = true;
+        const btn = document.querySelector('button[form="bio-form"]') || form.querySelector('button[type="submit"]');
+        let originalText = 'Analizar Composición';
+        if (btn) {
+            originalText = btn.innerHTML;
+            btn.innerHTML = '<span class="btn-ico">⏳</span> Calculando...';
+            btn.disabled = true;
+        }
 
         // Gather data
         const payload = {
@@ -187,8 +190,10 @@ function initBioForm() {
             console.error('Error calculating:', error);
             showToast('Error al conectar con el servidor.', 'error');
         } finally {
-            btn.textContent = originalText;
-            btn.disabled = false;
+            if (btn) {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
         }
     });
 }
