@@ -241,6 +241,10 @@
                                     <span class="ci-label" style="font-size:0.7rem;">Curva de referencia SMM × edad</span>
                                     <canvas id="smmCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
                                 </div>
+                                <div class="smm-curve-wrap mt-3">
+                                    <span class="ci-label" style="font-size:0.7rem;">Curva de referencia PhA × edad</span>
+                                    <canvas id="phaCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
+                                </div>
                             </div>
                         </section>
 
@@ -271,8 +275,9 @@
                             <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">BCC (Grasa vs Músculo)</div>
                             <div id="bcc-na" class="card-na">Requiere SMM y masa grasa del dispositivo.</div>
                             <div id="bcc-grid" style="display:none;">
-                                <div class="bcc-row"><span class="bcc-label">🥩 Músculo</span><div class="bar-container"><div class="bar-fill muscle-bar" id="bcc-musc-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-musc-val">--</span></div>
-                                <div class="bcc-row"><span class="bcc-label">🍩 Grasa</span><div class="bar-container"><div class="bar-fill fat-bar" id="bcc-fat-bar" style="width:0%"></div></div><span class="bcc-val" id="bcc-fat-val">--</span></div>
+                                <div class="bcc-container mt-2">
+                                    <canvas id="bccCanvas" width="220" height="220" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); width:100%; max-width:300px; margin:0 auto; display:block;"></canvas>
+                                </div>
                             </div>
                         </section>
 
