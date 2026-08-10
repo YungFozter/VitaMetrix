@@ -107,7 +107,7 @@
                             </form>
                         </div>
 
-                        <!-- MAIN BENTO GRID (Movido aquí) -->
+                        <!-- MAIN BENTO GRID -->
                         <div class="bento-grid">
                             <!-- CARD 1: Puntuación Global (Grande) -->
                             <section class="bento-card card-score">
@@ -187,6 +187,146 @@
                                     Ingrese los datos y haga clic en Analizar Composición.
                                 </div>
                                 <div class="hydration-tag" id="hydration-tag">--</div>
+                            </section>
+
+                            <!-- CARD 6: Índices de Composición -->
+                            <section class="bento-card card-composition">
+                                <div class="card-header">Índices de Composición</div>
+                                <div id="ci-na" class="card-na">Introduce SMM y masa grasa del dispositivo para ver los índices.</div>
+                                <div id="ci-grid" class="ci-grid" style="display:none;">
+                                    <div class="ci-item">
+                                        <span class="ci-label">IMC</span>
+                                        <span class="ci-value" id="ci-imc">--</span>
+                                        <span class="status-chip" id="ci-imc-status">--</span>
+                                    </div>
+                                    <div class="ci-item">
+                                        <span class="ci-label">FMI</span>
+                                        <span class="ci-value" id="ci-fmi">--</span>
+                                        <span class="status-chip" id="ci-fmi-status">--</span>
+                                    </div>
+                                    <div class="ci-item">
+                                        <span class="ci-label">FFMI</span>
+                                        <span class="ci-value" id="ci-ffmi">--</span>
+                                        <span class="status-chip" id="ci-ffmi-status">--</span>
+                                    </div>
+                                    <div class="ci-item">
+                                        <span class="ci-label">% Grasa</span>
+                                        <span class="ci-value" id="ci-fm-pct">--</span>
+                                        <span class="status-chip" id="ci-fm-pct-status">--</span>
+                                    </div>
+                                    <div class="ci-item">
+                                        <span class="ci-label">SMI</span>
+                                        <span class="ci-value" id="ci-smi">--</span>
+                                        <span class="status-chip" id="ci-smi-status">--</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 7: Músculo Segmental -->
+                            <section class="bento-card card-segmental">
+                                <div class="card-header">Músculo Segmental</div>
+                                <div id="seg-na" class="card-na">Introduce los valores segmentales del dispositivo.</div>
+                                <div id="seg-grid" class="seg-grid" style="display:none;">
+                                    <div class="seg-item">
+                                        <span class="seg-label">🦾 Brazo Der</span>
+                                        <span class="seg-value" id="seg-arm-r-val">--</span>
+                                        <span class="status-dot" id="seg-arm-r-status"></span>
+                                    </div>
+                                    <div class="seg-item">
+                                        <span class="seg-label">🦾 Brazo Izq</span>
+                                        <span class="seg-value" id="seg-arm-l-val">--</span>
+                                        <span class="status-dot" id="seg-arm-l-status"></span>
+                                    </div>
+                                    <div class="seg-item">
+                                        <span class="seg-label">🧍 Torso</span>
+                                        <span class="seg-value" id="seg-torso-val">--</span>
+                                        <span class="status-dot" id="seg-torso-status"></span>
+                                    </div>
+                                    <div class="seg-item">
+                                        <span class="seg-label">🦵 Pierna Der</span>
+                                        <span class="seg-value" id="seg-leg-r-val">--</span>
+                                        <span class="status-dot" id="seg-leg-r-status"></span>
+                                    </div>
+                                    <div class="seg-item">
+                                        <span class="seg-label">🦵 Pierna Izq</span>
+                                        <span class="seg-value" id="seg-leg-l-val">--</span>
+                                        <span class="status-dot" id="seg-leg-l-status"></span>
+                                    </div>
+                                    <div id="seg-asym" class="seg-asym" style="display:none;"></div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 8: Percentiles vs Edad -->
+                            <section class="bento-card card-percentiles">
+                                <div class="card-header">Percentiles (vs edad)</div>
+                                <div id="pct-na" class="card-na">Introduce SMM (y/o ángulo medido) para estimar percentiles.</div>
+                                <div id="pct-grid" style="display:none;">
+                                    <div class="pct-row">
+                                        <div class="pct-head">
+                                            <span class="pct-label">Ángulo de Fase</span>
+                                            <span class="pct-val" id="ph-pct-val">--</span>
+                                        </div>
+                                        <div class="bar-container"><div class="bar-fill pct-bar" id="ph-pct-bar" style="width:0%"></div></div>
+                                    </div>
+                                    <div class="pct-row">
+                                        <div class="pct-head">
+                                            <span class="pct-label">Masa Muscular (SMM)</span>
+                                            <span class="pct-val" id="smm-pct-val">--</span>
+                                        </div>
+                                        <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 9: Análisis Hídrico -->
+                            <section class="bento-card card-water">
+                                <div class="card-header">Análisis Hídrico</div>
+                                <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
+                                <div id="water-grid" style="display:none;">
+                                    <div class="mini-metric"><span>TBW</span><strong id="water-tbw">--</strong><span class="unit">L</span></div>
+                                    <div class="mini-metric"><span>ECW</span><strong id="water-ecw">--</strong><span class="unit">L</span></div>
+                                    <div class="water-ratio">
+                                        <span>ECW/TBW</span>
+                                        <strong id="water-ratio">--</strong>
+                                        <span class="status-chip" id="water-status">--</span>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 10: Cintura & Visceral -->
+                            <section class="bento-card card-waist">
+                                <div class="card-header">Cintura & Visceral</div>
+                                <div id="waist-na" class="card-na">Introduce circunferencia de cintura y/o grasa visceral.</div>
+                                <div id="waist-grid" style="display:none;">
+                                    <div class="waist-track">
+                                        <div class="bar-fill waist-bar" id="waist-bar" style="width:0%"></div>
+                                        <div class="waist-pin" id="waist-pin"></div>
+                                    </div>
+                                    <div class="waist-readout">
+                                        <span>Cintura</span>
+                                        <strong id="waist-val">--</strong><span class="unit">cm</span>
+                                        <span class="status-chip" id="waist-status">--</span>
+                                    </div>
+                                    <div class="waist-visc" id="visc-status"></div>
+                                </div>
+                            </section>
+
+                            <!-- CARD 11: BCC (Grasa vs Músculo) -->
+                            <section class="bento-card card-bcc">
+                                <div class="card-header">BCC (Grasa vs Músculo)</div>
+                                <div id="bcc-na" class="card-na">Requiere SMM y masa grasa del dispositivo.</div>
+                                <div id="bcc-grid" style="display:none;">
+                                    <div class="bcc-row">
+                                        <span class="bcc-label">🥩 Músculo</span>
+                                        <div class="bar-container"><div class="bar-fill muscle-bar" id="bcc-musc-bar" style="width:0%"></div></div>
+                                        <span class="bcc-val" id="bcc-musc-val">--</span>
+                                    </div>
+                                    <div class="bcc-row">
+                                        <span class="bcc-label">🍩 Grasa</span>
+                                        <div class="bar-container"><div class="bar-fill fat-bar" id="bcc-fat-bar" style="width:0%"></div></div>
+                                        <span class="bcc-val" id="bcc-fat-val">--</span>
+                                    </div>
+                                </div>
                             </section>
                         </div>
                     </div>

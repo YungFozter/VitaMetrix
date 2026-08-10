@@ -564,6 +564,12 @@ body {
 .card-biva { grid-column: span 2; grid-row: span 2; }
 .card-energy { grid-column: span 1; grid-row: span 2; }
 .card-interpretation { grid-column: span 1; grid-row: span 2; }
+.card-composition { grid-column: span 1; grid-row: span 2; }
+.card-segmental { grid-column: span 2; grid-row: span 1; }
+.card-percentiles { grid-column: span 1; grid-row: span 1; }
+.card-water { grid-column: span 1; grid-row: span 1; }
+.card-waist { grid-column: span 1; grid-row: span 1; }
+.card-bcc { grid-column: span 1; grid-row: span 1; }
 
 /* ESTILO DE LAS TARJETAS (Glassmorphism + Profesional) */
 .bento-card {
@@ -707,6 +713,94 @@ body {
     .card-score, .card-biva, .card-muscle-fat { grid-column: span 2; }
     .card-energy, .card-interpretation { grid-column: span 2; grid-row: span 1; }
 }
+
+/* ====== FASE 4: ESTILOS TARJETAS NUEVAS ====== */
+
+/* Texto placeholder cuando no hay datos */
+.card-na {
+    font-size: 0.85rem;
+    color: #7a8aa0;
+    line-height: 1.5;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 0.8rem;
+    border-radius: 12px;
+    font-style: italic;
+}
+
+/* --- CARD 6: Índices de Composición --- */
+.ci-grid { display: flex; flex-direction: column; gap: 0.7rem; }
+.ci-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.6rem; }
+.ci-label { font-size: 0.85rem; font-weight: 600; color: #3a4a62; }
+.ci-value { font-size: 1.4rem; font-weight: 700; color: #1A2A4A; }
+.status-chip {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 0.2rem 0.6rem; border-radius: 30px; white-space: nowrap;
+}
+.status-chip.green { background: #e2f0e8; color: #1a5a3a; }
+.status-chip.yellow { background: #fdf1dc; color: #b07d1a; }
+.status-chip.red { background: #fbe6e6; color: #b94a4a; }
+.status-chip.muted { background: #eef2f8; color: #7a8aa0; }
+
+/* --- CARD 7: Músculo Segmental --- */
+.seg-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+.seg-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.6rem; }
+.seg-label { font-size: 0.85rem; font-weight: 500; color: #3a4a62; }
+.seg-value { font-size: 1.2rem; font-weight: 700; color: #1A2A4A; }
+.status-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #c0c8d8; box-shadow: 0 0 0 3px rgba(0,0,0,0.03);
+}
+.status-dot.green { background: #2d7a4a; box-shadow: 0 0 0 3px rgba(45,122,74,0.15); }
+.status-dot.yellow { background: #cd7f32; box-shadow: 0 0 0 3px rgba(205,127,50,0.18); }
+.status-dot.red { background: #b94a4a; box-shadow: 0 0 0 3px rgba(185,74,74,0.18); }
+.seg-asym {
+    margin-top: 0.4rem; background: #fbe6e6; color: #b94a4a;
+    padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
+}
+
+/* --- CARD 8: Percentiles --- */
+.pct-row { margin-bottom: 0.9rem; }
+.pct-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
+.pct-label { font-size: 0.85rem; font-weight: 500; color: #3a4a62; }
+.pct-val { font-size: 1.3rem; font-weight: 700; color: #1A2A4A; }
+.pct-bar { background: linear-gradient(90deg, #2d7a4a, #cd7f32, #b94a4a); }
+
+/* --- CARD 9: Análisis Hídrico --- */
+#water-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+.mini-metric { display: flex; align-items: baseline; gap: 0.4rem; }
+.mini-metric span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.mini-metric .unit { font-size: 0.75rem; color: #7a8aa0; }
+.mini-metric strong { font-size: 1.6rem; font-weight: 700; color: #1A2A4A; }
+.water-ratio { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+.water-ratio span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; }
+.water-ratio strong { font-size: 1.3rem; font-weight: 700; color: #1A2A4A; }
+
+/* --- CARD 10: Cintura & Visceral --- */
+.waist-track {
+    position: relative; height: 10px; background: #e8edf5; border-radius: 20px;
+    overflow: visible; margin: 1.4rem 0 0.8rem 0;
+}
+.waist-bar { background: linear-gradient(90deg, #2d7a4a 0%, #cd7f32 55%, #b94a4a 100%); transition: width 1s ease; }
+.waist-pin {
+    position: absolute; top: -4px; width: 3px; height: 18px; background: #1A2A4A;
+    border-radius: 2px; transition: left 1s ease; box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+.waist-readout { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.waist-readout span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; }
+.waist-readout .unit { font-size: 0.75rem; color: #7a8aa0; }
+.waist-readout strong { font-size: 1.5rem; font-weight: 700; color: #1A2A4A; }
+.waist-visc {
+    margin-top: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #b94a4a;
+    background: #fbe6e6; padding: 0.4rem 0.8rem; border-radius: 10px;
+}
+
+/* --- CARD 11: BCC --- */
+.bcc-row { display: grid; grid-template-columns: 1fr 2fr auto; align-items: center; gap: 0.6rem; margin-bottom: 0.7rem; }
+.bcc-label { font-size: 0.85rem; font-weight: 600; color: #3a4a62; }
+.bcc-val { font-size: 1.2rem; font-weight: 700; color: #1A2A4A; text-align: right; }
+
+/* Animación de aparición de tarjetas que pasan de NA a datos */
+.bento-card .reveal { animation: fadeIn 0.4s ease forwards; }
 
 /* ====== CLIENTES VIEW ====== */
 .clients-table-container {

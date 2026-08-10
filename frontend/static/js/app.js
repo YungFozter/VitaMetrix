@@ -266,17 +266,33 @@ async function fetchDashboardStats() {
     }
 }
 
+// Helpers de semáforo
+function setChip(el, statusPair) {
+    if (!el) return;
+    el.classList.remove('green', 'yellow', 'red', 'muted');
+    if (!statusPair || !statusPair[1]) { el.textContent = '--'; el.classList.add('muted'); return; }
+    el.textContent = statusPair[0];
+    el.classList.add(statusPair[1]);
+}
+
+function showGrid(naId, gridId) {
+    const na = document.getElementById(naId);
+    const grid = document.getElementById(gridId);
+    if (na) na.style.display = 'none';
+    if (grid) grid.style.display = 'flex';
+}
+
 function updateBioUI(data, inputs) {
-    // 1. Valores numéricos
+    // 1. Valores numéricos base
     document.getElementById('global-score').textContent = data.score;
     document.getElementById('rank-badge').textContent = data.rank;
     document.getElementById('muscle-score').textContent = data.muscle_score;
     document.getElementById('fat-score').textContent = data.fat_score;
-    
+
     document.getElementById('res-value').textContent = inputs.resistance;
     document.getElementById('xc-value').textContent = inputs.reactance;
     document.getElementById('phase-value').textContent = data.phase_angle;
-    
+
     document.getElementById('ree-value').innerHTML = `${data.ree_kcal} <small>kcal</small>`;
     document.getElementById('tee-value').innerHTML = `${data.tee_kcal} <small>kcal</small>`;
     document.getElementById('pal-value').textContent = inputs.pal;
@@ -285,7 +301,7 @@ function updateBioUI(data, inputs) {
     document.querySelector('.muscle-bar').style.width = `${data.muscle_score}%`;
     document.querySelector('.fat-bar').style.width = `${data.fat_score}%`;
 
-    // 3b. Hallazgos clínicos (motor de reglas) + hidratación/visceral
+    // 3. Hallazgos clínicos (motor de reglas) + hidratación/visceral
     const clinicalText = document.getElementById('clinical-text');
     let html = `<strong>Análisis integral:</strong> La puntuación global es de ${data.score}/100 (${data.rank}). `;
     html += `El ángulo de fase en ${data.phase_angle}° indica ${data.cell_status.toLowerCase()}. `;
@@ -309,6 +325,120 @@ function updateBioUI(data, inputs) {
 
     // 4. Dibujar el gráfico BIVA en Canvas
     drawBIVAVector(inputs.resistance, inputs.reactance);
+
+    // ===== FASE 4: tarjetas nuevas =====
+
+    // CARD 6: Índices de composición
+    const ci = data.composition_indices;
+    if (ci && ci.available) {
+        showGrid('ci-na', 'ci-grid');
+        document.getElementById('ci-imc').textContent = ci.imc ?? '--';
+        setChip(document.getElementById('ci-imc-status'), ci.imc_status);
+        document.getElementById('ci-fmi').textContent = ci.fmi ?? '--';
+        setChip(document.getElementById('ci-fmi-status'), ci.fmi_status);
+        document.getElementById('ci-ffmi').textContent = ci.ffmi ?? '--';
+        setChip(document.getElementById('ci-ffmi-status'), ci.ffmi_status);
+        document.getElementById('ci-fm-pct').textContent = ci.fm_pct ?? '--';
+        setChip(document.getElementById('ci-fm-pct-status'), ci.fm_pct_status);
+        document.getElementById('ci-smi').textContent = ci.smi ?? '--';
+        setChip(document.getElementById('ci-smi-status'), ci.smi_status);
+    }
+
+    // CARD 7: Músculo segmental
+    const seg = data.segmental;
+    if (seg && seg.segments && Object.keys(seg.segments).length) {
+        showGrid('seg-na', 'seg-grid');
+        const map = { arm_right: 'seg-arm-r', arm_left: 'seg-arm-l', torso: 'seg-torso', leg_right: 'seg-leg-r', leg_left: 'seg-leg-l' };
+        for (const [key, prefix] of Object.entries(map)) {
+            const s = seg.segments[key];
+            const valEl = document.getElementById(`${prefix}-val`);
+            const dotEl = document.getElementById(`${prefix}-status`);
+            if (!valEl || !dotEl) continue;
+            if (s && s.available) {
+                valEl.textContent = `${s.value} kg`;
+                dotEl.className = `status-dot ${s.light}`;
+            } else {
+                valEl.textContent = '--';
+                dotEl.className = 'status-dot';
+            }
+        }
+        const asym = document.getElementById('seg-asym');
+        if (seg.asymmetries && seg.asymmetries.length) {
+            asym.style.display = 'block';
+            asym.innerHTML = seg.asymmetries.map(a => `⚠️ ${a.message}`).join('<br>');
+        } else {
+            asym.style.display = 'none';
+        }
+    }
+
+    // CARD 8: Percentiles vs edad
+    let pctAvailable = false;
+    const pctGrid = document.getElementById('pct-grid');
+    const pctNa = document.getElementById('pct-na');
+    if (data.phase_percentile) {
+        pctAvailable = true;
+        document.getElementById('ph-pct-val').textContent = `P${data.phase_percentile}`;
+        document.getElementById('ph-pct-bar').style.width = `${data.phase_percentile}%`;
+    }
+    if (data.smm_percentile) {
+        pctAvailable = true;
+        document.getElementById('smm-pct-val').textContent = `P${data.smm_percentile}`;
+        document.getElementById('smm-pct-bar').style.width = `${data.smm_percentile}%`;
+    }
+    if (pctAvailable) { pctNa.style.display = 'none'; pctGrid.style.display = 'block'; }
+
+    // CARD 9: Análisis hídrico
+    const hyd = data.hydration;
+    if (hyd && hyd.available) {
+        showGrid('water-na', 'water-grid');
+        document.getElementById('water-tbw').textContent = hyd.tbw ?? '--';
+        document.getElementById('water-ecw').textContent = hyd.ecw ?? '--';
+        document.getElementById('water-ratio').textContent = hyd.ecw_tbw_ratio ? `${hyd.ecw_tbw_ratio}%` : '--';
+        const wStatus = document.getElementById('water-status');
+        setChip(wStatus, hyd.alert ? ['Alerta', 'red'] : [hyd.status || 'Normal', 'green']);
+    }
+
+    // CARD 10: Cintura & visceral
+    const vis = data.visceral;
+    if (vis && vis.available) {
+        showGrid('waist-na', 'waist-grid');
+        const waist = inputs.waist;
+        const wValEl = document.getElementById('waist-val');
+        const wStatus = document.getElementById('waist-status');
+        if (waist != null && waist !== '') {
+            wValEl.textContent = waist;
+            // Pin: escala 50–130 cm -> 0–100%
+            const pct = Math.max(0, Math.min(100, ((parseFloat(waist) - 50) / 80) * 100));
+            document.getElementById('waist-bar').style.width = `${pct}%`;
+            document.getElementById('waist-pin').style.left = `${pct}%`;
+            setChip(wStatus, vis.waist_risk === 'Alto' ? ['Alto', 'red'] : ['Normal', 'green']);
+        } else {
+            wValEl.textContent = '--';
+            wStatus.textContent = '--';
+            wStatus.className = 'status-chip muted';
+        }
+        const viscEl = document.getElementById('visc-status');
+        if (vis.visceral_alert) {
+            viscEl.style.display = 'block';
+            viscEl.textContent = `⚠️ ${vis.status}`;
+        } else if (vis.status && vis.status !== 'No disponible') {
+            viscEl.style.display = 'block';
+            viscEl.textContent = vis.status;
+        } else {
+            viscEl.style.display = 'none';
+        }
+    }
+
+    // CARD 11: BCC (grasa vs músculo)
+    const bcc = data.bcc;
+    if (bcc && bcc.available) {
+        showGrid('bcc-na', 'bcc-grid');
+        document.getElementById('bcc-musc-val').textContent = `${bcc.muscle_pct}%`;
+        document.getElementById('bcc-fat-val').textContent = `${bcc.fat_pct}%`;
+        const total = (bcc.muscle_pct + bcc.fat_pct) || 1;
+        document.getElementById('bcc-musc-bar').style.width = `${(bcc.muscle_pct / total) * 100}%`;
+        document.getElementById('bcc-fat-bar').style.width = `${(bcc.fat_pct / total) * 100}%`;
+    }
 }
 
 function drawBIVAVector(R, Xc) {
