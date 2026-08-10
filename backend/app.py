@@ -221,5 +221,14 @@ def delete_client(client_id):
         print("Error deleting client:", e)
         return jsonify({"error": str(e)}), 500
 
+@app.route('/api/health', methods=['GET'])
+def health():
+    """Health check for Render (and other uptime monitors)."""
+    db_status = "connected" if supabase else "no-credentials"
+    return jsonify({"status": "ok", "supabase": db_status}), 200
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Never run with debug=True in production. The flag is opt-in via env var
+    # so `python backend/app.py` locally stays safe by default.
+    debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug_mode, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))
