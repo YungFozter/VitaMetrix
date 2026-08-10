@@ -168,9 +168,9 @@ def get_pha_age_curves(gender="male"):
     return {
         "ages": [c["age"] for c in pts],
         "p5": [c["p5"] for c in pts],
-        "p25": [c["p25"] for c in pts],
+        "p25": [c.get("p25", round((c["p5"] + c["p50"]) / 2, 2)) for c in pts],
         "p50": [c["p50"] for c in pts],
-        "p75": [c["p75"] for c in pts],
+        "p75": [c.get("p75", round((c["p50"] + c["p95"]) / 2, 2)) for c in pts],
         "p95": [c["p95"] for c in pts],
     }
 
