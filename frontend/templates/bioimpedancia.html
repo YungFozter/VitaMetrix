@@ -186,24 +186,55 @@
                         </section>
 
                         <!-- CARD 4: Energético -->
-                        <section class="bento-card bio-glass card-energy" style="grid-area: energy;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Consumo Energético (REE / TEE)</div>
-                            <div class="energy-grid mt-3">
+                        <section class="bento-card bio-glass card-energy" style="grid-area: energy; display: flex; flex-direction: column;">
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Consumo de energía - REE / TEE</div>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 1.5rem; margin-top: 1rem;">
+                                <!-- Fila REE -->
                                 <div>
-                                    <span class="label-sm">En reposo (REE)</span>
-                                    <div class="kcal-value" id="ree-value">-- <small>kcal</small></div>
+                                    <div style="font-size: 0.8rem; font-weight: 600; color: #5a6f8c; margin-bottom: 0.5rem;">Consumo de energía en reposo - REE</div>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="background: rgba(0,0,0,0.04); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #5a6f8c;">➔</div>
+                                        <div style="text-align: center;">
+                                            <div id="ree-mj" style="font-size: 2rem; font-weight: 400; color: #1A2A4A; line-height: 1;">--</div>
+                                            <div style="font-size: 0.65rem; color: #5a6f8c; text-transform: uppercase;">MJ/día</div>
+                                        </div>
+                                        <div style="color: #5a6f8c; font-size: 1.2rem;">=</div>
+                                        <div style="text-align: center;">
+                                            <div id="ree-value" style="font-size: 2rem; font-weight: 400; color: #1A2A4A; line-height: 1;">--</div>
+                                            <div style="font-size: 0.65rem; color: #5a6f8c; text-transform: uppercase;">kcal/día</div>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <!-- Fila TEE -->
                                 <div>
-                                    <span class="label-sm">Actividad (TEE)</span>
-                                    <div class="kcal-value" id="tee-value">-- <small>kcal</small></div>
+                                    <div style="font-size: 0.8rem; font-weight: 600; color: #5a6f8c; margin-bottom: 0.5rem;">Consumo de energía total - TEE</div>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        <div style="background: rgba(0,0,0,0.04); border-radius: 50%; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; color: #5a6f8c;">➔</div>
+                                        <div style="text-align: center;">
+                                            <div id="tee-mj" style="font-size: 2.2rem; font-weight: 500; color: #1A2A4A; line-height: 1;">--</div>
+                                            <div style="font-size: 0.65rem; color: #5a6f8c; text-transform: uppercase;">MJ/día</div>
+                                        </div>
+                                        <div style="color: #5a6f8c; font-size: 1.2rem;">=</div>
+                                        <div style="text-align: center; border-bottom: 3px solid #7c62d0; padding-bottom: 2px;">
+                                            <div id="tee-value" style="font-size: 2.2rem; font-weight: 500; color: #1A2A4A; line-height: 1;">--</div>
+                                            <div style="font-size: 0.65rem; color: #5a6f8c; text-transform: uppercase;">kcal/día</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="pal-gauge-wrap mt-4">
-                                <span class="label-sm" style="font-size:0.7rem;">Nivel de Actividad Física (PAL)</span>
-                                <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto; max-width:200px;"></canvas>
-                                <div class="pal-readout">
-                                    <span class="pal-number" id="pal-value">--</span>
-                                    <span class="pal-zone" id="pal-zone">--</span>
+
+                            <div class="pal-gauge-wrap" style="margin-top: auto; padding-top: 1.5rem; text-align: center;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                                    <div style="text-align: left;">
+                                        <div style="font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px;">PAL:</div>
+                                        <div class="pal-number" id="pal-value" style="font-weight: 700; color: #1A2A4A; font-size: 1.2rem;">--</div>
+                                    </div>
+                                    <div style="position: relative; width: 140px; margin: 0 auto;">
+                                        <canvas id="palGaugeCanvas" width="200" height="120" style="width:100%; height:auto; max-width:140px;"></canvas>
+                                        <span class="pal-zone" id="pal-zone" style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; font-size: 0.75rem; font-weight: 600;">--</span>
+                                    </div>
                                 </div>
                             </div>
                         </section>

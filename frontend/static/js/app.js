@@ -308,8 +308,17 @@ function updateBioUI(data, inputs) {
     document.getElementById('xc-value').textContent = inputs.reactance;
     document.getElementById('phase-value').textContent = data.phase_angle;
 
-    document.getElementById('ree-value').innerHTML = `${data.ree_kcal} <small>kcal</small>`;
-    document.getElementById('tee-value').innerHTML = `${data.tee_kcal} <small>kcal</small>`;
+    document.getElementById('ree-value').textContent = data.ree_kcal;
+    document.getElementById('tee-value').textContent = data.tee_kcal;
+    
+    // Calcular MJ (MegaJoules) -> 1 kcal = 0.004184 MJ
+    const reeMj = (data.ree_kcal * 0.004184).toFixed(1);
+    const teeMj = (data.tee_kcal * 0.004184).toFixed(2);
+    const elReeMj = document.getElementById('ree-mj');
+    const elTeeMj = document.getElementById('tee-mj');
+    if (elReeMj) elReeMj.textContent = reeMj;
+    if (elTeeMj) elTeeMj.textContent = teeMj;
+
     document.getElementById('pal-value').textContent = inputs.pal;
     drawPALGauge(inputs.pal);
     // Etiqueta de zona PAL
