@@ -396,6 +396,7 @@ function updateBioUI(data, inputs) {
         pctAvailable = true;
         document.getElementById('ph-pct-val').textContent = `P${data.phase_percentile}`;
         document.getElementById('ph-pct-bar').style.width = `${data.phase_percentile}%`;
+        if (data.pha_curves) drawPhACurve(data.pha_curves, inputs.age, data.phase_angle);
     }
     if (data.smm_percentile) {
         pctAvailable = true;
@@ -445,20 +446,11 @@ function updateBioUI(data, inputs) {
         } else if (vis.status && vis.status !== 'No disponible') {
             viscEl.style.display = 'block';
             viscEl.textContent = vis.status;
-        } else {
-            viscEl.style.display = 'none';
-        }
-    }
-
-    // CARD 11: BCC (grasa vs músculo)
+    // CARD 11: BCC
     const bcc = data.bcc;
     if (bcc && bcc.available) {
         showGrid('bcc-na', 'bcc-grid');
-        document.getElementById('bcc-musc-val').textContent = `${bcc.muscle_pct}%`;
-        document.getElementById('bcc-fat-val').textContent = `${bcc.fat_pct}%`;
-        const total = (bcc.muscle_pct + bcc.fat_pct) || 1;
-        document.getElementById('bcc-musc-bar').style.width = `${(bcc.muscle_pct / total) * 100}%`;
-        document.getElementById('bcc-fat-bar').style.width = `${(bcc.fat_pct / total) * 100}%`;
+        drawBCC(bcc.muscle_pct, bcc.fat_pct);
     }
 }
 
@@ -466,8 +458,7 @@ function drawBIVAVector(R, Xc, height, gender) {
     const canvas = document.getElementById('bivaCanvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.width, h = canvas.height;
     const centerX = w / 2;
     const centerY = h / 2;
 
@@ -814,4 +805,126 @@ function editClient(id, name, phone, email) {
     
     const h3 = document.querySelector('#client-form').previousElementSibling;
     if(h3) h3.textContent = 'Editar Cliente';
+}
+
+// --- 4c. CURVA PhA × EDAD ---
+function drawPhACurve(curves, patientAge, patientPhA) {
+    const canvas = document.getElementById('phaCurveCanvas');
+    if (!canvas || !curves) return;
+    const ctx = canvas.getContext('2d');
+    const w = canvas.width, h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const ages = curves.ages;
+    const aMin = Math.min(...ages), aMax = Math.max(...ages);
+    const allVals = [].concat(curves.p5, curves.p25, curves.p50, curves.p75, curves.p95, [patientPhA || 0]);
+    const vMin = Math.min(...allVals) - 1, vMax = Math.max(...allVals) + 1;
+
+    const padL = 30, padR = 12, padT = 12, padB = 22;
+    const plotW = w - padL - padR, plotH = h - padT - padB;
+    const xOf = (age) => padL + ((age - aMin) / (aMax - aMin || 1)) * plotW;
+    const yOf = (val) => padT + plotH - ((val - vMin) / (vMax - vMin || 1)) * plotH;
+
+    ctx.strokeStyle = '#c0c8d8';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+
+    const series = [
+        { key: 'p5',  color: 'rgba(185,74,74,0.5)' },
+        { key: 'p25', color: 'rgba(205,127,50,0.7)' },
+        { key: 'p50', color: '#1A2A4A' },
+        { key: 'p75', color: 'rgba(205,127,50,0.7)' },
+        { key: 'p95', color: 'rgba(185,74,74,0.5)' }
+    ];
+    series.forEach(s => {
+        ctx.strokeStyle = s.color;
+        ctx.lineWidth = (s.key === 'p50') ? 2.2 : 1.3;
+        ctx.setLineDash(s.key === 'p50' ? [] : [4, 3]);
+        ctx.beginPath();
+        ages.forEach((age, i) => {
+            const x = xOf(age), y = yOf(curves[s.key][i]);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+    });
+
+    if (patientPhA && patientAge >= aMin && patientAge <= aMax) {
+        const px = xOf(patientAge), py = yOf(patientPhA);
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = '#2d7a4a';
+        ctx.fill();
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+    }
+}
+
+// --- 4d. GRÁFICO BCC (SCATTER PLOT MÚSCULO VS GRASA) ---
+function drawBCC(musclePct, fatPct) {
+    const canvas = document.getElementById('bccCanvas');
+    if (!canvas || window.bccChartInstance) {
+        if(window.bccChartInstance) window.bccChartInstance.destroy();
+    }
+    if (!canvas) return;
+
+    window.bccChartInstance = new Chart(canvas, {
+        type: 'scatter',
+        data: {
+            datasets: [{
+                label: 'Paciente',
+                data: [{ x: musclePct, y: fatPct }],
+                backgroundColor: '#1A2A4A',
+                borderColor: '#ffffff',
+                borderWidth: 2,
+                pointRadius: 8,
+                pointHoverRadius: 10
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: (ctx) => `Músculo: ${ctx.raw.x}%, Grasa: ${ctx.raw.y}%`
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    title: { display: true, text: 'Músculo (SMM) %', color: '#5a6f8c' },
+                    min: Math.max(0, musclePct - 20),
+                    max: musclePct + 20,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                },
+                y: {
+                    title: { display: true, text: 'Grasa (FM) %', color: '#5a6f8c' },
+                    min: Math.max(0, fatPct - 20),
+                    max: fatPct + 20,
+                    grid: { color: 'rgba(0,0,0,0.05)' }
+                }
+            },
+            // Añadir una línea diagonal base dibujada como plugin
+            plugins: [{
+                id: 'bccDiagonal',
+                beforeDraw: (chart) => {
+                    const ctx = chart.ctx;
+                    const xAxis = chart.scales.x;
+                    const yAxis = chart.scales.y;
+                    ctx.save();
+                    ctx.strokeStyle = '#cd7f32'; // Línea bronce/dorada
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    // Diagonal simple cruzando desde el mínimo de X y maximo de Y, hasta maximo de X y mínimo de Y
+                    ctx.moveTo(xAxis.getPixelForValue(xAxis.min), yAxis.getPixelForValue(yAxis.max));
+                    ctx.lineTo(xAxis.getPixelForValue(xAxis.max), yAxis.getPixelForValue(yAxis.min));
+                    ctx.stroke();
+                    ctx.restore();
+                }
+            }]
+        }
+    });
 }

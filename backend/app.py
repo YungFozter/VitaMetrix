@@ -23,6 +23,7 @@ from reference import (
     get_phase_angle_percentile,
     get_smm_percentile,
     get_smm_age_curves,
+    get_pha_age_curves,
     analyze_segmental,
     analyze_composition_indices,
 )
@@ -187,6 +188,7 @@ def _run_analysis(data):
     # --- FASE 3: Módulos 3, 6 + índices de composición (reference.py) ---
     phase_for_percentile = phase_angle_dev if phase_angle_dev else biva_info['phase_angle']
     phase_percentile = get_phase_angle_percentile(phase_for_percentile, age, gender)
+    pha_curves = get_pha_age_curves(gender)
     smm_percentile = get_smm_percentile(smm, age, gender) if smm else None
     smm_curves = get_smm_age_curves(gender) if smm else None
 
@@ -262,6 +264,7 @@ def _run_analysis(data):
         "clinical_findings": clinical_findings,
         # Fase 3: módulos 3, 6 + índices
         "phase_percentile": phase_percentile,
+        "pha_curves": pha_curves,
         "smm_percentile": smm_percentile,
         "smm_curves": smm_curves,
         "segmental": segmental_info,
