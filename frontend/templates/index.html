@@ -10,10 +10,40 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- CSS -->
+    <!-- CSS base del proyecto (sidebar, dashboard, clientes, widgets de datos) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Tailwind CSS (UI/UX): glassmorphism + bento grid para la vista Bioimpedancia.
+         preflight:false para NO resetear los estilos de las otras vistas. -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        corePlugins: { preflight: false },
+        theme: {
+          extend: {
+            fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] },
+            colors: {
+              navy:   '#1A2A4A',
+              slatey: '#5a6f8c',
+              bronze: '#cd7f32',
+              alert:  '#b94a4a',
+              health: '#2d7a4a',
+              mint:   '#e2f0e8'
+            },
+            borderRadius: { '4xl': '28px' },
+            boxShadow: { glass: '0 20px 40px -12px rgba(20,40,80,0.18)', 'glass-lg': '0 30px 60px -12px rgba(26,42,74,0.28)' }
+          }
+        }
+      }
+    </script>
 </head>
 <body>
+
+    <!-- Fondo decorativo: glows sutiles para que el efecto glass resalte -->
+    <div class="fixed inset-0 -z-10 pointer-events-none" style="background:
+      radial-gradient(55rem 55rem at 18% 8%, rgba(26,42,74,0.10), transparent 60%),
+      radial-gradient(45rem 45rem at 92% 28%, rgba(205,127,50,0.10), transparent 60%),
+      radial-gradient(40rem 40rem at 62% 95%, rgba(45,122,74,0.08), transparent 60%),
+      #f4f7fc;"></div>
 
     <div class="app-layout">
         <!-- SIDEBAR -->
