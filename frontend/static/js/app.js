@@ -330,7 +330,7 @@ function updateBioUI(data, inputs) {
         else if (p >= 1.6) zone = 'Moderado';
         else if (p >= 1.4) zone = 'Ligero';
         palZoneEl.textContent = zone;
-        palZoneEl.style.color = (p >= 1.9) ? '#1A2A4A' : (p >= 1.6 ? '#2d7a4a' : (p >= 1.4 ? '#cd7f32' : '#b94a4a'));
+        palZoneEl.style.color = (p >= 1.9) ? '#5A6F8C' : (p >= 1.6 ? '#27AE60' : (p >= 1.4 ? '#F2994A' : '#E65555'));
     }
 
 
@@ -670,12 +670,12 @@ function drawPALGauge(pal) {
     ctx.lineWidth = 14;
     ctx.stroke();
 
-    // Zonas de color fieles al diseño
+    // Zonas de color más vibrantes
     const zones = [
-        { from: 1.2, to: 1.4,  color: '#d5adaa' }, // Sedentario
-        { from: 1.4, to: 1.6,  color: '#d9bfa2' }, // Ligero
-        { from: 1.6, to: 1.9,  color: '#9fb7a2' }, // Moderado
-        { from: 1.9, to: 2.5,  color: '#88939e' }  // Intenso
+        { from: 1.2, to: 1.4,  color: '#E65555' }, // Sedentario (Rojo vibrante)
+        { from: 1.4, to: 1.6,  color: '#F2994A' }, // Ligero (Naranja vibrante)
+        { from: 1.6, to: 1.9,  color: '#27AE60' }, // Moderado (Verde vibrante)
+        { from: 1.9, to: 2.5,  color: '#5A6F8C' }  // Intenso (Azul pizarra)
     ];
 
     zones.forEach((z) => {
