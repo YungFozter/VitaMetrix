@@ -697,11 +697,6 @@ function drawPALGauge(pal) {
     ctx.fillStyle = '#1A2A4A';
     ctx.fill();
 
-    // Etiqueta de valor
-    ctx.fillStyle = '#1A2A4A';
-    ctx.font = 'bold 16px Inter';
-    ctx.textAlign = 'center';
-    ctx.fillText((pal || '--').toString(), cx, cy - 8);
     ctx.textAlign = 'left';
 }
 
