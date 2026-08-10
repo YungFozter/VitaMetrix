@@ -154,15 +154,17 @@
                         </section>
 
                         <!-- CARD 3: BIVA -->
-                        <section class="bento-card bio-glass card-biva" style="grid-area: biva;">
+                        <section class="bento-card bio-glass card-biva" style="grid-area: biva; display: flex; flex-direction: column;">
                             <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Vectorial (BIVA)</div>
-                            <div class="biva-container mt-3">
-                                <canvas id="bivaCanvas" width="220" height="220" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7);"></canvas>
-                                <div class="biva-stats">
-                                    <div><span>Resistencia (R):</span> <strong id="res-value">--</strong> Ω</div>
-                                    <div><span>Reactancia (Xc):</span> <strong id="xc-value">--</strong> Ω</div>
-                                    <div><span>Ángulo de Fase:</span> <strong id="phase-value">--</strong>°</div>
-                                    <div class="cell-status" id="cell-status">--</div>
+                            <div class="biva-container mt-3" style="display: flex; flex-grow: 1; align-items: center; justify-content: space-between; gap: 2rem;">
+                                <div style="flex: 0 0 65%; display: flex; justify-content: center; align-items: center;">
+                                    <canvas id="bivaCanvas" width="400" height="400" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); width: 100%; max-width: 320px; height: auto;"></canvas>
+                                </div>
+                                <div class="biva-stats" style="flex: 1; display: flex; flex-direction: column; gap: 1rem; font-size: 1rem;">
+                                    <div><span style="color:#5a6f8c; font-size:0.9rem;">Resistencia (R):</span><br> <strong id="res-value" style="font-size: 2rem; color: #1A2A4A;">--</strong> <span style="color:#5a6f8c">Ω</span></div>
+                                    <div><span style="color:#5a6f8c; font-size:0.9rem;">Reactancia (Xc):</span><br> <strong id="xc-value" style="font-size: 2rem; color: #1A2A4A;">--</strong> <span style="color:#5a6f8c">Ω</span></div>
+                                    <div style="background: #E8EDF5; padding: 0.8rem; border-radius: 12px;"><span style="color:#5a6f8c; font-size:0.9rem;">Ángulo de Fase:</span><br> <strong id="phase-value" style="font-size: 1.5rem; color: #2d7a4a;">--</strong><span style="color:#2d7a4a">°</span></div>
+                                    <div class="cell-status" id="cell-status" style="margin-top: auto;">--</div>
                                 </div>
                             </div>
                         </section>
