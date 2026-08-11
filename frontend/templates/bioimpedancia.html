@@ -124,11 +124,13 @@
                         <!-- CARD 1: Puntuación Global -->
                         <section class="bento-card bio-glass card-score" style="grid-area: score; display: flex; flex-direction: column;">
                             <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">TRU Body Score</div>
-                            <div class="flex items-baseline gap-2" style="margin-top: 0.5rem;">
-                                <span class="big-number" id="global-score" style="font-size: 4.8rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
-                                <span class="text-slatey" style="font-size: 1.2rem; font-weight: 500;">de 100</span>
+                            <div style="display: flex; align-items: center; gap: 1.5rem; margin-top: 0.5rem; flex-wrap: wrap;">
+                                <div class="flex items-baseline gap-2">
+                                    <span class="big-number" id="global-score" style="font-size: 4.8rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
+                                    <span class="text-slatey" style="font-size: 1.2rem; font-weight: 500;">de 100</span>
+                                </div>
+                                <div class="rank-badge" id="rank-badge" style="margin-top: 0; font-size: 1.5rem; padding: 0.5rem 1.5rem;">--</div>
                             </div>
-                            <div class="rank-badge" id="rank-badge" style="margin-top: 0.5rem;">--</div>
                             
                             <div style="margin-top: auto; padding-top: 1rem; border-top: 1px solid rgba(0,0,0,0.05);">
                                 <div style="font-size: 0.7rem; color: #5a6f8c; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.5px;">Sistema de Rangos</div>
