@@ -627,8 +627,9 @@ body {
     grid-auto-rows: minmax(120px, auto);
     gap: 1.4rem;
     grid-template-areas:
-        "score       score       muscle      muscle      biva        biva        biva        biva        energy      energy      energy      energy"
-        "interp      interp      interp      interp      biva        biva        biva        biva        energy      energy      energy      energy"
+        "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
+        "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
+        "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
         "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
         "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
         "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc"
@@ -778,10 +779,10 @@ body {
 @media (max-width: 1400px) {
     .bio-results-grid {
         grid-template-areas:
-            "score       score       score       muscle      muscle      muscle      biva        biva        biva        biva        biva        biva"
-            "interp      interp      interp      interp      interp      interp      biva        biva        biva        biva        biva        biva"
-            "energy      energy      energy      energy      energy      energy      indices     indices     indices     segmental   segmental   segmental"
-            "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
+            "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
+            "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
+            "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
+            "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
             "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
     }
 }
