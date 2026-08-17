@@ -1,0 +1,179 @@
+/* ============================================================
+   Animations — VitaMetrix UI Motion System
+   Staggered entrance, bounce-in, view transitions,
+   glow pulse, dropdown animation.
+   ============================================================ */
+
+/* ============================================
+   STAGGERED ENTRANCE (para cards, filas, etc.)
+   ============================================ */
+.vm-enter-stagger {
+  opacity: 0;
+  transform: translateY(16px) scale(0.97);
+}
+
+.vm-enter-stagger.vm-entered {
+  animation: vmCardEnter var(--vm-t-enter) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Delays manuales 1-12 (sin Sass) */
+.vm-enter-delay-1  { animation-delay: 0.06s; }
+.vm-enter-delay-2  { animation-delay: 0.12s; }
+.vm-enter-delay-3  { animation-delay: 0.18s; }
+.vm-enter-delay-4  { animation-delay: 0.24s; }
+.vm-enter-delay-5  { animation-delay: 0.30s; }
+.vm-enter-delay-6  { animation-delay: 0.36s; }
+.vm-enter-delay-7  { animation-delay: 0.42s; }
+.vm-enter-delay-8  { animation-delay: 0.48s; }
+.vm-enter-delay-9  { animation-delay: 0.54s; }
+.vm-enter-delay-10 { animation-delay: 0.60s; }
+.vm-enter-delay-11 { animation-delay: 0.66s; }
+.vm-enter-delay-12 { animation-delay: 0.72s; }
+
+@keyframes vmCardEnter {
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================
+   BOUNCE-IN (para hero elements, badges, highlights)
+   ============================================ */
+.vm-bounce-in {
+  animation: vmBounceIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s both;
+}
+
+@keyframes vmBounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.08); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ============================================
+   VIEW TRANSITION (SPA: fade + slide)
+   ============================================ */
+.vm-view-enter {
+  animation: vmViewEnter var(--vm-t-enter) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes vmViewEnter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================
+   GLOW PULSE (para hero cards, elementos destacados)
+   ============================================ */
+.vm-glow-pulse {
+  animation: vmGlowPulse var(--vm-t-glow) ease-in-out infinite;
+}
+
+@keyframes vmGlowPulse {
+  0%, 100% {
+    box-shadow: var(--vm-shadow-glass),
+                0 0 30px -10px rgba(0, 180, 216, 0.1);
+  }
+  50% {
+    box-shadow: var(--vm-shadow-glass),
+                0 0 50px -8px rgba(0, 180, 216, 0.18);
+  }
+}
+
+/* ============================================
+   DROPDOWN ENTRANCE (fade + slide + scale)
+   ============================================ */
+.vm-dropdown-enter {
+  animation: vmDropdownEnter 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes vmDropdownEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ============================================
+   SHIMMER / SKELETON LOADER
+   ============================================ */
+.vm-shimmer {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: vmShimmer 1.5s infinite;
+}
+
+@keyframes vmShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ============================================
+   SPINNER (para botones en loading state)
+   ============================================ */
+.vm-spinner {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: vmSpin var(--vm-t-spin) linear infinite;
+}
+
+@keyframes vmSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ============================================
+   MICRO INTERACTIONS
+   ============================================ */
+
+/* Pulse sutil al cambiar de estado (chips, dots) */
+.vm-state-pulse {
+  animation: vmStatePulse 0.3s var(--vm-t-fast);
+}
+
+@keyframes vmStatePulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+/* Goal-reaching highlight (para métricas que llegan a objetivo) */
+.vm-highlight-flash {
+  animation: vmHighlightFlash 0.6s ease;
+}
+
+@keyframes vmHighlightFlash {
+  0% { box-shadow: 0 0 0 0 rgba(0, 180, 216, 0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(0, 180, 216, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(0, 180, 216, 0); }
+}
+
+/* ============================================
+   AMBIENT GLOW (para fondo de página)
+   Mueve los gradientes radiales sútilmente
+   ============================================ */
+.vm-ambient-glow {
+  animation: vmAmbientGlow 20s ease-in-out infinite;
+}
+
+@keyframes vmAmbientGlow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(2%, -1%) scale(1.02); }
+  66% { transform: translate(-1%, 1.5%) scale(0.98); }
+}
