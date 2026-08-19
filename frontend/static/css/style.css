@@ -739,15 +739,13 @@ body {
 .bio-results-grid {
     display: grid;
     grid-template-columns: repeat(12, 1fr);
-    grid-auto-rows: minmax(120px, auto);
     gap: 1.4rem;
     grid-template-areas:
         "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
         "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
         "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
-        "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
-        "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
-        "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc"
+        "indices     indices     indices     indices     indices     indices     segmental   segmental   segmental   segmental   segmental   segmental"
+        "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
         "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
 }
 
@@ -897,7 +895,8 @@ body {
             "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
             "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
             "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
-            "indices     indices     indices     segmental   segmental   segmental   percentiles percentiles percentiles percentiles percentiles percentiles"
+            "indices     indices     indices     indices     indices     indices     segmental   segmental   segmental   segmental   segmental   segmental"
+            "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
             "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
     }
 }
@@ -1714,4 +1713,26 @@ body {
 
 .btn-demo-inject:active {
     transform: translateY(0);
+}
+
+.card-composition, .card-segmental {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.9rem;
+    height: auto;
+}
+
+.ci-grid, .seg-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 0.2rem;
+}
+
+.pct-curves-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.2rem;
+    margin-top: 1rem;
 }

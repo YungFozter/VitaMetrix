@@ -317,13 +317,15 @@
                                     <div class="pct-head"><span class="pct-label">Masa Muscular (SMM)</span><span class="pct-val" id="smm-pct-val">--</span></div>
                                     <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
                                 </div>
-                                <div class="smm-curve-wrap mt-3">
-                                    <span class="ci-label" style="font-size:0.7rem;">Curva de referencia SMM × edad</span>
-                                    <canvas id="smmCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
-                                </div>
-                                <div class="smm-curve-wrap mt-3">
-                                    <span class="ci-label" style="font-size:0.7rem;">Curva de referencia PhA × edad</span>
-                                    <canvas id="phaCurveCanvas" width="320" height="160" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); width:100%; height:auto;"></canvas>
+                                <div class="pct-curves-grid">
+                                    <div class="smm-curve-wrap">
+                                        <span class="ci-label" style="font-size:0.78rem; font-weight:600; color:#5a6f8c; margin-bottom: 0.35rem; display:block;">Curva de referencia SMM × edad</span>
+                                        <canvas id="smmCurveCanvas" width="450" height="180" style="width:100%; height:auto; border-radius: 12px;"></canvas>
+                                    </div>
+                                    <div class="smm-curve-wrap">
+                                        <span class="ci-label" style="font-size:0.78rem; font-weight:600; color:#5a6f8c; margin-bottom: 0.35rem; display:block;">Curva de referencia PhA × edad</span>
+                                        <canvas id="phaCurveCanvas" width="450" height="180" style="width:100%; height:auto; border-radius: 12px;"></canvas>
+                                    </div>
                                 </div>
                             </div>
                         </section>
