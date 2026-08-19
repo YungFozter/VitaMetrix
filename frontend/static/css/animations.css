@@ -8,8 +8,8 @@
    STAGGERED ENTRANCE (para cards, filas, etc.)
    ============================================ */
 .vm-enter-stagger {
-  opacity: 0;
-  transform: translateY(16px) scale(0.97);
+  opacity: 1;
+  transform: none;
 }
 
 .vm-enter-stagger.vm-entered {
