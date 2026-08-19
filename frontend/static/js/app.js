@@ -1140,46 +1140,49 @@ function initFieldInfoPopups() {
     if (goBtn) {
         goBtn.addEventListener('click', () => {
             const reqLabel = reqEl ? reqEl.textContent : 'el dato';
+            const targetId = currentTargetInputId;
             closeModal();
 
-            // Asegurar que la vista activa sea Bioimpedancia
+            // 1. Asegurar que la vista activa sea Bioimpedancia
             const bioNav = document.querySelector('[data-target="bio-view"]');
             if (bioNav) {
                 bioNav.click();
             }
 
-            // Abrir sección de datos del dispositivo
+            // 2. Abrir sección de datos del dispositivo inmediatamente
             const details = document.querySelector('details.device-data');
             if (details) {
                 details.open = true;
             }
 
-            // Resaltar panel de formulario con animación
-            const formPanel = document.querySelector('.bio-form-panel') || document.getElementById('bio-form');
-            if (formPanel) {
-                formPanel.classList.remove('form-focus-pulse');
-                void formPanel.offsetWidth;
-                formPanel.classList.add('form-focus-pulse');
+            // 3. Resaltar panel de formulario con animación luminosa
+            const formSection = document.querySelector('.bio-form-horizontal') || document.querySelector('.bio-form-panel');
+            if (formSection) {
+                formSection.classList.remove('form-focus-pulse');
+                void formSection.offsetWidth;
+                formSection.classList.add('form-focus-pulse');
             }
 
-            // Scroll suave del contenedor principal y del elemento
+            // 4. Desplazamiento animado del scroll (.main-content y window)
             const mainContent = document.querySelector('.main-content');
-            if (currentTargetInputId) {
-                const targetInput = document.getElementById(currentTargetInputId);
-                if (targetInput) {
-                    setTimeout(() => {
+            if (mainContent) {
+                mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            // 5. Enfocar y centrar en pantalla el input específico
+            setTimeout(() => {
+                if (targetId) {
+                    const targetInput = document.getElementById(targetId);
+                    if (targetInput) {
                         targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         targetInput.focus({ preventScroll: true });
                         targetInput.classList.remove('input-highlight-pulse');
                         void targetInput.offsetWidth;
                         targetInput.classList.add('input-highlight-pulse');
-                    }, 200);
-                } else if (mainContent) {
-                    mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
                 }
-            } else if (mainContent) {
-                mainContent.scrollTo({ top: 0, behavior: 'smooth' });
-            }
+            }, 180);
 
             showToast('Completa ' + reqLabel + ' en el formulario', 'info');
         });

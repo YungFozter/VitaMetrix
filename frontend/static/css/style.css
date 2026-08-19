@@ -1672,3 +1672,5 @@ body {
     border-color: #00b4d8 !important;
     background-color: #f4fcfe !important;
 }
+
+.bio-form-horizontal.form-focus-pulse { animation: formPulseHighlight 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
