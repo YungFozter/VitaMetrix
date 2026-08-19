@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VitaMetrix · Medical Body Analyzer</title>
+    <title>VitaMetrix — Medical Body Analyzer</title>
     <!-- Tipografía Profesional (Inter + Poppins display) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +17,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=1">
     <!-- CSS base del proyecto (sidebar, dashboard, clientes, widgets de datos) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=7">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=8">
     <!-- Tailwind CSS (UI/UX): glassmorphism + bento grid para la vista Bioimpedancia.
          preflight:false para NO resetear los estilos de las otras vistas. -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -59,24 +59,24 @@
                 <h2 class="display-font vm-heading-1 sidebar-brand">VitaMetrix</h2>
             </div>
 
-            <div class="sidebar-section-label">Navegación</div>
+            <div class="sidebar-section-label">NAVEGACIÓN</div>
             <nav class="sidebar-nav">
-                <a href="#" class="nav-item active vm-enter-stagger" data-target="dashboard-view" data-title="Dashboard">
+                <a href="#dashboard-view" class="nav-item active vm-enter-stagger" data-target="dashboard-view" data-title="Dashboard">
                     <span class="nav-icon">📊</span>
                     Dashboard
                 </a>
-                <a href="#" class="nav-item vm-enter-stagger" data-target="bio-view" data-title="Bioimpedancia">
+                <a href="#bio-view" class="nav-item vm-enter-stagger" data-target="bio-view" data-title="Bioimpedancia">
                     <span class="nav-icon">⚡</span>
                     Bioimpedancia
                 </a>
-                <a href="#" class="nav-item vm-enter-stagger" data-target="clientes-view" data-title="Directorio de Clientes">
+                <a href="#clientes-view" class="nav-item vm-enter-stagger" data-target="clientes-view" data-title="Directorio de Clientes">
                     <span class="nav-icon">👥</span>
                     Clientes
                 </a>
             </nav>
 
             <div class="sidebar-divider"></div>
-            <div class="sidebar-section-label">Sistema</div>
+            <div class="sidebar-section-label">SISTEMA</div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-item vm-enter-stagger">
                     <span class="nav-icon">📦</span>
@@ -95,7 +95,7 @@
             <header class="topbar">
                 <div class="topbar-left">
                     <h1 id="page-title">Dashboard</h1>
-                    <span class="topbar-subtitle">Welcome back to VitaMetrix</span>
+                    <span class="topbar-subtitle">Bienvenido a VitaMetrix</span>
                 </div>
                 <div class="topbar-right">
                     <div class="time-badge">🕒 <span id="current-time">00:00 AM</span></div>
@@ -104,7 +104,7 @@
                     <div class="user-profile" id="user-profile-btn" style="position: relative; cursor: pointer;">
                         <img src="https://ui-avatars.com/api/?name=Dr+Audrey&background=00b4d8&color=fff" alt="User">
                         <div class="user-info">
-                            <strong>Audrey ⌄</strong>
+                            <strong>Dra. Audrey</strong>
                             <span>Manager</span>
                         </div>
                         
@@ -258,6 +258,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=10"></script>
 </body>
 </html>
