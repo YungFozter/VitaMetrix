@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initFieldInfoPopups();
     initMobileSidebar();
     initClock();
     initNavigation();
@@ -1089,3 +1090,81 @@ function initMobileSidebar() {
     });
 }
 
+
+// --- FIELD INFO POPUP & AUTO-FOCUS CONTROLLER ---
+function initFieldInfoPopups() {
+    const modal = document.getElementById('info-modal');
+    if (!modal) return;
+
+    const titleEl = document.getElementById('info-modal-title');
+    const descEl = document.getElementById('info-modal-desc');
+    const reqEl = document.getElementById('info-modal-req');
+    const closeBtn = document.getElementById('info-modal-close');
+    const cancelBtn = document.getElementById('info-modal-btn-cancel');
+    const goBtn = document.getElementById('info-modal-btn-go');
+
+    let currentTargetInputId = null;
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        currentTargetInputId = null;
+    };
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Delegate click for all info buttons
+    document.addEventListener('click', (e) => {
+        const btn = e.target.closest('.field-info-btn');
+        if (!btn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        const title = btn.getAttribute('data-info-title') || 'Información del Campo';
+        const desc = btn.getAttribute('data-info-desc') || 'Este parámetro requiere información adicional del dispositivo.';
+        const req = btn.getAttribute('data-info-req') || 'Dato del dispositivo de bioimpedancia';
+        currentTargetInputId = btn.getAttribute('data-focus-input');
+
+        if (titleEl) titleEl.textContent = title;
+        if (descEl) descEl.textContent = desc;
+        if (reqEl) reqEl.textContent = req;
+
+        modal.classList.remove('hidden');
+    });
+
+    // Go to form button
+    if (goBtn) {
+        goBtn.addEventListener('click', () => {
+            closeModal();
+
+            // Abrir acordión de datos del dispositivo
+            const details = document.querySelector('details.device-data');
+            if (details) {
+                details.open = true;
+            }
+
+            // Scroll suave hacia el formulario
+            const formPanel = document.querySelector('.bio-form-panel') || document.getElementById('bio-form');
+            if (formPanel) {
+                formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            // Enfocar y resaltar el input solicitado
+            if (currentTargetInputId) {
+                const targetInput = document.getElementById(currentTargetInputId);
+                if (targetInput) {
+                    setTimeout(() => {
+                        targetInput.focus();
+                        targetInput.classList.remove('input-highlight-pulse');
+                        void targetInput.offsetWidth;
+                        targetInput.classList.add('input-highlight-pulse');
+                    }, 400);
+                }
+            }
+        });
+    }
+}

@@ -1470,3 +1470,151 @@ body {
 .sidebar-toggle-btn:active {
     transform: scale(0.96);
 }
+
+
+/* ============================================================
+   INFO BUTTONS & DEVICE REQ MODAL
+   ============================================================ */
+
+.field-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    background: rgba(0, 180, 216, 0.12);
+    color: #00b4d8;
+    font-size: 0.7rem;
+    font-weight: 800;
+    font-family: inherit;
+    border: 1px solid rgba(0, 180, 216, 0.25);
+    cursor: pointer;
+    margin-left: 0.35rem;
+    vertical-align: middle;
+    line-height: 1;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 1px 3px rgba(0, 180, 216, 0.1);
+}
+
+.field-info-btn:hover {
+    background: #00b4d8;
+    color: #ffffff;
+    border-color: #00b4d8;
+    transform: scale(1.18);
+    box-shadow: 0 3px 8px rgba(0, 180, 216, 0.35);
+}
+
+.field-info-btn:active {
+    transform: scale(0.92);
+}
+
+.info-modal-box {
+    max-width: 440px;
+    width: 90%;
+    padding: 1.6rem 1.6rem 1.4rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 24px 48px -12px rgba(26, 42, 74, 0.25);
+    border-radius: 20px;
+}
+
+.info-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.info-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.info-modal-icon {
+    font-size: 1.3rem;
+}
+
+.info-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1A2A4A;
+}
+
+.info-modal-close {
+    background: rgba(26, 42, 74, 0.05);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    color: #5a6f8c;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.info-modal-close:hover {
+    background: rgba(230, 85, 85, 0.12);
+    color: #e65555;
+}
+
+.info-modal-desc {
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #3a4a62;
+    margin-bottom: 1rem;
+}
+
+.info-req-card {
+    background: #f0f7fb;
+    border: 1.5px dashed #00b4d8;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    margin-bottom: 0.8rem;
+}
+
+.info-req-label {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0088a8;
+    letter-spacing: 0.6px;
+    margin-bottom: 0.25rem;
+}
+
+.info-req-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1A2A4A;
+}
+
+.info-modal-hint {
+    font-size: 0.8rem;
+    color: #7a8aa0;
+    margin: 0 0 1.2rem;
+    font-style: italic;
+}
+
+.info-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.8rem;
+}
+
+/* Destello de enfoque en formulario */
+@keyframes inputPulseGlow {
+    0% { box-shadow: 0 0 0 0 rgba(0, 180, 216, 0.6); border-color: #00b4d8; }
+    50% { box-shadow: 0 0 0 8px rgba(0, 180, 216, 0.2); border-color: #00b4d8; }
+    100% { box-shadow: 0 0 0 0 rgba(0, 180, 216, 0); border-color: inherit; }
+}
+
+.input-highlight-pulse {
+    animation: inputPulseGlow 1.5s ease-out;
+    border-color: #00b4d8 !important;
+}

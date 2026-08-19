@@ -248,20 +248,46 @@
 
                         <!-- CARD 6: Índices -->
                         <section class="bento-card bio-glass card-composition" style="grid-area: indices;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Índices de Composición</div>
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span>Índices de Composición</span>
+                                <button type="button" class="field-info-btn" data-info-title="Índices de Composición Corporal" data-info-desc="Parámetros antropométricos y bioeléctricos calculados combinando datos básicos con las mediciones directas de tu equipo de bioimpedancia." data-info-req="Masa Grasa (kg) y Masa Muscular SMM (kg)" data-focus-input="input-smm" title="Ver requisitos">ℹ</button>
+                            </div>
                             <div id="ci-na" class="card-na">Introduce SMM y masa grasa del dispositivo para ver los índices.</div>
                             <div id="ci-grid" class="ci-grid" style="display:none;">
-                                <div class="ci-item"><span class="ci-label">IMC</span><span class="ci-value" id="ci-imc">--</span><span class="status-chip" id="ci-imc-status">--</span></div>
-                                <div class="ci-item"><span class="ci-label">FMI</span><span class="ci-value" id="ci-fmi">--</span><span class="status-chip" id="ci-fmi-status">--</span></div>
-                                <div class="ci-item"><span class="ci-label">FFMI</span><span class="ci-value" id="ci-ffmi">--</span><span class="status-chip" id="ci-ffmi-status">--</span></div>
-                                <div class="ci-item"><span class="ci-label">% Grasa</span><span class="ci-value" id="ci-fm-pct">--</span><span class="status-chip" id="ci-fm-pct-status">--</span></div>
-                                <div class="ci-item"><span class="ci-label">SMI</span><span class="ci-value" id="ci-smi">--</span><span class="status-chip" id="ci-smi-status">--</span></div>
+                                <div class="ci-item">
+                                    <span class="ci-label">IMC <button type="button" class="field-info-btn" data-info-title="IMC — Índice de Masa Corporal" data-info-desc="Relación entre el peso y la estatura al cuadrado (kg/m²). Clasifica bajo peso, normalidad, sobrepeso u obesidad general." data-info-req="Peso (kg) y Altura (cm)" data-focus-input="input-weight" title="Más información">ℹ</button></span>
+                                    <span class="ci-value" id="ci-imc">--</span>
+                                    <span class="status-chip" id="ci-imc-status">--</span>
+                                </div>
+                                <div class="ci-item">
+                                    <span class="ci-label">FMI <button type="button" class="field-info-btn" data-info-title="FMI — Índice de Masa Grasa" data-info-desc="Fat Mass Index: Expresa la masa grasa absoluta ajustada por la estatura al cuadrado (kg/m²). Permite diagnosticar exceso de adiposidad independientemente de la masa muscular." data-info-req="Masa Grasa (kg) en Datos del dispositivo" data-focus-input="input-fat-mass" title="¿Por qué está vacío?">ℹ</button></span>
+                                    <span class="ci-value" id="ci-fmi">--</span>
+                                    <span class="status-chip" id="ci-fmi-status">--</span>
+                                </div>
+                                <div class="ci-item">
+                                    <span class="ci-label">FFMI <button type="button" class="field-info-btn" data-info-title="FFMI — Índice de Masa Libre de Grasa" data-info-desc="Fat-Free Mass Index: Evalúa el desarrollo de tejido magro (músculo, órganos y huesos) ajustado a la estatura." data-info-req="Peso (kg), Altura (cm) y Masa Grasa (kg)" data-focus-input="input-fat-mass" title="Más información">ℹ</button></span>
+                                    <span class="ci-value" id="ci-ffmi">--</span>
+                                    <span class="status-chip" id="ci-ffmi-status">--</span>
+                                </div>
+                                <div class="ci-item">
+                                    <span class="ci-label">% Grasa <button type="button" class="field-info-btn" data-info-title="% Grasa Corporal" data-info-desc="Porcentaje del peso total correspondiente a tejido adiposo. Fundamental para seguimiento de pérdida de grasa." data-info-req="Masa Grasa (kg) en Datos del dispositivo" data-focus-input="input-fat-mass" title="¿Por qué está vacío?">ℹ</button></span>
+                                    <span class="ci-value" id="ci-fm-pct">--</span>
+                                    <span class="status-chip" id="ci-fm-pct-status">--</span>
+                                </div>
+                                <div class="ci-item">
+                                    <span class="ci-label">SMI <button type="button" class="field-info-btn" data-info-title="SMI — Índice de Músculo Esquelético" data-info-desc="Skeletal Muscle Index: Cantidad de masa muscular esquelética por estatura al cuadrado (kg/m²). Indicador clave para sarcopenia y rendimiento atlético." data-info-req="Masa Muscular (SMM) - kg en Datos del dispositivo" data-focus-input="input-smm" title="¿Por qué está vacío?">ℹ</button></span>
+                                    <span class="ci-value" id="ci-smi">--</span>
+                                    <span class="status-chip" id="ci-smi-status">--</span>
+                                </div>
                             </div>
                         </section>
 
                         <!-- CARD 7: Segmental -->
                         <section class="bento-card bio-glass card-segmental" style="grid-area: segmental;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Músculo Segmental</div>
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span>Músculo Segmental</span>
+                                <button type="button" class="field-info-btn" data-info-title="Masa Muscular Segmental" data-info-desc="Evalúa el equilibrio y simetría de masa muscular en extremidades y tronco (brazos, piernas y torso)." data-info-req="Valores segmentales (kg) en Datos del dispositivo" data-focus-input="input-seg-arm-r" title="Ver requisitos">ℹ</button>
+                            </div>
                             <div id="seg-na" class="card-na">Introduce los valores segmentales del dispositivo.</div>
                             <div id="seg-grid" class="seg-grid" style="display:none;">
                                 <div class="seg-item"><span class="seg-label">🦾 Brazo Der</span><span class="seg-value" id="seg-arm-r-val">--</span><span class="status-dot" id="seg-arm-r-status"></span></div>
@@ -299,7 +325,10 @@
 
                         <!-- CARD 9: Hídrico -->
                         <section class="bento-card bio-glass card-water" style="grid-area: water;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Análisis Hídrico</div>
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span>Análisis Hídrico</span>
+                                <button type="button" class="field-info-btn" data-info-title="Análisis Hídrico (TBW / ECW)" data-info-desc="Distribución de agua total y extracelular para detectar deshidratación o retención de líquidos (edemas)." data-info-req="Agua Total (TBW) y Agua Extracelular (ECW) en Datos del dispositivo" data-focus-input="input-tbw" title="Ver requisitos">ℹ</button>
+                            </div>
                             <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
                             <div id="water-grid" style="display:none;">
                                 <div class="mini-metric"><span>TBW</span><strong id="water-tbw">--</strong><span class="unit">L</span></div>

@@ -282,6 +282,32 @@
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
     <div id="toast-container"></div>
 
+    
+    <!-- MODAL DE INFORMACIÓN Y REQUISITOS DE DISPOSITIVO -->
+    <div id="info-modal" class="modal-overlay hidden">
+        <div class="modal-box bento-card info-modal-box">
+            <div class="info-modal-header">
+                <div class="info-modal-title-wrap">
+                    <span class="info-modal-icon">ℹ️</span>
+                    <h3 id="info-modal-title">Requisitos del Campo</h3>
+                </div>
+                <button type="button" class="info-modal-close" id="info-modal-close" aria-label="Cerrar ventana">✕</button>
+            </div>
+            <div class="info-modal-body">
+                <p id="info-modal-desc" class="info-modal-desc">Descripción del índice...</p>
+                <div class="info-req-card">
+                    <div class="info-req-label">📋 DATO REQUERIDO DEL EQUIPO:</div>
+                    <div class="info-req-value" id="info-modal-req">Masa Grasa (kg)</div>
+                </div>
+                <p class="info-modal-hint">Este valor lo proporciona el reporte impreso o digital de tu analizador de bioimpedancia.</p>
+            </div>
+            <div class="modal-actions info-modal-actions">
+                <button type="button" id="info-modal-btn-cancel" class="btn-secondary">Entendido</button>
+                <button type="button" id="info-modal-btn-go" class="btn-primary">Completar en el Formulario ✍️</button>
+            </div>
+        </div>
+    </div>
+
     <div id="custom-modal" class="modal-overlay hidden">
         <div class="modal-box bento-card">
             <h3 id="modal-title">Confirmación</h3>
