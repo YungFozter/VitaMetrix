@@ -1674,3 +1674,44 @@ body {
 }
 
 .bio-form-horizontal.form-focus-pulse { animation: formPulseHighlight 1.2s cubic-bezier(0.25, 1, 0.5, 1); }
+
+
+/* ============================================================
+   DEMO DATA INJECTOR BUTTON
+   ============================================================ */
+.bio-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn-demo-inject {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: #e8f7fa;
+    color: #0088a8;
+    border: 1.5px solid rgba(0, 180, 216, 0.35);
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    padding: 0.65rem 1.1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 2px 8px rgba(0, 180, 216, 0.08);
+}
+
+.btn-demo-inject:hover {
+    background: #00b4d8;
+    color: #ffffff;
+    border-color: #00b4d8;
+    box-shadow: 0 4px 14px rgba(0, 180, 216, 0.25);
+    transform: translateY(-2px);
+}
+
+.btn-demo-inject:active {
+    transform: translateY(0);
+}

@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initDemoDataInjector();
     initFieldInfoPopups();
     initMobileSidebar();
     initClock();
@@ -1187,4 +1188,58 @@ function initFieldInfoPopups() {
             showToast('Completa ' + reqLabel + ' en el formulario', 'info');
         });
     }
+}
+
+// --- DEMO DATA INJECTOR CONTROLLER ---
+function initDemoDataInjector() {
+    const btnDemo = document.getElementById('btn-fill-demo');
+    if (!btnDemo) return;
+
+    btnDemo.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // 1. Datos básicos
+        document.getElementById('input-idp').value = '104829';
+        document.getElementById('input-name').value = 'Dra. Sofía Alarcón';
+        document.getElementById('input-r').value = '532.4';
+        document.getElementById('input-xc').value = '57.8';
+        document.getElementById('input-weight').value = '66.4';
+        document.getElementById('input-height').value = '167';
+        document.getElementById('input-age').value = '29';
+        document.getElementById('input-gender').value = 'female';
+        document.getElementById('input-pal').value = '1.55';
+        document.getElementById('input-waist').value = '73.0';
+
+        // 2. Abrir datos del dispositivo y llenarlos
+        const details = document.querySelector('details.device-data');
+        if (details) details.open = true;
+
+        document.getElementById('input-smm').value = '25.8';
+        document.getElementById('input-tbw').value = '37.4';
+        document.getElementById('input-ecw').value = '14.8';
+        document.getElementById('input-fat-mass').value = '15.6';
+        document.getElementById('input-visceral').value = '1.1';
+        document.getElementById('input-phase-dev').value = '6.2';
+        document.getElementById('input-seg-arm-r').value = '2.35';
+        document.getElementById('input-seg-arm-l').value = '2.30';
+        document.getElementById('input-seg-torso').value = '18.9';
+        document.getElementById('input-seg-leg-r').value = '6.5';
+        document.getElementById('input-seg-leg-l').value = '6.4';
+
+        // 3. Destello de animación en los campos
+        const allInputs = document.querySelectorAll('#bio-form input, #bio-form select');
+        allInputs.forEach(input => {
+            input.classList.remove('input-highlight-pulse');
+            void input.offsetWidth;
+            input.classList.add('input-highlight-pulse');
+        });
+
+        showToast('🧪 Caso de prueba completo inyectado. Calculando...', 'success');
+
+        // 4. Disparar el análisis automáticamente
+        const form = document.getElementById('bio-form');
+        if (form) {
+            form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
+        }
+    });
 }
