@@ -677,7 +677,7 @@ function drawPALGauge(pal) {
     ctx.clearRect(0, 0, w, h);
 
     // Ajustamos 'cy' para que el arco (que baja del ecuador) no se corte al fondo
-    const cy = h - 45; 
+    const cy = h - 25; 
     const cx = w / 2;
     const radius = Math.min(cx, cy) - 20;
     
