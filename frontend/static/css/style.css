@@ -87,6 +87,121 @@ body {
     opacity: 1;
 }
 
+/* ============================================
+   FASE 1: SIDEBAR MEJORADA
+   ============================================ */
+
+/* Brand icon (icono de marca circular) */
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--vm-gradient-brand);
+  border-radius: var(--vm-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(26, 42, 74, 0.25);
+  flex-shrink: 0;
+}
+
+/* Logo container: icono + nombre alineados */
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-bottom: 1.5rem;
+}
+
+.sidebar-logo h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+/* Section labels en sidebar */
+.sidebar-section-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--vm-slate);
+  margin: 0.8rem 0 0.4rem 0.5rem;
+  padding: 0;
+}
+
+/* Divider entre secciones */
+.sidebar-divider {
+  height: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  margin: 0.7rem 0.5rem;
+}
+
+/* Nav items — hover con slide a la derecha */
+.nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: var(--vm-slate);
+  font-weight: 500;
+  font-size: 0.9rem;
+  border-radius: var(--vm-radius-md);
+  transition: all var(--vm-t-hover);
+  overflow: hidden;
+}
+
+.nav-item .nav-icon {
+  font-size: 1.2rem;
+  opacity: 0.7;
+  transition: opacity var(--vm-t-hover), transform var(--vm-t-hover);
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--vm-navy);
+  transform: translateX(4px);
+}
+
+.nav-item:hover .nav-icon {
+  opacity: 1;
+  color: var(--vm-cyan);
+}
+
+/* Nav item active — glass cyan + glow */
+.nav-item.active {
+  background: rgba(0, 180, 216, 0.10);
+  color: var(--vm-cyan);
+  box-shadow: inset 0 0 0 1px rgba(0, 180, 216, 0.20),
+              0 4px 12px rgba(0, 180, 216, 0.15);
+}
+
+.nav-item.active .nav-icon {
+  opacity: 1;
+  color: var(--vm-cyan);
+}
+
+/* Indicador de actividad: dot cyan brillante */
+.nav-item.active::after {
+  content: '';
+  position: absolute;
+  right: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vm-cyan);
+  box-shadow: 0 0 8px var(--vm-cyan);
+}
+
+/* Stagger delay para nav items (cuando DOMContentLoaded dispara entrance) */
+.nav-item.vm-enter-stagger {
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+}
+
 /* --- MAIN CONTENT --- */
 .main-content {
     flex: 1;
