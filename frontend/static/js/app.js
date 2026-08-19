@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+    initMobileSidebar();
     initClock();
     initNavigation();
     initBioForm();
@@ -1012,5 +1013,47 @@ function drawBCC(musclePct, fatPct) {
                 ctx.restore();
             }
         }]
+    });
+}
+// --- MOBILE SIDEBAR DRAWER CONTROLLER ---
+function initMobileSidebar() {
+    const menuBtn = document.getElementById('mobile-menu-btn');
+    const closeBtn = document.getElementById('sidebar-close-btn');
+    const sidebar = document.querySelector('.sidebar');
+    const backdrop = document.getElementById('sidebar-backdrop');
+    const navItems = document.querySelectorAll('.sidebar .nav-item');
+
+    if (!sidebar) return;
+
+    const openSidebar = () => {
+        sidebar.classList.add('mobile-open');
+        if (backdrop) backdrop.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    };
+
+    const closeSidebar = () => {
+        sidebar.classList.remove('mobile-open');
+        if (backdrop) backdrop.classList.remove('active');
+        document.body.style.overflow = '';
+    };
+
+    if (menuBtn) menuBtn.addEventListener('click', openSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+
+    // Auto-close drawer on navigation click (mobile)
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            if (window.innerWidth <= 992) {
+                closeSidebar();
+            }
+        });
+    });
+
+    // Close on Escape key
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
+            closeSidebar();
+        }
     });
 }

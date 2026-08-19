@@ -1221,3 +1221,209 @@ body {
     gap: 1rem;
     justify-content: center;
 }
+
+/* ============================================================
+   RESPONSIVE DESIGN (Móviles, Tablets y Pantallas Pequeñas)
+   ============================================================ */
+
+.mobile-menu-btn {
+    display: none;
+}
+
+.sidebar-close-btn {
+    display: none;
+}
+
+.sidebar-backdrop {
+    display: none;
+}
+
+/* TABLETS Y MÓVILES (< 992px) */
+@media (max-width: 992px) {
+    .app-layout {
+        position: relative;
+        height: auto;
+        min-height: 100vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        display: block;
+    }
+
+    /* SIDEBAR DRAWER OVERLAY */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 280px;
+        height: 100vh;
+        z-index: 1000;
+        background: #ffffff;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.25);
+        transform: translateX(-100%);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow-y: auto;
+    }
+
+    .sidebar.mobile-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-close-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(26, 42, 74, 0.06);
+        border: none;
+        color: #5a6f8c;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        margin-left: auto;
+    }
+
+    .sidebar-close-btn:hover {
+        background: rgba(26, 42, 74, 0.12);
+        color: #1A2A4A;
+    }
+
+    /* BACKDROP */
+    .sidebar-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.45);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 990;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .sidebar-backdrop.active {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    /* TOPBAR MOBILE */
+    .topbar {
+        padding: 0.9rem 1rem;
+        gap: 0.8rem;
+        align-items: center;
+    }
+
+    .topbar-left {
+        display: flex;
+        align-items: center;
+        gap: 0.8rem;
+    }
+
+    .topbar-titles h1 {
+        font-size: 1.4rem;
+        margin-bottom: 0;
+    }
+
+    .topbar-subtitle {
+        font-size: 0.8rem;
+    }
+
+    .mobile-menu-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1px solid rgba(26, 42, 74, 0.1);
+        color: #1A2A4A;
+        box-shadow: 0 2px 8px rgba(26, 42, 74, 0.06);
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: all 0.2s ease;
+    }
+
+    .mobile-menu-btn:hover {
+        background: #f4f7fc;
+    }
+
+    .time-badge {
+        display: none;
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    /* MAIN CONTENT & VIEWS CONTAINER */
+    .main-content {
+        width: 100%;
+        min-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .views-container {
+        padding: 0 1rem 2rem 1rem;
+        width: 100%;
+    }
+
+    /* BIOIMPEDANCIA RESPONSIVE */
+    .bio-layout {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        gap: 1.5rem;
+    }
+
+    .bio-form-panel {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .bento-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1.2rem;
+    }
+
+    .dash-cards {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+}
+
+/* SMARTPHONES PEQUEÑOS (< 576px) */
+@media (max-width: 576px) {
+    .topbar-titles h1 {
+        font-size: 1.2rem;
+    }
+
+    .views-container {
+        padding: 0 0.6rem 1.5rem 0.6rem;
+    }
+
+    .dash-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .form-fields {
+        grid-template-columns: 1fr !important;
+    }
+
+    .bento-card {
+        padding: 1.2rem 1rem !important;
+    }
+
+    .clients-table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .clients-table {
+        min-width: 480px;
+    }
+}

@@ -54,8 +54,11 @@
         <!-- SIDEBAR -->
         <aside class="sidebar">
             <div class="sidebar-logo">
-                <div class="brand-icon">⚡</div>
-                <h2 class="display-font vm-heading-1 sidebar-brand">VitaMetrix</h2>
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <div class="brand-icon">⚡</div>
+                    <h2 class="display-font vm-heading-1 sidebar-brand">VitaMetrix</h2>
+                </div>
+                <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Cerrar menú">✕</button>
             </div>
 
             <div class="sidebar-section-label">NAVEGACIÓN</div>
@@ -122,8 +125,17 @@
             <!-- TOPBAR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <h1 id="page-title">Dashboard</h1>
-                    <span class="topbar-subtitle">Bienvenido a VitaMetrix</span>
+                    <button type="button" class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Abrir menú de navegación">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    <div class="topbar-titles">
+                        <h1 id="page-title">Dashboard</h1>
+                        <span class="topbar-subtitle">Bienvenido a VitaMetrix</span>
+                    </div>
                 </div>
                 <div class="topbar-right">
                     <div class="time-badge">🕒 <span id="current-time">00:00 AM</span></div>
@@ -268,6 +280,7 @@
     </div>
 
     <!-- UI: TOASTS & MODALS -->
+    <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
     <div id="toast-container"></div>
 
     <div id="custom-modal" class="modal-overlay hidden">
