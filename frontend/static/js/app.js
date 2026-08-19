@@ -1139,32 +1139,49 @@ function initFieldInfoPopups() {
     // Go to form button
     if (goBtn) {
         goBtn.addEventListener('click', () => {
+            const reqLabel = reqEl ? reqEl.textContent : 'el dato';
             closeModal();
 
-            // Abrir acordión de datos del dispositivo
+            // Asegurar que la vista activa sea Bioimpedancia
+            const bioNav = document.querySelector('[data-target="bio-view"]');
+            if (bioNav) {
+                bioNav.click();
+            }
+
+            // Abrir sección de datos del dispositivo
             const details = document.querySelector('details.device-data');
             if (details) {
                 details.open = true;
             }
 
-            // Scroll suave hacia el formulario
+            // Resaltar panel de formulario con animación
             const formPanel = document.querySelector('.bio-form-panel') || document.getElementById('bio-form');
             if (formPanel) {
-                formPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                formPanel.classList.remove('form-focus-pulse');
+                void formPanel.offsetWidth;
+                formPanel.classList.add('form-focus-pulse');
             }
 
-            // Enfocar y resaltar el input solicitado
+            // Scroll suave del contenedor principal y del elemento
+            const mainContent = document.querySelector('.main-content');
             if (currentTargetInputId) {
                 const targetInput = document.getElementById(currentTargetInputId);
                 if (targetInput) {
                     setTimeout(() => {
-                        targetInput.focus();
+                        targetInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        targetInput.focus({ preventScroll: true });
                         targetInput.classList.remove('input-highlight-pulse');
                         void targetInput.offsetWidth;
                         targetInput.classList.add('input-highlight-pulse');
-                    }, 400);
+                    }, 200);
+                } else if (mainContent) {
+                    mainContent.scrollTo({ top: 0, behavior: 'smooth' });
                 }
+            } else if (mainContent) {
+                mainContent.scrollTo({ top: 0, behavior: 'smooth' });
             }
+
+            showToast('Completa ' + reqLabel + ' en el formulario', 'info');
         });
     }
 }
