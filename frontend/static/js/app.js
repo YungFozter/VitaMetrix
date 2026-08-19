@@ -1015,45 +1015,77 @@ function drawBCC(musclePct, fatPct) {
         }]
     });
 }
-// --- MOBILE SIDEBAR DRAWER CONTROLLER ---
+
+// --- SIDEBAR DRAWER & DESKTOP COLLAPSE CONTROLLER ---
 function initMobileSidebar() {
-    const menuBtn = document.getElementById('mobile-menu-btn');
+    const toggleBtn = document.getElementById('sidebar-toggle-btn') || document.getElementById('mobile-menu-btn');
     const closeBtn = document.getElementById('sidebar-close-btn');
+    const appLayout = document.querySelector('.app-layout');
     const sidebar = document.querySelector('.sidebar');
     const backdrop = document.getElementById('sidebar-backdrop');
     const navItems = document.querySelectorAll('.sidebar .nav-item');
 
     if (!sidebar) return;
 
-    const openSidebar = () => {
+    // Restore desktop preference
+    const savedCollapsed = localStorage.getItem('sidebar_collapsed');
+    if (savedCollapsed === 'true' && window.innerWidth > 992 && appLayout) {
+        appLayout.classList.add('sidebar-collapsed');
+    }
+
+    const toggleSidebar = () => {
+        if (window.innerWidth <= 992) {
+            // Mobile: Toggle Drawer
+            const isOpen = sidebar.classList.contains('mobile-open');
+            if (isOpen) {
+                closeMobileDrawer();
+            } else {
+                openMobileDrawer();
+            }
+        } else {
+            // Desktop: Toggle Collapse
+            if (appLayout) {
+                appLayout.classList.toggle('sidebar-collapsed');
+                const isCollapsed = appLayout.classList.contains('sidebar-collapsed');
+                localStorage.setItem('sidebar_collapsed', isCollapsed);
+            }
+        }
+    };
+
+    const openMobileDrawer = () => {
         sidebar.classList.add('mobile-open');
         if (backdrop) backdrop.classList.add('active');
         document.body.style.overflow = 'hidden';
     };
 
-    const closeSidebar = () => {
+    const closeMobileDrawer = () => {
         sidebar.classList.remove('mobile-open');
         if (backdrop) backdrop.classList.remove('active');
         document.body.style.overflow = '';
     };
 
-    if (menuBtn) menuBtn.addEventListener('click', openSidebar);
-    if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
-    if (backdrop) backdrop.addEventListener('click', closeSidebar);
+    if (toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+    if (closeBtn) closeBtn.addEventListener('click', closeMobileDrawer);
+    if (backdrop) backdrop.addEventListener('click', closeMobileDrawer);
 
     // Auto-close drawer on navigation click (mobile)
     navItems.forEach(item => {
         item.addEventListener('click', () => {
             if (window.innerWidth <= 992) {
-                closeSidebar();
+                closeMobileDrawer();
             }
         });
     });
 
-    // Close on Escape key
+    // Keyboard shortcuts: ESC to close on mobile, Ctrl+B to toggle on desktop
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape' && sidebar.classList.contains('mobile-open')) {
-            closeSidebar();
+            closeMobileDrawer();
+        }
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'b' || e.key === 'B')) {
+            e.preventDefault();
+            toggleSidebar();
         }
     });
 }
+
