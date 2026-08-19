@@ -677,10 +677,10 @@ function drawPALGauge(pal) {
     const w = canvas.width, h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
-    // Ajustamos 'cy' para que el arco (que baja del ecuador) no se corte al fondo
-    const cy = h - 25; 
+    // cy y radius perfectamente proporcionados para que el arco y la aguja nunca se recorten
     const cx = w / 2;
-    const radius = Math.min(cx, cy) - 20;
+    const cy = h - 55; 
+    const radius = 100;
     
     const START = Math.PI * 0.85;   
     const END = Math.PI * 2.15;     
