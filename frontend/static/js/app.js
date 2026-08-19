@@ -63,10 +63,13 @@ function showConfirm(title, message, onConfirm) {
 // --- 1. CLOCK ---
 function initClock() {
     const timeElement = document.getElementById('current-time');
-    setInterval(() => {
+    if (!timeElement) return;
+    const tick = () => {
         const now = new Date();
-        timeElement.textContent = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    }, 1000);
+        timeElement.textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    };
+    tick();
+    setInterval(tick, 1000);
 }
 
 // --- 1.5 PROFILE DROPDOWN ---
@@ -178,10 +181,16 @@ function initBioForm() {
             });
             
             const data = await response.json();
-            
-            // Update UI
+            if (!response.ok) {
+                throw new Error(data.error || 'Error en el análisis');
+            }
+
             updateBioUI(data, payload);
-            showToast("Evaluación guardada en la nube con éxito.", "success");
+            if (data.saved) {
+                showToast("Evaluación guardada en la nube con éxito.", "success");
+            } else {
+                showToast("Análisis listo. No se pudo guardar en la nube.", "info");
+            }
             
             // Refrescar stats del dashboard
             fetchDashboardStats();
@@ -207,25 +216,42 @@ async function fetchDashboardStats() {
             const data = await response.json();
             
             // 1. Update Top Cards
-            document.getElementById('dash-total-clients').textContent = data.total_clients;
-            document.getElementById('dash-total-evals').textContent = data.total_evaluations;
-            document.getElementById('dash-avg-score').textContent = data.avg_score;
+            document.getElementById('dash-total-clients').textContent = data.total_clients ?? 0;
+            document.getElementById('dash-total-evals').textContent = data.total_evaluations ?? 0;
+            document.getElementById('dash-avg-score').textContent = data.avg_score ?? 0;
             
             // 2. Update Recent Table
             const tbody = document.getElementById('dash-recent-tbody');
             if (tbody) {
-                if (data.recent.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">No hay evaluaciones recientes.</td></tr>';
+                tbody.replaceChildren();
+                const recent = Array.isArray(data.recent) ? data.recent : [];
+                if (recent.length === 0) {
+                    const tr = document.createElement('tr');
+                    const td = document.createElement('td');
+                    td.colSpan = 4;
+                    td.style.textAlign = 'center';
+                    td.style.padding = '2rem';
+                    td.textContent = 'No hay evaluaciones recientes.';
+                    tr.appendChild(td);
+                    tbody.appendChild(tr);
                 } else {
-                    tbody.innerHTML = '';
-                    data.recent.forEach(e => {
+                    recent.forEach(e => {
                         const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td style="font-weight: 600;">${e.name}</td>
-                            <td>${e.date}</td>
-                            <td><span class="code-badge" style="background: rgba(45,122,74,0.1); color: #2d7a4a;">${e.score} pts</span></td>
-                            <td>${e.phase_angle}°</td>
-                        `;
+                        const tdName = document.createElement('td');
+                        tdName.style.fontWeight = '600';
+                        tdName.textContent = e.name || 'Unknown';
+                        const tdDate = document.createElement('td');
+                        tdDate.textContent = e.date || '';
+                        const tdScore = document.createElement('td');
+                        const badge = document.createElement('span');
+                        badge.className = 'code-badge';
+                        badge.style.background = 'rgba(45,122,74,0.1)';
+                        badge.style.color = '#2d7a4a';
+                        badge.textContent = `${e.score ?? 0} pts`;
+                        tdScore.appendChild(badge);
+                        const tdPhase = document.createElement('td');
+                        tdPhase.textContent = `${e.phase_angle ?? '--'}°`;
+                        tr.append(tdName, tdDate, tdScore, tdPhase);
                         tbody.appendChild(tr);
                     });
                 }
@@ -712,8 +738,6 @@ function drawPALGauge(pal) {
     ctx.arc(cx, cy, 2, 0, 2 * Math.PI);
     ctx.fillStyle = '#ffffff';
     ctx.fill();
-    ctx.fillStyle = '#1A2A4A';
-    ctx.fill();
 
     ctx.textAlign = 'left';
 }
@@ -763,10 +787,12 @@ function initClients() {
                 body: JSON.stringify(payload)
             });
             const result = await res.json();
-            if(result.success) {
-                btnCancel.click(); // Resetear formulario y modo
-                fetchClients(); // recargar tabla
-                showToast(editingClientId ? 'Cliente actualizado exitosamente' : 'Cliente guardado con el código ' + result.data.code, 'success');
+            if (result.success) {
+                const wasEditing = Boolean(editingClientId);
+                const assignedCode = result.data && result.data.code;
+                btnCancel.click();
+                fetchClients();
+                showToast(wasEditing ? 'Cliente actualizado exitosamente' : 'Cliente guardado con el código ' + assignedCode, 'success');
             } else {
                 showToast('Error al guardar: ' + result.error, 'error');
             }
@@ -789,27 +815,41 @@ async function fetchClients() {
     try {
         const res = await fetch('/api/clients');
         const clients = await res.json();
-        
-        if(!clients || clients.length === 0) {
+        if (!res.ok || !Array.isArray(clients) || clients.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: #7a8aa0;">No hay clientes registrados.</td></tr>';
             return;
         }
         
-        tbody.innerHTML = '';
+        tbody.replaceChildren();
         clients.forEach(c => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><span class="code-badge">ID-${c.code.toString().padStart(4, '0')}</span></td>
-                <td style="font-weight: 600;">${c.name}</td>
-                <td>
-                    ${c.phone ? '📞 ' + c.phone + '<br>' : ''}
-                    ${c.email ? '📧 ' + c.email : ''}
-                </td>
-                <td>
-                    <button class="btn-edit" onclick="editClient('${c.id}', '${c.name.replace(/'/g, "\\'")}', '${(c.phone||'').replace(/'/g, "\\'")}', '${(c.email||'').replace(/'/g, "\\'")}')">Editar</button>
-                    <button class="btn-danger" onclick="deleteClient('${c.id}')">Eliminar</button>
-                </td>
-            `;
+            const tdCode = document.createElement('td');
+            const badge = document.createElement('span');
+            badge.className = 'code-badge';
+            badge.textContent = 'ID-' + String(c.code ?? 0).padStart(4, '0');
+            tdCode.appendChild(badge);
+
+            const tdName = document.createElement('td');
+            tdName.style.fontWeight = '600';
+            tdName.textContent = c.name || '';
+
+            const tdContact = document.createElement('td');
+            if (c.phone) tdContact.append(`📞 ${c.phone}`);
+            if (c.phone && c.email) tdContact.appendChild(document.createElement('br'));
+            if (c.email) tdContact.append(`📧 ${c.email}`);
+
+            const tdActions = document.createElement('td');
+            const btnEdit = document.createElement('button');
+            btnEdit.className = 'btn-edit';
+            btnEdit.textContent = 'Editar';
+            btnEdit.addEventListener('click', () => editClient(c.id, c.name || '', c.phone || '', c.email || ''));
+            const btnDel = document.createElement('button');
+            btnDel.className = 'btn-danger';
+            btnDel.textContent = 'Eliminar';
+            btnDel.addEventListener('click', () => deleteClient(c.id));
+            tdActions.append(btnEdit, btnDel);
+
+            tr.append(tdCode, tdName, tdContact, tdActions);
             tbody.appendChild(tr);
         });
     } catch(err) {
@@ -911,10 +951,11 @@ function drawPhACurve(curves, patientAge, patientPhA) {
 // --- 4d. GRÁFICO BCC (SCATTER PLOT MÚSCULO VS GRASA) ---
 function drawBCC(musclePct, fatPct) {
     const canvas = document.getElementById('bccCanvas');
-    if (!canvas || window.bccChartInstance) {
-        if(window.bccChartInstance) window.bccChartInstance.destroy();
+    if (window.bccChartInstance) {
+        window.bccChartInstance.destroy();
+        window.bccChartInstance = null;
     }
-    if (!canvas) return;
+    if (!canvas || !window.Chart) return;
 
     window.bccChartInstance = new Chart(canvas, {
         type: 'scatter',
@@ -953,25 +994,23 @@ function drawBCC(musclePct, fatPct) {
                     max: fatPct + 20,
                     grid: { color: 'rgba(0,0,0,0.05)' }
                 }
-            },
-            // Añadir una línea diagonal base dibujada como plugin
-            plugins: [{
-                id: 'bccDiagonal',
-                beforeDraw: (chart) => {
-                    const ctx = chart.ctx;
-                    const xAxis = chart.scales.x;
-                    const yAxis = chart.scales.y;
-                    ctx.save();
-                    ctx.strokeStyle = '#cd7f32'; // Línea bronce/dorada
-                    ctx.lineWidth = 2;
-                    ctx.beginPath();
-                    // Diagonal simple cruzando desde el mínimo de X y maximo de Y, hasta maximo de X y mínimo de Y
-                    ctx.moveTo(xAxis.getPixelForValue(xAxis.min), yAxis.getPixelForValue(yAxis.max));
-                    ctx.lineTo(xAxis.getPixelForValue(xAxis.max), yAxis.getPixelForValue(yAxis.min));
-                    ctx.stroke();
-                    ctx.restore();
-                }
-            }]
-        }
+            }
+        },
+        plugins: [{
+            id: 'bccDiagonal',
+            beforeDraw: (chart) => {
+                const ctx = chart.ctx;
+                const xAxis = chart.scales.x;
+                const yAxis = chart.scales.y;
+                ctx.save();
+                ctx.strokeStyle = '#cd7f32';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(xAxis.getPixelForValue(xAxis.min), yAxis.getPixelForValue(yAxis.max));
+                ctx.lineTo(xAxis.getPixelForValue(xAxis.max), yAxis.getPixelForValue(yAxis.min));
+                ctx.stroke();
+                ctx.restore();
+            }
+        }]
     });
 }

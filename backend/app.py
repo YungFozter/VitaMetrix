@@ -8,6 +8,8 @@ _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
 
+from typing import Optional
+
 from flask import Flask, render_template, request, jsonify
 from dotenv import load_dotenv
 from supabase import create_client, Client
@@ -40,11 +42,37 @@ app = Flask(
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
-supabase: Client = None
+supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_KEY:
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 else:
     print("WARNING: Supabase credentials not found in .env")
+
+_EMPTY_DASHBOARD = {
+    "total_clients": 0,
+    "total_evaluations": 0,
+    "avg_score": 0,
+    "recent": [],
+    "population": {},
+}
+
+
+def _cell_bucket(phase_angle, valid=True):
+    """Clasifica estado celular para el gráfico del dashboard (Óptimo / Límite / Bajo)."""
+    if not valid:
+        return "Límite"
+    if phase_angle > 6.0:
+        return "Óptimo"
+    if phase_angle >= 5.0:
+        return "Límite"
+    return "Bajo"
+
+
+def _normalize_gender(value):
+    raw = (value or "male").strip().lower()
+    if raw in ("f", "female", "mujer", "femenino"):
+        return "female"
+    return "male"
 
 @app.route('/')
 def index():
@@ -53,7 +81,7 @@ def index():
 @app.route('/api/dashboard-stats', methods=['GET'])
 def dashboard_stats():
     if not supabase:
-        return jsonify({"total_patients": 0, "total_evaluations": 0, "avg_score": 0, "recent": [], "population": {}})
+        return jsonify(_EMPTY_DASHBOARD)
         
     try:
         # Get count of unique clients from 'clients' table
@@ -62,7 +90,7 @@ def dashboard_stats():
         
         # Get all evaluations
         evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
-        evaluations = evals_res.data
+        evaluations = evals_res.data or []
         
         total_evaluations = len(evaluations)
         
@@ -77,19 +105,15 @@ def dashboard_stats():
         recent = []
         for e in evaluations:
             # Re-calculate phase angle / cell status since it's not in DB
-            biva_info = get_biva_interpretation(float(e.get('resistance', 0)), float(e.get('reactance', 0)))
-            c_status = biva_info['cell_status']
-            
-            # Count for population
-            if "Óptimo" in c_status: cell_status_counts["Óptimo"] += 1
-            elif "Bajo" in c_status: cell_status_counts["Bajo"] += 1
-            else: cell_status_counts["Límite"] += 1
+            biva_info = get_biva_interpretation(float(e.get('resistance', 0) or 0), float(e.get('reactance', 0) or 0))
+            bucket = _cell_bucket(biva_info['phase_angle'], biva_info.get('valid', True))
+            cell_status_counts[bucket] += 1
             
             # Save top 5 recent
             if len(recent) < 5:
                 recent.append({
                     "name": e.get('patient_name', 'Unknown'),
-                    "date": e.get('created_at', '').split('T')[0],
+                    "date": (e.get('created_at') or '').split('T')[0],
                     "score": e.get('global_score', 0),
                     "phase_angle": biva_info['phase_angle']
                 })
@@ -103,7 +127,7 @@ def dashboard_stats():
         })
     except Exception as e:
         print(f"Error fetching stats: {e}")
-        return jsonify({"total_patients": 0, "total_evaluations": 0, "avg_score": 0, "recent": [], "population": {}}), 500
+        return jsonify(_EMPTY_DASHBOARD), 500
 
 def _run_analysis(data):
     """
@@ -169,7 +193,7 @@ def _run_analysis(data):
     weight = _num(data.get('weight', 0)) or 0
     height = _num(data.get('height', 0)) or 0
     age = int(_num(data.get('age', 0)) or 0)
-    gender = data.get('gender', 'male')
+    gender = _normalize_gender(data.get('gender', 'male'))
     pal = _num(data.get('pal', 1.2)) or 1.2
 
     # Cálculos - Módulos
@@ -223,6 +247,7 @@ def _run_analysis(data):
         }
 
     # Guardar en Supabase (columnas nuevas son opcionales; se ignoran si no existen)
+    saved = False
     if supabase:
         try:
             supabase.table('evaluations').insert({
@@ -245,6 +270,7 @@ def _run_analysis(data):
                 "visceral_fat": visceral_fat,
                 "waist": waist
             }).execute()
+            saved = True
         except Exception as e:
             print(f"Error saving to supabase: {e}")
 
@@ -270,6 +296,7 @@ def _run_analysis(data):
         "segmental": segmental_info,
         "composition_indices": composition_indices,
         "bcc": bcc,
+        "saved": saved,
         # Fase 7: datos para gráficos (BIVA normalizado por altura, curva SMM)
         "inputs_echo": {
             "height": height,
@@ -312,7 +339,7 @@ def get_clients():
 @app.route('/api/clients', methods=['POST'])
 def add_client():
     if not supabase: return jsonify({"error": "No db"}), 500
-    data = request.json
+    data = request.json or {}
     name = data.get('name')
     phone = data.get('phone', '')
     email = data.get('email', '')
@@ -350,7 +377,7 @@ def add_client():
 @app.route('/api/clients/<string:client_id>', methods=['PUT'])
 def update_client(client_id):
     if not supabase: return jsonify({"error": "No db"}), 500
-    data = request.json
+    data = request.json or {}
     name = data.get('name')
     phone = data.get('phone', '')
     email = data.get('email', '')

@@ -86,8 +86,9 @@ def calculate_scores(weight, height, phase_angle, smm=None, fat_mass=None, gende
         fat_pct = (fat_mass / weight) * 100
         # Puntuación de músculo: a mayor % magro (hasta ~50%), mayor score
         muscle_score = min(max(int(lean_pct * 1.6), 10), 100)
-        # Puntuación de grasa: inversamente proporcional al % grasa
-        fat_score = min(max(int(100 - fat_pct * 1.4), 5), 100)
+        # Puntuación de grasa: carga (mayor = más grasa). Coherente con el
+        # fallback por IMC y con global_score, que RESTA este valor.
+        fat_score = min(max(int(fat_pct * 1.4), 5), 100)
     else:
         muscle_score, fat_score = _estimate_scores_from_phase_bmi(weight, height, phase_angle)
 
@@ -125,9 +126,11 @@ def analyze_hydration(tbw=None, ecw=None, weight=None):
       42-45%  -> Leve sobrecarga hídrica extracelular (Atención)
       > 45%   -> Edema subclínico / Inflamación sistémica (Alerta Roja)
     """
-    if not tbw or not ecw or tbw == 0:
+    if tbw is None or ecw is None or tbw == 0:
         return {
             "available": False,
+            "tbw": tbw,
+            "ecw": ecw,
             "ecw_tbw_ratio": None,
             "status": "No disponible",
             "alert": False
@@ -151,6 +154,8 @@ def analyze_hydration(tbw=None, ecw=None, weight=None):
 
     return {
         "available": True,
+        "tbw": round(tbw, 1),
+        "ecw": round(ecw, 1),
         "ecw_tbw_ratio": ratio,
         "status": status,
         "alert": alert
@@ -273,7 +278,7 @@ def build_clinical_report(biva, hydration, visceral, scores, phase_angle, ecw_tb
     if not findings:
         findings.append(
             "Composición corporal dentro de rangos saludables. Mantener hábitos actuales "
-            "y repetition de la evaluación en 3 meses."
+            "y repetición de la evaluación en 3 meses."
         )
 
     return findings
