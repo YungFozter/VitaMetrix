@@ -1025,16 +1025,34 @@ async function fetchEvaluaciones() {
     }
 }
 
+function normalizeText(str) {
+    if (!str) return '';
+    return String(str)
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .trim();
+}
+
 function filterAndRenderEvaluaciones() {
     const tbody = document.getElementById('evaluaciones-tbody');
     if (!tbody) return;
 
-    const searchTerm = (document.getElementById('eval-search-input')?.value || '').toLowerCase();
+    const searchTerm = normalizeText(document.getElementById('eval-search-input')?.value);
     const statusFilter = document.getElementById('eval-filter-status')?.value || 'all';
 
     const filtered = allEvaluationsData.filter(item => {
-        const nameMatch = (item.patient_name || '').toLowerCase().includes(searchTerm) ||
-                          (item.patient_idp || '').toLowerCase().includes(searchTerm);
+        const normName = normalizeText(item.patient_name);
+        const normIdp = normalizeText(item.patient_idp);
+        const normWeight = normalizeText(item.weight);
+        const normHeight = normalizeText(item.height);
+
+        const nameMatch = !searchTerm ||
+                          normName.includes(searchTerm) ||
+                          normIdp.includes(searchTerm) ||
+                          normWeight.includes(searchTerm) ||
+                          normHeight.includes(searchTerm);
+
         const statusMatch = statusFilter === 'all' || (item.cell_status || '').includes(statusFilter);
         return nameMatch && statusMatch;
     });
