@@ -1,9 +1,10 @@
 import os
 import sys
+import logging
 
-# Asegurar que el directorio del módulo (backend/) esté en sys.path para que
-# `import calculations` / `import reference` funcione tanto con
-# `python backend/app.py` como con `flask --app backend.app` o `gunicorn backend.app:app`.
+# Configurar logging seguro
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+
 _BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 if _BACKEND_DIR not in sys.path:
     sys.path.insert(0, _BACKEND_DIR)
@@ -28,6 +29,7 @@ from reference import (
     get_pha_age_curves,
     analyze_segmental,
     analyze_composition_indices,
+    load_tables,
 )
 
 load_dotenv()
@@ -44,22 +46,25 @@ SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 
 supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        logging.error("Error al inicializar cliente de Supabase: %s", e)
 else:
-    print("WARNING: Supabase credentials not found in .env")
+    logging.warning("Supabase credentials not found in environment variables.")
 
 _EMPTY_DASHBOARD = {
     "total_clients": 0,
     "total_evaluations": 0,
     "avg_score": 0,
     "recent": [],
-    "population": {},
+    "population": {"Óptimo": 0, "Límite": 0, "Bajo": 0},
 }
 
 
 def _cell_bucket(phase_angle, valid=True):
     """Clasifica estado celular para el gráfico del dashboard (Óptimo / Límite / Bajo)."""
-    if not valid:
+    if not valid or phase_angle is None:
         return "Límite"
     if phase_angle > 6.0:
         return "Óptimo"
@@ -84,38 +89,37 @@ def dashboard_stats():
         return jsonify(_EMPTY_DASHBOARD)
         
     try:
-        # Get count of unique clients from 'clients' table
+        # Contar clientes
         clients_res = supabase.table('clients').select('id', count='exact').execute()
         total_clients = clients_res.count if clients_res.count is not None else 0
         
-        # Get all evaluations
-        evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
+        # Obtener evaluaciones recientes
+        evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).limit(100).execute()
         evaluations = evals_res.data or []
         
         total_evaluations = len(evaluations)
         
-        # Calculate Average Score
+        # Calcular promedio de TRU Score
         valid_scores = [float(e['global_score']) for e in evaluations if e.get('global_score') is not None]
         avg_score = round(sum(valid_scores) / len(valid_scores), 1) if valid_scores else 0
         
-        # Population stats (Cell Status)
+        # Estadísticas poblacionales (Estado celular)
         cell_status_counts = {"Óptimo": 0, "Límite": 0, "Bajo": 0}
         
-        # Format recent and calculate status
         recent = []
         for e in evaluations:
-            # Re-calculate phase angle / cell status since it's not in DB
-            biva_info = get_biva_interpretation(float(e.get('resistance', 0) or 0), float(e.get('reactance', 0) or 0))
-            bucket = _cell_bucket(biva_info['phase_angle'], biva_info.get('valid', True))
+            r = float(e.get('resistance', 0) or 0)
+            xc = float(e.get('reactance', 0) or 0)
+            biva_info = get_biva_interpretation(r, xc)
+            bucket = _cell_bucket(biva_info.get('phase_angle', 0), biva_info.get('valid', True))
             cell_status_counts[bucket] += 1
             
-            # Save top 5 recent
             if len(recent) < 5:
                 recent.append({
                     "name": e.get('patient_name', 'Unknown'),
                     "date": (e.get('created_at') or '').split('T')[0],
                     "score": e.get('global_score', 0),
-                    "phase_angle": biva_info['phase_angle']
+                    "phase_angle": biva_info.get('phase_angle', 0)
                 })
         
         return jsonify({
@@ -126,32 +130,29 @@ def dashboard_stats():
             "population": cell_status_counts
         })
     except Exception as e:
-        print(f"Error fetching stats: {e}")
+        logging.error("Error al obtener estadísticas del dashboard: %s", e, exc_info=True)
         return jsonify(_EMPTY_DASHBOARD), 500
 
 def _run_analysis(data):
     """
     FASE 5: Núcleo de cálculo unificado.
-    Recibe el payload del formulario, ejecuta los Módulos 1-7 (BIVA, Scores,
-    hidratación, visceral, energético, segmental, percentiles, índices, BCC)
-    y devuelve UN diccionario con todo. Lo comparten /api/calculate (compat)
-    y /api/dashboard-data (endpoint canónico del manual).
+    Recibe el payload del formulario, ejecuta los Módulos 1-7 y devuelve UN diccionario completo.
     """
-    # NUEVOS CAMPOS DEL DISPOSITIVO (Opción A) — todos opcionales
-    smm = data.get('smm')           # Masa muscular esquelética (kg)
-    tbw = data.get('tbw')           # Agua total corporal (L)
-    ecw = data.get('ecw')           # Agua extracelular (L)
-    fat_mass = data.get('fat_mass') # Masa grasa (kg)
-    visceral_fat = data.get('visceral_fat')  # Grasa visceral (L)
-    waist = data.get('waist')       # Circunferencia de cintura (cm)
-    # Campos Fase 3 (opcionales, del dispositivo)
-    phase_angle_dev = data.get('phase_angle_dev')  # Ángulo de fase medido por el equipo
+    # Campos opcionales del dispositivo
+    smm = data.get('smm')
+    tbw = data.get('tbw')
+    ecw = data.get('ecw')
+    fat_mass = data.get('fat_mass')
+    visceral_fat = data.get('visceral_fat')
+    waist = data.get('waist')
+    phase_angle_dev = data.get('phase_angle_dev')
     seg_arm_r = data.get('seg_arm_r')
     seg_arm_l = data.get('seg_arm_l')
     seg_torso = data.get('seg_torso')
     seg_leg_r = data.get('seg_leg_r')
     seg_leg_l = data.get('seg_leg_l')
-    # Índices ya calculados por el dispositivo (opcionales; si no, los estimamos)
+    
+    # Índices directos del dispositivo (si se proporcionan)
     dev_imc = data.get('imc')
     dev_fmi = data.get('fmi')
     dev_ffmi = data.get('ffmi')
@@ -184,10 +185,10 @@ def _run_analysis(data):
     dev_smi = _num(dev_smi)
 
     # Datos paciente
-    patient_idp = data.get('patient_idp', '000000')
-    patient_name = data.get('patient_name', 'Unknown')
+    patient_idp = str(data.get('patient_idp', '000000')).strip()
+    patient_name = str(data.get('patient_name', 'Unknown')).strip()
 
-    # Datos fisicos
+    # Datos físicos
     r = _num(data.get('resistance', 0)) or 0
     xc = _num(data.get('reactance', 0)) or 0
     weight = _num(data.get('weight', 0)) or 0
@@ -196,9 +197,9 @@ def _run_analysis(data):
     gender = _normalize_gender(data.get('gender', 'male'))
     pal = _num(data.get('pal', 1.2)) or 1.2
 
-    # Cálculos - Módulos
+    # Cálculos - Módulos Base
     biva_info = get_biva_interpretation(r, xc)
-    energy_info = calculate_energy(weight, height, age, gender, pal, smm=smm)
+    energy_info = calculate_energy(weight, height, age, gender, pal, smm=smm, fat_mass=fat_mass)
     scores = calculate_scores(weight, height, biva_info['phase_angle'],
                               smm=smm, fat_mass=fat_mass, gender=gender)
     hydration_info = analyze_hydration(tbw=tbw, ecw=ecw, weight=weight)
@@ -209,13 +210,14 @@ def _run_analysis(data):
         ecw_tbw_ratio=hydration_info.get('ecw_tbw_ratio')
     )
 
-    # --- FASE 3: Módulos 3, 6 + índices de composición (reference.py) ---
+    # Percentiles y Curvas Poblacionales
     phase_for_percentile = phase_angle_dev if phase_angle_dev else biva_info['phase_angle']
     phase_percentile = get_phase_angle_percentile(phase_for_percentile, age, gender)
     pha_curves = get_pha_age_curves(gender)
     smm_percentile = get_smm_percentile(smm, age, gender) if smm else None
     smm_curves = get_smm_age_curves(gender) if smm else None
 
+    # Músculo Segmental
     segments = {
         'arm_right': seg_arm_r, 'arm_left': seg_arm_l,
         'torso': seg_torso, 'leg_right': seg_leg_r, 'leg_left': seg_leg_l
@@ -223,21 +225,47 @@ def _run_analysis(data):
     has_segments = any(v is not None for v in segments.values())
     segmental_info = analyze_segmental(segments, gender) if has_segments else {"segments": {}, "asymmetries": []}
 
-    # Índices: usar los del dispositivo si se dieron, si no estimar
-    if dev_imc or dev_fmi or dev_ffmi or dev_fm_pct or dev_smi:
-        composition_indices = {
-            "available": True,
-            "imc": dev_imc, "imc_status": None,
-            "fmi": dev_fmi, "fmi_status": None,
-            "ffmi": dev_ffmi, "ffmi_status": None,
-            "fm_pct": dev_fm_pct, "fm_pct_status": None,
-            "smi": dev_smi, "smi_status": None,
-            "from_device": True
-        }
-    else:
-        composition_indices = analyze_composition_indices(weight, height, fat_mass, smm, gender)
+    # [CLI-01 FIX] Índices de Composición: cálculo integral con override granular
+    calculated_indices = analyze_composition_indices(weight, height, fat_mass, smm, gender)
+    tables = load_tables()
 
-    # BCC (gráfico grasa vs músculo): posición relativa estimada
+    def _eval_imc_status(v):
+        r_tab = tables.get("bmi_normal_ranges", {}).get(gender, {})
+        if v < r_tab.get("low", 18.5): return "Bajo peso", "yellow"
+        if v <= r_tab.get("normal_max", 24.9): return "Normal", "green"
+        if v <= r_tab.get("overweight_max", 29.9): return "Sobrepeso", "yellow"
+        return "Obesidad", "red"
+
+    def _eval_high_status(v, key):
+        r_tab = tables.get(key, {}).get(gender, {})
+        return ("Normal", "green") if (v is not None and v <= r_tab.get("normal_max", 999)) else ("Alto", "red")
+
+    def _eval_low_status(v, key):
+        r_tab = tables.get(key, {}).get(gender, {})
+        return ("Normal", "green") if (v is not None and v >= r_tab.get("normal_min", 0)) else ("Bajo", "yellow")
+
+    final_imc = dev_imc if dev_imc is not None else calculated_indices.get("imc")
+    final_fmi = dev_fmi if dev_fmi is not None else calculated_indices.get("fmi")
+    final_ffmi = dev_ffmi if dev_ffmi is not None else calculated_indices.get("ffmi")
+    final_fm_pct = dev_fm_pct if dev_fm_pct is not None else calculated_indices.get("fm_pct")
+    final_smi = dev_smi if dev_smi is not None else calculated_indices.get("smi")
+
+    composition_indices = {
+        "available": any(x is not None for x in (final_imc, final_fmi, final_ffmi, final_fm_pct, final_smi)),
+        "imc": final_imc,
+        "imc_status": _eval_imc_status(final_imc) if final_imc is not None else None,
+        "fmi": final_fmi,
+        "fmi_status": _eval_high_status(final_fmi, "fmi_normal_ranges") if final_fmi is not None else None,
+        "ffmi": final_ffmi,
+        "ffmi_status": _eval_low_status(final_ffmi, "ffmi_normal_ranges") if final_ffmi is not None else None,
+        "fm_pct": final_fm_pct,
+        "fm_pct_status": _eval_high_status(final_fm_pct, "fm_percent_ranges") if final_fm_pct is not None else None,
+        "smi": final_smi,
+        "smi_status": _eval_low_status(final_smi, "smi_normal_ranges") if final_smi is not None else None,
+        "from_device": any(x is not None for x in (dev_imc, dev_fmi, dev_ffmi, dev_fm_pct, dev_smi))
+    }
+
+    # BCC (gráfico grasa vs músculo)
     bcc = {"available": False}
     if fat_mass and smm and weight:
         bcc = {
@@ -246,12 +274,11 @@ def _run_analysis(data):
             "muscle_pct": round(smm / weight * 100, 1)
         }
 
-    # Guardar en Supabase con reciclaje de código EVA-XXX
+    # Guardar en Supabase con reciclaje seguro de códigos EVA-XXX
     saved = False
     assigned_code = None
     if supabase:
         try:
-            # Lógica de reciclaje de códigos de evaluación (EVA-001, EVA-002, etc.)
             evals_res = supabase.table('evaluations').select('code').execute()
             existing_codes = []
             for row in (evals_res.data or []):
@@ -296,16 +323,15 @@ def _run_analysis(data):
 
             try:
                 supabase.table('evaluations').insert(insert_payload).execute()
-            except Exception as insert_err:
-                # Fallback si la columna 'code' aún no existe en el esquema de Supabase
+            except Exception:
+                # Fallback si la columna 'code' aún no existe en el esquema de la BD
                 insert_payload.pop('code', None)
                 supabase.table('evaluations').insert(insert_payload).execute()
 
             saved = True
         except Exception as e:
-            print(f"Error saving to supabase: {e}")
+            logging.error("Error al guardar evaluación en Supabase: %s", e)
 
-    # Respuesta unificada (Módulos 1-7 + informe clínico)
     return {
         "score": scores['score'],
         "rank": scores['rank'],
@@ -319,7 +345,6 @@ def _run_analysis(data):
         "hydration": hydration_info,
         "visceral": visceral_info,
         "clinical_findings": clinical_findings,
-        # Fase 3: módulos 3, 6 + índices
         "phase_percentile": phase_percentile,
         "pha_curves": pha_curves,
         "smm_percentile": smm_percentile,
@@ -328,7 +353,6 @@ def _run_analysis(data):
         "composition_indices": composition_indices,
         "bcc": bcc,
         "saved": saved,
-        # Fase 7: datos para gráficos (BIVA normalizado por altura, curva SMM)
         "inputs_echo": {
             "height": height,
             "gender": gender,
@@ -346,12 +370,7 @@ def calculate():
 
 @app.route('/api/dashboard-data', methods=['POST'])
 def dashboard_data():
-    """
-    FASE 5: Endpoint unificado según el manual (Pagina2 Analyzer.md).
-    El frontend envía los datos del formulario y recibe UN JSON con los
-    Módulos 1-7 + el informe clínico concatenado. Sustituye a /api/calculate
-    como ruta canónica del flujo de la pantalla de Bioimpedancia.
-    """
+    """Endpoint canónico del manual (Pagina2 Analyzer.md)."""
     data = request.json or {}
     return jsonify(_run_analysis(data))
 
@@ -359,7 +378,8 @@ def dashboard_data():
 
 @app.route('/api/evaluations', methods=['GET'])
 def get_evaluations():
-    if not supabase: return jsonify([]), 500
+    if not supabase:
+        return jsonify([]), 200
     try:
         res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
         evals_asc = res.data or []
@@ -377,19 +397,19 @@ def get_evaluations():
         evals_asc.reverse()
         return jsonify(evals_asc)
     except Exception as e:
-        print("Error fetching evaluations:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al obtener evaluaciones: %s", e, exc_info=True)
+        return jsonify({"error": "No se pudieron obtener las evaluaciones"}), 500
 
 @app.route('/api/evaluations/<string:eval_id>', methods=['GET'])
 def get_evaluation_by_id(eval_id):
-    if not supabase: return jsonify({"error": "No db"}), 500
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         res = supabase.table('evaluations').select('*').eq('id', eval_id).execute()
         if not res.data:
             return jsonify({"error": "Evaluación no encontrada"}), 404
         
         raw_eval = res.data[0]
-        # Re-correr los cálculos completos con el payload de la evaluación guardada
         payload = {
             "patient_idp": raw_eval.get('patient_idp'),
             "patient_name": raw_eval.get('patient_name'),
@@ -416,38 +436,41 @@ def get_evaluation_by_id(eval_id):
         full_analysis["raw_inputs"] = payload
         return jsonify(full_analysis)
     except Exception as e:
-        print("Error fetching evaluation:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al obtener detalle de evaluación: %s", e, exc_info=True)
+        return jsonify({"error": "Error interno al recuperar la evaluación"}), 500
 
 @app.route('/api/evaluations/<string:eval_id>', methods=['DELETE'])
 def delete_evaluation(eval_id):
-    if not supabase: return jsonify({"error": "No db"}), 500
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         supabase.table('evaluations').delete().eq('id', eval_id).execute()
         return jsonify({"success": True})
     except Exception as e:
-        print("Error deleting evaluation:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al eliminar evaluación: %s", e, exc_info=True)
+        return jsonify({"error": "Error al eliminar la evaluación"}), 500
 
 # --- RUTAS DE CLIENTES ---
 
 @app.route('/api/clients', methods=['GET'])
 def get_clients():
-    if not supabase: return jsonify([]), 500
+    if not supabase:
+        return jsonify([]), 200
     try:
         res = supabase.table('clients').select('*').order('code').execute()
-        return jsonify(res.data)
+        return jsonify(res.data or [])
     except Exception as e:
-        print("Error fetching clients:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al obtener clientes: %s", e, exc_info=True)
+        return jsonify({"error": "Error al obtener clientes"}), 500
 
 @app.route('/api/clients', methods=['POST'])
 def add_client():
-    if not supabase: return jsonify({"error": "No db"}), 500
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
     data = request.json or {}
-    name = data.get('name')
-    phone = data.get('phone', '')
-    email = data.get('email', '')
+    name = (data.get('name') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip()
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -455,7 +478,7 @@ def add_client():
     try:
         # Lógica de reciclaje de códigos
         res = supabase.table('clients').select('code').execute()
-        codes = [row['code'] for row in res.data if row.get('code') is not None]
+        codes = [row['code'] for row in (res.data or []) if row.get('code') is not None]
         codes.sort()
         
         new_code = 1
@@ -465,7 +488,6 @@ def add_client():
             elif code > new_code:
                 break
                 
-        # Guardar en Supabase
         new_client = {
             "code": new_code,
             "name": name,
@@ -476,16 +498,17 @@ def add_client():
         
         return jsonify({"success": True, "data": res_insert.data[0] if res_insert.data else {}})
     except Exception as e:
-        print("Error adding client:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al registrar cliente: %s", e, exc_info=True)
+        return jsonify({"error": "Error al guardar cliente"}), 500
 
 @app.route('/api/clients/<string:client_id>', methods=['PUT'])
 def update_client(client_id):
-    if not supabase: return jsonify({"error": "No db"}), 500
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
     data = request.json or {}
-    name = data.get('name')
-    phone = data.get('phone', '')
-    email = data.get('email', '')
+    name = (data.get('name') or '').strip()
+    phone = (data.get('phone') or '').strip()
+    email = (data.get('email') or '').strip()
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -499,27 +522,26 @@ def update_client(client_id):
         res = supabase.table('clients').update(updated_data).eq('id', client_id).execute()
         return jsonify({"success": True, "data": res.data[0] if res.data else {}})
     except Exception as e:
-        print("Error updating client:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al actualizar cliente: %s", e, exc_info=True)
+        return jsonify({"error": "Error al actualizar cliente"}), 500
 
 @app.route('/api/clients/<string:client_id>', methods=['DELETE'])
 def delete_client(client_id):
-    if not supabase: return jsonify({"error": "No db"}), 500
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         supabase.table('clients').delete().eq('id', client_id).execute()
         return jsonify({"success": True})
     except Exception as e:
-        print("Error deleting client:", e)
-        return jsonify({"error": str(e)}), 500
+        logging.error("Error al eliminar cliente: %s", e, exc_info=True)
+        return jsonify({"error": "Error al eliminar cliente"}), 500
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    """Health check for Render (and other uptime monitors)."""
+    """Health check para Render y monitores de uptime."""
     db_status = "connected" if supabase else "no-credentials"
     return jsonify({"status": "ok", "supabase": db_status}), 200
 
 if __name__ == '__main__':
-    # Never run with debug=True in production. The flag is opt-in via env var
-    # so `python backend/app.py` locally stays safe by default.
     debug_mode = os.environ.get("FLASK_DEBUG", "0") == "1"
     app.run(debug=debug_mode, host='0.0.0.0', port=int(os.environ.get("PORT", 5000)))

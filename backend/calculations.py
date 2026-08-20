@@ -10,8 +10,8 @@ def calculate_phase_angle(resistance, reactance):
     Calcula el Ángulo de Fase en grados.
     Formula: atan2(Reactancia, Resistencia) * (180 / PI)
     """
-    if resistance == 0:
-        return 0
+    if resistance is None or reactance is None or resistance <= 0 or reactance <= 0:
+        return 0.0
     angle_rad = math.atan2(reactance, resistance)
     angle_deg = angle_rad * (180 / math.pi)
     return round(angle_deg, 2)
@@ -22,10 +22,9 @@ def get_biva_interpretation(resistance, reactance):
     Interpreta los valores BIVA basado en el Ángulo de Fase y la Resistencia.
     Umbrales según Pagina2 Analyzer.md (Módulo 1).
     """
-    # Validación: R y Xc no pueden ser 0 (manual sección 6)
-    if resistance == 0 or reactance == 0:
+    if not resistance or not reactance or resistance <= 0 or reactance <= 0:
         return {
-            "phase_angle": 0,
+            "phase_angle": 0.0,
             "cell_status": "Datos incompletos",
             "hydration": "Datos incompletos",
             "valid": False
@@ -59,15 +58,14 @@ def get_biva_interpretation(resistance, reactance):
 
 # ---------------------------------------------------------------------------
 # MÓDULO 2: Puntuación Global TRU Body Score (Muscle / Fat)
-# Opción A: usa SMM y grasa reales cuando el dispositivo los entrega.
-# Fallback (Opción B): estima a partir de ángulo de fase e IMC.
 # ---------------------------------------------------------------------------
 
 def _estimate_scores_from_phase_bmi(weight, height, phase_angle):
     """Estimación de respaldo cuando no se dispone de SMM/grasa del dispositivo."""
-    height_m = height / 100.0
-    bmi = weight / (height_m ** 2) if height_m > 0 else 0
-    muscle_score = min(max(int(phase_angle * 10), 10), 100)
+    height_m = (height or 0) / 100.0
+    bmi = (weight / (height_m ** 2)) if (height_m > 0 and weight and weight > 0) else 22.0
+    pa = phase_angle or 5.5
+    muscle_score = min(max(int(pa * 10), 10), 100)
     fat_score = min(max(int(bmi * 1.5), 5), 100)
     return muscle_score, fat_score
 
@@ -75,24 +73,15 @@ def _estimate_scores_from_phase_bmi(weight, height, phase_angle):
 def calculate_scores(weight, height, phase_angle, smm=None, fat_mass=None, gender='male'):
     """
     Puntuación TRU Body Score.
-    - Si smm (kg) y fat_mass (kg) se proporcionan (Opción A), se usan directamente
-      para derivar percentiles relativos frente a un promedio poblacional simple.
-    - Si no, se estima (Opción B).
-    El Global Score es un promedio ponderado.
     """
-    if smm is not None and fat_mass is not None and weight > 0:
-        # Percentaje de masa magra y grasa respecto al peso
+    if smm is not None and fat_mass is not None and weight and weight > 0:
         lean_pct = (smm / weight) * 100
         fat_pct = (fat_mass / weight) * 100
-        # Puntuación de músculo: a mayor % magro (hasta ~50%), mayor score
         muscle_score = min(max(int(lean_pct * 1.6), 10), 100)
-        # Puntuación de grasa: carga (mayor = más grasa). Coherente con el
-        # fallback por IMC y con global_score, que RESTA este valor.
         fat_score = min(max(int(fat_pct * 1.4), 5), 100)
     else:
         muscle_score, fat_score = _estimate_scores_from_phase_bmi(weight, height, phase_angle)
 
-    # Global score (promedio ponderado: músculo 70%, grasa 30%)
     base_score = 40
     global_score = min(max(int(base_score + (muscle_score * 0.7) - (fat_score * 0.3)), 10), 99)
 
@@ -120,13 +109,8 @@ def calculate_scores(weight, height, phase_angle, smm=None, fat_mass=None, gende
 def analyze_hydration(tbw=None, ecw=None, weight=None):
     """
     Relación ECW/TBW = (ECW / TBW) * 100
-    Umbrales (manual Módulo 4):
-      < 39%   -> Hidratación intracelular óptima (Atleta)
-      39-42%  -> Rango saludable normal
-      42-45%  -> Leve sobrecarga hídrica extracelular (Atención)
-      > 45%   -> Edema subclínico / Inflamación sistémica (Alerta Roja)
     """
-    if tbw is None or ecw is None or tbw == 0:
+    if tbw is None or ecw is None or tbw <= 0:
         return {
             "available": False,
             "tbw": tbw,
@@ -136,8 +120,7 @@ def analyze_hydration(tbw=None, ecw=None, weight=None):
             "alert": False
         }
 
-    ratio = (ecw / tbw) * 100
-    ratio = round(ratio, 1)
+    ratio = round((ecw / tbw) * 100, 1)
 
     if ratio < 39:
         status = "Hidratación intracelular óptima"
@@ -167,13 +150,6 @@ def analyze_hydration(tbw=None, ecw=None, weight=None):
 # ---------------------------------------------------------------------------
 
 def analyze_visceral_fat(waist_cm=None, visceral_fat_l=None, gender='male'):
-    """
-    Riesgo cardiometabólico según Federación Internacional de Diabetes (IDF):
-      Mujeres: cintura >= 88 cm  -> Riesgo Alto
-      Hombres: cintura >= 102 cm -> Riesgo Alto
-    Grasa visceral:
-      Mujeres > 1.5 L / Hombres > 2.5 L -> Alerta cardiovascular
-    """
     result = {
         "available": False,
         "waist_risk": None,
@@ -208,48 +184,50 @@ def analyze_visceral_fat(waist_cm=None, visceral_fat_l=None, gender='male'):
 # MÓDULO 7: Gasto Energético (REE / TEE / PAL)
 # ---------------------------------------------------------------------------
 
-def calculate_energy(weight, height, age, gender, pal, smm=None):
+def calculate_energy(weight, height, age, gender, pal, smm=None, fat_mass=None):
     """
-    Calcula REE y TEE.
-    Si se dispone de SMM (masa magra), usa Cunningham: REE = 500 + 22 * SMM.
-    Si no, usa Mifflin-St Jeor (peso, altura, edad, sexo).
-    TEE = REE * PAL.
+    Calcula REE (Gasto Energético en Reposo) y TEE (Gasto Total).
     """
-    if smm is not None and smm > 0:
-        ree = 500 + (22 * smm)
+    w = weight or 70.0
+    h = height or 170.0
+    a = age or 30
+    p = pal or 1.2
+
+    lbm = None
+    if fat_mass is not None and fat_mass > 0 and w > fat_mass:
+        lbm = w - fat_mass
+    elif smm is not None and smm > 0:
+        lbm = min(w * 0.9, smm / 0.55)
+
+    if lbm is not None and lbm > 15:
+        ree = 500 + (22 * lbm)
     else:
         if gender == 'male':
-            ree = 10 * weight + 6.25 * height - 5 * age + 5
+            ree = (10 * w) + (6.25 * h) - (5 * a) + 5
         else:
-            ree = 10 * weight + 6.25 * height - 5 * age - 161
+            ree = (10 * w) + (6.25 * h) - (5 * a) - 161
 
-    tee = ree * pal
+    ree_kcal = int(round(max(800, ree)))
+    tee_kcal = int(round(ree_kcal * p))
     return {
-        "ree_kcal": int(ree),
-        "tee_kcal": int(tee)
+        "ree_kcal": ree_kcal,
+        "tee_kcal": tee_kcal
     }
 
 
 # ---------------------------------------------------------------------------
-# MOTOR DE REGLAS CLÍNICO (Módulo de Informe)
-# Concatena interpretaciones automáticas según el manual (sección 3).
+# MOTOR DE REGLAS CLÍNICO
 # ---------------------------------------------------------------------------
 
 def build_clinical_report(biva, hydration, visceral, scores, phase_angle, ecw_tbw_ratio=None):
-    """
-    Devuelve una lista de strings con las interpretaciones que se disparan.
-    Cada regla sigue la lógica IF/THEN del manual.
-    """
     findings = []
 
-    # Regla: Ángulo de fase < 5°
-    if phase_angle is not None and phase_angle < 5.0:
+    if phase_angle is not None and phase_angle < 5.0 and phase_angle > 0:
         findings.append(
             "Integridad de membranas celulares comprometida. "
             "Descartar inflamación crónica o desnutrición proteica."
         )
 
-    # Regla: ECW/TBW > 45% combinado con grasa visceral alta
     if hydration.get("available") and hydration.get("alert") and ecw_tbw_ratio is not None and ecw_tbw_ratio > 45:
         if visceral.get("available") and visceral.get("visceral_alert"):
             findings.append(
@@ -260,21 +238,18 @@ def build_clinical_report(biva, hydration, visceral, scores, phase_angle, ecw_tb
                 "Sobrecarga hídrica extracelular. Vigilar función renal y estado inflamatorio."
             )
 
-    # Regla: cintura alta
     if visceral.get("available") and visceral.get("waist_risk") == "Alto":
         findings.append(
             "Circunferencia de cintura elevada (riesgo IDF). Priorizar intervención "
             "nutricional y actividad física estructurada."
         )
 
-    # Regla: puntuación global baja
     if scores.get("score", 100) < 80:
         findings.append(
             "Composición corporal por debajo del rango óptimo (Bronce/Hierro). "
             "Reevaluar plan de entrenamiento y nutrición."
         )
 
-    # Si no se dispara ninguna regla, mensaje positivo por defecto
     if not findings:
         findings.append(
             "Composición corporal dentro de rangos saludables. Mantener hábitos actuales "

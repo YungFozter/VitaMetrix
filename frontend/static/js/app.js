@@ -8,28 +8,29 @@ document.addEventListener('DOMContentLoaded', () => {
     initClients();
     initEvaluaciones();
     initProfileDropdown();
+    initSystemMenuListeners();
     fetchDashboardStats();
 });
 
 // --- 0. TOASTS & MODALS ---
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
-    if(!container) return;
-    
+    if (!container) return;
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    
+
     // Icon
     let icon = 'ℹ️';
-    if(type === 'success') icon = '✅';
-    if(type === 'error') icon = '❌';
-    
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+
     toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
     container.appendChild(toast);
-    
+
     // Animate in
     setTimeout(() => toast.classList.add('show'), 10);
-    
+
     // Remove after 3s
     setTimeout(() => {
         toast.classList.remove('show');
@@ -39,28 +40,28 @@ function showToast(message, type = 'info') {
 
 function showConfirm(title, message, onConfirm) {
     const modal = document.getElementById('custom-modal');
-    if(!modal) return;
-    
+    if (!modal) return;
+
     document.getElementById('modal-title').textContent = title;
     document.getElementById('modal-message').textContent = message;
-    
+
     const btnCancel = document.getElementById('modal-btn-cancel');
     const btnConfirm = document.getElementById('modal-btn-confirm');
-    
+
     // Reset listeners by cloning
     const newCancel = btnCancel.cloneNode(true);
     const newConfirm = btnConfirm.cloneNode(true);
     btnCancel.parentNode.replaceChild(newCancel, btnCancel);
     btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
-    
+
     const closeModal = () => modal.classList.add('hidden');
-    
+
     newCancel.addEventListener('click', closeModal);
     newConfirm.addEventListener('click', () => {
         closeModal();
         onConfirm();
     });
-    
+
     modal.classList.remove('hidden');
 }
 
@@ -80,13 +81,13 @@ function initClock() {
 function initProfileDropdown() {
     const profileBtn = document.getElementById('user-profile-btn');
     const dropdown = document.getElementById('profile-dropdown');
-    
-    if(profileBtn && dropdown) {
+
+    if (profileBtn && dropdown) {
         profileBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             dropdown.classList.toggle('hidden');
         });
-        
+
         // Cierra el menú al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!profileBtn.contains(e.target)) {
@@ -105,7 +106,7 @@ function initNavigation() {
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-            
+
             // Remove active from all nav items
             navItems.forEach(nav => nav.classList.remove('active'));
             // Add active to clicked nav item
@@ -125,7 +126,7 @@ function initNavigation() {
                     targetView.classList.remove('hidden-view');
                     targetView.classList.add('active-view');
                 }
-                
+
                 // Update title
                 pageTitle.textContent = item.getAttribute('data-title') || 'Dashboard';
             }
@@ -140,7 +141,7 @@ function initBioForm() {
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        
+
         // Change button state
         const btn = document.querySelector('button[form="bio-form"]') || form.querySelector('button[type="submit"]');
         let originalText = 'Analizar Composición';
@@ -183,7 +184,7 @@ function initBioForm() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            
+
             const data = await response.json();
             if (!response.ok) {
                 throw new Error(data.error || 'Error en el análisis');
@@ -195,7 +196,7 @@ function initBioForm() {
             } else {
                 showToast("Análisis listo. No se pudo guardar en la nube.", "info");
             }
-            
+
             // Refrescar stats del dashboard
             fetchDashboardStats();
 
@@ -218,12 +219,12 @@ async function fetchDashboardStats() {
         const response = await fetch('/api/dashboard-stats');
         if (response.ok) {
             const data = await response.json();
-            
+
             // 1. Update Top Cards
             document.getElementById('dash-total-clients').textContent = data.total_clients ?? 0;
             document.getElementById('dash-total-evals').textContent = data.total_evaluations ?? 0;
             document.getElementById('dash-avg-score').textContent = data.avg_score ?? 0;
-            
+
             // 2. Update Recent Table
             const tbody = document.getElementById('dash-recent-tbody');
             if (tbody) {
@@ -265,7 +266,7 @@ async function fetchDashboardStats() {
             const ctx = document.getElementById('dash-population-chart');
             if (ctx && window.Chart) {
                 if (populationChart) populationChart.destroy();
-                
+
                 populationChart = new Chart(ctx, {
                     type: 'doughnut',
                     data: {
@@ -321,7 +322,7 @@ function updateBioUI(data, inputs) {
     // 1. Valores numéricos base
     document.getElementById('global-score').textContent = data.score;
     document.getElementById('rank-badge').textContent = data.rank;
-    
+
     // Circular Gauges for Muscle and Fat
     const muscleGauge = document.getElementById('muscle-gauge');
     const fatGauge = document.getElementById('fat-gauge');
@@ -340,7 +341,7 @@ function updateBioUI(data, inputs) {
 
     document.getElementById('ree-value').textContent = data.ree_kcal;
     document.getElementById('tee-value').textContent = data.tee_kcal;
-    
+
     // Calcular MJ (MegaJoules) -> 1 kcal = 0.004184 MJ
     const reeMj = (data.ree_kcal * 0.004184).toFixed(1);
     const teeMj = (data.tee_kcal * 0.004184).toFixed(2);
@@ -543,13 +544,13 @@ function drawBIVAVector(R, Xc, height, gender) {
         ctx.fillStyle = '#6b7280';
         ctx.fill();
     }
-    
+
     ctx.strokeStyle = '#6b7280';
     // Diagonal 1 (Agua): De arriba-derecha a abajo-izquierda
     drawArrowLine(centerX + 120, centerY - 120, centerX - 120, centerY + 120);
     // Diagonal 2 (Masa Celular): De abajo-derecha a arriba-izquierda
     drawArrowLine(centerX + 80, centerY + 80, centerX - 110, centerY - 110);
-    
+
     // Etiquetas de diagonales
     ctx.fillText('agua', centerX - 145, centerY + 125);
     ctx.fillText('Masa Celular', centerX - 130, centerY - 120);
@@ -558,7 +559,7 @@ function drawBIVAVector(R, Xc, height, gender) {
     // --- Dibujar Elipses (Rotadas ~45 grados) ---
     // Ángulo de rotación típico en BIVA (aprox -45° a -50°)
     const rot = -45 * Math.PI / 180;
-    
+
     function drawEllipse(rx, ry, fillStyle, strokeStyle) {
         ctx.save();
         ctx.translate(centerX, centerY);
@@ -588,7 +589,7 @@ function drawBIVAVector(R, Xc, height, gender) {
     const hM = (height || 170) / 100.0;
     const rH = R / hM;
     const xcH = Xc / hM;
-    
+
     // Mapeo inverso de valores a píxeles (R: 200-600, Xc: 20-100)
     // Para que el centro (centerX, centerY) coincida con los valores medios poblacionales (~400, ~50)
     const px = centerX + ((rH - 400) / 200) * 120;
@@ -629,7 +630,7 @@ function drawSMMCurve(curves, patientAge, patientSMM) {
 
     // Curvas de referencia (P5, P25, P50, P75, P95)
     const series = [
-        { key: 'p5',  color: 'rgba(185,74,74,0.5)' },
+        { key: 'p5', color: 'rgba(185,74,74,0.5)' },
         { key: 'p25', color: 'rgba(205,127,50,0.7)' },
         { key: 'p50', color: '#1A2A4A' },
         { key: 'p75', color: 'rgba(205,127,50,0.7)' },
@@ -682,11 +683,11 @@ function drawPALGauge(pal) {
 
     // cy y radius perfectamente proporcionados para que el arco y la aguja nunca se recorten
     const cx = w / 2;
-    const cy = h - 55; 
+    const cy = h - 55;
     const radius = 100;
-    
-    const START = Math.PI * 0.85;   
-    const END = Math.PI * 2.15;     
+
+    const START = Math.PI * 0.85;
+    const END = Math.PI * 2.15;
     const ANG = END - START;
 
     const PAL_MIN = 1.2, PAL_MAX = 2.5;
@@ -702,10 +703,10 @@ function drawPALGauge(pal) {
 
     // Zonas de color más vibrantes
     const zones = [
-        { from: 1.2, to: 1.4,  color: '#E65555' }, // Sedentario (Rojo vibrante)
-        { from: 1.4, to: 1.6,  color: '#F2994A' }, // Ligero (Naranja vibrante)
-        { from: 1.6, to: 1.9,  color: '#27AE60' }, // Moderado (Verde vibrante)
-        { from: 1.9, to: 2.5,  color: '#5A6F8C' }  // Intenso (Azul pizarra)
+        { from: 1.2, to: 1.4, color: '#E65555' }, // Sedentario (Rojo vibrante)
+        { from: 1.4, to: 1.6, color: '#F2994A' }, // Ligero (Naranja vibrante)
+        { from: 1.6, to: 1.9, color: '#27AE60' }, // Moderado (Verde vibrante)
+        { from: 1.9, to: 2.5, color: '#5A6F8C' }  // Intenso (Azul pizarra)
     ];
 
     zones.forEach((z) => {
@@ -721,7 +722,7 @@ function drawPALGauge(pal) {
     // Aguja (Diseño elegante tipo poligonal)
     const ang = angOf(pal);
     const needleLength = radius - 15;
-    
+
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(ang);
@@ -765,7 +766,7 @@ function initClients() {
         btnSave.textContent = 'Guardar Cliente';
         btnCancel.classList.add('hidden-view');
         const h3 = form.previousElementSibling;
-        if(h3) h3.textContent = 'Registrar Cliente';
+        if (h3) h3.textContent = 'Registrar Cliente';
     });
 
     // Guardar o Actualizar cliente
@@ -800,7 +801,7 @@ function initClients() {
             } else {
                 showToast('Error al guardar: ' + result.error, 'error');
             }
-        } catch(err) {
+        } catch (err) {
             console.error(err);
             showToast('Error de conexión.', 'error');
         } finally {
@@ -812,10 +813,10 @@ function initClients() {
 
 async function fetchClients() {
     const tbody = document.getElementById('clients-tbody');
-    if(!tbody) return;
-    
+    if (!tbody) return;
+
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Cargando...</td></tr>';
-    
+
     try {
         const res = await fetch('/api/clients');
         const clients = await res.json();
@@ -823,7 +824,7 @@ async function fetchClients() {
             tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: #7a8aa0;">No hay clientes registrados.</td></tr>';
             return;
         }
-        
+
         tbody.replaceChildren();
         clients.forEach(c => {
             const tr = document.createElement('tr');
@@ -843,7 +844,7 @@ async function fetchClients() {
             if (c.email) tdContact.append(`📧 ${c.email}`);
 
             const tdActions = document.createElement('td');
-            
+
             const btnEvals = document.createElement('button');
             btnEvals.className = 'btn-primary';
             btnEvals.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 0.4rem; background: #00b4d8; border: none;';
@@ -877,7 +878,7 @@ async function fetchClients() {
             tr.append(tdCode, tdName, tdContact, tdActions);
             tbody.appendChild(tr);
         });
-    } catch(err) {
+    } catch (err) {
         console.error(err);
         tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: red;">Error cargando clientes.</td></tr>';
     }
@@ -885,19 +886,19 @@ async function fetchClients() {
 
 function deleteClient(id) {
     showConfirm(
-        'Eliminar Cliente', 
+        'Eliminar Cliente',
         '¿Estás seguro de que deseas eliminar este cliente? Su código será reasignado al próximo cliente nuevo.',
         async () => {
             try {
                 const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
                 const result = await res.json();
-                if(result.success) {
+                if (result.success) {
                     showToast('Cliente eliminado correctamente', 'success');
                     fetchClients();
                 } else {
                     showToast('Error al eliminar: ' + result.error, 'error');
                 }
-            } catch(err) {
+            } catch (err) {
                 console.error(err);
                 showToast('Error de conexión', 'error');
             }
@@ -907,16 +908,16 @@ function deleteClient(id) {
 
 function editClient(id, name, phone, email) {
     editingClientId = id;
-    
+
     document.getElementById('new-client-name').value = name;
     document.getElementById('new-client-phone').value = phone;
     document.getElementById('new-client-email').value = email;
-    
+
     document.getElementById('btn-save-client').textContent = 'Actualizar Cliente';
     document.getElementById('btn-cancel-client').classList.remove('hidden-view');
-    
+
     const h3 = document.querySelector('#client-form').previousElementSibling;
-    if(h3) h3.textContent = 'Editar Cliente';
+    if (h3) h3.textContent = 'Editar Cliente';
 }
 
 // --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---
@@ -927,7 +928,7 @@ function initEvaluaciones() {
     const btnRefresh = document.getElementById('btn-refresh-evals');
     const searchInput = document.getElementById('eval-search-input');
     const filterStatus = document.getElementById('eval-filter-status');
-    
+
     if (btnRefresh) {
         btnRefresh.addEventListener('click', () => {
             fetchEvaluaciones();
@@ -983,7 +984,7 @@ function initEvaluaciones() {
             if (inp.visceral_fat) document.getElementById('input-visceral').value = inp.visceral_fat;
 
             modal.classList.add('hidden');
-            
+
             // Switch to bioimpedancia view
             const bioNav = document.querySelector('[data-target="bio-view"]');
             if (bioNav) bioNav.click();
@@ -1069,10 +1070,10 @@ function filterAndRenderEvaluaciones() {
         const normHeight = normalizeText(item.height);
 
         const nameMatch = !searchTerm ||
-                          normName.includes(searchTerm) ||
-                          normIdp.includes(searchTerm) ||
-                          normWeight.includes(searchTerm) ||
-                          normHeight.includes(searchTerm);
+            normName.includes(searchTerm) ||
+            normIdp.includes(searchTerm) ||
+            normWeight.includes(searchTerm) ||
+            normHeight.includes(searchTerm);
 
         const statusMatch = statusFilter === 'all' || (item.cell_status || '').includes(statusFilter);
         return nameMatch && statusMatch;
@@ -1271,7 +1272,7 @@ function drawPhACurve(curves, patientAge, patientPhA) {
     ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
 
     const series = [
-        { key: 'p5',  color: 'rgba(185,74,74,0.5)' },
+        { key: 'p5', color: 'rgba(185,74,74,0.5)' },
         { key: 'p25', color: 'rgba(205,127,50,0.7)' },
         { key: 'p50', color: '#1A2A4A' },
         { key: 'p75', color: 'rgba(205,127,50,0.7)' },
@@ -1593,4 +1594,36 @@ function initDemoDataInjector() {
             form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
         }
     });
+}
+
+function initSystemMenuListeners() {
+    // Listeners para módulos del sistema y perfil
+    const stockBtn = document.getElementById('nav-stock-btn');
+    if (stockBtn) {
+        stockBtn.addEventListener('click', () => {
+            showToast('📦 Módulo de Stock Control en desarrollo para VitaMetrix v2.0', 'info');
+        });
+    }
+
+    const settingsBtn = document.getElementById('nav-settings-btn');
+    const dropSettingsBtn = document.getElementById('dropdown-settings-btn');
+    const onSettings = () => {
+        showToast('⚙️ Preferencias y configuración de referencias clínicas disponibles en v2.0', 'info');
+    };
+    if (settingsBtn) settingsBtn.addEventListener('click', onSettings);
+    if (dropSettingsBtn) dropSettingsBtn.addEventListener('click', onSettings);
+
+    const dropProfileBtn = document.getElementById('dropdown-profile-btn');
+    if (dropProfileBtn) {
+        dropProfileBtn.addEventListener('click', () => {
+            showToast('👤 Usuario activo: Dra. Audrey — Especialista en Bioimpedancia Clínica', 'info');
+        });
+    }
+
+    const dropLogoutBtn = document.getElementById('dropdown-logout-btn');
+    if (dropLogoutBtn) {
+        dropLogoutBtn.addEventListener('click', () => {
+            showToast('ℹ️ Modo Estación Clínica Local activo.', 'info');
+        });
+    }
 }
