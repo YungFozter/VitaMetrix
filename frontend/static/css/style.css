@@ -1736,3 +1736,70 @@ body {
     gap: 1.2rem;
     margin-top: 1rem;
 }
+
+/* --- BENTO CARD SIN HOVER (Para contenedores de listas/tablas) --- */
+.bento-card.no-hover, .bento-card-no-hover {
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0, 20, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+}
+.bento-card.no-hover:hover, .bento-card-no-hover:hover {
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0, 20, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.70) !important;
+}
+
+/* --- BOTONES DE ACCIÓN MEJORADOS (ABRIR Y ELIMINAR) --- */
+.eval-btn-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.eval-btn-open {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    background: #00b4d8;
+    color: #ffffff;
+    border: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.42rem 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 180, 216, 0.2);
+}
+
+.eval-btn-open:hover {
+    background: #0096b7;
+    color: #ffffff;
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.35);
+    transform: translateY(-1px);
+}
+
+.eval-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.08);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    font-size: 0.85rem;
+    padding: 0.42rem 0.65rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.eval-btn-delete:hover {
+    background: #ef4444;
+    color: #ffffff;
+    border-color: #ef4444;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.25);
+    transform: translateY(-1px);
+}
+

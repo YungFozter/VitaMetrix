@@ -1113,20 +1113,22 @@ function filterAndRenderEvaluaciones() {
         const tdActions = document.createElement('td');
         tdActions.style.textAlign = 'right';
 
+        const btnGroup = document.createElement('div');
+        btnGroup.className = 'eval-btn-group';
+
         const btnView = document.createElement('button');
-        btnView.className = 'btn-primary';
-        btnView.style.cssText = 'padding: 0.35rem 0.7rem; font-size: 0.8rem; margin-right: 0.4rem;';
-        btnView.innerHTML = '👁️ Abrir';
+        btnView.className = 'eval-btn-open';
+        btnView.innerHTML = '<i class="bi bi-eye-fill"></i> Abrir';
         btnView.addEventListener('click', () => openEvaluationDetailModal(ev.id));
 
         const btnDel = document.createElement('button');
-        btnDel.className = 'btn-danger';
-        btnDel.style.cssText = 'padding: 0.35rem 0.6rem; font-size: 0.8rem;';
-        btnDel.innerHTML = '🗑️';
+        btnDel.className = 'eval-btn-delete';
+        btnDel.innerHTML = '<i class="bi bi-trash3-fill"></i>';
         btnDel.title = 'Eliminar Evaluación';
         btnDel.addEventListener('click', () => deleteEvaluation(ev.id));
 
-        tdActions.append(btnView, btnDel);
+        btnGroup.append(btnView, btnDel);
+        tdActions.appendChild(btnGroup);
         tr.append(tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
         tbody.appendChild(tr);
     });
