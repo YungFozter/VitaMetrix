@@ -324,6 +324,75 @@ def dashboard_data():
     data = request.json or {}
     return jsonify(_run_analysis(data))
 
+# --- RUTAS DE EVALUACIONES ---
+
+@app.route('/api/evaluations', methods=['GET'])
+def get_evaluations():
+    if not supabase: return jsonify([]), 500
+    try:
+        res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
+        evals = res.data or []
+        # Enriquecer cada evaluación con los datos interpretados
+        for e in evals:
+            r = float(e.get('resistance') or 0)
+            xc = float(e.get('reactance') or 0)
+            biva_info = get_biva_interpretation(r, xc)
+            e['phase_angle'] = biva_info['phase_angle']
+            e['cell_status'] = biva_info['cell_status']
+            e['hydration_status'] = biva_info['hydration']
+        return jsonify(evals)
+    except Exception as e:
+        print("Error fetching evaluations:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/evaluations/<string:eval_id>', methods=['GET'])
+def get_evaluation_by_id(eval_id):
+    if not supabase: return jsonify({"error": "No db"}), 500
+    try:
+        res = supabase.table('evaluations').select('*').eq('id', eval_id).execute()
+        if not res.data:
+            return jsonify({"error": "Evaluación no encontrada"}), 404
+        
+        raw_eval = res.data[0]
+        # Re-correr los cálculos completos con el payload de la evaluación guardada
+        payload = {
+            "patient_idp": raw_eval.get('patient_idp'),
+            "patient_name": raw_eval.get('patient_name'),
+            "resistance": raw_eval.get('resistance'),
+            "reactance": raw_eval.get('reactance'),
+            "weight": raw_eval.get('weight'),
+            "height": raw_eval.get('height'),
+            "age": raw_eval.get('age'),
+            "gender": raw_eval.get('gender'),
+            "pal": raw_eval.get('pal'),
+            "smm": raw_eval.get('smm'),
+            "tbw": raw_eval.get('tbw'),
+            "ecw": raw_eval.get('ecw'),
+            "fat_mass": raw_eval.get('fat_mass'),
+            "visceral_fat": raw_eval.get('visceral_fat'),
+            "waist": raw_eval.get('waist')
+        }
+        full_analysis = _run_analysis(payload)
+        full_analysis["id"] = raw_eval.get("id")
+        full_analysis["created_at"] = raw_eval.get("created_at")
+        full_analysis["patient_idp"] = raw_eval.get("patient_idp")
+        full_analysis["patient_name"] = raw_eval.get("patient_name")
+        full_analysis["raw_inputs"] = payload
+        return jsonify(full_analysis)
+    except Exception as e:
+        print("Error fetching evaluation:", e)
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/evaluations/<string:eval_id>', methods=['DELETE'])
+def delete_evaluation(eval_id):
+    if not supabase: return jsonify({"error": "No db"}), 500
+    try:
+        supabase.table('evaluations').delete().eq('id', eval_id).execute()
+        return jsonify({"success": True})
+    except Exception as e:
+        print("Error deleting evaluation:", e)
+        return jsonify({"error": str(e)}), 500
+
 # --- RUTAS DE CLIENTES ---
 
 @app.route('/api/clients', methods=['GET'])

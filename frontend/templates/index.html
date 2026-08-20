@@ -82,6 +82,18 @@
                     </span>
                     <span>Bioimpedancia</span>
                 </a>
+                <a href="#evaluaciones-view" class="nav-item" data-target="evaluaciones-view" data-title="Historial de Evaluaciones">
+                    <span class="nav-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                    </span>
+                    <span>Evaluaciones</span>
+                </a>
                 <a href="#clientes-view" class="nav-item" data-target="clientes-view" data-title="Directorio de Clientes">
                     <span class="nav-icon">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -164,14 +176,14 @@
                 <div id="dashboard-view" class="view active-view">
                     <!-- Dashboard Cards (Bento) -->
                     <div class="dash-cards">
-                        <div class="dash-card bento-card">
+                        <div class="dash-card bento-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'clientes-view\']').click()">
                             <div class="dash-icon-box" style="background: rgba(26, 42, 74, 0.1); color: #1A2A4A;">👥</div>
                             <div class="dash-info">
                                 <div class="dash-label">Total Clientes</div>
                                 <div class="dash-value" id="dash-total-clients">0</div>
                             </div>
                         </div>
-                        <div class="dash-card bento-card">
+                        <div class="dash-card bento-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
                             <div class="dash-icon-box" style="background: rgba(0, 180, 216, 0.1); color: #00b4d8;">📊</div>
                             <div class="dash-info">
                                 <div class="dash-label">Total Evaluaciones</div>
@@ -224,6 +236,9 @@
 
                 <!-- VIEW 2: BIOIMPEDANCIA -->
                 {% include "bioimpedancia.html" %}
+
+                <!-- VIEW 4: EVALUACIONES -->
+                {% include "evaluaciones.html" %}
 
                 <!-- VIEW 3: CLIENTES -->
                 <div id="clientes-view" class="view hidden-view">

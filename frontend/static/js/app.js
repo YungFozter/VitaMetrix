@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initBioForm();
     initClients();
+    initEvaluaciones();
     initProfileDropdown();
     fetchDashboardStats();
 });
@@ -895,6 +896,304 @@ function editClient(id, name, phone, email) {
     
     const h3 = document.querySelector('#client-form').previousElementSibling;
     if(h3) h3.textContent = 'Editar Cliente';
+}
+
+// --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---
+let allEvaluationsData = [];
+let selectedEvaluationData = null;
+
+function initEvaluaciones() {
+    const btnRefresh = document.getElementById('btn-refresh-evals');
+    const searchInput = document.getElementById('eval-search-input');
+    const filterStatus = document.getElementById('eval-filter-status');
+    
+    if (btnRefresh) {
+        btnRefresh.addEventListener('click', () => {
+            fetchEvaluaciones();
+            showToast('Historial de evaluaciones actualizado', 'info');
+        });
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('input', filterAndRenderEvaluaciones);
+    }
+
+    if (filterStatus) {
+        filterStatus.addEventListener('change', filterAndRenderEvaluaciones);
+    }
+
+    // Modal detail close triggers
+    const modal = document.getElementById('eval-detail-modal');
+    const closeBtn = document.getElementById('eval-modal-close');
+    if (closeBtn && modal) {
+        closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        });
+    }
+
+    // Modal action: Reload into calculator
+    const btnOpenCalc = document.getElementById('btn-modal-open-calc');
+    if (btnOpenCalc) {
+        btnOpenCalc.addEventListener('click', () => {
+            if (!selectedEvaluationData || !selectedEvaluationData.raw_inputs) return;
+            const inp = selectedEvaluationData.raw_inputs;
+
+            // Fill basic form
+            document.getElementById('input-idp').value = inp.patient_idp || '';
+            document.getElementById('input-name').value = inp.patient_name || '';
+            document.getElementById('input-r').value = inp.resistance || '';
+            document.getElementById('input-xc').value = inp.reactance || '';
+            document.getElementById('input-weight').value = inp.weight || '';
+            document.getElementById('input-height').value = inp.height || '';
+            document.getElementById('input-age').value = inp.age || '';
+            if (inp.gender) document.getElementById('input-gender').value = inp.gender;
+            if (inp.pal) document.getElementById('input-pal').value = inp.pal;
+            if (inp.waist) document.getElementById('input-waist').value = inp.waist;
+
+            // Fill optional device form
+            const details = document.querySelector('details.device-data');
+            if (details) details.open = true;
+
+            if (inp.smm) document.getElementById('input-smm').value = inp.smm;
+            if (inp.tbw) document.getElementById('input-tbw').value = inp.tbw;
+            if (inp.ecw) document.getElementById('input-ecw').value = inp.ecw;
+            if (inp.fat_mass) document.getElementById('input-fat-mass').value = inp.fat_mass;
+            if (inp.visceral_fat) document.getElementById('input-visceral').value = inp.visceral_fat;
+
+            modal.classList.add('hidden');
+            
+            // Switch to bioimpedancia view
+            const bioNav = document.querySelector('[data-target="bio-view"]');
+            if (bioNav) bioNav.click();
+
+            showToast('Evaluación cargada en el formulario de bioimpedancia', 'success');
+
+            // Trigger submit calculation automatically
+            const form = document.getElementById('bio-form');
+            if (form) {
+                form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
+            }
+        });
+    }
+
+    // Modal action: Edit Client Data
+    const btnEditClient = document.getElementById('btn-modal-edit-client');
+    if (btnEditClient) {
+        btnEditClient.addEventListener('click', async () => {
+            if (!selectedEvaluationData) return;
+            const patientName = selectedEvaluationData.patient_name;
+            modal.classList.add('hidden');
+
+            // Switch to clients view
+            const clientsNav = document.querySelector('[data-target="clientes-view"]');
+            if (clientsNav) clientsNav.click();
+
+            // Try to find matching client by name
+            try {
+                const res = await fetch('/api/clients');
+                const clients = await res.json();
+                const match = clients.find(c => (c.name || '').toLowerCase() === (patientName || '').toLowerCase());
+                if (match) {
+                    editClient(match.id, match.name, match.phone || '', match.email || '');
+                    showToast(`Editando datos de ${match.name}`, 'info');
+                } else {
+                    document.getElementById('new-client-name').value = patientName || '';
+                    showToast(`Creando/Editando registro para ${patientName}`, 'info');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+    }
+
+    fetchEvaluaciones();
+}
+
+async function fetchEvaluaciones() {
+    const tbody = document.getElementById('evaluaciones-tbody');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('/api/evaluations');
+        if (!res.ok) throw new Error('Error al consultar servidor');
+        allEvaluationsData = await res.json();
+        filterAndRenderEvaluaciones();
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: red;">Error al cargar las evaluaciones.</td></tr>';
+    }
+}
+
+function filterAndRenderEvaluaciones() {
+    const tbody = document.getElementById('evaluaciones-tbody');
+    if (!tbody) return;
+
+    const searchTerm = (document.getElementById('eval-search-input')?.value || '').toLowerCase();
+    const statusFilter = document.getElementById('eval-filter-status')?.value || 'all';
+
+    const filtered = allEvaluationsData.filter(item => {
+        const nameMatch = (item.patient_name || '').toLowerCase().includes(searchTerm) ||
+                          (item.patient_idp || '').toLowerCase().includes(searchTerm);
+        const statusMatch = statusFilter === 'all' || (item.cell_status || '').includes(statusFilter);
+        return nameMatch && statusMatch;
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: #5a6f8c;">No se encontraron evaluaciones registradas.</td></tr>';
+        return;
+    }
+
+    tbody.replaceChildren();
+    filtered.forEach(ev => {
+        const tr = document.createElement('tr');
+
+        // Date & Time
+        const tdDate = document.createElement('td');
+        const rawDate = ev.created_at || '';
+        const formattedDate = rawDate ? rawDate.replace('T', ' ').substring(0, 16) : '--';
+        tdDate.innerHTML = `<span style="font-weight: 500; font-size: 0.85rem; color: #1A2A4A;">${formattedDate}</span>`;
+
+        // Patient / IDP
+        const tdPatient = document.createElement('td');
+        tdPatient.innerHTML = `<div style="font-weight: 700; color: #1A2A4A;">${ev.patient_name || 'Sin nombre'}</div>
+                               <div style="font-size: 0.78rem; color: #5a6f8c;">IDP: ${ev.patient_idp || '--'}</div>`;
+
+        // Base Measurements (Weight, Height, R, Xc)
+        const tdBase = document.createElement('td');
+        tdBase.innerHTML = `<div style="font-size: 0.82rem; color: #334155;"><strong>${ev.weight || '--'} kg</strong> | ${ev.height || '--'} cm</div>
+                            <div style="font-size: 0.75rem; color: #64748b;">R: ${ev.resistance || '--'}Ω / Xc: ${ev.reactance || '--'}Ω</div>`;
+
+        // TRU Score
+        const tdScore = document.createElement('td');
+        const scoreBadge = document.createElement('span');
+        scoreBadge.className = 'code-badge';
+        scoreBadge.style.background = 'rgba(45,122,74,0.1)';
+        scoreBadge.style.color = '#2d7a4a';
+        scoreBadge.style.fontWeight = '700';
+        scoreBadge.textContent = `${ev.global_score ?? 0} pts`;
+        tdScore.appendChild(scoreBadge);
+
+        // Phase Angle
+        const tdPhase = document.createElement('td');
+        tdPhase.innerHTML = `<span style="font-weight: 700; color: #00b4d8;">${ev.phase_angle ?? '--'}°</span>`;
+
+        // Cell Status
+        const tdStatus = document.createElement('td');
+        const statusChip = document.createElement('span');
+        const cell = ev.cell_status || 'Normal';
+        let chipBg = 'rgba(45,122,74,0.1)';
+        let chipColor = '#2d7a4a';
+        if (cell.includes('Límite')) { chipBg = 'rgba(205,127,50,0.1)'; chipColor = '#cd7f32'; }
+        if (cell.includes('Bajo')) { chipBg = 'rgba(185,74,74,0.1)'; chipColor = '#b94a4a'; }
+
+        statusChip.style.cssText = `background: ${chipBg}; color: ${chipColor}; padding: 0.25rem 0.6rem; border-radius: 6px; font-weight: 600; font-size: 0.78rem; display: inline-block;`;
+        statusChip.textContent = cell;
+        tdStatus.appendChild(statusChip);
+
+        // Actions
+        const tdActions = document.createElement('td');
+        tdActions.style.textAlign = 'right';
+
+        const btnView = document.createElement('button');
+        btnView.className = 'btn-primary';
+        btnView.style.cssText = 'padding: 0.35rem 0.7rem; font-size: 0.8rem; margin-right: 0.4rem;';
+        btnView.innerHTML = '👁️ Abrir';
+        btnView.addEventListener('click', () => openEvaluationDetailModal(ev.id));
+
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-danger';
+        btnDel.style.cssText = 'padding: 0.35rem 0.6rem; font-size: 0.8rem;';
+        btnDel.innerHTML = '🗑️';
+        btnDel.title = 'Eliminar Evaluación';
+        btnDel.addEventListener('click', () => deleteEvaluation(ev.id));
+
+        tdActions.append(btnView, btnDel);
+        tr.append(tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
+        tbody.appendChild(tr);
+    });
+}
+
+async function openEvaluationDetailModal(evalId) {
+    const modal = document.getElementById('eval-detail-modal');
+    if (!modal) return;
+
+    showToast('Cargando reporte de evaluación...', 'info');
+
+    try {
+        const res = await fetch(`/api/evaluations/${evalId}`);
+        if (!res.ok) throw new Error('No se pudo obtener la evaluación');
+        const data = await res.json();
+        selectedEvaluationData = data;
+
+        document.getElementById('eval-modal-name').textContent = data.patient_name || 'Paciente';
+        document.getElementById('eval-modal-meta').textContent = `IDP: ${data.patient_idp || '--'} | Fecha: ${data.created_at ? data.created_at.replace('T', ' ').substring(0, 16) : '--'}`;
+        document.getElementById('eval-modal-score').textContent = data.score ?? 0;
+        document.getElementById('eval-modal-rank').textContent = data.rank || '';
+        document.getElementById('eval-modal-phase').textContent = `${data.phase_angle ?? 0}°`;
+        document.getElementById('eval-modal-cell').textContent = data.cell_status || '';
+        document.getElementById('eval-modal-tee').textContent = data.tee_kcal ?? '--';
+
+        // Render inputs grid
+        const inputsGrid = document.getElementById('eval-modal-inputs-grid');
+        if (inputsGrid && data.raw_inputs) {
+            const inp = data.raw_inputs;
+            inputsGrid.innerHTML = `
+                <div><strong>Peso:</strong> ${inp.weight || '--'} kg</div>
+                <div><strong>Altura:</strong> ${inp.height || '--'} cm</div>
+                <div><strong>Edad:</strong> ${inp.age || '--'} años</div>
+                <div><strong>Género:</strong> ${inp.gender === 'female' ? 'Femenino' : 'Masculino'}</div>
+                <div><strong>Resistencia (R):</strong> ${inp.resistance || '--'} Ω</div>
+                <div><strong>Reactancia (Xc):</strong> ${inp.reactance || '--'} Ω</div>
+                <div><strong>Masa Muscular (SMM):</strong> ${inp.smm ? inp.smm + ' kg' : 'N/A'}</div>
+                <div><strong>Masa Grasa:</strong> ${inp.fat_mass ? inp.fat_mass + ' kg' : 'N/A'}</div>
+                <div><strong>Grasa Visceral:</strong> ${inp.visceral_fat ? inp.visceral_fat + ' L' : 'N/A'}</div>
+                <div><strong>PAL (Actividad):</strong> ${inp.pal || '--'}</div>
+            `;
+        }
+
+        // Render clinical findings
+        const clinicalBox = document.getElementById('eval-modal-clinical');
+        if (clinicalBox) {
+            let html = `<p style="margin-top: 0;"><strong>Diagnóstico general:</strong> El paciente presenta un estado celular <strong>${(data.cell_status || '').toLowerCase()}</strong> con un TRU Score de <strong>${data.score}/100</strong>.</p>`;
+            if (data.clinical_findings && data.clinical_findings.length > 0) {
+                html += `<ul style="margin: 0.5rem 0 0 1.2rem; padding: 0;">`;
+                data.clinical_findings.forEach(f => {
+                    html += `<li style="margin-bottom: 0.3rem;">${f}</li>`;
+                });
+                html += `</ul>`;
+            }
+            clinicalBox.innerHTML = html;
+        }
+
+        modal.classList.remove('hidden');
+    } catch (err) {
+        console.error(err);
+        showToast('Error al abrir el detalle de la evaluación', 'error');
+    }
+}
+
+function deleteEvaluation(evalId) {
+    showConfirm(
+        'Eliminar Evaluación',
+        '¿Estás seguro de que deseas eliminar este registro del historial clínico?',
+        async () => {
+            try {
+                const res = await fetch(`/api/evaluations/${evalId}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('Evaluación eliminada correctamente', 'success');
+                    fetchEvaluaciones();
+                    fetchDashboardStats();
+                } else {
+                    showToast('Error al eliminar: ' + result.error, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            }
+        }
+    );
 }
 
 // --- 4c. CURVA PhA × EDAD ---

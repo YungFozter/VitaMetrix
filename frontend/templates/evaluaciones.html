@@ -1,0 +1,115 @@
+<!-- VIEW 4: EVALUACIONES (Historial Completo) -->
+<div id="evaluaciones-view" class="view hidden-view">
+    <!-- Header & Filtros / Búsqueda -->
+    <div class="bento-card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
+        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
+            <div>
+                <h3 class="display-font" style="margin: 0; color: #1A2A4A; font-size: 1.4rem;">📋 Historial Clínico de Evaluaciones</h3>
+                <p style="margin: 0.25rem 0 0 0; color: #5a6f8c; font-size: 0.88rem;">Explora, filtra, visualiza o exporta todas las evaluaciones registradas en VitaMetrix.</p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                <div class="search-box" style="position: relative; min-width: 260px;">
+                    <input type="text" id="eval-search-input" placeholder="🔍 Buscar por cliente o IDP..." style="width: 100%; padding: 0.5rem 0.8rem 0.5rem 2.2rem; border: 1px solid #d0d9e8; border-radius: 8px; font-size: 0.88rem; outline: none;">
+                    <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+                </div>
+                <select id="eval-filter-status" style="padding: 0.5rem 0.8rem; border: 1px solid #d0d9e8; border-radius: 8px; font-size: 0.88rem; outline: none; background: white; cursor: pointer;">
+                    <option value="all">Todos los Estados Celulares</option>
+                    <option value="Óptimo">Óptimo (>6.0°)</option>
+                    <option value="Límite">Límite (5.0° - 6.0°)</option>
+                    <option value="Bajo">Bajo (<5.0°)</option>
+                </select>
+                <button type="button" id="btn-refresh-evals" class="btn-secondary" style="padding: 0.5rem 0.9rem; font-size: 0.88rem;" title="Recargar lista">
+                    🔄 Actualizar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla Bento de Evaluaciones -->
+    <div class="bento-card" style="min-height: 550px; padding: 1.5rem;">
+        <div class="clients-table-container">
+            <table class="clients-table">
+                <thead>
+                    <tr>
+                        <th>Fecha / Hora</th>
+                        <th>IDP / Paciente</th>
+                        <th>Mediciones Base</th>
+                        <th>TRU Score</th>
+                        <th>Ángulo Fase</th>
+                        <th>Estado Celular</th>
+                        <th style="text-align: right;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="evaluaciones-tbody">
+                    <tr><td colspan="7" style="text-align: center; padding: 3rem; color: #5a6f8c;">Cargando historial de evaluaciones...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL DE DETALLE COMPLETO DE EVALUACIÓN -->
+<div id="eval-detail-modal" class="modal-overlay hidden">
+    <div class="modal-box bento-card" style="max-width: 900px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 1.75rem;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e5e9f0; padding-bottom: 1rem; margin-bottom: 1.25rem;">
+            <div>
+                <span class="code-badge" style="background: rgba(0,180,216,0.1); color: #00b4d8; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.8rem;">EVALUACIÓN MÉDICA</span>
+                <h2 id="eval-modal-name" class="display-font" style="margin: 0.4rem 0 0.1rem 0; color: #1A2A4A; font-size: 1.5rem;">Paciente</h2>
+                <div style="font-size: 0.85rem; color: #5a6f8c;" id="eval-modal-meta">IDP: -- | Fecha: --</div>
+            </div>
+            <button type="button" id="eval-modal-close" style="background: none; border: none; font-size: 1.4rem; cursor: pointer; color: #5a6f8c; padding: 0.2rem 0.5rem;">✕</button>
+        </div>
+
+        <div id="eval-modal-body" style="display: flex; flex-direction: column; gap: 1.25rem;">
+            <!-- Resumen de Métricas Clave -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+                <div style="background: rgba(26,42,74,0.03); border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 0.78rem; text-transform: uppercase; letter-weight: 600; color: #5a6f8c;">Global TRU Score</div>
+                    <div id="eval-modal-score" style="font-size: 2rem; font-weight: 800; color: #1A2A4A; margin-top: 0.2rem;">0</div>
+                    <div id="eval-modal-rank" style="font-size: 0.8rem; font-weight: 600; color: #2d7a4a;">--</div>
+                </div>
+                <div style="background: rgba(0,180,216,0.03); border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 0.78rem; text-transform: uppercase; letter-weight: 600; color: #5a6f8c;">Ángulo de Fase</div>
+                    <div id="eval-modal-phase" style="font-size: 2rem; font-weight: 800; color: #00b4d8; margin-top: 0.2rem;">0.0°</div>
+                    <div id="eval-modal-cell" style="font-size: 0.8rem; font-weight: 600; color: #1A2A4A;">--</div>
+                </div>
+                <div style="background: rgba(45,122,74,0.03); border: 1px solid #e2e8f0; border-radius: 12px; padding: 1rem; text-align: center;">
+                    <div style="font-size: 0.78rem; text-transform: uppercase; letter-weight: 600; color: #5a6f8c;">Gasto Calórico TEE</div>
+                    <div id="eval-modal-tee" style="font-size: 2rem; font-weight: 800; color: #2d7a4a; margin-top: 0.2rem;">0</div>
+                    <div style="font-size: 0.8rem; color: #5a6f8c;">kcal/día</div>
+                </div>
+            </div>
+
+            <!-- Parámetros de Entrada -->
+            <div style="background: #f8fafc; border-radius: 12px; padding: 1.2rem; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 0.8rem 0; color: #1A2A4A; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                    ⚙️ Parámetros Físicos & Bioimpedancia
+                </h4>
+                <div id="eval-modal-inputs-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; font-size: 0.85rem;">
+                    <!-- Llenado dinámico por JS -->
+                </div>
+            </div>
+
+            <!-- Interpretación Clínica -->
+            <div style="background: #fff; border-radius: 12px; padding: 1.2rem; border: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 0.6rem 0; color: #1A2A4A; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                    🩺 Diagnóstico & Hallazgos Clínicos
+                </h4>
+                <div id="eval-modal-clinical" style="font-size: 0.9rem; line-height: 1.5; color: #334155;">
+                    <!-- Contenido dinámico -->
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; pt-3; border-top: 1px solid #e5e9f0;">
+            <button type="button" id="btn-modal-edit-client" class="btn-secondary" style="display: flex; align-items: center; gap: 0.4rem;">
+                ✏️ Editar Datos Cliente
+            </button>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" id="btn-modal-open-calc" class="btn-primary" style="display: flex; align-items: center; gap: 0.4rem;">
+                    ⚡ Recargar en Calculadora Bioimpedancia
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
