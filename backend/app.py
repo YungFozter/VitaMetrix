@@ -246,11 +246,33 @@ def _run_analysis(data):
             "muscle_pct": round(smm / weight * 100, 1)
         }
 
-    # Guardar en Supabase (columnas nuevas son opcionales; se ignoran si no existen)
+    # Guardar en Supabase con reciclaje de código EVA-XXX
     saved = False
+    assigned_code = None
     if supabase:
         try:
-            supabase.table('evaluations').insert({
+            # Lógica de reciclaje de códigos de evaluación (EVA-001, EVA-002, etc.)
+            evals_res = supabase.table('evaluations').select('code').execute()
+            existing_codes = []
+            for row in (evals_res.data or []):
+                raw_c = row.get('code')
+                if raw_c and str(raw_c).startswith('EVA-'):
+                    try:
+                        existing_codes.append(int(raw_c.replace('EVA-', '')))
+                    except ValueError:
+                        pass
+            existing_codes.sort()
+
+            next_num = 1
+            for num in existing_codes:
+                if num == next_num:
+                    next_num += 1
+                elif num > next_num:
+                    break
+
+            assigned_code = f"EVA-{next_num:03d}"
+
+            insert_payload = {
                 "patient_idp": patient_idp,
                 "patient_name": patient_name,
                 "resistance": r,
@@ -268,8 +290,17 @@ def _run_analysis(data):
                 "ecw": ecw,
                 "fat_mass": fat_mass,
                 "visceral_fat": visceral_fat,
-                "waist": waist
-            }).execute()
+                "waist": waist,
+                "code": assigned_code
+            }
+
+            try:
+                supabase.table('evaluations').insert(insert_payload).execute()
+            except Exception as insert_err:
+                # Fallback si la columna 'code' aún no existe en el esquema de Supabase
+                insert_payload.pop('code', None)
+                supabase.table('evaluations').insert(insert_payload).execute()
+
             saved = True
         except Exception as e:
             print(f"Error saving to supabase: {e}")
@@ -333,9 +364,9 @@ def get_evaluations():
         res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
         evals_asc = res.data or []
         
-        # Asignar código secuencial EVA-001, EVA-002 basándose en el orden de creación
         for idx, e in enumerate(evals_asc, start=1):
-            e['code'] = e.get('code') or f"EVA-{idx:03d}"
+            if not e.get('code'):
+                e['code'] = f"EVA-{idx:03d}"
             r = float(e.get('resistance') or 0)
             xc = float(e.get('reactance') or 0)
             biva_info = get_biva_interpretation(r, xc)
@@ -343,7 +374,6 @@ def get_evaluations():
             e['cell_status'] = biva_info['cell_status']
             e['hydration_status'] = biva_info['hydration']
             
-        # Retornar ordenadas descendentes (última primero)
         evals_asc.reverse()
         return jsonify(evals_asc)
     except Exception as e:
@@ -379,6 +409,7 @@ def get_evaluation_by_id(eval_id):
         }
         full_analysis = _run_analysis(payload)
         full_analysis["id"] = raw_eval.get("id")
+        full_analysis["code"] = raw_eval.get("code")
         full_analysis["created_at"] = raw_eval.get("created_at")
         full_analysis["patient_idp"] = raw_eval.get("patient_idp")
         full_analysis["patient_name"] = raw_eval.get("patient_name")
