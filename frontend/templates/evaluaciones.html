@@ -1,26 +1,37 @@
 <!-- VIEW 4: EVALUACIONES (Historial Completo) -->
 <div id="evaluaciones-view" class="view hidden-view">
     <!-- Header & Filtros / Búsqueda -->
-    <div class="bento-card" style="margin-bottom: 1.5rem; padding: 1.25rem 1.5rem;">
-        <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 1rem;">
-            <div>
-                <h3 class="display-font" style="margin: 0; color: #1A2A4A; font-size: 1.4rem;">📋 Historial Clínico de Evaluaciones</h3>
-                <p style="margin: 0.25rem 0 0 0; color: #5a6f8c; font-size: 0.88rem;">Explora, filtra, visualiza o exporta todas las evaluaciones registradas en VitaMetrix.</p>
-            </div>
-            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
-                <div class="search-box" style="position: relative; min-width: 260px;">
-                    <input type="text" id="eval-search-input" placeholder="🔍 Buscar por cliente o IDP..." style="width: 100%; padding: 0.5rem 0.8rem 0.5rem 2.2rem; border: 1px solid #d0d9e8; border-radius: 8px; font-size: 0.88rem; outline: none;">
-                    <span style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
+    <div class="bento-card mb-4 p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-12 col-md-6 col-lg-5">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4 text-primary"><i class="bi bi-journal-medical"></i></span>
+                    <h3 class="display-font m-0 text-navy fw-bold fs-4">Historial Clínico de Evaluaciones</h3>
                 </div>
-                <select id="eval-filter-status" style="padding: 0.5rem 0.8rem; border: 1px solid #d0d9e8; border-radius: 8px; font-size: 0.88rem; outline: none; background: white; cursor: pointer;">
-                    <option value="all">Todos los Estados Celulares</option>
-                    <option value="Óptimo">Óptimo (>6.0°)</option>
-                    <option value="Límite">Límite (5.0° - 6.0°)</option>
-                    <option value="Bajo">Bajo (<5.0°)</option>
-                </select>
-                <button type="button" id="btn-refresh-evals" class="btn-secondary" style="padding: 0.5rem 0.9rem; font-size: 0.88rem;" title="Recargar lista">
-                    🔄 Actualizar
-                </button>
+                <p class="m-0 text-muted small mt-1">Explora, filtra, visualiza o exporta todas las evaluaciones registradas en VitaMetrix.</p>
+            </div>
+            <div class="col-12 col-md-6 col-lg-7">
+                <div class="d-flex flex-wrap flex-sm-nowrap justify-content-md-end gap-2">
+                    <!-- Bootstrap Input Group con Icono Unificado -->
+                    <div class="input-group input-group-sm" style="max-width: 280px;">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="eval-search-input" class="form-control border-start-0 ps-0 shadow-none" placeholder="Buscar por cliente o IDP...">
+                    </div>
+
+                    <!-- Select de Estado Celular de Bootstrap -->
+                    <select id="eval-filter-status" class="form-select form-select-sm shadow-none" style="max-width: 220px; cursor: pointer;">
+                        <option value="all">Todos los Estados Celulares</option>
+                        <option value="Óptimo">Óptimo (>6.0°)</option>
+                        <option value="Límite">Límite (5.0° - 6.0°)</option>
+                        <option value="Bajo">Bajo (<5.0°)</option>
+                    </select>
+
+                    <!-- Botón de Actualizar con Bootstrap -->
+                    <button type="button" id="btn-refresh-evals" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none" title="Recargar lista">
+                        <i class="bi bi-arrow-clockwise"></i>
+                        <span>Actualizar</span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
