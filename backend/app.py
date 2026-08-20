@@ -330,17 +330,22 @@ def dashboard_data():
 def get_evaluations():
     if not supabase: return jsonify([]), 500
     try:
-        res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
-        evals = res.data or []
-        # Enriquecer cada evaluación con los datos interpretados
-        for e in evals:
+        res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
+        evals_asc = res.data or []
+        
+        # Asignar código secuencial EVA-001, EVA-002 basándose en el orden de creación
+        for idx, e in enumerate(evals_asc, start=1):
+            e['code'] = e.get('code') or f"EVA-{idx:03d}"
             r = float(e.get('resistance') or 0)
             xc = float(e.get('reactance') or 0)
             biva_info = get_biva_interpretation(r, xc)
             e['phase_angle'] = biva_info['phase_angle']
             e['cell_status'] = biva_info['cell_status']
             e['hydration_status'] = biva_info['hydration']
-        return jsonify(evals)
+            
+        # Retornar ordenadas descendentes (última primero)
+        evals_asc.reverse()
+        return jsonify(evals_asc)
     except Exception as e:
         print("Error fetching evaluations:", e)
         return jsonify({"error": str(e)}), 500

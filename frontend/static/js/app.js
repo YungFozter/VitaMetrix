@@ -843,15 +843,36 @@ async function fetchClients() {
             if (c.email) tdContact.append(`📧 ${c.email}`);
 
             const tdActions = document.createElement('td');
+            
+            const btnEvals = document.createElement('button');
+            btnEvals.className = 'btn-primary';
+            btnEvals.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 0.4rem; background: #00b4d8; border: none;';
+            btnEvals.innerHTML = '📋 Evaluaciones';
+            btnEvals.title = 'Ver historial de evaluaciones de este cliente';
+            btnEvals.addEventListener('click', () => {
+                const evalNav = document.querySelector('[data-target="evaluaciones-view"]');
+                if (evalNav) evalNav.click();
+                const searchInput = document.getElementById('eval-search-input');
+                if (searchInput) {
+                    searchInput.value = c.name || '';
+                    filterAndRenderEvaluaciones();
+                }
+                showToast(`Mostrando evaluaciones de ${c.name}`, 'info');
+            });
+
             const btnEdit = document.createElement('button');
             btnEdit.className = 'btn-edit';
+            btnEdit.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 0.4rem;';
             btnEdit.textContent = 'Editar';
             btnEdit.addEventListener('click', () => editClient(c.id, c.name || '', c.phone || '', c.email || ''));
+
             const btnDel = document.createElement('button');
             btnDel.className = 'btn-danger';
+            btnDel.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem;';
             btnDel.textContent = 'Eliminar';
             btnDel.addEventListener('click', () => deleteClient(c.id));
-            tdActions.append(btnEdit, btnDel);
+
+            tdActions.append(btnEvals, btnEdit, btnDel);
 
             tr.append(tdCode, tdName, tdContact, tdActions);
             tbody.appendChild(tr);
@@ -1066,6 +1087,16 @@ function filterAndRenderEvaluaciones() {
     filtered.forEach(ev => {
         const tr = document.createElement('tr');
 
+        // Code Badge (EVA-XXX)
+        const tdCode = document.createElement('td');
+        const codeBadge = document.createElement('span');
+        codeBadge.className = 'code-badge';
+        codeBadge.style.background = 'rgba(0, 180, 216, 0.1)';
+        codeBadge.style.color = '#00b4d8';
+        codeBadge.style.fontWeight = '700';
+        codeBadge.textContent = ev.code || 'EVA-000';
+        tdCode.appendChild(codeBadge);
+
         // Date & Time
         const tdDate = document.createElement('td');
         const rawDate = ev.created_at || '';
@@ -1129,7 +1160,7 @@ function filterAndRenderEvaluaciones() {
 
         btnGroup.append(btnView, btnDel);
         tdActions.appendChild(btnGroup);
-        tr.append(tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
+        tr.append(tdCode, tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
         tbody.appendChild(tr);
     });
 }
@@ -1147,7 +1178,8 @@ async function openEvaluationDetailModal(evalId) {
         selectedEvaluationData = data;
 
         document.getElementById('eval-modal-name').textContent = data.patient_name || 'Paciente';
-        document.getElementById('eval-modal-meta').textContent = `IDP: ${data.patient_idp || '--'} | Fecha: ${data.created_at ? data.created_at.replace('T', ' ').substring(0, 16) : '--'}`;
+        const evalCodeStr = data.code ? ` | Código: ${data.code}` : '';
+        document.getElementById('eval-modal-meta').textContent = `IDP: ${data.patient_idp || '--'}${evalCodeStr} | Fecha: ${data.created_at ? data.created_at.replace('T', ' ').substring(0, 16) : '--'}`;
         document.getElementById('eval-modal-score').textContent = data.score ?? 0;
         document.getElementById('eval-modal-rank').textContent = data.rank || '';
         document.getElementById('eval-modal-phase').textContent = `${data.phase_angle ?? 0}°`;
