@@ -178,6 +178,33 @@ function initBioForm() {
             seg_leg_l: document.getElementById('input-seg-leg-l').value || null
         };
 
+        // Validar rangos numéricos reales
+        if (isNaN(payload.resistance) || payload.resistance < 100 || payload.resistance > 1500) {
+            showToast('Resistencia (R) fuera de rango válido (100 - 1500 Ω)', 'error');
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            return;
+        }
+        if (isNaN(payload.reactance) || payload.reactance < 10 || payload.reactance > 200) {
+            showToast('Reactancia (Xc) fuera de rango válido (10 - 200 Ω)', 'error');
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            return;
+        }
+        if (isNaN(payload.weight) || payload.weight < 20 || payload.weight > 350) {
+            showToast('Peso fuera de rango válido (20 - 350 kg)', 'error');
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            return;
+        }
+        if (isNaN(payload.height) || payload.height < 50 || payload.height > 250) {
+            showToast('Altura fuera de rango válido (50 - 250 cm)', 'error');
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            return;
+        }
+        if (isNaN(payload.age) || payload.age < 1 || payload.age > 120) {
+            showToast('Edad fuera de rango válido (1 - 120 años)', 'error');
+            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
+            return;
+        }
+
         try {
             const response = await fetch('/api/dashboard-data', {
                 method: 'POST',
@@ -386,28 +413,46 @@ function showGrid(naId, gridId) {
 }
 
 function updateBioUI(data, inputs) {
-    // 1. Valores numéricos base
-    document.getElementById('global-score').textContent = data.score;
+    // 1. Valores numéricos base con animación de conteo
+    if (window.vmAnimate && window.vmAnimate.number) {
+        window.vmAnimate.number(document.getElementById('global-score'), data.score);
+        window.vmAnimate.number(document.getElementById('muscle-score'), data.muscle_score);
+        window.vmAnimate.number(document.getElementById('fat-score'), data.fat_score);
+        window.vmAnimate.number(document.getElementById('ree-value'), data.ree_kcal);
+        window.vmAnimate.number(document.getElementById('tee-value'), data.tee_kcal);
+    } else {
+        document.getElementById('global-score').textContent = data.score;
+        document.getElementById('muscle-score').textContent = data.muscle_score;
+        document.getElementById('fat-score').textContent = data.fat_score;
+        document.getElementById('ree-value').textContent = data.ree_kcal;
+        document.getElementById('tee-value').textContent = data.tee_kcal;
+    }
+    
     document.getElementById('rank-badge').textContent = data.rank;
 
     // Circular Gauges for Muscle and Fat
     const muscleGauge = document.getElementById('muscle-gauge');
     const fatGauge = document.getElementById('fat-gauge');
     if (muscleGauge) {
-        muscleGauge.style.setProperty('--muscle-pct', `${data.muscle_score}%`);
-        document.getElementById('muscle-score').textContent = data.muscle_score;
+        if (window.vmAnimate && window.vmAnimate.gauge) {
+            window.vmAnimate.gauge(muscleGauge, data.muscle_score, '#2d7a4a');
+        } else {
+            muscleGauge.style.setProperty('--muscle-pct', `${data.muscle_score}%`);
+            muscleGauge.style.background = `conic-gradient(#2d7a4a ${data.muscle_score}%, #e2e8f0 0)`;
+        }
     }
     if (fatGauge) {
-        fatGauge.style.setProperty('--fat-pct', `${data.fat_score}%`);
-        document.getElementById('fat-score').textContent = data.fat_score;
+        if (window.vmAnimate && window.vmAnimate.gauge) {
+            window.vmAnimate.gauge(fatGauge, data.fat_score, '#b94a4a');
+        } else {
+            fatGauge.style.setProperty('--fat-pct', `${data.fat_score}%`);
+            fatGauge.style.background = `conic-gradient(#b94a4a ${data.fat_score}%, #e2e8f0 0)`;
+        }
     }
 
     document.getElementById('res-value').textContent = inputs.resistance;
     document.getElementById('xc-value').textContent = inputs.reactance;
     document.getElementById('phase-value').textContent = data.phase_angle;
-
-    document.getElementById('ree-value').textContent = data.ree_kcal;
-    document.getElementById('tee-value').textContent = data.tee_kcal;
 
     // Calcular MJ (MegaJoules) -> 1 kcal = 0.004184 MJ
     const reeMj = (data.ree_kcal * 0.004184).toFixed(1);

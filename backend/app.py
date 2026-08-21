@@ -40,6 +40,20 @@ app = Flask(
     static_folder='../frontend/static'
 )
 
+@app.after_request
+def set_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
+
+import html
+
+def _clean_str(val, max_len=150):
+    if not val:
+        return ""
+    return html.escape(str(val).strip()[:max_len])
+
 # Inicializar Supabase
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -184,16 +198,17 @@ def _run_analysis(data):
     dev_fm_pct = _num(dev_fm_pct)
     dev_smi = _num(dev_smi)
 
-    # Datos paciente
-    patient_idp = str(data.get('patient_idp', '000000')).strip()
-    patient_name = str(data.get('patient_name', 'Unknown')).strip()
+    # Datos paciente sanitizados
+    patient_idp = _clean_str(data.get('patient_idp', '000000'), max_len=50) or '000000'
+    patient_name = _clean_str(data.get('patient_name', 'Unknown'), max_len=100) or 'Unknown'
 
     # Datos físicos
     r = _num(data.get('resistance', 0)) or 0
     xc = _num(data.get('reactance', 0)) or 0
     weight = _num(data.get('weight', 0)) or 0
     height = _num(data.get('height', 0)) or 0
-    age = int(_num(data.get('age', 0)) or 0)
+    raw_age = int(_num(data.get('age', 30)) or 30)
+    age = raw_age if raw_age > 0 else 30
     gender = _normalize_gender(data.get('gender', 'male'))
     pal = _num(data.get('pal', 1.2)) or 1.2
 
@@ -279,15 +294,18 @@ def _run_analysis(data):
     assigned_code = None
     if supabase:
         try:
-            evals_res = supabase.table('evaluations').select('code').execute()
             existing_codes = []
-            for row in (evals_res.data or []):
-                raw_c = row.get('code')
-                if raw_c and str(raw_c).startswith('EVA-'):
-                    try:
-                        existing_codes.append(int(raw_c.replace('EVA-', '')))
-                    except ValueError:
-                        pass
+            try:
+                evals_res = supabase.table('evaluations').select('code').execute()
+                for row in (evals_res.data or []):
+                    raw_c = row.get('code')
+                    if raw_c and str(raw_c).startswith('EVA-'):
+                        try:
+                            existing_codes.append(int(raw_c.replace('EVA-', '')))
+                        except ValueError:
+                            pass
+            except Exception:
+                pass
             existing_codes.sort()
 
             next_num = 1
@@ -468,9 +486,9 @@ def add_client():
     if not supabase:
         return jsonify({"error": "Base de datos no configurada"}), 503
     data = request.json or {}
-    name = (data.get('name') or '').strip()
-    phone = (data.get('phone') or '').strip()
-    email = (data.get('email') or '').strip()
+    name = _clean_str(data.get('name'), max_len=100)
+    phone = _clean_str(data.get('phone'), max_len=30)
+    email = _clean_str(data.get('email'), max_len=100)
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -506,9 +524,9 @@ def update_client(client_id):
     if not supabase:
         return jsonify({"error": "Base de datos no configurada"}), 503
     data = request.json or {}
-    name = (data.get('name') or '').strip()
-    phone = (data.get('phone') or '').strip()
-    email = (data.get('email') or '').strip()
+    name = _clean_str(data.get('name'), max_len=100)
+    phone = _clean_str(data.get('phone'), max_len=30)
+    email = _clean_str(data.get('email'), max_len=100)
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400

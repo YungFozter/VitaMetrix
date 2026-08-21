@@ -12,13 +12,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <!-- Glass System (variants de glassmorphism) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}?v=11">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/glass.css') }}?v=25">
     <!-- Animations (entrance, bounce, transitions, glow, shimmer) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=11">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/animations.css') }}?v=25">
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=11">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=25">
     <!-- CSS base del proyecto (sidebar, dashboard, clientes, widgets de datos) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=11">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=25">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -190,34 +190,105 @@
 
                     <!-- Dashboard Cards (KPI Bento 3 columnas) -->
                     <div class="dash-cards 3-col">
-                        <div class="dash-card bento-card kpi-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'clientes-view\']').click()">
-                            <div class="dash-icon-box icon-clients">👥</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Total Pacientes / Clientes</div>
-                                <div class="dash-value-wrap">
-                                    <span class="dash-value" id="dash-total-clients">0</span>
-                                    <span class="dash-badge badge-active">Registrados</span>
+                        <!-- Card 1: Pacientes / Clientes -->
+                        <div class="dash-card bento-card kpi-card kpi-card-clients" onclick="document.querySelector('[data-target=\'clientes-view\']').click()" role="button" tabindex="0" title="Ver directorio de pacientes">
+                            <div class="kpi-ambient-glow"></div>
+                            <div class="kpi-top-row">
+                                <div class="kpi-meta">
+                                    <span class="kpi-category">DIRECTORIO MÉDICO</span>
+                                    <h3 class="kpi-title">Total Pacientes</h3>
+                                </div>
+                                <div class="kpi-icon-pill icon-clients">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                                        <circle cx="9" cy="7" r="4"></circle>
+                                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                    </svg>
                                 </div>
                             </div>
-                        </div>
-                        <div class="dash-card bento-card kpi-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
-                            <div class="dash-icon-box icon-evals">📊</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Total Evaluaciones</div>
-                                <div class="dash-value-wrap">
-                                    <span class="dash-value" id="dash-total-evals">0</span>
-                                    <span class="dash-badge badge-trend">Completadas</span>
+                            <div class="kpi-value-row">
+                                <span class="kpi-value" id="dash-total-clients">0</span>
+                                <div class="kpi-chip chip-clients">
+                                    <span class="chip-dot dot-clients"></span>
+                                    <span>Registrados</span>
                                 </div>
                             </div>
+                            <div class="kpi-footer-row">
+                                <span class="kpi-footer-text">Ver directorio y fichas</span>
+                                <span class="kpi-arrow-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
                         </div>
-                        <div class="dash-card bento-card kpi-card">
-                            <div class="dash-icon-box icon-score">🏆</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Promedio TRU Score</div>
-                                <div class="dash-value-wrap">
-                                    <span class="dash-value" id="dash-avg-score">0</span>
-                                    <span class="dash-badge badge-health">Salud Celular</span>
+
+                        <!-- Card 2: Total Evaluaciones -->
+                        <div class="dash-card bento-card kpi-card kpi-card-evals" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()" role="button" tabindex="0" title="Ver historial de evaluaciones">
+                            <div class="kpi-ambient-glow"></div>
+                            <div class="kpi-top-row">
+                                <div class="kpi-meta">
+                                    <span class="kpi-category">HISTORIAL BIA</span>
+                                    <h3 class="kpi-title">Evaluaciones</h3>
                                 </div>
+                                <div class="kpi-icon-pill icon-evals">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value-row">
+                                <span class="kpi-value" id="dash-total-evals">0</span>
+                                <div class="kpi-chip chip-evals">
+                                    <span class="chip-dot dot-evals"></span>
+                                    <span>Completadas</span>
+                                </div>
+                            </div>
+                            <div class="kpi-footer-row">
+                                <span class="kpi-footer-text">Explorar análisis clínicos</span>
+                                <span class="kpi-arrow-icon">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                                        <polyline points="12 5 19 12 12 19"></polyline>
+                                    </svg>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Card 3: Promedio TRU Score -->
+                        <div class="dash-card bento-card kpi-card kpi-card-score" onclick="document.querySelector('[data-target=\'bio-view\']').click()" role="button" tabindex="0" title="Calibrar en analizador">
+                            <div class="kpi-ambient-glow"></div>
+                            <div class="kpi-top-row">
+                                <div class="kpi-meta">
+                                    <span class="kpi-category">COHORTE GLOBAL</span>
+                                    <h3 class="kpi-title">Promedio TRU Score</h3>
+                                </div>
+                                <div class="kpi-icon-pill icon-score">
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
+                                        <path d="M4 22h16"></path>
+                                        <path d="M10 14.66V17c0 .55-.45 1-1 1H7"></path>
+                                        <path d="M14 14.66V17c0 .55.45 1 1 1h2"></path>
+                                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="kpi-value-row">
+                                <div class="kpi-value-group">
+                                    <span class="kpi-value" id="dash-avg-score">0</span>
+                                    <span class="kpi-unit">pts</span>
+                                </div>
+                                <div class="kpi-chip chip-score">
+                                    <span class="chip-dot dot-score"></span>
+                                    <span>Salud Celular</span>
+                                </div>
+                            </div>
+                            <div class="kpi-footer-row">
+                                <span class="kpi-footer-text">Calibración bioeléctrica</span>
+                                <span class="kpi-score-badge">Óptimo</span>
                             </div>
                         </div>
                     </div>
@@ -275,15 +346,15 @@
                             <div class="dash-health-summary-box">
                                 <div class="health-summary-item">
                                     <span class="status-dot dot-normal"></span>
-                                    <span class="summary-label">Normal ($\ge 6.0^\circ$)</span>
+                                    <span class="summary-label">Normal (&ge; 6.0&deg;)</span>
                                 </div>
                                 <div class="health-summary-item">
                                     <span class="status-dot dot-warning"></span>
-                                    <span class="summary-label">Moderado ($5.0 - 5.9^\circ$)</span>
+                                    <span class="summary-label">Moderado (5.0&deg; - 5.9&deg;)</span>
                                 </div>
                                 <div class="health-summary-item">
                                     <span class="status-dot dot-alert"></span>
-                                    <span class="summary-label">Riesgo ($< 5.0^\circ$)</span>
+                                    <span class="summary-label">Riesgo (&lt; 5.0&deg;)</span>
                                 </div>
                             </div>
                         </section>
@@ -393,8 +464,8 @@
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
-    <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=25"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=11"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=25"></script>
 </body>
 </html>

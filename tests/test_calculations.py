@@ -19,6 +19,8 @@ from reference import (
     analyze_segmental,
     analyze_composition_indices
 )
+from app import app, _clean_str, _run_analysis
+
 
 class TestVitaMetrixCore(unittest.TestCase):
 
@@ -58,6 +60,38 @@ class TestVitaMetrixCore(unittest.TestCase):
         self.assertEqual(ci['imc'], 22.9)
         self.assertEqual(ci['imc_status'][0], 'Normal')
         self.assertEqual(ci['fm_pct'], 20.0)
+
+    def test_segmental_asymmetry_formula(self):
+        # Brazos: 2.2 kg vs 2.6 kg. Promedio = 2.4 kg. Diferencia = 0.4. 0.4/2.4 = 16.7% (alerta > 10%)
+        seg_data = {
+            'arm_right': 2.6, 'arm_left': 2.2,
+            'torso': 20.0, 'leg_right': 7.0, 'leg_left': 7.0
+        }
+        res = analyze_segmental(seg_data, gender='male')
+        self.assertEqual(len(res['asymmetries']), 1)
+        self.assertAlmostEqual(res['asymmetries'][0]['diff_pct'], 16.7, delta=0.2)
+
+    def test_sanitization_and_security(self):
+        dirty = "<script>alert('xss')</script> Juan"
+        cleaned = _clean_str(dirty)
+        self.assertNotIn("<script>", cleaned)
+        self.assertIn("&lt;script&gt;", cleaned)
+
+    def test_flask_security_headers_and_health(self):
+        client = app.test_client()
+        response = client.get('/api/health')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('X-Content-Type-Options', response.headers)
+        self.assertEqual(response.headers['X-Content-Type-Options'], 'nosniff')
+        self.assertEqual(response.headers['X-Frame-Options'], 'SAMEORIGIN')
+
+    def test_run_analysis_fallback_age(self):
+        res = _run_analysis({
+            "resistance": 550, "reactance": 55, "weight": 70, "height": 170, "age": 0
+        })
+        self.assertGreater(res['ree_kcal'], 1000)
+        self.assertIsNotNone(res['phase_percentile'])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -10,6 +10,8 @@ import json
 import math
 from functools import lru_cache
 
+import logging
+
 # Ruta al JSON de referencia (raíz del proyecto / data/)
 _BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _TABLES_PATH = os.path.join(_BASE, "data", "reference_tables.json")
@@ -21,7 +23,7 @@ def load_tables():
         with open(_TABLES_PATH, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
-        print(f"Error cargando reference_tables.json: {e}")
+        logging.error("Error cargando reference_tables.json: %s", e)
         return {}
 
 
@@ -123,12 +125,13 @@ def analyze_segmental(segments, gender="male"):
             "status": status, "light": light
         }
 
-    # Asimetría: brazos y piernas
+    # Asimetría: brazos y piernas (diferencia relativa al promedio homólogo)
     pairs = [("arm_right", "arm_left"), ("leg_right", "leg_left")]
     for a, b in pairs:
         va, vb = segments.get(a), segments.get(b)
-        if va and vb and min(va, vb) > 0:
-            diff = abs(va - vb) / min(va, vb)
+        if va and vb and (va + vb) > 0:
+            avg_val = (va + vb) / 2.0
+            diff = abs(va - vb) / avg_val
             if diff > 0.10:
                 asymmetries.append({
                     "segment": f"{a}/{b}",
