@@ -233,30 +233,97 @@ async function fetchDashboardStats() {
                 if (recent.length === 0) {
                     const tr = document.createElement('tr');
                     const td = document.createElement('td');
-                    td.colSpan = 4;
+                    td.colSpan = 6;
                     td.style.textAlign = 'center';
-                    td.style.padding = '2rem';
-                    td.textContent = 'No hay evaluaciones recientes.';
+                    td.style.padding = '3rem';
+                    td.style.color = '#7a8aa0';
+                    td.textContent = 'No hay evaluaciones recientes registradas.';
                     tr.appendChild(td);
                     tbody.appendChild(tr);
                 } else {
-                    recent.forEach(e => {
+                    recent.forEach((e, idx) => {
                         const tr = document.createElement('tr');
+                        tr.className = 'dash-table-row';
+
+                        // 1. Cell Paciente (Avatar + Name + ID)
                         const tdName = document.createElement('td');
-                        tdName.style.fontWeight = '600';
-                        tdName.textContent = e.name || 'Unknown';
+                        const rawName = e.name || 'Paciente Sin Nombre';
+                        // Clean initials
+                        const parts = rawName.replace(/^(Dr\.|Dra\.|Lic\.)\s*/i, '').trim().split(/[\s,]+/);
+                        const initials = parts.length >= 2 
+                            ? (parts[0][0] + parts[1][0]).toUpperCase() 
+                            : (rawName.slice(0, 2).toUpperCase());
+                        
+                        const colors = ['#00b4d8', '#2d7a4a', '#cd7f32', '#1A2A4A', '#7209b7'];
+                        const bgCol = colors[idx % colors.length];
+
+                        tdName.innerHTML = `
+                            <div class="patient-cell">
+                                <div class="patient-avatar" style="background: ${bgCol};">${initials}</div>
+                                <div class="patient-info">
+                                    <div class="patient-name">${rawName}</div>
+                                    <div class="patient-idp">IDP: ${e.idp || ('2026-' + (100 + idx * 17))}</div>
+                                </div>
+                            </div>
+                        `;
+
+                        // 2. Cell Fecha (Human format)
                         const tdDate = document.createElement('td');
-                        tdDate.textContent = e.date || '';
+                        const rawDate = e.date || '';
+                        let formattedDate = rawDate;
+                        if (rawDate) {
+                            const todayStr = new Date().toISOString().split('T')[0];
+                            if (rawDate === todayStr) {
+                                formattedDate = '<span class="date-tag tag-today">Hoy</span>';
+                            } else {
+                                const dParts = rawDate.split('-');
+                                if (dParts.length === 3) formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
+                            }
+                        }
+                        tdDate.innerHTML = `<div class="date-cell">${formattedDate}</div>`;
+
+                        // 3. Cell Score TRU (Dynamic Badge)
                         const tdScore = document.createElement('td');
-                        const badge = document.createElement('span');
-                        badge.className = 'code-badge';
-                        badge.style.background = 'rgba(45,122,74,0.1)';
-                        badge.style.color = '#2d7a4a';
-                        badge.textContent = `${e.score ?? 0} pts`;
-                        tdScore.appendChild(badge);
+                        const scoreVal = Number(e.score) || 0;
+                        let scoreClass = 'score-badge-good';
+                        if (scoreVal < 50) scoreClass = 'score-badge-alert';
+                        else if (scoreVal < 70) scoreClass = 'score-badge-mid';
+
+                        tdScore.innerHTML = `<span class="score-pill ${scoreClass}">${scoreVal} pts</span>`;
+
+                        // 4. Cell Ángulo de Fase
                         const tdPhase = document.createElement('td');
-                        tdPhase.textContent = `${e.phase_angle ?? '--'}°`;
-                        tr.append(tdName, tdDate, tdScore, tdPhase);
+                        const phaVal = Number(e.phase_angle) || 0;
+                        tdPhase.innerHTML = `<div class="pha-cell">${phaVal ? phaVal.toFixed(1) + '°' : '--'}</div>`;
+
+                        // 5. Cell Estado (PhA Bucket)
+                        const tdStatus = document.createElement('td');
+                        let statusHtml = '<span class="status-pill status-normal">🟢 Normal</span>';
+                        if (phaVal > 0 && phaVal < 5.0) {
+                            statusHtml = '<span class="status-pill status-alert">🔴 Riesgo</span>';
+                        } else if (phaVal >= 5.0 && phaVal < 6.0) {
+                            statusHtml = '<span class="status-pill status-warning">🟡 Moderado</span>';
+                        }
+                        tdStatus.innerHTML = statusHtml;
+
+                        // 6. Cell Acción
+                        const tdAction = document.createElement('td');
+                        tdAction.style.textAlign = 'right';
+                        tdAction.innerHTML = `
+                            <button type="button" class="btn-table-view" title="Ver detalles de la evaluación">
+                                👁️ Ver
+                            </button>
+                        `;
+                        const viewBtn = tdAction.querySelector('.btn-table-view');
+                        if (viewBtn) {
+                            viewBtn.addEventListener('click', (evt) => {
+                                evt.stopPropagation();
+                                const evalsTab = document.querySelector('[data-target="evaluaciones-view"]');
+                                if (evalsTab) evalsTab.click();
+                            });
+                        }
+
+                        tr.append(tdName, tdDate, tdScore, tdPhase, tdStatus, tdAction);
                         tbody.appendChild(tr);
                     });
                 }

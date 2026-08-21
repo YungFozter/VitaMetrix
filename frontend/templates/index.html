@@ -175,61 +175,116 @@
             <div class="views-container">
                 <!-- VIEW 1: DASHBOARD -->
                 <div id="dashboard-view" class="view active-view">
-                    <!-- Dashboard Cards (Bento) -->
-                    <div class="dash-cards">
-                        <div class="dash-card bento-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'clientes-view\']').click()">
-                            <div class="dash-icon-box" style="background: rgba(26, 42, 74, 0.1); color: #1A2A4A;">👥</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Total Clientes</div>
-                                <div class="dash-value" id="dash-total-clients">0</div>
-                            </div>
+                    <!-- Dashboard Top Header Action Bar -->
+                    <div class="dash-top-bar">
+                        <div class="dash-top-titles">
+                            <h2 class="dash-section-title">Visión General Médica</h2>
+                            <p class="dash-section-sub">Resumen de pacientes, evaluaciones e indicadores bioeléctricos de composición corporal.</p>
                         </div>
-                        <div class="dash-card bento-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
-                            <div class="dash-icon-box" style="background: rgba(0, 180, 216, 0.1); color: #00b4d8;">📊</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Total Evaluaciones</div>
-                                <div class="dash-value" id="dash-total-evals">0</div>
-                            </div>
-                        </div>
-                        <div class="dash-card bento-card">
-                            <div class="dash-icon-box" style="background: rgba(45, 122, 74, 0.1); color: #2d7a4a;">🏆</div>
-                            <div class="dash-info">
-                                <div class="dash-label">Promedio TRU Score</div>
-                                <div class="dash-value" id="dash-avg-score">0</div>
-                            </div>
-                        </div>
-                        <div class="dash-card bento-card" style="display: flex; align-items: center; justify-content: center; cursor: pointer; border: 1px solid #00b4d8;" onclick="document.querySelector('[data-target=\'bio-view\']').click()">
-                            <h3 style="color: #00b4d8; margin: 0; font-size: 1.2rem;">+ Nueva Evaluación</h3>
+                        <div class="dash-top-actions">
+                            <button type="button" class="btn-primary btn-new-eval" onclick="document.querySelector('[data-target=\'bio-view\']').click()">
+                                <span class="btn-ico">⚡</span> Nueva Evaluación
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Main Dashboard Content (Bento Grid) -->
-                    <div class="bento-grid" style="grid-template-columns: 2fr 1fr; margin-top: 2rem;">
+                    <!-- Dashboard Cards (KPI Bento 3 columnas) -->
+                    <div class="dash-cards 3-col">
+                        <div class="dash-card bento-card kpi-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'clientes-view\']').click()">
+                            <div class="dash-icon-box icon-clients">👥</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Total Pacientes / Clientes</div>
+                                <div class="dash-value-wrap">
+                                    <span class="dash-value" id="dash-total-clients">0</span>
+                                    <span class="dash-badge badge-active">Registrados</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dash-card bento-card kpi-card" style="cursor: pointer;" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
+                            <div class="dash-icon-box icon-evals">📊</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Total Evaluaciones</div>
+                                <div class="dash-value-wrap">
+                                    <span class="dash-value" id="dash-total-evals">0</span>
+                                    <span class="dash-badge badge-trend">Completadas</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dash-card bento-card kpi-card">
+                            <div class="dash-icon-box icon-score">🏆</div>
+                            <div class="dash-info">
+                                <div class="dash-label">Promedio TRU Score</div>
+                                <div class="dash-value-wrap">
+                                    <span class="dash-value" id="dash-avg-score">0</span>
+                                    <span class="dash-badge badge-health">Salud Celular</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Dashboard Content (Bento Grid 2fr 1fr) -->
+                    <div class="bento-grid dash-main-grid" style="grid-template-columns: 2fr 1fr; margin-top: 1.5rem;">
                         <!-- Left Panel: Recent Evals -->
-                        <section class="bento-card" style="min-height: 400px;">
-                            <div class="card-header">Últimas Evaluaciones</div>
-                            <div class="clients-table-container">
-                                <table class="clients-table">
+                        <section class="bento-card dash-evals-card">
+                            <div class="dash-card-header">
+                                <div class="dash-header-title">
+                                    <span class="dash-header-icon">📊</span>
+                                    <div>
+                                        <h3 class="dash-header-text">Últimas Evaluaciones Clínicas</h3>
+                                        <span class="dash-header-sub">Análisis de composición corporal y estado celular recientes</span>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn-link-action" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
+                                    Ver Historial Completo →
+                                </button>
+                            </div>
+
+                            <div class="clients-table-container dash-table-wrap">
+                                <table class="clients-table dash-table">
                                     <thead>
                                         <tr>
-                                            <th>Paciente</th>
-                                            <th>Fecha</th>
-                                            <th>Score</th>
-                                            <th>Ángulo Fase</th>
+                                            <th>PACIENTE</th>
+                                            <th>FECHA</th>
+                                            <th>SCORE TRU</th>
+                                            <th>ÁNGULO FASE</th>
+                                            <th>ESTADO</th>
+                                            <th style="text-align: right;">ACCIÓN</th>
                                         </tr>
                                     </thead>
                                     <tbody id="dash-recent-tbody">
-                                        <tr><td colspan="4" style="text-align: center; padding: 2rem;">Cargando...</td></tr>
+                                        <tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: #7a8aa0;">Cargando evaluaciones...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
                         </section>
 
-                        <!-- Right Panel: Charts -->
-                        <section class="bento-card" style="min-height: 400px; display: flex; flex-direction: column;">
-                            <div class="card-header">Estado Celular Poblacional</div>
-                            <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; position: relative;">
-                                <canvas id="dash-population-chart" width="250" height="250"></canvas>
+                        <!-- Right Panel: Charts & Population Health -->
+                        <section class="bento-card dash-chart-card">
+                            <div class="dash-card-header">
+                                <div class="dash-header-title">
+                                    <span class="dash-header-icon">🍩</span>
+                                    <div>
+                                        <h3 class="dash-header-text">Estado Celular Poblacional</h3>
+                                        <span class="dash-header-sub">Distribución del Ángulo de Fase (PhA)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chart-container-wrap">
+                                <canvas id="dash-population-chart" width="220" height="220"></canvas>
+                            </div>
+                            <div class="dash-health-summary-box">
+                                <div class="health-summary-item">
+                                    <span class="status-dot dot-normal"></span>
+                                    <span class="summary-label">Normal ($\ge 6.0^\circ$)</span>
+                                </div>
+                                <div class="health-summary-item">
+                                    <span class="status-dot dot-warning"></span>
+                                    <span class="summary-label">Moderado ($5.0 - 5.9^\circ$)</span>
+                                </div>
+                                <div class="health-summary-item">
+                                    <span class="status-dot dot-alert"></span>
+                                    <span class="summary-label">Riesgo ($< 5.0^\circ$)</span>
+                                </div>
                             </div>
                         </section>
                     </div>
