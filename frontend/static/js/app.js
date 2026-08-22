@@ -1740,3 +1740,393 @@ function initSystemMenuListeners() {
         });
     }
 }
+
+// ============================================================
+// --- CLINICAL CALENDAR & APPOINTMENTS CONTROLLER ---
+// ============================================================
+let clinicAppointments = [];
+let calCurrentDate = new Date();
+let calSelectedDateStr = new Date().toISOString().split('T')[0];
+
+const MONTH_NAMES_ES = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+async function initAppointmentsCalendar() {
+    initAppointmentModal();
+    initCalendarNav();
+    await fetchAppointmentsList();
+    renderClinicCalendar();
+    renderSelectedDayAppointments();
+    populateClientsDatalist();
+}
+
+function initCalendarNav() {
+    const prevBtn = document.getElementById('cal-prev-month');
+    const nextBtn = document.getElementById('cal-next-month');
+
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            calCurrentDate.setMonth(calCurrentDate.getMonth() - 1);
+            renderClinicCalendar();
+        });
+    }
+
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            calCurrentDate.setMonth(calCurrentDate.getMonth() + 1);
+            renderClinicCalendar();
+        });
+    }
+}
+
+async function fetchAppointmentsList() {
+    try {
+        const res = await fetch('/api/appointments');
+        if (res.ok) {
+            const data = await res.json();
+            if (Array.isArray(data) && data.length > 0) {
+                clinicAppointments = data;
+            } else {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+                clinicAppointments = [
+                    {
+                        id: 'demo_1',
+                        patient_name: 'Dra. Sofía Alarcón',
+                        patient_phone: '+54 9 11 5544-2211',
+                        patient_idp: '104829',
+                        date: todayStr,
+                        time: '09:30',
+                        type: 'Control Trimestral',
+                        status: 'confirmed',
+                        notes: 'Ayuno de 2h, seguimiento deportivo'
+                    },
+                    {
+                        id: 'demo_2',
+                        patient_name: 'Carlos Mendoza',
+                        patient_phone: '+54 9 11 8899-3322',
+                        patient_idp: '104910',
+                        date: todayStr,
+                        time: '11:45',
+                        type: 'Evaluación Inicial BIA',
+                        status: 'pending',
+                        notes: 'Primera consulta BIA, hidratación normal'
+                    },
+                    {
+                        id: 'demo_3',
+                        patient_name: 'Valentina Ruiz',
+                        patient_phone: '+54 9 11 7722-1100',
+                        patient_idp: '105022',
+                        date: tomorrowStr,
+                        time: '16:00',
+                        type: 'Seguimiento Deportivo',
+                        status: 'confirmed',
+                        notes: 'Preparación competencia fitness'
+                    }
+                ];
+            }
+        }
+    } catch (e) {
+        console.error('Error fetching appointments:', e);
+    }
+}
+
+function renderClinicCalendar() {
+    const grid = document.getElementById('calendar-days-grid');
+    const monthLabel = document.getElementById('cal-month-label');
+    if (!grid || !monthLabel) return;
+
+    const year = calCurrentDate.getFullYear();
+    const month = calCurrentDate.getMonth();
+
+    monthLabel.textContent = `${MONTH_NAMES_ES[month]} ${year}`;
+    grid.replaceChildren();
+
+    // First day of month (0 = Sunday, 1 = Monday...)
+    const firstDay = new Date(year, month, 1);
+    let startDayIndex = firstDay.getDay() - 1; // Convert to Monday = 0
+    if (startDayIndex === -1) startDayIndex = 6; // Sunday
+
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const todayStr = new Date().toISOString().split('T')[0];
+
+    // Empty previous month padding cells
+    for (let i = 0; i < startDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'cal-day-cell empty-day';
+        grid.appendChild(emptyCell);
+    }
+
+    // Days of current month
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.className = 'cal-day-cell';
+        dayCell.textContent = day;
+
+        const dayDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+        if (dayDateStr === todayStr) {
+            dayCell.classList.add('today');
+        }
+        if (dayDateStr === calSelectedDateStr) {
+            dayCell.classList.add('selected');
+        }
+
+        // Check if day has appointments
+        const dayAppts = clinicAppointments.filter(a => a.date === dayDateStr);
+        if (dayAppts.length > 0) {
+            const hasPending = dayAppts.some(a => a.status === 'pending');
+            const dot = document.createElement('span');
+            dot.className = `cal-day-dot ${hasPending ? 'dot-has-pending' : 'dot-has-confirmed'}`;
+            dayCell.appendChild(dot);
+        }
+
+        dayCell.addEventListener('click', () => {
+            calSelectedDateStr = dayDateStr;
+            renderClinicCalendar();
+            renderSelectedDayAppointments();
+        });
+
+        grid.appendChild(dayCell);
+    }
+}
+
+function renderSelectedDayAppointments() {
+    const listContainer = document.getElementById('day-appointments-list');
+    const titleEl = document.getElementById('day-appointments-title');
+    const countEl = document.getElementById('day-appointments-count');
+    if (!listContainer) return;
+
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isToday = calSelectedDateStr === todayStr;
+
+    const parts = calSelectedDateStr.split('-');
+    const formattedDate = (parts.length === 3) ? `${parts[2]} de ${MONTH_NAMES_ES[parseInt(parts[1]) - 1]}` : calSelectedDateStr;
+
+    if (titleEl) {
+        titleEl.textContent = isToday ? 'Citas de hoy' : `Citas: ${formattedDate}`;
+    }
+
+    const dayAppts = clinicAppointments.filter(a => a.date === calSelectedDateStr);
+    dayAppts.sort((a, b) => (a.time || '').localeCompare(b.time || ''));
+
+    if (countEl) {
+        countEl.textContent = `${dayAppts.length} cita${dayAppts.length === 1 ? '' : 's'}`;
+    }
+
+    listContainer.replaceChildren();
+
+    if (dayAppts.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'appt-empty-state';
+        empty.innerHTML = `
+            <span>☕ Sin citas programadas para este día.</span>
+            <button type="button" class="btn-link-action" onclick="openNewAppointmentForDate('${calSelectedDateStr}')" style="font-size:0.78rem; margin-top:0.2rem;">
+                + Agendar para este día
+            </button>
+        `;
+        listContainer.appendChild(empty);
+        return;
+    }
+
+    dayAppts.forEach(appt => {
+        const card = document.createElement('div');
+        card.className = 'appt-item-card';
+
+        const isConf = (appt.status || 'confirmed') === 'confirmed';
+        const statusBadgeHtml = isConf
+            ? '<span class="status-chip green" style="font-size:0.68rem; padding:0.1rem 0.45rem;">🟢 Confirmada</span>'
+            : '<span class="status-chip yellow" style="font-size:0.68rem; padding:0.1rem 0.45rem;">🟡 Pendiente</span>';
+
+        card.innerHTML = `
+            <div class="appt-top-row">
+                <span class="appt-time-badge">🕒 ${appt.time || '09:00'}</span>
+                ${statusBadgeHtml}
+            </div>
+            <div>
+                <h4 class="appt-patient-name">${appt.patient_name || 'Paciente'}</h4>
+                <div class="appt-type-tag">${appt.type || 'Evaluación BIA'} ${appt.notes ? '• <em style="color:#64748b;">' + appt.notes + '</em>' : ''}</div>
+            </div>
+            <div class="appt-actions-row">
+                <button type="button" class="btn-start-bia-appt" title="Cargar paciente en el analizador de bioimpedancia">
+                    ⚡ Iniciar BIA
+                </button>
+                <button type="button" class="btn-delete-appt" title="Eliminar cita">
+                    🗑️
+                </button>
+            </div>
+        `;
+
+        // Start BIA calculation from appointment
+        const startBtn = card.querySelector('.btn-start-bia-appt');
+        if (startBtn) {
+            startBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                startEvaluationFromAppointment(appt);
+            });
+        }
+
+        // Delete appointment
+        const delBtn = card.querySelector('.btn-delete-appt');
+        if (delBtn) {
+            delBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                showConfirm('Eliminar Cita', `¿Deseas cancelar la cita de ${appt.patient_name}?`, async () => {
+                    await deleteAppointment(appt.id);
+                });
+            });
+        }
+
+        listContainer.appendChild(card);
+    });
+}
+
+function startEvaluationFromAppointment(appt) {
+    // 1. Switch to Bioimpedancia view
+    const bioNav = document.querySelector('[data-target="bio-view"]');
+    if (bioNav) bioNav.click();
+
+    // 2. Fill basic data
+    if (appt.patient_name) document.getElementById('input-name').value = appt.patient_name;
+    if (appt.patient_idp) document.getElementById('input-idp').value = appt.patient_idp;
+
+    // 3. Highlight form
+    const formPanel = document.querySelector('.bio-form-horizontal') || document.querySelector('.bio-form-panel');
+    if (formPanel) {
+        formPanel.classList.remove('form-focus-pulse');
+        void formPanel.offsetWidth;
+        formPanel.classList.add('form-focus-pulse');
+    }
+
+    // 4. Scroll smoothly to top
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    showToast(`Paciente ${appt.patient_name} cargado/a desde la agenda clínica.`, 'success');
+}
+
+function initAppointmentModal() {
+    const modal = document.getElementById('appointment-modal');
+    const openBtn = document.getElementById('btn-open-appointment-modal');
+    const closeBtn = document.getElementById('appt-modal-close');
+    const cancelBtn = document.getElementById('appt-btn-cancel');
+    const form = document.getElementById('appointment-form');
+
+    const closeModal = () => {
+        if (modal) modal.classList.add('hidden');
+        if (form) form.reset();
+        document.getElementById('appt-edit-id').value = '';
+    };
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            const todayStr = new Date().toISOString().split('T')[0];
+            document.getElementById('appt-date').value = calSelectedDateStr || todayStr;
+            populateClientsDatalist();
+            if (modal) modal.classList.remove('hidden');
+        });
+    }
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+    }
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSave = document.getElementById('appt-btn-save');
+            const originalText = btnSave ? btnSave.textContent : 'Guardar';
+            if (btnSave) { btnSave.textContent = 'Guardando...'; btnSave.disabled = true; }
+
+            const payload = {
+                patient_name: document.getElementById('appt-patient-name').value.trim(),
+                patient_phone: document.getElementById('appt-patient-phone').value.trim(),
+                date: document.getElementById('appt-date').value,
+                time: document.getElementById('appt-time').value,
+                type: document.getElementById('appt-type').value,
+                status: document.getElementById('appt-status').value,
+                notes: document.getElementById('appt-notes').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/appointments', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    showToast('Cita agendada exitosamente 📅', 'success');
+                    closeModal();
+                    await fetchAppointmentsList();
+                    renderClinicCalendar();
+                    renderSelectedDayAppointments();
+                } else {
+                    showToast('Error al guardar: ' + (result.error || 'Intente nuevamente'), 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            } finally {
+                if (btnSave) { btnSave.textContent = originalText; btnSave.disabled = false; }
+            }
+        });
+    }
+}
+
+function openNewAppointmentForDate(dateStr) {
+    const modal = document.getElementById('appointment-modal');
+    document.getElementById('appt-date').value = dateStr;
+    populateClientsDatalist();
+    if (modal) modal.classList.remove('hidden');
+}
+
+async function deleteAppointment(apptId) {
+    try {
+        const res = await fetch(`/api/appointments/${apptId}`, { method: 'DELETE' });
+        const result = await res.json();
+        if (result.success) {
+            clinicAppointments = clinicAppointments.filter(a => a.id !== apptId);
+            showToast('Cita eliminada correctamente', 'info');
+            renderClinicCalendar();
+            renderSelectedDayAppointments();
+        } else {
+            showToast('Error al eliminar cita', 'error');
+        }
+    } catch (e) {
+        console.error(e);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+async function populateClientsDatalist() {
+    const datalist = document.getElementById('clients-datalist');
+    if (!datalist) return;
+    try {
+        const res = await fetch('/api/clients');
+        if (res.ok) {
+            const clients = await res.json();
+            if (Array.isArray(clients)) {
+                datalist.replaceChildren();
+                clients.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.label = c.phone ? `Tel: ${c.phone}` : '';
+                    datalist.appendChild(opt);
+                });
+            }
+        }
+    } catch (e) {
+        // Silently ignore
+    }
+}
