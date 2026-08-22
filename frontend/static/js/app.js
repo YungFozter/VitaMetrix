@@ -1036,11 +1036,16 @@ function editClient(id, name, phone, email) {
 // --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---
 let allEvaluationsData = [];
 let selectedEvaluationData = null;
+let evalCurrentPage = 1;
+let evalPageSize = '25';
 
 function initEvaluaciones() {
     const btnRefresh = document.getElementById('btn-refresh-evals');
     const searchInput = document.getElementById('eval-search-input');
     const filterStatus = document.getElementById('eval-filter-status');
+    const pageSizeSelect = document.getElementById('eval-page-size');
+    const btnPrev = document.getElementById('eval-btn-prev');
+    const btnNext = document.getElementById('eval-btn-next');
 
     if (btnRefresh) {
         btnRefresh.addEventListener('click', () => {
@@ -1049,12 +1054,46 @@ function initEvaluaciones() {
         });
     }
 
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', (e) => {
+            evalPageSize = e.target.value;
+            evalCurrentPage = 1;
+            filterAndRenderEvaluaciones();
+        });
+    }
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            if (evalCurrentPage > 1) {
+                evalCurrentPage--;
+                filterAndRenderEvaluaciones();
+                const scrollContainer = document.querySelector('.evals-table-scroll-container');
+                if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        });
+    }
+
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            evalCurrentPage++;
+            filterAndRenderEvaluaciones();
+            const scrollContainer = document.querySelector('.evals-table-scroll-container');
+            if (scrollContainer) scrollContainer.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    }
+
     if (searchInput) {
-        searchInput.addEventListener('input', filterAndRenderEvaluaciones);
+        searchInput.addEventListener('input', () => {
+            evalCurrentPage = 1;
+            filterAndRenderEvaluaciones();
+        });
     }
 
     if (filterStatus) {
-        filterStatus.addEventListener('change', filterAndRenderEvaluaciones);
+        filterStatus.addEventListener('change', () => {
+            evalCurrentPage = 1;
+            filterAndRenderEvaluaciones();
+        });
     }
 
     // Modal detail close triggers
@@ -1156,7 +1195,7 @@ async function fetchEvaluaciones() {
         filterAndRenderEvaluaciones();
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: red;">Error al cargar las evaluaciones.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2.5rem; color: red;">Error al cargar las evaluaciones.</td></tr>';
     }
 }
 
@@ -1192,13 +1231,38 @@ function filterAndRenderEvaluaciones() {
         return nameMatch && statusMatch;
     });
 
+    const totalItems = filtered.length;
+    const isAll = evalPageSize === 'all';
+    const limit = isAll ? Math.max(totalItems, 1) : (parseInt(evalPageSize, 10) || 25);
+    const totalPages = isAll ? 1 : (Math.ceil(totalItems / limit) || 1);
+
+    if (evalCurrentPage > totalPages) evalCurrentPage = totalPages;
+    if (evalCurrentPage < 1) evalCurrentPage = 1;
+
+    const startIndex = (evalCurrentPage - 1) * limit;
+    const endIndex = Math.min(startIndex + limit, totalItems);
+    const pageItems = isAll ? filtered : filtered.slice(startIndex, endIndex);
+
+    // Update pagination controls in UI
+    const infoRange = document.getElementById('eval-info-range');
+    const infoTotal = document.getElementById('eval-info-total');
+    const pageBadge = document.getElementById('eval-current-page-badge');
+    const btnPrev = document.getElementById('eval-btn-prev');
+    const btnNext = document.getElementById('eval-btn-next');
+
+    if (infoRange) infoRange.textContent = totalItems > 0 ? `${startIndex + 1}-${endIndex}` : '0-0';
+    if (infoTotal) infoTotal.textContent = totalItems;
+    if (pageBadge) pageBadge.textContent = `Pág. ${evalCurrentPage} / ${totalPages}`;
+    if (btnPrev) btnPrev.disabled = evalCurrentPage <= 1;
+    if (btnNext) btnNext.disabled = evalCurrentPage >= totalPages;
+
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2.5rem; color: #5a6f8c;">No se encontraron evaluaciones registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2.5rem; color: #5a6f8c;">No se encontraron evaluaciones registradas.</td></tr>';
         return;
     }
 
     tbody.replaceChildren();
-    filtered.forEach(ev => {
+    pageItems.forEach(ev => {
         const tr = document.createElement('tr');
 
         // Code Badge (EVA-XXX)

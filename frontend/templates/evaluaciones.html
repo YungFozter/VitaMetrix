@@ -26,6 +26,14 @@
                         <option value="Bajo">Bajo (<5.0°)</option>
                     </select>
 
+                    <!-- Selector de Cantidad por Página (10, 25, 50) -->
+                    <select id="eval-page-size" class="form-select form-select-sm shadow-none" style="max-width: 145px; cursor: pointer;" title="Cantidad de evaluaciones por página">
+                        <option value="10">10 por página</option>
+                        <option value="25" selected>25 por página</option>
+                        <option value="50">50 por página</option>
+                        <option value="all">Todas</option>
+                    </select>
+
                     <!-- Botón de Actualizar con Bootstrap -->
                     <button type="button" id="btn-refresh-evals" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none" title="Recargar lista">
                         <i class="bi bi-arrow-clockwise"></i>
@@ -36,9 +44,9 @@
         </div>
     </div>
 
-    <!-- Tabla Bento de Evaluaciones -->
-    <div class="bento-card no-hover" style="min-height: 550px; padding: 1.5rem;">
-        <div class="clients-table-container">
+    <!-- Tabla Bento de Evaluaciones con Contenedor Scrolleable Propio -->
+    <div class="bento-card no-hover" style="padding: 1.5rem;">
+        <div class="evals-table-scroll-container">
             <table class="clients-table">
                 <thead>
                     <tr>
@@ -56,6 +64,22 @@
                     <tr><td colspan="8" style="text-align: center; padding: 3rem; color: #5a6f8c;">Cargando historial de evaluaciones...</td></tr>
                 </tbody>
             </table>
+        </div>
+
+        <!-- Footer de Paginación y Contador de Evaluaciones -->
+        <div class="eval-pagination-footer d-flex flex-wrap align-items-center justify-content-between gap-3 mt-3 pt-3 border-top">
+            <div class="eval-count-info text-muted small" id="eval-pagination-info">
+                Mostrando <strong id="eval-info-range">0-0</strong> de <strong id="eval-info-total">0</strong> evaluaciones
+            </div>
+            <div class="eval-pagination-controls d-flex align-items-center gap-2" id="eval-pagination-controls">
+                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none" id="eval-btn-prev" disabled>
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </button>
+                <span class="badge bg-light text-dark border px-3 py-2 font-monospace" id="eval-current-page-badge" style="font-size: 0.82rem; font-weight: 600;">Pág. 1 / 1</span>
+                <button type="button" class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1 shadow-none" id="eval-btn-next" disabled>
+                    Siguiente <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
         </div>
     </div>
 </div>
