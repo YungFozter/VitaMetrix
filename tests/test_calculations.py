@@ -93,5 +93,51 @@ class TestVitaMetrixCore(unittest.TestCase):
         self.assertIsNotNone(res['phase_percentile'])
 
 
+    def test_appointments_crud_api(self):
+        client = app.test_client()
+        # 1. Create appointment
+        payload = {
+            "patient_name": "Test Patient",
+            "patient_phone": "+5491112345678",
+            "date": "2026-08-25",
+            "time": "10:00",
+            "type": "Evaluación Inicial BIA",
+            "notes": "Ayuno 2h"
+        }
+        res_post = client.post('/api/appointments', json=payload)
+        self.assertEqual(res_post.status_code, 201)
+        data = res_post.get_json()
+        self.assertTrue(data.get('success'))
+
+        # 2. Get appointments
+        res_get = client.get('/api/appointments')
+        self.assertEqual(res_get.status_code, 200)
+        appts = res_get.get_json()
+        self.assertTrue(any(a.get('patient_name') == "Test Patient" for a in appts))
+
+    def test_chatbot_webhook_flow(self):
+        client = app.test_client()
+        # 1. Menu test
+        res_menu = client.post('/api/bot/webhook', json={"sender": "Carlos", "message": "Hola"})
+        self.assertEqual(res_menu.status_code, 200)
+        data_menu = res_menu.get_json()
+        self.assertEqual(data_menu['action'], 'menu')
+        self.assertIn("Agendar una Evaluación", data_menu['response'])
+
+        # 2. Booking trigger test
+        res_book = client.post('/api/bot/webhook', json={"sender": "Carlos", "message": "Quiero agendar una cita"})
+        self.assertEqual(res_book.status_code, 200)
+        data_book = res_book.get_json()
+        self.assertEqual(data_book['action'], 'booking_flow')
+        self.assertIn("Horarios Disponibles", data_book['response'])
+
+        # 3. Preparation instructions test
+        res_prep = client.post('/api/bot/webhook', json={"sender": "Carlos", "message": "¿Debo ir en ayuno?"})
+        self.assertEqual(res_prep.status_code, 200)
+        data_prep = res_prep.get_json()
+        self.assertEqual(data_prep['action'], 'prep_instructions')
+        self.assertIn("Ayuno de alimentos", data_prep['response'])
+
+
 if __name__ == '__main__':
     unittest.main()

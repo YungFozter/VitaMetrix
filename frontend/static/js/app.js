@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initEvaluaciones();
     initProfileDropdown();
     initSystemMenuListeners();
+    initAppointmentsCalendar();
     fetchDashboardStats();
 });
 

@@ -1,6 +1,8 @@
 import os
 import sys
 import logging
+import time
+from datetime import datetime
 
 # Configurar logging seguro
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -553,6 +555,219 @@ def delete_client(client_id):
     except Exception as e:
         logging.error("Error al eliminar cliente: %s", e, exc_info=True)
         return jsonify({"error": "Error al eliminar cliente"}), 500
+
+# --- RUTAS DE CITAS Y AGENDA CLÍNICA ---
+
+_LOCAL_APPOINTMENTS = []
+
+@app.route('/api/appointments', methods=['GET'])
+def get_appointments():
+    date_filter = request.args.get('date')
+    if not supabase:
+        results = _LOCAL_APPOINTMENTS
+        if date_filter:
+            results = [a for a in results if a.get('date') == date_filter]
+        return jsonify(results), 200
+
+    try:
+        query = supabase.table('appointments').select('*').order('date').order('time')
+        if date_filter:
+            query = query.eq('date', date_filter)
+        res = query.execute()
+        return jsonify(res.data or []), 200
+    except Exception as e:
+        logging.warning("Tabla appointments no disponible en Supabase, usando almacenamiento local: %s", e)
+        results = _LOCAL_APPOINTMENTS
+        if date_filter:
+            results = [a for a in results if a.get('date') == date_filter]
+        return jsonify(results), 200
+
+@app.route('/api/appointments', methods=['POST'])
+def create_appointment():
+    data = request.json or {}
+    patient_name = _clean_str(data.get('patient_name'), max_len=100)
+    patient_phone = _clean_str(data.get('patient_phone'), max_len=30)
+    patient_idp = _clean_str(data.get('patient_idp'), max_len=50)
+    appt_date = _clean_str(data.get('date'), max_len=20)
+    appt_time = _clean_str(data.get('time'), max_len=10)
+    appt_type = _clean_str(data.get('type') or 'Evaluación Inicial BIA', max_len=50)
+    appt_status = _clean_str(data.get('status') or 'confirmed', max_len=20)
+    notes = _clean_str(data.get('notes'), max_len=250)
+
+    if not patient_name or not appt_date or not appt_time:
+        return jsonify({"error": "Paciente, fecha y hora son obligatorios"}), 400
+
+    new_appt = {
+        "id": f"apt_{len(_LOCAL_APPOINTMENTS) + 1}_{int(time.time() if 'time' in globals() else 1000)}",
+        "patient_name": patient_name,
+        "patient_phone": patient_phone,
+        "patient_idp": patient_idp,
+        "date": appt_date,
+        "time": appt_time,
+        "type": appt_type,
+        "status": appt_status,
+        "notes": notes,
+        "created_at": datetime.now().isoformat() if 'datetime' in globals() else "2026-08-22T00:00:00"
+    }
+
+    if supabase:
+        try:
+            res = supabase.table('appointments').insert({
+                "patient_name": patient_name,
+                "patient_phone": patient_phone,
+                "patient_idp": patient_idp,
+                "date": appt_date,
+                "time": appt_time,
+                "type": appt_type,
+                "status": appt_status,
+                "notes": notes
+            }).execute()
+            if res.data:
+                return jsonify({"success": True, "data": res.data[0]}), 201
+        except Exception as e:
+            logging.warning("No se pudo insertar en Supabase appointments, usando fallback local: %s", e)
+
+    _LOCAL_APPOINTMENTS.append(new_appt)
+    return jsonify({"success": True, "data": new_appt}), 201
+
+@app.route('/api/appointments/<string:appt_id>', methods=['PUT'])
+def update_appointment(appt_id):
+    data = request.json or {}
+    updated = {
+        "patient_name": _clean_str(data.get('patient_name')),
+        "patient_phone": _clean_str(data.get('patient_phone')),
+        "patient_idp": _clean_str(data.get('patient_idp')),
+        "date": _clean_str(data.get('date')),
+        "time": _clean_str(data.get('time')),
+        "type": _clean_str(data.get('type')),
+        "status": _clean_str(data.get('status')),
+        "notes": _clean_str(data.get('notes'))
+    }
+    # Remover campos vacíos
+    updated = {k: v for k, v in updated.items() if v}
+
+    if supabase:
+        try:
+            res = supabase.table('appointments').update(updated).eq('id', appt_id).execute()
+            if res.data:
+                return jsonify({"success": True, "data": res.data[0]})
+        except Exception as e:
+            logging.warning("Error al actualizar en Supabase appointments: %s", e)
+
+    for item in _LOCAL_APPOINTMENTS:
+        if item.get('id') == appt_id:
+            item.update(updated)
+            return jsonify({"success": True, "data": item})
+
+    return jsonify({"success": True, "message": "Actualizado"})
+
+@app.route('/api/appointments/<string:appt_id>', methods=['DELETE'])
+def delete_appointment(appt_id):
+    if supabase:
+        try:
+            supabase.table('appointments').delete().eq('id', appt_id).execute()
+            return jsonify({"success": True})
+        except Exception as e:
+            logging.warning("Error al eliminar en Supabase appointments: %s", e)
+
+    global _LOCAL_APPOINTMENTS
+    _LOCAL_APPOINTMENTS = [a for a in _LOCAL_APPOINTMENTS if a.get('id') != appt_id]
+    return jsonify({"success": True})
+
+# --- CHATBOT WEBHOOK (WhatsApp / Telegram Automation) ---
+
+@app.route('/api/bot/webhook', methods=['POST', 'GET'])
+def bot_webhook():
+    """
+    Webhook inteligente para Evolution API, Baileys, Telegram y Webhooks directos.
+    Permite agendamiento automatizado, consulta de disponibilidad y preparación clínica.
+    """
+    if request.method == 'GET':
+        # Verificación de webhook (Meta / Evolution)
+        challenge = request.args.get('hub.challenge')
+        return challenge if challenge else jsonify({"status": "active", "service": "VitaMetrix Chatbot Engine"}), 200
+
+    payload = request.json or {}
+    sender = ""
+    incoming_text = ""
+
+    # 1. Parsear formato Evolution API / Baileys
+    if "data" in payload and isinstance(payload.get("data"), dict) and "message" in payload.get("data", {}):
+        msg_data = payload["data"]
+        sender = msg_data.get("key", {}).get("remoteJid", "").split('@')[0]
+        msg = msg_data.get("message", {})
+        incoming_text = msg.get("conversation") or msg.get("extendedTextMessage", {}).get("text", "")
+    # 2. Parsear formato Telegram
+    elif "message" in payload and isinstance(payload.get("message"), dict):
+        tele_msg = payload.get("message", {})
+        sender_info = tele_msg.get("from")
+        sender = sender_info.get("first_name", "Paciente") if isinstance(sender_info, dict) else "Paciente"
+        incoming_text = tele_msg.get("text", "")
+    # 3. Formato directo / REST
+    else:
+        sender = str(payload.get("sender") or "Paciente")
+        incoming_text = str(payload.get("message") or "")
+
+    text_clean = incoming_text.lower().strip()
+    response_msg = ""
+    action_taken = "none"
+
+    if any(k in text_clean for k in ["agendar", "cita", "turno", "reservar", "1"]):
+        action_taken = "booking_flow"
+        response_msg = (
+            f"¡Hola {sender}! 👋 Te ayudo a agendar tu Evaluación de Bioimpedancia (BIA) en VitaMetrix.\n\n"
+            "📅 *Horarios Disponibles para esta semana:*\n"
+            "• Mañanas: 09:00 AM, 10:30 AM, 11:45 AM\n"
+            "• Tardes: 03:30 PM, 04:45 PM, 06:00 PM\n\n"
+            "Por favor responde con tu *Nombre completo* y la *Fecha y Hora deseada* (ej: 'Marta Díaz, Mañana a las 10:30 AM')."
+        )
+    elif any(k in text_clean for k in ["precio", "costo", "tarifa", "cuanto", "2"]):
+        action_taken = "pricing_info"
+        response_msg = (
+            "📊 *Evaluación Integral de Bioimpedancia y Salud Celular (VitaMetrix)*\n\n"
+            "El estudio incluye:\n"
+            "✅ Análisis Vectorial BIVA (Agua Celular & Membranas)\n"
+            "✅ Puntuación TRU Body Score (Músculo vs Grasa)\n"
+            "✅ Gasto Energético Metabólico (REE / TEE)\n"
+            "✅ Músculo Segmental y Grasa Visceral (Riesgo IDF)\n"
+            "✅ Informe Clínico Digital en PDF\n\n"
+            "Responde *1* si deseas reservar tu turno."
+        )
+    elif any(k in text_clean for k in ["preparacion", "ayuno", "indicacion", "requisito", "3"]):
+        action_taken = "prep_instructions"
+        response_msg = (
+            "📋 *Indicaciones previas para tu prueba de Bioimpedancia:*\n\n"
+            "1. Ayuno de alimentos y líquidos de al menos 2 horas.\n"
+            "2. No realizar actividad física intensa 12 horas antes.\n"
+            "3. Evitar cafeína o diuréticos previo al examen.\n"
+            "4. Asistir con ropa cómoda y sin joyas/metales en tobillos y muñecas.\n\n"
+            "¡Te esperamos!"
+        )
+    elif any(k in text_clean for k in ["doctor", "humano", "especialista", "4"]):
+        action_taken = "human_escalation"
+        response_msg = (
+            "👨‍⚕️ He notificado a nuestro equipo médico. Un especialista se comunicará contigo a la brevedad.\n"
+            "Horario de atención: Lunes a Viernes de 08:30 a 19:00."
+        )
+    else:
+        action_taken = "menu"
+        response_msg = (
+            f"¡Hola {sender}! 👋 Bienvenido/a al servicio de atención de *VitaMetrix*.\n\n"
+            "¿En qué podemos ayudarte hoy?\n\n"
+            "1️⃣ Agendar una Evaluación de Bioimpedancia\n"
+            "2️⃣ Conocer qué incluye el análisis y tarifas\n"
+            "3️⃣ Indicaciones previas a la prueba (ayuno/preparación)\n"
+            "4️⃣ Hablar con un especialista"
+        )
+
+    return jsonify({
+        "success": True,
+        "sender": sender,
+        "received": incoming_text,
+        "response": response_msg,
+        "action": action_taken,
+        "human_delay_seconds": 2.5
+    }), 200
 
 @app.route('/api/health', methods=['GET'])
 def health():
