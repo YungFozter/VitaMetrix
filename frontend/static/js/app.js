@@ -39,15 +39,24 @@ function showToast(message, type = 'info') {
     }, 3000);
 }
 
-function showConfirm(title, message, onConfirm) {
+function showConfirm(title, message, onConfirm, options = {}) {
     const modal = document.getElementById('custom-modal');
     if (!modal) return;
 
-    document.getElementById('modal-title').textContent = title;
-    document.getElementById('modal-message').textContent = message;
+    document.getElementById('modal-title').textContent = title || 'Confirmación';
+    document.getElementById('modal-message').textContent = message || '¿Estás seguro?';
 
     const btnCancel = document.getElementById('modal-btn-cancel');
     const btnConfirm = document.getElementById('modal-btn-confirm');
+    const iconContainer = document.getElementById('modal-icon-container');
+
+    if (btnConfirm) {
+        btnConfirm.textContent = options.confirmText || 'Eliminar';
+    }
+
+    if (iconContainer) {
+        iconContainer.innerHTML = `<i class="${options.icon || 'bi bi-trash3-fill'}"></i>`;
+    }
 
     // Reset listeners by cloning
     const newCancel = btnCancel.cloneNode(true);
@@ -60,8 +69,13 @@ function showConfirm(title, message, onConfirm) {
     newCancel.addEventListener('click', closeModal);
     newConfirm.addEventListener('click', () => {
         closeModal();
-        onConfirm();
+        if (typeof onConfirm === 'function') onConfirm();
     });
+
+    // Close on clicking backdrop
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
 
     modal.classList.remove('hidden');
 }
