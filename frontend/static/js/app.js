@@ -1296,9 +1296,14 @@ function filterAndRenderEvaluaciones() {
         tdDate.innerHTML = `<span style="font-weight: 500; font-size: 0.85rem; color: #1A2A4A;">${formattedDate}</span>`;
 
         // Patient / IDP
+        const rawName = (ev.patient_name || '').trim();
+        const displayPatientName = (!rawName || rawName.toLowerCase() === 'unknown') ? 'Paciente sin registrar' : rawName;
+        const rawIdp = (ev.patient_idp || '').trim();
+        const displayPatientIdp = (!rawIdp || rawIdp === '000000') ? '--' : rawIdp;
+
         const tdPatient = document.createElement('td');
-        tdPatient.innerHTML = `<div style="font-weight: 700; color: #1A2A4A;">${ev.patient_name || 'Sin nombre'}</div>
-                               <div style="font-size: 0.78rem; color: #5a6f8c;">IDP: ${ev.patient_idp || '--'}</div>`;
+        tdPatient.innerHTML = `<div style="font-weight: 700; color: #1A2A4A;">${displayPatientName}</div>
+                               <div style="font-size: 0.78rem; color: #5a6f8c;">IDP: ${displayPatientIdp}</div>`;
 
         // Base Measurements (Weight, Height, R, Xc)
         const tdBase = document.createElement('td');

@@ -42,11 +42,15 @@ app = Flask(
     static_folder='../frontend/static'
 )
 
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024  # Limitar tamaño de payload a 2 MB
+
 @app.after_request
 def set_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: https:;"
     return response
 
 import html
@@ -201,18 +205,18 @@ def _run_analysis(data):
     dev_smi = _num(dev_smi)
 
     # Datos paciente sanitizados
-    patient_idp = _clean_str(data.get('patient_idp', '000000'), max_len=50) or '000000'
-    patient_name = _clean_str(data.get('patient_name', 'Unknown'), max_len=100) or 'Unknown'
+    patient_idp = _clean_str(data.get('patient_idp', ''), max_len=50) or ''
+    patient_name = _clean_str(data.get('patient_name', 'Paciente sin registrar'), max_len=100) or 'Paciente sin registrar'
 
-    # Datos físicos
-    r = _num(data.get('resistance', 0)) or 0
-    xc = _num(data.get('reactance', 0)) or 0
-    weight = _num(data.get('weight', 0)) or 0
-    height = _num(data.get('height', 0)) or 0
+    # Datos físicos sanitizados y acotados a rangos clínicos válidos
+    r = max(0.0, min(_num(data.get('resistance', 0)) or 0.0, 2000.0))
+    xc = max(0.0, min(_num(data.get('reactance', 0)) or 0.0, 500.0))
+    weight = max(10.0, min(_num(data.get('weight', 0)) or 70.0, 350.0))
+    height = max(40.0, min(_num(data.get('height', 0)) or 170.0, 250.0))
     raw_age = int(_num(data.get('age', 30)) or 30)
-    age = raw_age if raw_age > 0 else 30
+    age = max(1, min(raw_age, 120))
     gender = _normalize_gender(data.get('gender', 'male'))
-    pal = _num(data.get('pal', 1.2)) or 1.2
+    pal = max(1.0, min(_num(data.get('pal', 1.2)) or 1.2, 3.0))
 
     # Cálculos - Módulos Base
     biva_info = get_biva_interpretation(r, xc)
