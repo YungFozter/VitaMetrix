@@ -2343,22 +2343,28 @@ body {
 .cal-nav-btn {
     background: rgba(26, 42, 74, 0.06);
     border: none;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: bold;
     color: #1a2a4a;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cal-nav-btn:hover {
     background: #00b4d8;
     color: #ffffff;
+    transform: scale(1.08);
+    box-shadow: 0 4px 10px rgba(0, 180, 216, 0.3);
+}
+
+.cal-nav-btn:active {
+    transform: scale(0.95);
 }
 
 .cal-month-label {
@@ -2385,24 +2391,25 @@ body {
 }
 
 .cal-day-cell {
-    height: 32px;
+    height: 34px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: #334155;
     cursor: pointer;
     position: relative;
-    transition: all 0.2s ease;
+    transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, color 0.18s ease;
     user-select: none;
 }
 
-.cal-day-cell:hover:not(.empty-day) {
+.cal-day-cell:hover:not(.empty-day):not(.selected) {
     background: rgba(0, 180, 216, 0.12);
     color: #0088a8;
+    transform: scale(1.06);
 }
 
 .cal-day-cell.empty-day {
@@ -2473,21 +2480,21 @@ body {
 }
 
 .appt-item-card {
-    background: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.88);
     border: 1px solid rgba(0, 0, 0, 0.06);
     border-radius: 14px;
     padding: 0.75rem 0.85rem;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    transition: all 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
 }
 
 .appt-item-card:hover {
     background: #ffffff;
-    box-shadow: 0 6px 15px rgba(26, 42, 74, 0.06);
-    transform: translateY(-1px);
+    box-shadow: 0 8px 20px -4px rgba(26, 42, 74, 0.08);
+    transform: translateY(-2px);
 }
 
 .appt-top-row {
@@ -2533,14 +2540,20 @@ body {
     border-radius: 6px;
     font-size: 0.72rem;
     font-weight: 600;
-    padding: 0.25rem 0.6rem;
+    padding: 0.25rem 0.65rem;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, filter 0.2s ease;
+    box-shadow: 0 2px 6px rgba(0, 180, 216, 0.25);
 }
 
 .btn-start-bia-appt:hover {
-    box-shadow: 0 4px 10px rgba(0, 180, 216, 0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 180, 216, 0.45);
+    transform: translateY(-1.5px);
+    filter: brightness(1.05);
+}
+
+.btn-start-bia-appt:active {
+    transform: translateY(0.5px) scale(0.97);
 }
 
 .btn-delete-appt {
@@ -2549,13 +2562,19 @@ body {
     color: #94a3b8;
     cursor: pointer;
     font-size: 0.85rem;
-    padding: 0.1rem 0.3rem;
+    padding: 0.15rem 0.35rem;
     border-radius: 4px;
-    transition: color 0.2s ease;
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease, background-color 0.2s ease;
 }
 
 .btn-delete-appt:hover {
     color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    transform: scale(1.1);
+}
+
+.btn-delete-appt:active {
+    transform: scale(0.95);
 }
 
 .appt-empty-state {
