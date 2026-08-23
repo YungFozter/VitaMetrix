@@ -1803,16 +1803,81 @@ function initSystemMenuListeners() {
 
     const settingsBtn = document.getElementById('nav-settings-btn');
     const dropSettingsBtn = document.getElementById('dropdown-settings-btn');
-    const onSettings = () => {
-        showToast('⚙️ Preferencias y configuración de referencias clínicas disponibles en v2.0', 'info');
+    const settingsModal = document.getElementById('settings-modal');
+    const settingsForm = document.getElementById('settings-form');
+    const settingsClose = document.getElementById('settings-modal-close');
+    const settingsCancel = document.getElementById('settings-btn-cancel');
+
+    // Cargar ajustes guardados de localStorage
+    const loadSavedSettings = () => {
+        const savedName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+        const savedTitle = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
+        const savedClinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
+        const savedUnit = localStorage.getItem('vm_unit_weight') || 'kg';
+        const savedPha = localStorage.getItem('vm_pha_optimal') || '6.0';
+
+        const nameInput = document.getElementById('settings-user-name');
+        const titleInput = document.getElementById('settings-user-title');
+        const clinicInput = document.getElementById('settings-clinic-name');
+        const unitInput = document.getElementById('settings-unit-weight');
+        const phaInput = document.getElementById('settings-pha-optimal');
+
+        if (nameInput) nameInput.value = savedName;
+        if (titleInput) titleInput.value = savedTitle;
+        if (clinicInput) clinicInput.value = savedClinic;
+        if (unitInput) unitInput.value = savedUnit;
+        if (phaInput) phaInput.value = savedPha;
+
+        // Actualizar header UI
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            userInfo.innerHTML = `<strong>${savedName}</strong><span>${savedTitle}</span>`;
+        }
     };
-    if (settingsBtn) settingsBtn.addEventListener('click', onSettings);
-    if (dropSettingsBtn) dropSettingsBtn.addEventListener('click', onSettings);
+
+    loadSavedSettings();
+
+    const openSettingsModal = () => {
+        loadSavedSettings();
+        if (settingsModal) settingsModal.classList.remove('hidden');
+    };
+
+    const closeSettingsModal = () => {
+        if (settingsModal) settingsModal.classList.add('hidden');
+    };
+
+    if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
+    if (dropSettingsBtn) dropSettingsBtn.addEventListener('click', openSettingsModal);
+    if (settingsClose) settingsClose.addEventListener('click', closeSettingsModal);
+    if (settingsCancel) settingsCancel.addEventListener('click', closeSettingsModal);
+
+    if (settingsForm) {
+        settingsForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameVal = document.getElementById('settings-user-name').value.trim();
+            const titleVal = document.getElementById('settings-user-title').value.trim();
+            const clinicVal = document.getElementById('settings-clinic-name').value.trim();
+            const unitVal = document.getElementById('settings-unit-weight').value;
+            const phaVal = document.getElementById('settings-pha-optimal').value;
+
+            localStorage.setItem('vm_user_name', nameVal);
+            localStorage.setItem('vm_user_title', titleVal);
+            localStorage.setItem('vm_clinic_name', clinicVal);
+            localStorage.setItem('vm_unit_weight', unitVal);
+            localStorage.setItem('vm_pha_optimal', phaVal);
+
+            loadSavedSettings();
+            closeSettingsModal();
+            showToast('✅ Configuración guardada correctamente.', 'success');
+        });
+    }
 
     const dropProfileBtn = document.getElementById('dropdown-profile-btn');
     if (dropProfileBtn) {
         dropProfileBtn.addEventListener('click', () => {
-            showToast('👤 Usuario activo: Dra. Audrey — Especialista en Bioimpedancia Clínica', 'info');
+            const curName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+            const curTitle = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
+            showToast(`👤 Usuario activo: ${curName} (${curTitle})`, 'info');
         });
     }
 
