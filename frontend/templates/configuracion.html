@@ -94,7 +94,7 @@
             </div>
         </div>
 
-        <!-- BLOQUE 3: UBICACIÓN Y MAPA INTERACTIVO CONSULTORIO (GPS LEAFLET) -->
+        <!-- BLOQUE 3: UBICACIÓN Y MAPA INTERACTIVO CONSULTORIO (GPS & GOOGLE MAPS) -->
         <div class="col-12 col-lg-8">
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
                 <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
@@ -102,12 +102,17 @@
                         <span class="fs-4 text-danger"><i class="bi bi-geo-alt-fill"></i></span>
                         <div>
                             <h3 class="display-font text-navy fw-bold fs-5 m-0">Ubicación del Consultorio</h3>
-                            <span class="text-muted small">Rastreo GPS, marcación en mapa y dirección editable</span>
+                            <span class="text-muted small">Rastreo GPS de alta precisión, marcación y Google Maps</span>
                         </div>
                     </div>
-                    <button type="button" id="btn-locate-me" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-none">
-                        <i class="bi bi-crosshair"></i> Mi Ubicación Actual
-                    </button>
+                    <div class="d-flex align-items-center gap-2">
+                        <button type="button" id="btn-locate-me" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-none">
+                            <i class="bi bi-crosshair"></i> Mi Ubicación GPS
+                        </button>
+                        <a href="https://www.google.com/maps" target="_blank" id="btn-open-google-maps" class="btn btn-sm btn-outline-success d-inline-flex align-items-center gap-1 shadow-none">
+                            <i class="bi bi-google"></i> Ver en Google Maps
+                        </a>
+                    </div>
                 </div>
 
                 <div class="row g-3 mb-3">
@@ -130,8 +135,24 @@
                     </div>
                 </div>
 
-                <!-- Contenedor del Mapa Leaflet -->
-                <div id="clinic-map" class="clinic-map-container rounded-4 border shadow-inner" style="height: 320px; width: 100%; z-index: 1;"></div>
+                <!-- Selector de Tipo de Mapa (Leaflet GPS vs Google Maps) -->
+                <div class="d-flex align-items-center justify-content-between mb-2 text-xs text-muted px-1">
+                    <span id="map-precision-badge" class="badge bg-success-subtle text-success rounded-pill px-2.5 py-1">
+                        <i class="bi bi-geo-fill me-1"></i> Precisión GPS: Nivel Edificio (Zoom 17x)
+                    </span>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="btn-map-type-leaflet">
+                            <i class="bi bi-map"></i> OpenStreetMap
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="btn-map-type-google">
+                            <i class="bi bi-google"></i> Google Maps Embed
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Contenedores del Mapa -->
+                <div id="clinic-map" class="clinic-map-container rounded-4 border shadow-inner" style="height: 330px; width: 100%; z-index: 1;"></div>
+                <iframe id="google-map-iframe" class="rounded-4 border shadow-inner d-none" style="height: 330px; width: 100%; border:0;" loading="lazy" allowfullscreen src=""></iframe>
             </div>
         </div>
 
