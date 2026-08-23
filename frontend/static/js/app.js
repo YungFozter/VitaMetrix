@@ -2373,7 +2373,7 @@ function applyThemeMode(isDark) {
     }
 }
 
-// Inicialización del Mapa Leaflet
+// Inicialización del Mapa Leaflet con Icono SVG Personalizado
 function initClinicMap() {
     const mapContainer = document.getElementById('clinic-map');
     if (!mapContainer || typeof L === 'undefined') return;
@@ -2381,35 +2381,87 @@ function initClinicMap() {
     const savedLat = parseFloat(localStorage.getItem('vm_clinic_lat')) || -34.6037;
     const savedLng = parseFloat(localStorage.getItem('vm_clinic_lng')) || -58.3816;
 
+    // Custom Red Pin Icon using Bootstrap Icon SVG
+    const clinicCustomPin = L.divIcon({
+        className: 'clinic-custom-pin-icon',
+        html: `<div style="font-size: 2.2rem; color: #ef4444; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-geo-alt-fill"></i></div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 32]
+    });
+
     if (!clinicLeafletMap) {
-        clinicLeafletMap = L.map('clinic-map').setView([savedLat, savedLng], 14);
+        clinicLeafletMap = L.map('clinic-map').setView([savedLat, savedLng], 15);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© OpenStreetMap'
         }).addTo(clinicLeafletMap);
 
-        clinicMarker = L.marker([savedLat, savedLng], { draggable: true }).addTo(clinicLeafletMap);
-        clinicMarker.bindPopup("🏥 <b>Consultorio Médico VitaMetrix</b>").openPopup();
+        clinicMarker = L.marker([savedLat, savedLng], { 
+            draggable: true, 
+            icon: clinicCustomPin 
+        }).addTo(clinicLeafletMap);
+        
+        clinicMarker.bindPopup("🏥 <b>Consultorio Médico VitaMetrix</b><br>Arrastra o haz clic para cambiar posición.").openPopup();
 
         clinicMarker.on('dragend', (e) => {
             const pos = e.target.getLatLng();
-            updateMapCoordinates(pos.lat, pos.lng);
+            updateMapCoordinates(pos.lat, pos.lng, false);
         });
 
         clinicLeafletMap.on('click', (e) => {
             const { lat, lng } = e.latlng;
             clinicMarker.setLatLng([lat, lng]);
-            updateMapCoordinates(lat, lng);
+            updateMapCoordinates(lat, lng, false);
         });
-    } else {
-        setTimeout(() => {
-            clinicLeafletMap.invalidateSize();
-        }, 200);
+
+        // Listeners para edición manual de Latitud y Longitud
+        const latInput = document.getElementById('cfg-clinic-lat');
+        const lngInput = document.getElementById('cfg-clinic-lng');
+        const btnSearch = document.getElementById('btn-search-address');
+        const addressInput = document.getElementById('cfg-clinic-address');
+
+        const onManualCoordsChange = () => {
+            const latVal = parseFloat(latInput ? latInput.value : '');
+            const lngVal = parseFloat(lngInput ? lngInput.value : '');
+            if (!isNaN(latVal) && !isNaN(lngVal) && latVal >= -90 && latVal <= 90 && lngVal >= -180 && lngVal <= 180) {
+                clinicMarker.setLatLng([latVal, lngVal]);
+                clinicLeafletMap.panTo([latVal, lngVal]);
+                localStorage.setItem('vm_clinic_lat', latVal.toFixed(6));
+                localStorage.setItem('vm_clinic_lng', lngVal.toFixed(6));
+            }
+        };
+
+        if (latInput) latInput.addEventListener('change', onManualCoordsChange);
+        if (lngInput) lngInput.addEventListener('change', onManualCoordsChange);
+
+        if (btnSearch) {
+            btnSearch.addEventListener('click', () => {
+                if (addressInput && addressInput.value.trim()) {
+                    geocodeAddress(addressInput.value.trim());
+                }
+            });
+        }
+
+        if (addressInput) {
+            addressInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (addressInput.value.trim()) geocodeAddress(addressInput.value.trim());
+                }
+            });
+        }
     }
+
+    setTimeout(() => {
+        if (clinicLeafletMap) {
+            clinicLeafletMap.invalidateSize();
+            clinicLeafletMap.setView([savedLat, savedLng], 15);
+        }
+    }, 200);
 }
 
-function updateMapCoordinates(lat, lng) {
+function updateMapCoordinates(lat, lng, panTo = true) {
     const latInput = document.getElementById('cfg-clinic-lat');
     const lngInput = document.getElementById('cfg-clinic-lng');
     if (latInput) latInput.value = lat.toFixed(6);
@@ -2417,7 +2469,35 @@ function updateMapCoordinates(lat, lng) {
 
     localStorage.setItem('vm_clinic_lat', lat.toFixed(6));
     localStorage.setItem('vm_clinic_lng', lng.toFixed(6));
-    showToast(`📍 Coordenadas actualizadas: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'info');
+
+    if (panTo && clinicLeafletMap) {
+        clinicLeafletMap.panTo([lat, lng]);
+    }
+}
+
+function geocodeAddress(query) {
+    showToast('🔍 Buscando dirección en el mapa...', 'info');
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                const lat = parseFloat(data[0].lat);
+                const lng = parseFloat(data[0].lon);
+                if (clinicLeafletMap && clinicMarker) {
+                    clinicLeafletMap.setView([lat, lng], 16);
+                    clinicMarker.setLatLng([lat, lng]);
+                    clinicMarker.bindPopup(`📍 <b>${data[0].display_name.split(',')[0]}</b>`).openPopup();
+                    updateMapCoordinates(lat, lng, false);
+                    showToast('✅ Dirección localizada en el mapa.', 'success');
+                }
+            } else {
+                showToast('⚠️ No se encontraron coordenadas para esa dirección.', 'error');
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('⚠️ Error al buscar la dirección.', 'error');
+        });
 }
 
 function locateUserGPS() {

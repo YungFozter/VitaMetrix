@@ -111,17 +111,22 @@
                 </div>
 
                 <div class="row g-3 mb-3">
-                    <div class="col-12 col-md-8">
+                    <div class="col-12 col-md-6">
                         <label class="form-label text-muted small fw-semibold text-uppercase">Dirección Física del Consultorio</label>
-                        <input type="text" id="cfg-clinic-address" class="form-control shadow-none" placeholder="Ej: Av. Corrientes 1234, Piso 4, CABA" value="Av. Libertador 2450, Piso 3, CABA">
+                        <div class="input-group">
+                            <input type="text" id="cfg-clinic-address" class="form-control shadow-none" placeholder="Ej: Av. Corrientes 1234, CABA" value="Av. Libertador 2450, CABA">
+                            <button type="button" id="btn-search-address" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1">
+                                <i class="bi bi-search"></i> Buscar
+                            </button>
+                        </div>
                     </div>
-                    <div class="col-6 col-md-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Latitud</label>
-                        <input type="text" id="cfg-clinic-lat" class="form-control shadow-none" readonly value="-34.6037">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Latitud (Editable ✏️)</label>
+                        <input type="number" step="any" id="cfg-clinic-lat" class="form-control shadow-none" placeholder="Latitud" value="-34.6037">
                     </div>
-                    <div class="col-6 col-md-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Longitud</label>
-                        <input type="text" id="cfg-clinic-lng" class="form-control shadow-none" readonly value="-58.3816">
+                    <div class="col-6 col-md-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Longitud (Editable ✏️)</label>
+                        <input type="number" step="any" id="cfg-clinic-lng" class="form-control shadow-none" placeholder="Longitud" value="-58.3816">
                     </div>
                 </div>
 
