@@ -1,0 +1,396 @@
+/* ============================================================
+   VITAMETRIX - VISTA BIOIMPEDANCIA (BIA)
+   ============================================================ */
+
+/* --- FORMULARIO HORIZONTAL (full-width arriba) --- */
+.bio-form-horizontal {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.78);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    border-radius: 24px;
+    padding: 1.4rem 1.6rem;
+    box-shadow: 0 18px 40px -16px rgba(0, 20, 40, 0.12);
+    margin-bottom: 1.6rem;
+}
+
+.bio-form-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1.1rem;
+}
+
+.form-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1A2A4A;
+    letter-spacing: -0.3px;
+}
+
+.form-sub {
+    font-size: 0.82rem;
+    color: #7a8aa0;
+    margin-top: 0.15rem;
+}
+
+.btn-analyze {
+    width: auto;
+    padding: 0.85rem 1.6rem;
+    margin-top: 0;
+    border-radius: 14px;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    background: #1A2A4A;
+    box-shadow: 0 10px 24px -8px rgba(26, 42, 74, 0.5);
+}
+
+.btn-analyze:hover {
+    background: #243a63;
+    transform: translateY(-2px);
+    box-shadow: 0 16px 30px -8px rgba(26, 42, 74, 0.55);
+}
+
+.btn-ico { font-size: 1.05rem; }
+
+/* Rejilla de campos del formulario: auto-fit responsivo */
+.form-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 0.8rem 1rem;
+    align-items: end;
+}
+
+.device-data {
+    margin-top: 0.9rem;
+    background: rgba(26, 42, 74, 0.03);
+    border: 1px solid rgba(26, 42, 74, 0.07);
+    border-radius: 16px;
+    padding: 0.6rem 0.9rem;
+}
+
+.device-data summary {
+    cursor: pointer;
+    font-weight: 600;
+    color: #1A2A4A;
+    font-size: 0.9rem;
+    list-style: none;
+}
+
+.device-data summary::-webkit-details-marker { display: none; }
+.device-data summary::before {
+    content: '▸';
+    display: inline-block;
+    margin-right: 0.5rem;
+    transition: transform 0.2s ease;
+    color: #1A2A4A;
+}
+.device-data[open] summary::before { transform: rotate(90deg); }
+
+.form-hint { font-size: 0.8rem; color: #7a8aa0; margin: 0.4rem 0 0.6rem; }
+.device-fields { margin-top: 0.6rem; }
+
+/* Grupo de form base */
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #5a6f8c;
+    margin-bottom: 0.4rem;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #d0d7e2;
+    border-radius: 10px;
+    background: #f8fafc;
+    font-family: inherit;
+    font-size: 0.95rem;
+    color: #1A2A4A;
+    transition: all 0.3s ease;
+    outline: none;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: #00b4d8;
+    background: white;
+    box-shadow: 0 0 0 4px rgba(0, 180, 216, 0.1);
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1rem;
+    background: #00b4d8;
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.btn-primary:hover {
+    background: #0096b4;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 180, 216, 0.3);
+}
+
+/* BENTO GRID BIA (12 columnas, áreas nombradas) */
+.bio-results-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 1.4rem;
+    grid-template-areas:
+        "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
+        "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
+        "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
+        "indices     indices     indices     indices     indices     indices     segmental   segmental   segmental   segmental   segmental   segmental"
+        "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
+        "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
+}
+
+.card-score       { grid-area: score; }
+.card-muscle-fat  { grid-area: muscle; }
+.card-biva        { grid-area: biva; }
+.card-energy      { grid-area: energy; }
+.card-interpretation { grid-area: interp; }
+.card-composition { grid-area: indices; }
+.card-segmental   { grid-area: segmental; }
+.card-percentiles { grid-area: percentiles; }
+.card-water       { grid-area: water; }
+.card-waist       { grid-area: waist; }
+.card-bcc         { grid-area: bcc; }
+
+/* CARD 1: SCORE */
+.score-display { display: flex; align-items: baseline; gap: 0.3rem; margin-top: 0.2rem; }
+.big-number { font-size: 4.8rem; font-weight: 700; color: #1A2A4A; line-height: 1; }
+.score-label { font-size: 1.2rem; font-weight: 500; color: #7a8aa0; }
+.rank-badge {
+    font-size: 2.2rem; font-weight: 700; color: #cd7f32;
+    background: rgba(205, 127, 50, 0.12);
+    padding: 0.1rem 1.2rem; border-radius: 40px;
+    display: inline-block; width: fit-content; margin-top: 0.2rem;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    cursor: default;
+}
+.rank-badge:hover {
+    transform: scale(1.08) translateY(-2px);
+    background: rgba(205, 127, 50, 0.2);
+    box-shadow: 0 8px 16px rgba(205, 127, 50, 0.2);
+}
+.score-sub { color: #3a8a5e; font-weight: 500; font-size: 0.9rem; }
+
+/* CARD 2: MUSCLE / FAT */
+.metric-row { display: flex; gap: 2rem; margin-bottom: 0.8rem; }
+.metric-item { display: flex; align-items: baseline; gap: 0.3rem; }
+.metric-label { font-size: 0.9rem; font-weight: 500; color: #3a4a62; }
+.metric-value { font-size: 2.2rem; font-weight: 700; color: #1A2A4A; }
+.metric-unit { font-size: 0.9rem; color: #7a8aa0; }
+.progress-indicator { display: flex; flex-direction: column; gap: 0.4rem; }
+.bar-container { width: 100%; height: 6px; background: #e8edf5; border-radius: 20px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 20px; transition: width 1s ease; }
+.muscle-bar { background: #2d7a4a; }
+.fat-bar { background: #b94a4a; }
+
+/* CARD 3: BIVA */
+.biva-container { display: flex; align-items: center; gap: 1.5rem; }
+#bivaCanvas {
+    background: rgba(255, 255, 255, 0.4);
+    border-radius: 20px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    width: 180px; height: 180px;
+}
+.biva-stats { font-size: 0.9rem; line-height: 2; color: #2a3a52; }
+.biva-stats strong { color: #1A2A4A; font-weight: 700; }
+.cell-status {
+    margin-top: 0.5rem; background: #e2f0e8; color: #1a5a3a;
+    padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.8rem;
+    font-weight: 600; display: inline-block; transition: all 0.3s ease;
+}
+.cell-status:hover {
+    background: #cce4d6; transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(26, 90, 58, 0.15);
+}
+
+/* CARD 4: ENERGY */
+.energy-grid { display: flex; flex-direction: column; gap: 0.8rem; }
+.label-sm { font-size: 0.7rem; text-transform: uppercase; color: #6a7a92; letter-spacing: 0.5px; }
+.kcal-value { font-size: 2.2rem; font-weight: 700; color: #1A2A4A; }
+.kcal-value small { font-size: 0.9rem; font-weight: 400; color: #6a7a92; }
+.pal-gauge-wrap {
+    margin-top: 1rem; display: flex; flex-direction: column; align-items: center;
+}
+.pal-gauge-wrap canvas { max-width: 200px; }
+.pal-readout { margin-top: 0.2rem; display: flex; flex-direction: column; align-items: center; }
+.pal-number { font-size: 1.8rem; font-weight: 700; color: #1A2A4A; line-height: 1; }
+.pal-zone { font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px; margin-top: 0.1rem; }
+.smm-curve-wrap { display: flex; flex-direction: column; gap: 0.3rem; }
+.smm-curve-wrap canvas { border-radius: 12px; }
+
+/* CARD 5: INTERPRETATION */
+.clinical-text {
+    font-size: 0.95rem; line-height: 1.6; color: #1e2a41;
+    background: rgba(0, 0, 0, 0.02); padding: 0.8rem;
+    border-radius: 12px; border-left: 4px solid #1A2A4A;
+    transition: all 0.3s ease;
+}
+.clinical-text:hover { background: rgba(0, 0, 0, 0.04); border-left-color: #cd7f32; transform: translateX(4px); }
+.hydration-tag { margin-top: 0.8rem; font-weight: 600; color: #1a5a3a; }
+
+/* CARD 6: ÍNDICES DE COMPOSICIÓN */
+.ci-grid { display: flex; flex-direction: column; gap: 0.7rem; }
+.ci-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.6rem; }
+.ci-label { font-size: 0.85rem; font-weight: 600; color: #3a4a62; }
+.ci-value { font-size: 1.4rem; font-weight: 700; color: #1A2A4A; }
+.status-chip {
+    font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 0.2rem 0.6rem; border-radius: 30px; white-space: nowrap;
+}
+.status-chip.green { background: #e2f0e8; color: #1a5a3a; }
+.status-chip.yellow { background: #fdf1dc; color: #b07d1a; }
+.status-chip.red { background: #fbe6e6; color: #b94a4a; }
+.status-chip.muted { background: #eef2f8; color: #7a8aa0; }
+
+/* CARD 7: MÚSCULO SEGMENTAL */
+.seg-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+.seg-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 0.6rem; }
+.seg-label { font-size: 0.85rem; font-weight: 500; color: #3a4a62; }
+.seg-value { font-size: 1.2rem; font-weight: 700; color: #1A2A4A; }
+.status-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #c0c8d8; box-shadow: 0 0 0 3px rgba(0,0,0,0.03);
+}
+.status-dot.green { background: #2d7a4a; box-shadow: 0 0 0 3px rgba(45,122,74,0.15); }
+.status-dot.yellow { background: #cd7f32; box-shadow: 0 0 0 3px rgba(205,127,50,0.18); }
+.status-dot.red { background: #b94a4a; box-shadow: 0 0 0 3px rgba(185,74,74,0.18); }
+.seg-asym {
+    margin-top: 0.4rem; background: #fbe6e6; color: #b94a4a;
+    padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
+}
+
+/* CARD 8: PERCENTILES */
+.pct-row { margin-bottom: 0.9rem; }
+.pct-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
+.pct-label { font-size: 0.85rem; font-weight: 500; color: #3a4a62; }
+.pct-val { font-size: 1.3rem; font-weight: 700; color: #1A2A4A; }
+.pct-bar { background: linear-gradient(90deg, #2d7a4a, #cd7f32, #b94a4a); }
+
+/* CARD 9: ANÁLISIS HÍDRICO */
+#water-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+.mini-metric { display: flex; align-items: baseline; gap: 0.4rem; }
+.mini-metric span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.mini-metric .unit { font-size: 0.75rem; color: #7a8aa0; }
+.mini-metric strong { font-size: 1.6rem; font-weight: 700; color: #1A2A4A; }
+.water-ratio { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.2rem; }
+.water-ratio span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; }
+.water-ratio strong { font-size: 1.3rem; font-weight: 700; color: #1A2A4A; }
+
+/* CARD 10: CINTURA & VISCERAL */
+.waist-track {
+    position: relative; height: 10px; background: #e8edf5; border-radius: 20px;
+    overflow: visible; margin: 1.4rem 0 0.8rem 0;
+}
+.waist-bar { background: linear-gradient(90deg, #2d7a4a 0%, #cd7f32 55%, #b94a4a 100%); transition: width 1s ease; }
+.waist-pin {
+    position: absolute; top: -4px; width: 3px; height: 18px; background: #1A2A4A;
+    border-radius: 2px; transition: left 1s ease; box-shadow: 0 0 4px rgba(0,0,0,0.3);
+}
+.waist-readout { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.waist-readout span { font-size: 0.8rem; color: #5a6f8c; font-weight: 600; }
+.waist-readout .unit { font-size: 0.75rem; color: #7a8aa0; }
+.waist-readout strong { font-size: 1.5rem; font-weight: 700; color: #1A2A4A; }
+.waist-visc {
+    margin-top: 0.5rem; font-size: 0.85rem; font-weight: 600; color: #b94a4a;
+    background: #fbe6e6; padding: 0.4rem 0.8rem; border-radius: 10px;
+}
+
+/* CARD 11: BCC */
+.bcc-row { display: grid; grid-template-columns: 1fr 2fr auto; align-items: center; gap: 0.6rem; margin-bottom: 0.7rem; }
+.bcc-label { font-size: 0.85rem; font-weight: 600; color: #3a4a62; }
+.bcc-val { font-size: 1.2rem; font-weight: 700; color: #1A2A4A; text-align: right; }
+
+.card-na {
+    font-size: 0.85rem;
+    color: #7a8aa0;
+    line-height: 1.5;
+    background: rgba(0, 0, 0, 0.02);
+    padding: 0.8rem;
+    border-radius: 12px;
+    font-style: italic;
+}
+
+.bio-glass {
+    background: rgba(255, 255, 255, 0.70);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
+}
+.bio-glass:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 30px 60px -12px rgba(26, 42, 74, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 1);
+    background: rgba(255, 255, 255, 0.85);
+}
+
+/* RESPONSIVE BIA GRID */
+@media (max-width: 1400px) {
+    .bio-results-grid {
+        grid-template-areas:
+            "score       score       score       score       score       score       muscle      muscle      muscle      muscle      muscle      muscle"
+            "biva        biva        biva        biva        biva        biva        energy      energy      energy      energy      energy      energy"
+            "interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp      interp"
+            "indices     indices     indices     indices     indices     indices     segmental   segmental   segmental   segmental   segmental   segmental"
+            "percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles percentiles"
+            "water       water       water       water       waist       waist       waist       waist       bcc         bcc         bcc         bcc";
+    }
+}
+
+@media (max-width: 1100px) {
+    .bio-results-grid {
+        grid-template-columns: repeat(6, 1fr);
+        grid-template-areas:
+            "score       score       score       muscle      muscle      muscle"
+            "biva        biva        biva        biva        biva        biva"
+            "energy      energy      energy      interp      interp      interp"
+            "indices     indices     indices     segmental   segmental   segmental"
+            "percentiles percentiles percentiles percentiles percentiles percentiles"
+            "water       water       water       waist       waist       waist"
+            "bcc         bcc         bcc         bcc         bcc         bcc";
+    }
+    .bio-form-head { flex-direction: column; align-items: stretch; }
+    .bio-form-actions .btn-demo-inject,
+    .bio-form-actions .btn-analyze { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 760px) {
+    .bio-results-grid {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "score"
+            "muscle"
+            "biva"
+            "energy"
+            "interp"
+            "indices"
+            "segmental"
+            "percentiles"
+            "water"
+            "waist"
+            "bcc";
+    }
+    .form-fields { grid-template-columns: 1fr 1fr; }
+}

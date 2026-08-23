@@ -1,0 +1,312 @@
+/* ============================================================
+   VITAMETRIX - COMPONENTES REUTILIZABLES (BOTONES, CARDS, MODALES, TOASTS)
+   ============================================================ */
+
+/* --- BOTONES BASE & ICONOS --- */
+.icon-btn {
+    background: white;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.2rem;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+    transition: transform 0.2s ease;
+}
+.icon-btn:hover { transform: scale(1.05); }
+
+/* Switch Toggle */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #1A2A4A;
+    transition: .4s;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+}
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
+
+/* Perfil de Usuario & Dropdown */
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: #fff;
+    padding: 0.4rem 1rem 0.4rem 0.4rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+    position: relative;
+    cursor: pointer;
+}
+
+.user-profile img {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-info strong {
+    font-size: 0.9rem;
+    color: #1e2a41;
+}
+
+.user-info span {
+    font-size: 0.75rem;
+    color: #7a8aa0;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    min-width: 180px;
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem 0;
+    z-index: 100;
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.2s ease;
+}
+
+.profile-dropdown.hidden {
+    opacity: 0;
+    transform: translateY(-10px);
+    pointer-events: none;
+}
+
+.dropdown-item {
+    padding: 0.7rem 1.2rem;
+    color: #1e2a41;
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+    background: rgba(0, 180, 216, 0.1);
+    color: #00b4d8;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: rgba(0,0,0,0.05);
+    margin: 0.3rem 0;
+}
+
+/* --- TARJETAS BENTO (Base Glass) --- */
+.bento-card {
+    background: rgba(255, 255, 255, 0.90);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 4px 18px rgba(26, 42, 74, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+    padding: 1.5rem;
+    transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s ease;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+
+.bento-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -6px rgba(26, 42, 74, 0.09), inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+.bento-card.no-hover, .bento-card-no-hover {
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0, 20, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.70) !important;
+    border-color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.bento-card.no-hover:hover, .bento-card-no-hover:hover {
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0, 20, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+    background: rgba(255, 255, 255, 0.70) !important;
+}
+
+/* --- MODALES GENERALES --- */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), backdrop-filter 0.22s ease;
+    transform: translateZ(0);
+}
+
+.modal-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-box {
+    width: 440px;
+    max-width: 92%;
+    text-align: center;
+    padding: 2.2rem 2rem 1.8rem;
+    background: #ffffff;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.02);
+    transform: scale(1) translateY(0);
+    transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+    transform: translateZ(0);
+}
+
+.modal-box:hover,
+.modal-box.bento-card:hover,
+.appointment-modal-box:hover {
+    transform: scale(1) translateY(0) !important;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.02) !important;
+    background: #ffffff !important;
+}
+
+.modal-overlay.hidden .modal-box {
+    transform: scale(0.94) translateY(12px);
+    opacity: 0;
+}
+
+.info-modal-box {
+    max-width: 440px;
+    width: 90%;
+    padding: 1.6rem 1.6rem 1.4rem;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 0 24px 48px -12px rgba(26, 42, 74, 0.25);
+    border-radius: 20px;
+}
+
+.info-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.info-modal-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-align: left;
+}
+
+.info-modal-title-wrap > div {
+    text-align: left;
+}
+
+.info-modal-icon {
+    font-size: 1.3rem;
+}
+
+.info-modal-header h3 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #1A2A4A;
+    text-align: left;
+}
+
+.modal-sub {
+    text-align: left;
+}
+
+.info-modal-close {
+    background: rgba(26, 42, 74, 0.05);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 0.9rem;
+    color: #5a6f8c;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.info-modal-close:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+}
+
+.info-modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-top: 1.2rem;
+}
+
+/* --- TOAST NOTIFICATIONS --- */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 10000;
+    pointer-events: none;
+}
+
+.toast {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 0.9rem 1.3rem;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1e2a41;
+    pointer-events: auto;
+    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.success { border-left: 4px solid #10b981; }
+.toast.error { border-left: 4px solid #ef4444; }
+.toast.info { border-left: 4px solid #00b4d8; }
+
+@keyframes toastSlideIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}

@@ -1,0 +1,32 @@
+/* ============================================================
+   VITAMETRIX - BASE & RESET
+   ============================================================ */
+
+/* Reset y base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #f4f7fc;
+    color: #1e2a41;
+}
+
+/* Variables globales de color y estilo */
+:root {
+    --vm-navy: #1A2A4A;
+    --vm-cyan: #00b4d8;
+    --vm-slate: #5a6f8c;
+    --vm-slate-light: #64748b;
+    --vm-bg-light: #f4f7fc;
+    --vm-white: #ffffff;
+    --vm-border-light: rgba(226, 232, 240, 0.9);
+    --vm-gradient-brand: linear-gradient(135deg, #00b4d8 0%, #1A2A4A 100%);
+    --vm-radius-sm: 8px;
+    --vm-radius-md: 12px;
+    --vm-radius-lg: 24px;
+    --vm-t-hover: 0.2s ease;
+}
