@@ -2,20 +2,20 @@
 
                     <!-- ===== FORMULARIO HORIZONTAL (full-width, arriba) ===== -->
                     <section class="bio-form-horizontal bio-glass">
-                        <div class="bio-form-head">
+                        <div class="bio-form-head d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-3 border-bottom">
                             <div>
-                                <h3 class="form-title">Ingreso de Datos</h3>
-                                <p class="form-sub">Completa los valores del paciente y del dispositivo de bioimpedancia.</p>
+                                <h3 class="form-title display-font fw-bold text-navy fs-4 m-0">Ingreso de Datos Bioeléctricos</h3>
+                                <p class="form-sub text-muted small m-0 mt-1">Completa los valores del paciente y del dispositivo de bioimpedancia.</p>
                             </div>
-                            <div class="bio-form-actions">
-                                <button type="button" id="btn-print-report" class="btn-secondary" title="Imprimir o guardar reporte clínico en PDF" onclick="window.print()">
-                                    <span class="btn-ico">🖨️</span> Reporte PDF
+                            <div class="bio-form-actions d-flex flex-wrap align-items-center gap-2">
+                                <button type="button" id="btn-print-report" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center gap-1 shadow-none" title="Imprimir o guardar reporte clínico en PDF" onclick="window.print()">
+                                    <i class="bi bi-printer-fill"></i> Reporte PDF
                                 </button>
-                                <button type="button" id="btn-fill-demo" class="btn-demo-inject" title="Inyectar caso clínico completo con datos del dispositivo">
-                                    <span class="btn-ico">🧪</span> Autocompletar Caso
+                                <button type="button" id="btn-fill-demo" class="btn btn-sm btn-outline-info d-inline-flex align-items-center gap-1 shadow-none" title="Inyectar caso clínico completo con datos del dispositivo">
+                                    <i class="bi bi-magic"></i> Autocompletar Caso
                                 </button>
-                                <button type="submit" form="bio-form" class="btn-primary btn-analyze">
-                                    <span class="btn-ico">⚡</span> Analizar Composición
+                                <button type="submit" form="bio-form" class="btn btn-primary btn-analyze d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-4 py-2 fw-semibold">
+                                    <i class="bi bi-lightning-charge-fill text-warning"></i> Analizar Composición
                                 </button>
                             </div>
                         </div>

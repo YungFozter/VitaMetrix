@@ -1,201 +1,192 @@
-<!-- VIEW 1: DASHBOARD -->
+<!-- VIEW 1: DASHBOARD (PANEL PRINCIPAL) -->
 <div id="dashboard-view" class="view active-view">
-    <!-- Dashboard Top Header Action Bar -->
-    <div class="dash-top-bar">
+    <!-- Dashboard Header Action Bar (Bootstrap Flex & Grid) -->
+    <div class="dash-top-bar d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
         <div class="dash-top-titles">
-            <h2 class="dash-section-title">Visión General Médica</h2>
-            <p class="dash-section-sub">Resumen de pacientes, evaluaciones e indicadores bioeléctricos de composición corporal.</p>
+            <h2 class="dash-section-title display-font text-navy fw-bold fs-3 mb-1">
+                <i class="bi bi-speedometer2 text-info me-2"></i>Visión General Médica
+            </h2>
+            <p class="dash-section-sub text-muted small m-0">
+                Resumen de pacientes, evaluaciones e indicadores bioeléctricos de composición corporal.
+            </p>
         </div>
         <div class="dash-top-actions">
-            <button type="button" class="btn-primary btn-new-eval" onclick="document.querySelector('[data-target=\'bio-view\']').click()">
-                <span class="btn-ico">⚡</span> Nueva Evaluación
+            <button type="button" class="btn btn-primary btn-new-eval d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-4 py-2 fw-semibold" onclick="document.querySelector('[data-target=\'bio-view\']').click()">
+                <i class="bi bi-lightning-charge-fill text-warning"></i>
+                <span>Nueva Evaluación</span>
             </button>
         </div>
     </div>
 
-    <!-- Dashboard Cards (KPI Bento 3 columnas) -->
-    <div class="dash-cards 3-col">
+    <!-- Rejilla de Tarjetas KPI Bento (Bootstrap Grid 3 columnas) -->
+    <div class="row g-3 g-xl-4 mb-4">
         <!-- Card 1: Pacientes / Clientes -->
-        <div class="dash-card bento-card kpi-card kpi-card-clients" onclick="document.querySelector('[data-target=\'clientes-view\']').click()" role="button" tabindex="0" title="Ver directorio de pacientes">
-            <div class="kpi-ambient-glow"></div>
-            <div class="kpi-top-row">
-                <div class="kpi-meta">
-                    <span class="kpi-category">DIRECTORIO MÉDICO</span>
-                    <h3 class="kpi-title">Total Pacientes</h3>
+        <div class="col-12 col-md-4">
+            <div class="dash-card bento-card kpi-card kpi-card-clients h-100 p-4 border-0 shadow-sm rounded-4" onclick="document.querySelector('[data-target=\'clientes-view\']').click()" role="button" tabindex="0" title="Ver directorio de pacientes">
+                <div class="kpi-ambient-glow"></div>
+                <div class="kpi-top-row d-flex align-items-start justify-content-between">
+                    <div class="kpi-meta">
+                        <span class="kpi-category text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.08em;">DIRECTORIO MÉDICO</span>
+                        <h3 class="kpi-title fw-bold text-navy fs-5 m-0 mt-1">Total Pacientes</h3>
+                    </div>
+                    <div class="kpi-icon-pill icon-clients bg-primary-subtle text-primary p-3 rounded-4">
+                        <i class="bi bi-people-fill fs-4"></i>
+                    </div>
                 </div>
-                <div class="kpi-icon-pill icon-clients">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                    </svg>
+                <div class="kpi-value-row d-flex align-items-baseline justify-content-between my-3">
+                    <span class="kpi-value display-font fw-extrabold text-navy display-5" id="dash-total-clients">0</span>
+                    <div class="kpi-chip chip-clients badge rounded-pill bg-indigo-subtle text-indigo px-3 py-2">
+                        <span class="chip-dot dot-clients me-1"></span>
+                        <span>Registrados</span>
+                    </div>
                 </div>
-            </div>
-            <div class="kpi-value-row">
-                <span class="kpi-value" id="dash-total-clients">0</span>
-                <div class="kpi-chip chip-clients">
-                    <span class="chip-dot dot-clients"></span>
-                    <span>Registrados</span>
+                <div class="kpi-footer-row d-flex align-items-center justify-content-between pt-3 border-top">
+                    <span class="kpi-footer-text text-muted small">Ver directorio y fichas</span>
+                    <span class="kpi-arrow-icon text-muted"><i class="bi bi-arrow-right"></i></span>
                 </div>
-            </div>
-            <div class="kpi-footer-row">
-                <span class="kpi-footer-text">Ver directorio y fichas</span>
-                <span class="kpi-arrow-icon">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </span>
             </div>
         </div>
 
         <!-- Card 2: Total Evaluaciones -->
-        <div class="dash-card bento-card kpi-card kpi-card-evals" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()" role="button" tabindex="0" title="Ver historial de evaluaciones">
-            <div class="kpi-ambient-glow"></div>
-            <div class="kpi-top-row">
-                <div class="kpi-meta">
-                    <span class="kpi-category">HISTORIAL BIA</span>
-                    <h3 class="kpi-title">Evaluaciones</h3>
+        <div class="col-12 col-md-4">
+            <div class="dash-card bento-card kpi-card kpi-card-evals h-100 p-4 border-0 shadow-sm rounded-4" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()" role="button" tabindex="0" title="Ver historial de evaluaciones">
+                <div class="kpi-ambient-glow"></div>
+                <div class="kpi-top-row d-flex align-items-start justify-content-between">
+                    <div class="kpi-meta">
+                        <span class="kpi-category text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.08em;">HISTORIAL BIA</span>
+                        <h3 class="kpi-title fw-bold text-navy fs-5 m-0 mt-1">Evaluaciones</h3>
+                    </div>
+                    <div class="kpi-icon-pill icon-evals bg-info-subtle text-info p-3 rounded-4">
+                        <i class="bi bi-activity fs-4"></i>
+                    </div>
                 </div>
-                <div class="kpi-icon-pill icon-evals">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                    </svg>
+                <div class="kpi-value-row d-flex align-items-baseline justify-content-between my-3">
+                    <span class="kpi-value display-font fw-extrabold text-navy display-5" id="dash-total-evals">0</span>
+                    <div class="kpi-chip chip-evals badge rounded-pill bg-info-subtle text-info px-3 py-2">
+                        <span class="chip-dot dot-evals me-1"></span>
+                        <span>Completadas</span>
+                    </div>
                 </div>
-            </div>
-            <div class="kpi-value-row">
-                <span class="kpi-value" id="dash-total-evals">0</span>
-                <div class="kpi-chip chip-evals">
-                    <span class="chip-dot dot-evals"></span>
-                    <span>Completadas</span>
+                <div class="kpi-footer-row d-flex align-items-center justify-content-between pt-3 border-top">
+                    <span class="kpi-footer-text text-muted small">Explorar análisis clínicos</span>
+                    <span class="kpi-arrow-icon text-muted"><i class="bi bi-arrow-right"></i></span>
                 </div>
-            </div>
-            <div class="kpi-footer-row">
-                <span class="kpi-footer-text">Explorar análisis clínicos</span>
-                <span class="kpi-arrow-icon">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                </span>
             </div>
         </div>
 
         <!-- Card 3: Promedio TRU Score -->
-        <div class="dash-card bento-card kpi-card kpi-card-score" onclick="document.querySelector('[data-target=\'bio-view\']').click()" role="button" tabindex="0" title="Calibrar en analizador">
-            <div class="kpi-ambient-glow"></div>
-            <div class="kpi-top-row">
-                <div class="kpi-meta">
-                    <span class="kpi-category">COHORTE GLOBAL</span>
-                    <h3 class="kpi-title">Promedio TRU Score</h3>
+        <div class="col-12 col-md-4">
+            <div class="dash-card bento-card kpi-card kpi-card-score h-100 p-4 border-0 shadow-sm rounded-4" onclick="document.querySelector('[data-target=\'bio-view\']').click()" role="button" tabindex="0" title="Calibrar en analizador">
+                <div class="kpi-ambient-glow"></div>
+                <div class="kpi-top-row d-flex align-items-start justify-content-between">
+                    <div class="kpi-meta">
+                        <span class="kpi-category text-uppercase fw-bold text-muted" style="font-size: 0.68rem; letter-spacing: 0.08em;">COHORTE GLOBAL</span>
+                        <h3 class="kpi-title fw-bold text-navy fs-5 m-0 mt-1">Promedio TRU Score</h3>
+                    </div>
+                    <div class="kpi-icon-pill icon-score bg-success-subtle text-success p-3 rounded-4">
+                        <i class="bi bi-trophy-fill fs-4"></i>
+                    </div>
                 </div>
-                <div class="kpi-icon-pill icon-score">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                        <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"></path>
-                        <path d="M4 22h16"></path>
-                        <path d="M10 14.66V17c0 .55-.45 1-1 1H7"></path>
-                        <path d="M14 14.66V17c0 .55.45 1 1 1h2"></path>
-                        <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"></path>
-                    </svg>
+                <div class="kpi-value-row d-flex align-items-baseline justify-content-between my-3">
+                    <div class="kpi-value-group d-flex align-items-baseline gap-1">
+                        <span class="kpi-value display-font fw-extrabold text-navy display-5" id="dash-avg-score">0</span>
+                        <span class="kpi-unit text-muted fs-6">pts</span>
+                    </div>
+                    <div class="kpi-chip chip-score badge rounded-pill bg-success-subtle text-success px-3 py-2">
+                        <span class="chip-dot dot-score me-1"></span>
+                        <span>Salud Celular</span>
+                    </div>
                 </div>
-            </div>
-            <div class="kpi-value-row">
-                <div class="kpi-value-group">
-                    <span class="kpi-value" id="dash-avg-score">0</span>
-                    <span class="kpi-unit">pts</span>
+                <div class="kpi-footer-row d-flex align-items-center justify-content-between pt-3 border-top">
+                    <span class="kpi-footer-text text-muted small">Calibración bioeléctrica</span>
+                    <span class="kpi-score-badge badge bg-success-subtle text-success border border-success-subtle px-2 py-1">Óptimo</span>
                 </div>
-                <div class="kpi-chip chip-score">
-                    <span class="chip-dot dot-score"></span>
-                    <span>Salud Celular</span>
-                </div>
-            </div>
-            <div class="kpi-footer-row">
-                <span class="kpi-footer-text">Calibración bioeléctrica</span>
-                <span class="kpi-score-badge">Óptimo</span>
             </div>
         </div>
     </div>
 
-    <!-- Main Dashboard Content (Bento Grid 2fr 1fr) -->
-    <div class="bento-grid dash-main-grid" style="grid-template-columns: 2fr 1fr; margin-top: 1.5rem;">
-        <!-- Left Panel: Recent Evals -->
-        <section class="bento-card dash-evals-card">
-            <div class="dash-card-header">
-                <div class="dash-header-title">
-                    <span class="dash-header-icon">📊</span>
-                    <div>
-                        <h3 class="dash-header-text">Últimas Evaluaciones Clínicas</h3>
-                        <span class="dash-header-sub">Análisis de composición corporal y estado celular recientes</span>
+    <!-- Rejilla Principal del Dashboard (Bootstrap Grid: 8 cols izquierda / 4 cols derecha) -->
+    <div class="row g-4">
+        <!-- Panel Izquierdo: Últimas Evaluaciones -->
+        <div class="col-12 col-lg-8">
+            <section class="bento-card dash-evals-card h-100 p-4 border-0 shadow-sm rounded-4 bg-white">
+                <div class="dash-card-header d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                    <div class="dash-header-title d-flex align-items-center gap-2">
+                        <span class="dash-header-icon text-primary fs-4"><i class="bi bi-bar-chart-line-fill"></i></span>
+                        <div>
+                            <h3 class="dash-header-text fw-bold text-navy m-0 fs-5">Últimas Evaluaciones Clínicas</h3>
+                            <span class="dash-header-sub text-muted small">Análisis de composición corporal y estado celular recientes</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-link text-decoration-none text-info fw-semibold p-0" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
+                        Ver Historial Completo →
+                    </button>
+                </div>
+
+                <div class="clients-table-container dash-table-wrap">
+                    <table class="table table-hover align-middle clients-table dash-table mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>PACIENTE</th>
+                                <th>FECHA</th>
+                                <th>SCORE TRU</th>
+                                <th>ÁNGULO FASE</th>
+                                <th>ESTADO</th>
+                                <th class="text-end">ACCIÓN</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dash-recent-tbody">
+                            <tr><td colspan="6" class="text-center text-muted py-5">Cargando evaluaciones...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <!-- Panel Derecho: Agenda Clínica & Calendario -->
+        <div class="col-12 col-lg-4">
+            <section class="bento-card dash-calendar-card h-100 p-4 border-0 shadow-sm rounded-4 bg-white">
+                <div class="dash-card-header d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                    <div class="dash-header-title d-flex align-items-center gap-2">
+                        <span class="dash-header-icon text-info fs-4"><i class="bi bi-calendar-event-fill"></i></span>
+                        <div>
+                            <h3 class="dash-header-text fw-bold text-navy m-0 fs-5">Agenda & Citas BIA</h3>
+                            <span class="dash-header-sub text-muted small">Gestión de turnos clínicos</span>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-primary d-inline-flex align-items-center gap-1 shadow-sm px-3 py-1" id="btn-open-appointment-modal" title="Programar nueva cita">
+                        <i class="bi bi-plus-lg"></i> Agendar
+                    </button>
+                </div>
+
+                <!-- Mini Calendario -->
+                <div class="clinic-calendar-container p-3 rounded-4 bg-light border mb-3">
+                    <div class="calendar-nav-header d-flex align-items-center justify-content-between mb-2">
+                        <button type="button" class="btn btn-sm btn-light border shadow-none p-1 px-2 fw-bold" id="cal-prev-month" aria-label="Mes anterior">‹</button>
+                        <span class="cal-month-label fw-bold text-navy small" id="cal-month-label">Agosto 2026</span>
+                        <button type="button" class="btn btn-sm btn-light border shadow-none p-1 px-2 fw-bold" id="cal-next-month" aria-label="Mes siguiente">›</button>
+                    </div>
+
+                    <div class="calendar-weekdays d-grid text-center fw-bold text-muted small mb-1" style="grid-template-columns: repeat(7, 1fr);">
+                        <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
+                    </div>
+
+                    <div class="calendar-days-grid d-grid gap-1" id="calendar-days-grid" style="grid-template-columns: repeat(7, 1fr);">
+                        <!-- Días generados por JS -->
                     </div>
                 </div>
-                <button type="button" class="btn-link-action" onclick="document.querySelector('[data-target=\'evaluaciones-view\']').click()">
-                    Ver Historial Completo →
-                </button>
-            </div>
 
-            <div class="clients-table-container dash-table-wrap">
-                <table class="clients-table dash-table">
-                    <thead>
-                        <tr>
-                            <th>PACIENTE</th>
-                            <th>FECHA</th>
-                            <th>SCORE TRU</th>
-                            <th>ÁNGULO FASE</th>
-                            <th>ESTADO</th>
-                            <th style="text-align: right;">ACCIÓN</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dash-recent-tbody">
-                        <tr><td colspan="6" style="text-align: center; padding: 2.5rem; color: #7a8aa0;">Cargando evaluaciones...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- Right Panel: Clinic Agenda & Appointments Calendar -->
-        <section class="bento-card dash-calendar-card">
-            <div class="dash-card-header">
-                <div class="dash-header-title">
-                    <span class="dash-header-icon">📅</span>
-                    <div>
-                        <h3 class="dash-header-text">Agenda & Citas BIA</h3>
-                        <span class="dash-header-sub">Gestión de turnos y reservas clínicas</span>
+                <!-- Lista de Citas del Día -->
+                <div class="dash-day-appointments-section">
+                    <div class="day-appointments-header d-flex align-items-center justify-content-between mb-2">
+                        <span class="day-appointments-title text-uppercase fw-bold text-muted small" id="day-appointments-title">Citas de hoy</span>
+                        <span class="day-appointments-count badge bg-info-subtle text-info rounded-pill px-3 py-1" id="day-appointments-count">0 citas</span>
+                    </div>
+                    <div class="day-appointments-list d-flex flex-column gap-2" id="day-appointments-list">
+                        <!-- Citas inyectadas por JS -->
                     </div>
                 </div>
-                <button type="button" class="btn-primary btn-add-appointment" id="btn-open-appointment-modal" title="Programar nueva cita">
-                    <span class="btn-ico">➕</span> Agendar
-                </button>
-            </div>
-
-            <!-- Mini Calendar Component -->
-            <div class="clinic-calendar-container">
-                <div class="calendar-nav-header">
-                    <button type="button" class="cal-nav-btn" id="cal-prev-month" aria-label="Mes anterior">‹</button>
-                    <span class="cal-month-label" id="cal-month-label">Agosto 2026</span>
-                    <button type="button" class="cal-nav-btn" id="cal-next-month" aria-label="Mes siguiente">›</button>
-                </div>
-
-                <div class="calendar-weekdays">
-                    <span>Lu</span><span>Ma</span><span>Mi</span><span>Ju</span><span>Vi</span><span>Sá</span><span>Do</span>
-                </div>
-
-                <div class="calendar-days-grid" id="calendar-days-grid">
-                    <!-- Celdas de días inyectadas dinámicamente -->
-                </div>
-            </div>
-
-            <!-- Lista de citas del día seleccionado -->
-            <div class="dash-day-appointments-section">
-                <div class="day-appointments-header">
-                    <span class="day-appointments-title" id="day-appointments-title">Citas de hoy</span>
-                    <span class="day-appointments-count" id="day-appointments-count">0 citas</span>
-                </div>
-                <div class="day-appointments-list" id="day-appointments-list">
-                    <!-- Citas inyectadas dinámicamente -->
-                </div>
-            </div>
-        </section>
+            </section>
+        </div>
     </div>
 </div>

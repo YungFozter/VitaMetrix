@@ -1,48 +1,64 @@
-<!-- VIEW 3: CLIENTES -->
+<!-- VIEW 3: DIRECTORIO DE CLIENTES / PACIENTES -->
 <div id="clientes-view" class="view hidden-view">
-    <div class="bio-layout">
-        <!-- Formulario de Nuevo/Editar Cliente -->
-        <div class="bio-form-panel">
-            <h3>Registrar Cliente</h3>
-            <form id="client-form">
-                <div class="form-group">
-                    <label>Nombre Completo</label>
-                    <input type="text" id="new-client-name" required placeholder="Ej: Perez, Juan">
+    <div class="row g-4">
+        <!-- Formulario de Nuevo/Editar Cliente (4 columnas) -->
+        <div class="col-12 col-lg-4">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="fs-4 text-primary"><i class="bi bi-person-plus-fill"></i></span>
+                    <h3 class="display-font text-navy fw-bold fs-5 m-0">Registrar Paciente</h3>
                 </div>
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="tel" id="new-client-phone" placeholder="Ej: +1 234 567 890">
-                </div>
-                <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" id="new-client-email" placeholder="Ej: juan@email.com">
-                </div>
-                <button type="submit" id="btn-save-client" class="btn-primary">Guardar Cliente</button>
-                <button type="button" id="btn-cancel-client" class="btn-secondary hidden-view" style="margin-top: 0.5rem; width: 100%;">Cancelar Edición</button>
-            </form>
+                <form id="client-form" class="d-flex flex-column gap-3">
+                    <div>
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre Completo *</label>
+                        <input type="text" id="new-client-name" class="form-control form-control-lg shadow-none fs-6" required placeholder="Ej: Perez, Juan">
+                    </div>
+                    <div>
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Teléfono (WhatsApp)</label>
+                        <input type="tel" id="new-client-phone" class="form-control shadow-none" placeholder="Ej: +54 9 11 1234-5678">
+                    </div>
+                    <div>
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Correo Electrónico</label>
+                        <input type="email" id="new-client-email" class="form-control shadow-none" placeholder="Ej: juan@email.com">
+                    </div>
+                    <div class="mt-2">
+                        <button type="submit" id="btn-save-client" class="btn btn-primary w-100 py-2.5 rounded-3 fw-semibold shadow-sm">
+                            <i class="bi bi-floppy-fill me-1"></i> Guardar Cliente
+                        </button>
+                        <button type="button" id="btn-cancel-client" class="btn btn-outline-secondary w-100 mt-2 py-2 rounded-3 hidden-view">
+                            Cancelar Edición
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <!-- Lista de Clientes -->
-        <div class="bento-grid" style="display: block;">
-            <section class="bento-card" style="min-height: 500px;">
-                <div class="card-header">Base de Datos de Clientes</div>
-                <div class="clients-table-container">
-                    <table class="clients-table">
-                        <thead>
+        <!-- Lista y Tabla de Clientes (8 columnas) -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100" style="min-height: 500px;">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-info"><i class="bi bi-folder-fill"></i></span>
+                        <h3 class="display-font text-navy fw-bold fs-5 m-0">Directorio General de Pacientes</h3>
+                    </div>
+                    <span class="badge bg-light text-dark border px-3 py-2">Total Registros</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle clients-table mb-0">
+                        <thead class="table-light">
                             <tr>
-                                <th>Código</th>
-                                <th>Nombre</th>
-                                <th>Contacto</th>
-                                <th>Acciones</th>
+                                <th>CÓDIGO</th>
+                                <th>PACIENTE</th>
+                                <th>CONTACTO</th>
+                                <th class="text-end">ACCIONES</th>
                             </tr>
                         </thead>
                         <tbody id="clients-tbody">
-                            <!-- Rows populated by JS -->
-                            <tr><td colspan="4" style="text-align: center; padding: 2rem;">Cargando clientes...</td></tr>
+                            <tr><td colspan="4" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>
                         </tbody>
                     </table>
                 </div>
-            </section>
+            </div>
         </div>
     </div>
 </div>
