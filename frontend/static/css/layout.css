@@ -1,5 +1,5 @@
 /* ============================================================
-   VITAMETRIX - LAYOUT & NAVEGACIÓN
+   VITAMETRIX - LAYOUT & NAVEGACIÓN (ULTRA-SMOOTH TRANSITIONS)
    ============================================================ */
 
 /* ====== NUEVO LAYOUT SPA ====== */
@@ -9,7 +9,25 @@
     overflow: hidden;
 }
 
-/* --- SIDEBAR --- */
+/* --- TRANSICIONES FLUIDAS PARA TEXTOS DEL SIDEBAR --- */
+.sidebar-brand,
+.sidebar-section-label,
+.brand-selector,
+.nav-item span:not(.nav-icon) {
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                max-width 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                margin 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 1;
+    max-width: 220px;
+    white-space: nowrap;
+    overflow: hidden;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* --- SIDEBAR PRINCIPAL --- */
 .sidebar {
     width: 260px;
     background: #ffffff;
@@ -18,8 +36,11 @@
     flex-direction: column;
     padding: 1.5rem;
     z-index: 10;
-    transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease, left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     flex-shrink: 0;
+    will-change: width, padding;
 }
 
 .sidebar-logo {
@@ -36,8 +57,6 @@
     font-weight: 700;
     color: #1A2A4A;
     letter-spacing: -0.5px;
-    white-space: nowrap;
-    transition: opacity 0.2s ease;
 }
 
 .brand-icon {
@@ -85,8 +104,6 @@
     color: #5a6f8c;
     margin: 0.8rem 0 0.4rem 0.5rem;
     padding: 0;
-    white-space: nowrap;
-    transition: opacity 0.2s ease;
 }
 
 /* Divider entre secciones */
@@ -94,6 +111,7 @@
     height: 1px;
     background: rgba(0, 0, 0, 0.06);
     margin: 0.7rem 0.5rem;
+    transition: opacity 0.25s ease;
 }
 
 /* Nav items */
@@ -108,15 +126,18 @@
     font-weight: 500;
     font-size: 0.9rem;
     border-radius: 12px;
-    transition: all 0.2s ease;
+    transition: background-color 0.25s ease, 
+                color 0.25s ease, 
+                transform 0.25s ease, 
+                padding 0.35s cubic-bezier(0.4, 0, 0.2, 1), 
+                justify-content 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     overflow: hidden;
-    white-space: nowrap;
 }
 
 .nav-item .nav-icon {
     font-size: 1.2rem;
     opacity: 0.7;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease, color 0.2s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -158,6 +179,7 @@
     border-radius: 50%;
     background: #00b4d8;
     box-shadow: 0 0 8px #00b4d8;
+    transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
 /* Botón para cerrar drawer en móvil */
@@ -192,7 +214,12 @@
     .app-layout.sidebar-collapsed .sidebar-section-label,
     .app-layout.sidebar-collapsed .nav-item span:not(.nav-icon),
     .app-layout.sidebar-collapsed .brand-selector {
-        display: none !important;
+        opacity: 0;
+        max-width: 0;
+        margin: 0 !important;
+        padding: 0 !important;
+        pointer-events: none;
+        transform: translateX(-12px);
     }
 
     .app-layout.sidebar-collapsed .sidebar-logo {
@@ -201,12 +228,14 @@
 
     .app-layout.sidebar-collapsed .nav-item {
         justify-content: center;
-        padding: 0.75rem 0;
+        padding: 0.8rem 0;
+        gap: 0;
         transform: none !important;
     }
 
     .app-layout.sidebar-collapsed .nav-item::after {
-        display: none;
+        opacity: 0;
+        transform: translateY(-50%) scale(0);
     }
 }
 
@@ -222,6 +251,7 @@
     -webkit-overflow-scrolling: touch;
     transform: translateZ(0);
     backface-visibility: hidden;
+    transition: margin-left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* --- TOPBAR --- */
@@ -252,7 +282,11 @@
     color: #1A2A4A;
     cursor: pointer;
     box-shadow: 0 3px 10px rgba(26, 42, 74, 0.05);
-    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: background-color 0.25s ease, 
+                color 0.25s ease, 
+                border-color 0.25s ease, 
+                transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), 
+                box-shadow 0.25s ease;
     outline: none;
     flex-shrink: 0;
     padding: 0;
@@ -270,10 +304,13 @@
     transform: scale(0.95);
 }
 
+.sidebar-toggle-btn i,
 .sidebar-toggle-btn svg {
-    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    display: inline-block;
 }
 
+.app-layout.sidebar-collapsed .sidebar-toggle-btn i,
 .app-layout.sidebar-collapsed .sidebar-toggle-btn svg {
     transform: rotate(180deg);
 }
@@ -338,7 +375,7 @@
     z-index: 999;
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.3s ease;
+    transition: opacity 0.35s ease;
 }
 
 .sidebar-backdrop.active {
@@ -355,6 +392,7 @@
         width: 260px;
         z-index: 1000;
         box-shadow: 0 10px 40px rgba(0,0,0,0.18);
+        transition: left 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .sidebar.mobile-open,
