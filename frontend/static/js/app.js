@@ -2360,6 +2360,8 @@ function initConfiguracionView() {
 
     // Inicializar mapa Leaflet cuando la vista de configuración sea visible
     initClinicMap();
+}
+
 function applyThemeMode(isDark) {
     const label = document.getElementById('theme-status-label');
     if (isDark) {
