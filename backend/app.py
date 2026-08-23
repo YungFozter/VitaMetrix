@@ -56,7 +56,8 @@ def set_security_headers(response):
         "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com; "
         "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
         "img-src 'self' data: blob: https:; "
-        "connect-src 'self' https: https://nominatim.openstreetmap.org;"
+        "connect-src 'self' https: https://nominatim.openstreetmap.org; "
+        "frame-src 'self' https://maps.google.com https://www.google.com;"
     )
     return response
 
