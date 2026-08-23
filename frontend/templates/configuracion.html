@@ -1,0 +1,173 @@
+<!-- VIEW 5: CONFIGURACIÓN DEL SISTEMA Y PREFERENCIAS CLÍNICAS -->
+<div id="configuracion-view" class="view hidden-view">
+    <!-- Header de la Pantalla de Configuración -->
+    <div class="dash-top-bar d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="dash-top-titles">
+            <h2 class="dash-section-title display-font text-navy fw-bold fs-3 mb-1">
+                <i class="bi bi-gear-wide-connected text-info me-2"></i>Configuración General del Sistema
+            </h2>
+            <p class="dash-section-sub text-muted small m-0">
+                Personaliza la identidad profesional, membrete de reportes, mapa de ubicación, respaldos y tema visual.
+            </p>
+        </div>
+        <div class="dash-top-actions d-flex align-items-center gap-2">
+            <button type="button" id="btn-save-all-settings" class="btn btn-primary d-inline-flex align-items-center gap-2 shadow-sm rounded-3 px-4 py-2 fw-semibold">
+                <i class="bi bi-floppy-fill"></i>
+                <span>Guardar Cambios</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Contenido en Grilla Bento (Bootstrap 5.3 Grid) -->
+    <div class="row g-4">
+        <!-- BLOQUE 1: PERFIL PROFESIONAL Y PARÁMETROS BIA -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="fs-4 text-primary"><i class="bi bi-person-badge-fill"></i></span>
+                    <h3 class="display-font text-navy fw-bold fs-5 m-0">Perfil Profesional & Datos Clínicos</h3>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Profesional *</label>
+                        <input type="text" id="cfg-user-name" class="form-control shadow-none" required value="Dra. Audrey">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Especialidad / Cargo *</label>
+                        <input type="text" id="cfg-user-title" class="form-control shadow-none" required value="Manager / Especialista BIA">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Centro Clínico</label>
+                        <input type="text" id="cfg-clinic-name" class="form-control shadow-none" value="Centro Médico VitaMetrix">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Unidad de Peso por Defecto</label>
+                        <select id="cfg-unit-weight" class="form-select shadow-none">
+                            <option value="kg" selected>Kilogramos (kg)</option>
+                            <option value="lbs">Libras (lbs)</option>
+                        </select>
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Ángulo de Fase Mínimo Óptimo (°)</label>
+                        <input type="number" id="cfg-pha-optimal" class="form-control shadow-none" step="0.1" value="6.0">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOQUE 2: MEMBRETE DE REPORTE CLÍNICO PDF -->
+        <div class="col-12 col-lg-6">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-info"><i class="bi bi-file-earmark-pdf-fill"></i></span>
+                        <h3 class="display-font text-navy fw-bold fs-5 m-0">Membrete para Reportes PDF</h3>
+                    </div>
+                    <span class="badge bg-info-subtle text-info rounded-pill px-3 py-1">Impresión BIA</span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Matrícula Profesional (MP / MN)</label>
+                        <input type="text" id="cfg-pdf-mp" class="form-control shadow-none" placeholder="Ej: MP: 12345 / MN: 6789" value="MP: 45892 / MN: 1204">
+                    </div>
+                    <div class="col-12 col-md-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Teléfono de Contacto</label>
+                        <input type="tel" id="cfg-pdf-phone" class="form-control shadow-none" placeholder="Ej: +54 9 11 4455-6677" value="+54 9 11 4455-6677">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Logo de la Clínica (URL o Imagen)</label>
+                        <div class="input-group">
+                            <input type="text" id="cfg-pdf-logo-url" class="form-control shadow-none" placeholder="URL del logo o sube un archivo..." value="https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff">
+                            <button type="button" class="btn btn-outline-secondary" id="btn-upload-logo" onclick="document.getElementById('cfg-logo-file-input').click()">
+                                <i class="bi bi-upload"></i> Cargar Logo
+                            </button>
+                            <input type="file" id="cfg-logo-file-input" accept="image/*" class="d-none">
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Aviso Legal al Pie del Informe</label>
+                        <textarea id="cfg-pdf-disclaimer" class="form-control shadow-none" rows="2" placeholder="Nota aclaratoria al pie del informe impreso...">Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- BLOQUE 3: UBICACIÓN Y MAPA INTERACTIVO CONSULTORIO (GPS LEAFLET) -->
+        <div class="col-12 col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="fs-4 text-danger"><i class="bi bi-geo-alt-fill"></i></span>
+                        <div>
+                            <h3 class="display-font text-navy fw-bold fs-5 m-0">Ubicación del Consultorio</h3>
+                            <span class="text-muted small">Rastreo GPS, marcación en mapa y dirección editable</span>
+                        </div>
+                    </div>
+                    <button type="button" id="btn-locate-me" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 shadow-none">
+                        <i class="bi bi-crosshair"></i> Mi Ubicación Actual
+                    </button>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-12 col-md-8">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Dirección Física del Consultorio</label>
+                        <input type="text" id="cfg-clinic-address" class="form-control shadow-none" placeholder="Ej: Av. Corrientes 1234, Piso 4, CABA" value="Av. Libertador 2450, Piso 3, CABA">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Latitud</label>
+                        <input type="text" id="cfg-clinic-lat" class="form-control shadow-none" readonly value="-34.6037">
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Longitud</label>
+                        <input type="text" id="cfg-clinic-lng" class="form-control shadow-none" readonly value="-58.3816">
+                    </div>
+                </div>
+
+                <!-- Contenedor del Mapa Leaflet -->
+                <div id="clinic-map" class="clinic-map-container rounded-4 border shadow-inner" style="height: 320px; width: 100%; z-index: 1;"></div>
+            </div>
+        </div>
+
+        <!-- BLOQUE 4: RESPALDO Y ACCIONES DE DATOS + PREFERENCIAS VISUALES -->
+        <div class="col-12 col-lg-4 d-flex flex-column gap-4">
+            <!-- Preferencias Visuales -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="fs-4 text-warning"><i class="bi bi-palette-fill"></i></span>
+                    <h3 class="display-font text-navy fw-bold fs-5 m-0">Preferencias Visuales</h3>
+                </div>
+                <div class="d-flex align-items-center justify-content-between p-3 rounded-3 bg-light border">
+                    <div>
+                        <strong class="d-block text-navy small">Tema de Interfaz</strong>
+                        <span class="text-muted text-xs" id="theme-status-label">Modo Claro Médico</span>
+                    </div>
+                    <div class="form-check form-switch m-0 fs-4">
+                        <input class="form-check-input cursor-pointer" type="checkbox" role="switch" id="cfg-theme-toggle">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Respaldo & Exportación -->
+            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white flex-grow-1">
+                <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
+                    <span class="fs-4 text-success"><i class="bi bi-database-fill-gear"></i></span>
+                    <h3 class="display-font text-navy fw-bold fs-5 m-0">Respaldo & Exportación</h3>
+                </div>
+                <div class="d-flex flex-column gap-2.5">
+                    <button type="button" id="btn-export-csv" class="btn btn-outline-success w-100 py-2.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-2 fw-semibold">
+                        <i class="bi bi-file-earmark-spreadsheet-fill"></i> Exportar Evaluaciones (CSV)
+                    </button>
+                    <button type="button" id="btn-export-json" class="btn btn-outline-primary w-100 py-2.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-2 fw-semibold">
+                        <i class="bi bi-download"></i> Descargar Respaldo JSON
+                    </button>
+                    <button type="button" id="btn-import-json" class="btn btn-outline-secondary w-100 py-2.5 rounded-3 d-inline-flex align-items-center justify-content-center gap-2 fw-semibold" onclick="document.getElementById('cfg-json-file-input').click()">
+                        <i class="bi bi-upload"></i> Restaurar Copia JSON
+                    </button>
+                    <input type="file" id="cfg-json-file-input" accept=".json" class="d-none">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

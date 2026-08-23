@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initProfileDropdown();
     initSystemMenuListeners();
     initAppointmentsCalendar();
+    initConfiguracionView();
     fetchDashboardStats();
 });
 
@@ -144,6 +145,12 @@ function initNavigation() {
 
                 // Update title
                 pageTitle.textContent = item.getAttribute('data-title') || 'Dashboard';
+
+                if (targetId === 'configuracion-view') {
+                    setTimeout(() => {
+                        if (typeof initClinicMap === 'function') initClinicMap();
+                    }, 150);
+                }
             }
         });
     });
@@ -1801,74 +1808,12 @@ function initSystemMenuListeners() {
         });
     }
 
-    const settingsBtn = document.getElementById('nav-settings-btn');
     const dropSettingsBtn = document.getElementById('dropdown-settings-btn');
-    const settingsModal = document.getElementById('settings-modal');
-    const settingsForm = document.getElementById('settings-form');
-    const settingsClose = document.getElementById('settings-modal-close');
-    const settingsCancel = document.getElementById('settings-btn-cancel');
-
-    // Cargar ajustes guardados de localStorage
-    const loadSavedSettings = () => {
-        const savedName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
-        const savedTitle = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
-        const savedClinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
-        const savedUnit = localStorage.getItem('vm_unit_weight') || 'kg';
-        const savedPha = localStorage.getItem('vm_pha_optimal') || '6.0';
-
-        const nameInput = document.getElementById('settings-user-name');
-        const titleInput = document.getElementById('settings-user-title');
-        const clinicInput = document.getElementById('settings-clinic-name');
-        const unitInput = document.getElementById('settings-unit-weight');
-        const phaInput = document.getElementById('settings-pha-optimal');
-
-        if (nameInput) nameInput.value = savedName;
-        if (titleInput) titleInput.value = savedTitle;
-        if (clinicInput) clinicInput.value = savedClinic;
-        if (unitInput) unitInput.value = savedUnit;
-        if (phaInput) phaInput.value = savedPha;
-
-        // Actualizar header UI
-        const userInfo = document.querySelector('.user-info');
-        if (userInfo) {
-            userInfo.innerHTML = `<strong>${savedName}</strong><span>${savedTitle}</span>`;
-        }
-    };
-
-    loadSavedSettings();
-
-    const openSettingsModal = () => {
-        loadSavedSettings();
-        if (settingsModal) settingsModal.classList.remove('hidden');
-    };
-
-    const closeSettingsModal = () => {
-        if (settingsModal) settingsModal.classList.add('hidden');
-    };
-
-    if (settingsBtn) settingsBtn.addEventListener('click', openSettingsModal);
-    if (dropSettingsBtn) dropSettingsBtn.addEventListener('click', openSettingsModal);
-    if (settingsClose) settingsClose.addEventListener('click', closeSettingsModal);
-    if (settingsCancel) settingsCancel.addEventListener('click', closeSettingsModal);
-
-    if (settingsForm) {
-        settingsForm.addEventListener('submit', (e) => {
+    if (dropSettingsBtn) {
+        dropSettingsBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            const nameVal = document.getElementById('settings-user-name').value.trim();
-            const titleVal = document.getElementById('settings-user-title').value.trim();
-            const clinicVal = document.getElementById('settings-clinic-name').value.trim();
-            const unitVal = document.getElementById('settings-unit-weight').value;
-            const phaVal = document.getElementById('settings-pha-optimal').value;
-
-            localStorage.setItem('vm_user_name', nameVal);
-            localStorage.setItem('vm_user_title', titleVal);
-            localStorage.setItem('vm_clinic_name', clinicVal);
-            localStorage.setItem('vm_unit_weight', unitVal);
-            localStorage.setItem('vm_pha_optimal', phaVal);
-
-            loadSavedSettings();
-            closeSettingsModal();
-            showToast('✅ Configuración guardada correctamente.', 'success');
+            const configNav = document.getElementById('nav-settings-btn');
+            if (configNav) configNav.click();
         });
     }
 
@@ -2277,4 +2222,322 @@ async function populateClientsDatalist() {
     } catch (e) {
         // Silently ignore
     }
+}
+
+// ============================================================
+// --- CONFIGURACIÓN VIEW, MAPA LEAFLET & EXPORTACIÓN CONTROLLER ---
+// ============================================================
+let clinicLeafletMap = null;
+let clinicMarker = null;
+
+function initConfiguracionView() {
+    const btnSave = document.getElementById('btn-save-all-settings');
+    const btnLocate = document.getElementById('btn-locate-me');
+    const btnExportCsv = document.getElementById('btn-export-csv');
+    const btnExportJson = document.getElementById('btn-export-json');
+    const inputJsonFile = document.getElementById('cfg-json-file-input');
+    const inputLogoFile = document.getElementById('cfg-logo-file-input');
+    const themeToggle = document.getElementById('cfg-theme-toggle');
+
+    // Cargar todos los ajustes persistentes
+    const loadAllSettings = () => {
+        const name = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+        const title = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
+        const clinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
+        const unit = localStorage.getItem('vm_unit_weight') || 'kg';
+        const pha = localStorage.getItem('vm_pha_optimal') || '6.0';
+        const mp = localStorage.getItem('vm_pdf_mp') || 'MP: 45892 / MN: 1204';
+        const phone = localStorage.getItem('vm_pdf_phone') || '+54 9 11 4455-6677';
+        const logoUrl = localStorage.getItem('vm_pdf_logo_url') || 'https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff';
+        const disclaimer = localStorage.getItem('vm_pdf_disclaimer') || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
+        const address = localStorage.getItem('vm_clinic_address') || 'Av. Libertador 2450, Piso 3, CABA';
+        const lat = localStorage.getItem('vm_clinic_lat') || '-34.6037';
+        const lng = localStorage.getItem('vm_clinic_lng') || '-58.3816';
+        const darkTheme = localStorage.getItem('vm_dark_theme') === 'true';
+
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val;
+        };
+
+        setVal('cfg-user-name', name);
+        setVal('cfg-user-title', title);
+        setVal('cfg-clinic-name', clinic);
+        setVal('cfg-unit-weight', unit);
+        setVal('cfg-pha-optimal', pha);
+        setVal('cfg-pdf-mp', mp);
+        setVal('cfg-pdf-phone', phone);
+        setVal('cfg-pdf-logo-url', logoUrl);
+        setVal('cfg-pdf-disclaimer', disclaimer);
+        setVal('cfg-clinic-address', address);
+        setVal('cfg-clinic-lat', lat);
+        setVal('cfg-clinic-lng', lng);
+
+        if (themeToggle) {
+            themeToggle.checked = darkTheme;
+            applyThemeMode(darkTheme);
+        }
+
+        // Actualizar header UI
+        const userInfo = document.querySelector('.user-info');
+        if (userInfo) {
+            userInfo.innerHTML = `<strong>${name}</strong><span>${title}</span>`;
+        }
+    };
+
+    loadAllSettings();
+
+    // Guardar todos los cambios
+    if (btnSave) {
+        btnSave.addEventListener('click', () => {
+            const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
+
+            localStorage.setItem('vm_user_name', getVal('cfg-user-name'));
+            localStorage.setItem('vm_user_title', getVal('cfg-user-title'));
+            localStorage.setItem('vm_clinic_name', getVal('cfg-clinic-name'));
+            localStorage.setItem('vm_unit_weight', document.getElementById('cfg-unit-weight') ? document.getElementById('cfg-unit-weight').value : 'kg');
+            localStorage.setItem('vm_pha_optimal', getVal('cfg-pha-optimal'));
+            localStorage.setItem('vm_pdf_mp', getVal('cfg-pdf-mp'));
+            localStorage.setItem('vm_pdf_phone', getVal('cfg-pdf-phone'));
+            localStorage.setItem('vm_pdf_logo_url', getVal('cfg-pdf-logo-url'));
+            localStorage.setItem('vm_pdf_disclaimer', getVal('cfg-pdf-disclaimer'));
+            localStorage.setItem('vm_clinic_address', getVal('cfg-clinic-address'));
+            localStorage.setItem('vm_clinic_lat', getVal('cfg-clinic-lat'));
+            localStorage.setItem('vm_clinic_lng', getVal('cfg-clinic-lng'));
+
+            loadAllSettings();
+            showToast('💾 Toda la configuración del sistema ha sido guardada correctamente.', 'success');
+        });
+    }
+
+    // Toggle de tema claro / oscuro
+    if (themeToggle) {
+        themeToggle.addEventListener('change', (e) => {
+            const isDark = e.target.checked;
+            localStorage.setItem('vm_dark_theme', isDark);
+            applyThemeMode(isDark);
+        });
+    }
+
+    // Carga de archivo de logo en base64
+    if (inputLogoFile) {
+        inputLogoFile.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const logoUrlInput = document.getElementById('cfg-pdf-logo-url');
+                    if (logoUrlInput) {
+                        logoUrlInput.value = event.target.result;
+                        localStorage.setItem('vm_pdf_logo_url', event.target.result);
+                        showToast('🖼️ Logo actualizado correctamente.', 'success');
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // Exportar CSV
+    if (btnExportCsv) {
+        btnExportCsv.addEventListener('click', exportEvaluationsToCSV);
+    }
+
+    // Exportar JSON
+    if (btnExportJson) {
+        btnExportJson.addEventListener('click', exportBackupJSON);
+    }
+
+    // Restaurar JSON
+    if (inputJsonFile) {
+        inputJsonFile.addEventListener('change', importBackupJSON);
+    }
+
+    // Geolocalización GPS en mapa
+    if (btnLocate) {
+        btnLocate.addEventListener('click', locateUserGPS);
+    }
+
+    // Inicializar mapa Leaflet cuando la vista de configuración sea visible
+    initClinicMap();
+}
+
+function applyThemeMode(isDark) {
+    const label = document.getElementById('theme-status-label');
+    if (isDark) {
+        document.body.classList.add('vm-dark-mode');
+        if (label) label.textContent = 'Modo Vidrio Oscuro (Glass BIA)';
+    } else {
+        document.body.classList.remove('vm-dark-mode');
+        if (label) label.textContent = 'Modo Claro Médico';
+    }
+}
+
+// Inicialización del Mapa Leaflet
+function initClinicMap() {
+    const mapContainer = document.getElementById('clinic-map');
+    if (!mapContainer || typeof L === 'undefined') return;
+
+    const savedLat = parseFloat(localStorage.getItem('vm_clinic_lat')) || -34.6037;
+    const savedLng = parseFloat(localStorage.getItem('vm_clinic_lng')) || -58.3816;
+
+    if (!clinicLeafletMap) {
+        clinicLeafletMap = L.map('clinic-map').setView([savedLat, savedLng], 14);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(clinicLeafletMap);
+
+        clinicMarker = L.marker([savedLat, savedLng], { draggable: true }).addTo(clinicLeafletMap);
+        clinicMarker.bindPopup("🏥 <b>Consultorio Médico VitaMetrix</b>").openPopup();
+
+        clinicMarker.on('dragend', (e) => {
+            const pos = e.target.getLatLng();
+            updateMapCoordinates(pos.lat, pos.lng);
+        });
+
+        clinicLeafletMap.on('click', (e) => {
+            const { lat, lng } = e.latlng;
+            clinicMarker.setLatLng([lat, lng]);
+            updateMapCoordinates(lat, lng);
+        });
+    } else {
+        setTimeout(() => {
+            clinicLeafletMap.invalidateSize();
+        }, 200);
+    }
+}
+
+function updateMapCoordinates(lat, lng) {
+    const latInput = document.getElementById('cfg-clinic-lat');
+    const lngInput = document.getElementById('cfg-clinic-lng');
+    if (latInput) latInput.value = lat.toFixed(6);
+    if (lngInput) lngInput.value = lng.toFixed(6);
+
+    localStorage.setItem('vm_clinic_lat', lat.toFixed(6));
+    localStorage.setItem('vm_clinic_lng', lng.toFixed(6));
+    showToast(`📍 Coordenadas actualizadas: ${lat.toFixed(4)}, ${lng.toFixed(4)}`, 'info');
+}
+
+function locateUserGPS() {
+    if (!navigator.geolocation) {
+        showToast('⚠️ Geolocalización no soportada en este navegador.', 'error');
+        return;
+    }
+
+    showToast('📡 Obteniendo posición GPS en tiempo real...', 'info');
+
+    navigator.geolocation.getCurrentPosition((pos) => {
+        const { latitude, longitude } = pos.coords;
+        if (clinicLeafletMap && clinicMarker) {
+            clinicLeafletMap.setView([latitude, longitude], 16);
+            clinicMarker.setLatLng([latitude, longitude]);
+            clinicMarker.bindPopup("📍 <b>Tu Ubicación Actual GPS</b>").openPopup();
+            updateMapCoordinates(latitude, longitude);
+            showToast('✅ Ubicación GPS detectada y centrada en el mapa.', 'success');
+        }
+    }, (err) => {
+        showToast('⚠️ No se pudo obtener la posición GPS actual.', 'error');
+    }, { enableHighAccuracy: true });
+}
+
+// Exportación CSV
+function exportEvaluationsToCSV() {
+    fetch('/api/evaluaciones')
+        .then(res => res.json())
+        .then(evals => {
+            if (!evals || evals.length === 0) {
+                showToast('⚠️ No hay evaluaciones en el historial para exportar.', 'info');
+                return;
+            }
+
+            const headers = ['ID', 'Código', 'Fecha', 'IDP', 'Paciente', 'Peso_kg', 'Altura_cm', 'R_ohm', 'Xc_ohm', 'TRU_Score', 'Angulo_Fase', 'Estado'];
+            const rows = evals.map(ev => [
+                ev.id || '',
+                ev.code || '',
+                ev.timestamp || '',
+                ev.idp || '',
+                `"${(ev.patient_name || '').replace(/"/g, '""')}"`,
+                ev.weight || '',
+                ev.height || '',
+                ev.r_ohm || '',
+                ev.xc_ohm || '',
+                ev.tru_score || '',
+                ev.phase_angle || '',
+                `"${(ev.cellular_status || '').replace(/"/g, '""')}"`
+            ]);
+
+            const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement('a');
+            link.setAttribute('href', encodedUri);
+            link.setAttribute('download', `VitaMetrix_Evaluaciones_${new Date().toISOString().split('T')[0]}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+            showToast('📊 Evaluaciones exportadas a CSV correctamente.', 'success');
+        })
+        .catch(() => {
+            showToast('⚠️ Error al consultar el historial para exportar.', 'error');
+        });
+}
+
+// Respaldo JSON
+function exportBackupJSON() {
+    fetch('/api/evaluaciones')
+        .then(res => res.json())
+        .then(evals => {
+            const backupData = {
+                app: 'VitaMetrix',
+                version: '2.0',
+                backup_date: new Date().toISOString(),
+                settings: {
+                    user_name: localStorage.getItem('vm_user_name') || 'Dra. Audrey',
+                    user_title: localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA',
+                    clinic_name: localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix',
+                    clinic_address: localStorage.getItem('vm_clinic_address') || '',
+                    clinic_lat: localStorage.getItem('vm_clinic_lat') || '',
+                    clinic_lng: localStorage.getItem('vm_clinic_lng') || ''
+                },
+                evaluaciones: evals
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `VitaMetrix_Backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+
+            showToast('📦 Respaldo JSON descargado con éxito.', 'success');
+        });
+}
+
+// Restauración JSON
+function importBackupJSON(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        try {
+            const data = JSON.parse(event.target.result);
+            if (data.settings) {
+                if (data.settings.user_name) localStorage.setItem('vm_user_name', data.settings.user_name);
+                if (data.settings.user_title) localStorage.setItem('vm_user_title', data.settings.user_title);
+                if (data.settings.clinic_name) localStorage.setItem('vm_clinic_name', data.settings.clinic_name);
+                if (data.settings.clinic_address) localStorage.setItem('vm_clinic_address', data.settings.clinic_address);
+                if (data.settings.clinic_lat) localStorage.setItem('vm_clinic_lat', data.settings.clinic_lat);
+                if (data.settings.clinic_lng) localStorage.setItem('vm_clinic_lng', data.settings.clinic_lng);
+            }
+            showToast('✅ Copia de seguridad restaurada correctamente.', 'success');
+            setTimeout(() => window.location.reload(), 1200);
+        } catch (err) {
+            showToast('⚠️ El archivo JSON seleccionado no es una copia de seguridad válida de VitaMetrix.', 'error');
+        }
+    };
+    reader.readAsText(file);
 }

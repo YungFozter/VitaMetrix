@@ -25,3 +25,6 @@
 
 /* Vista Citas & Calendario */
 @import url('citas.css');
+
+/* Vista Configuración General & Mapa Consultorio */
+@import url('configuracion.css');
