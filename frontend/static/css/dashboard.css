@@ -34,7 +34,9 @@
 }
 
 /* --- REJILLA DE TARJETAS KPI (3 Columnas) --- */
-.dash-cards.3-col {
+.dash-cards.three-col,
+.dash-cards-3col,
+[class*="3-col"] {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 1.5rem;
@@ -42,7 +44,9 @@
 }
 
 @media (max-width: 992px) {
-    .dash-cards.3-col {
+    .dash-cards.three-col,
+    .dash-cards-3col,
+    [class*="3-col"] {
         grid-template-columns: 1fr;
     }
 }
