@@ -2384,7 +2384,7 @@ function initClinicMap() {
     // Custom Red Pin Icon using Bootstrap Icon SVG
     const clinicCustomPin = L.divIcon({
         className: 'clinic-custom-pin-icon',
-        html: `<div style="font-size: 2.2rem; color: #ef4444; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); transform: translate(-50%, -100%); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-geo-alt-fill"></i></div>`,
+        html: `<div style="font-size: 2.2rem; color: #ef4444; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"><i class="bi bi-geo-alt-fill"></i></div>`,
         iconSize: [32, 32],
         iconAnchor: [16, 32]
     });
