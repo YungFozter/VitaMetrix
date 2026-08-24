@@ -78,12 +78,17 @@
                     </div>
                     <div class="col-12">
                         <label class="form-label text-muted small fw-semibold text-uppercase">Logo de la Clínica (URL o Imagen)</label>
-                        <div class="input-group">
-                            <input type="text" id="cfg-pdf-logo-url" class="form-control shadow-none" placeholder="URL del logo o sube un archivo..." value="https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff">
-                            <button type="button" class="btn btn-outline-secondary" id="btn-upload-logo" onclick="document.getElementById('cfg-logo-file-input').click()">
-                                <i class="bi bi-upload"></i> Cargar Logo
-                            </button>
-                            <input type="file" id="cfg-logo-file-input" accept="image/*" class="d-none">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="logo-preview-box rounded-3 border bg-light d-flex align-items-center justify-content-center overflow-hidden shadow-sm" style="width: 48px; height: 48px; shrink: 0;">
+                                <img id="cfg-logo-preview" src="https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff" alt="Logo Preview" class="w-100 h-100 object-fit-cover">
+                            </div>
+                            <div class="input-group flex-grow-1">
+                                <input type="text" id="cfg-pdf-logo-url" class="form-control shadow-none" placeholder="URL del logo o sube un archivo..." value="https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff">
+                                <button type="button" class="btn btn-outline-secondary d-inline-flex align-items-center gap-1" id="btn-upload-logo" onclick="document.getElementById('cfg-logo-file-input').click()">
+                                    <i class="bi bi-upload"></i> Subir
+                                </button>
+                                <input type="file" id="cfg-logo-file-input" accept="image/*" class="d-none">
+                            </div>
                         </div>
                     </div>
                     <div class="col-12">

@@ -2268,6 +2268,8 @@ function initConfiguracionView() {
         setVal('cfg-pdf-mp', mp);
         setVal('cfg-pdf-phone', phone);
         setVal('cfg-pdf-logo-url', logoUrl);
+        const logoPreview = document.getElementById('cfg-logo-preview');
+        if (logoPreview && logoUrl) logoPreview.src = logoUrl;
         setVal('cfg-pdf-disclaimer', disclaimer);
         setVal('cfg-clinic-address', address);
         setVal('cfg-clinic-lat', lat);
@@ -2310,17 +2312,29 @@ function initConfiguracionView() {
         });
     }
 
-    // Carga de archivo de logo en base64
+    // Carga de archivo de logo en base64 y actualización de vista previa
+    const updateLogoPreview = (url) => {
+        const previewImg = document.getElementById('cfg-logo-preview');
+        if (previewImg && url) {
+            previewImg.src = url;
+        }
+    };
+
+    const logoUrlInput = document.getElementById('cfg-pdf-logo-url');
+    if (logoUrlInput) {
+        logoUrlInput.addEventListener('input', (e) => updateLogoPreview(e.target.value.trim()));
+    }
+
     if (inputLogoFile) {
         inputLogoFile.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    const logoUrlInput = document.getElementById('cfg-pdf-logo-url');
                     if (logoUrlInput) {
                         logoUrlInput.value = event.target.result;
                         localStorage.setItem('vm_pdf_logo_url', event.target.result);
+                        updateLogoPreview(event.target.result);
                         showToast('🖼️ Logo actualizado correctamente.', 'success');
                     }
                 };
