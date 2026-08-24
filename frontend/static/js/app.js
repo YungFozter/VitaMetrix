@@ -2421,9 +2421,10 @@ function initClinicMap() {
     if (!clinicLeafletMap) {
         clinicLeafletMap = L.map('clinic-map').setView([savedLat, savedLng], 17); // Zoom 17x street level precision
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             maxZoom: 19,
-            attribution: '© OpenStreetMap'
+            subdomains: 'abcd',
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
         }).addTo(clinicLeafletMap);
 
         clinicMarker = L.marker([savedLat, savedLng], { 
