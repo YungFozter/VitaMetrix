@@ -2310,15 +2310,6 @@ function initConfiguracionView() {
         });
     }
 
-    // Toggle de tema claro / oscuro
-    if (themeToggle) {
-        themeToggle.addEventListener('change', (e) => {
-            const isDark = e.target.checked;
-            localStorage.setItem('vm_dark_theme', isDark);
-            applyThemeMode(isDark);
-        });
-    }
-
     // Carga de archivo de logo en base64
     if (inputLogoFile) {
         inputLogoFile.addEventListener('change', (e) => {
