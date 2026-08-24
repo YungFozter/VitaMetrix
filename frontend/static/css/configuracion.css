@@ -40,3 +40,45 @@
     object-fit: cover;
     border: 1px solid rgba(0, 180, 216, 0.25);
 }
+
+/* Adaptación Responsiva para Pantallas de Teléfono Móvil */
+@media (max-width: 768px) {
+    .dash-top-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0.75rem !important;
+    }
+
+    .dash-top-actions {
+        width: 100% !important;
+    }
+
+    .dash-top-actions button {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 0.75rem !important;
+    }
+
+    .clinic-map-container,
+    #google-map-iframe {
+        height: 260px !important;
+    }
+
+    /* Selector de tipos de mapa en móvil */
+    #configuracion-view .btn-group {
+        width: 100%;
+        margin-top: 0.5rem;
+    }
+
+    #configuracion-view .btn-group button {
+        flex: 1;
+        font-size: 0.75rem !important;
+        padding: 0.4rem 0.5rem !important;
+    }
+
+    /* Caja de logo en móvil */
+    .logo-preview-box-wrap {
+        flex-direction: column;
+        align-items: stretch;
+    }
+}
