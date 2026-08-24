@@ -280,38 +280,56 @@
     margin-top: 1.2rem;
 }
 
-/* --- TOAST NOTIFICATIONS --- */
+/* --- TOAST NOTIFICATIONS (Notificación Lateral Animada) --- */
+#toast-container,
 .toast-container {
     position: fixed;
-    bottom: 2rem;
+    top: 2rem;
     right: 2rem;
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
-    z-index: 10000;
+    gap: 0.85rem;
+    z-index: 100000;
     pointer-events: none;
 }
 
 .toast {
-    background: #ffffff;
-    border-radius: 14px;
-    padding: 0.9rem 1.3rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.04);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    border-radius: 16px;
+    padding: 1rem 1.4rem;
+    box-shadow: 0 16px 32px -8px rgba(15, 23, 42, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05);
     display: flex;
     align-items: center;
-    gap: 0.8rem;
-    font-size: 0.9rem;
-    font-weight: 500;
+    gap: 0.85rem;
+    font-size: 0.92rem;
+    font-weight: 600;
     color: #1e2a41;
     pointer-events: auto;
-    animation: toastSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateX(110%) scale(0.95);
+    transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.toast.success { border-left: 4px solid #10b981; }
-.toast.error { border-left: 4px solid #ef4444; }
-.toast.info { border-left: 4px solid #00b4d8; }
+.toast.show {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+}
 
-@keyframes toastSlideIn {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+.toast.success {
+    border-left: 5px solid #10b981;
+    background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(236,253,245,0.95) 100%);
+    color: #065f46;
+}
+
+.toast.error {
+    border-left: 5px solid #ef4444;
+    background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(254,242,242,0.95) 100%);
+    color: #991b1b;
+}
+
+.toast.info {
+    border-left: 5px solid #00b4d8;
+    background: linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(240,253,250,0.95) 100%);
+    color: #134e4a;
 }
