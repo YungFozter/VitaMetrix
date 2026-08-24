@@ -2320,9 +2320,33 @@ function initConfiguracionView() {
         }
     };
 
-    const logoUrlInput = document.getElementById('cfg-pdf-logo-url');
-    if (logoUrlInput) {
-        logoUrlInput.addEventListener('input', (e) => updateLogoPreview(e.target.value.trim()));
+    // Abrir modal de vista previa completa (Lightbox) al hacer clic en la miniatura del logo
+    const previewBox = document.getElementById('cfg-logo-preview-container');
+    const lightboxModal = document.getElementById('logo-lightbox-modal');
+    const lightboxImg = document.getElementById('logo-lightbox-img');
+    const lightboxCloseBtn = document.getElementById('logo-lightbox-close');
+    const lightboxBtnClose = document.getElementById('logo-lightbox-btn-close');
+
+    const closeLogoLightbox = () => {
+        if (lightboxModal) lightboxModal.classList.add('hidden');
+    };
+
+    if (previewBox) {
+        previewBox.addEventListener('click', () => {
+            const previewImg = document.getElementById('cfg-logo-preview');
+            if (previewImg && lightboxImg && lightboxModal) {
+                lightboxImg.src = previewImg.src;
+                lightboxModal.classList.remove('hidden');
+            }
+        });
+    }
+
+    if (lightboxCloseBtn) lightboxCloseBtn.addEventListener('click', closeLogoLightbox);
+    if (lightboxBtnClose) lightboxBtnClose.addEventListener('click', closeLogoLightbox);
+    if (lightboxModal) {
+        lightboxModal.addEventListener('click', (e) => {
+            if (e.target === lightboxModal) closeLogoLightbox();
+        });
     }
 
     if (inputLogoFile) {
