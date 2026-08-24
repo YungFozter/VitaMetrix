@@ -1,8 +1,4 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Aplicar tema guardado inmediatamente
-    if (localStorage.getItem('vm_dark_theme') === 'true') {
-        document.body.classList.add('vm-dark-mode');
-    }
     initDemoDataInjector();
     initFieldInfoPopups();
     initMobileSidebar();
