@@ -1252,6 +1252,108 @@ def get_stock_movements():
         movs = _LOCAL_STOCK_MOVEMENTS
     return jsonify(movs[:50])
 
+# --- GESTIÓN MAESTRA DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) ---
+
+_DEFAULT_STOCK_CATEGORIES = [
+    {"name": "Insumos BIA", "icon": "🩺", "description": "Electrodos, gel conductor, cables y accesorios de bioimpedancia"},
+    {"name": "Suplementos Nutricionales", "icon": "💊", "description": "Proteínas, creatina, aminoácidos, vitaminas y minerales"},
+    {"name": "Material Clínico e Higiene", "icon": "🧼", "description": "Toallitas con alcohol, guantes, papel camilla y desinfección"},
+    {"name": "Accesorios y Equipos", "icon": "📦", "description": "Cintas métricas, tallímetros, calipers y básculas"},
+    {"name": "Medicamentos / Fármacos", "icon": "💉", "description": "Fármacos clínicos de uso o prescripción en consulta"},
+    {"name": "Material de Oficina", "icon": "📝", "description": "Fichas, papel de impresión y suministros administrativos"},
+    {"name": "Otros", "icon": "🏷️", "description": "Artículos varios no clasificados"}
+]
+
+_DEFAULT_STOCK_UNITS = [
+    {"name": "Pack", "category": "Conteo"},
+    {"name": "Unidad (u)", "category": "Conteo"},
+    {"name": "Frasco / Bote", "category": "Conteo"},
+    {"name": "Caja", "category": "Conteo"},
+    {"name": "Tabletas", "category": "Posología"},
+    {"name": "Cápsulas", "category": "Posología"},
+    {"name": "Sobres", "category": "Posología"},
+    {"name": "Ampollas", "category": "Posología"},
+    {"name": "Mililitros (ml)", "category": "Volumen"},
+    {"name": "Litros (L)", "category": "Volumen"},
+    {"name": "Gramos (g)", "category": "Peso"},
+    {"name": "Kilogramos (kg)", "category": "Peso"}
+]
+
+@app.route('/api/stock/taxonomies', methods=['GET'])
+def get_stock_taxonomies():
+    items = []
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('category, unit').execute()
+            if res.data is not None:
+                items = res.data
+        except Exception as e:
+            logging.warning("Error al consultar stock_items para taxonomías: %s", e)
+    if not items:
+        items = _LOCAL_STOCK_ITEMS
+
+    cat_counts = {}
+    unit_counts = {}
+    for it in items:
+        c = (it.get('category') or 'Otros').strip()
+        u = (it.get('unit') or 'Unidad').strip()
+        cat_counts[c] = cat_counts.get(c, 0) + 1
+        unit_counts[u] = unit_counts.get(u, 0) + 1
+
+    categories = []
+    seen_cats = set()
+    for cat in _DEFAULT_STOCK_CATEGORIES:
+        seen_cats.add(cat['name'].lower())
+        categories.append({
+            "name": cat['name'],
+            "icon": cat.get('icon', '📦'),
+            "description": cat.get('description', ''),
+            "count": cat_counts.get(cat['name'], 0)
+        })
+
+    for c_name, count in cat_counts.items():
+        if c_name.lower() not in seen_cats:
+            categories.append({
+                "name": c_name,
+                "icon": "📦",
+                "description": "Categoría personalizada",
+                "count": count
+            })
+
+    return jsonify({
+        "categories": categories,
+        "units": _DEFAULT_STOCK_UNITS
+    })
+
+@app.route('/api/stock/categories/rename', methods=['PUT'])
+def rename_stock_category():
+    data = request.json or {}
+    old_name = _clean_str(data.get('old_name'))
+    new_name = _clean_str(data.get('new_name'), max_len=80)
+
+    if not old_name or not new_name:
+        return jsonify({"error": "El nombre actual y el nuevo nombre son obligatorios"}), 400
+
+    # Actualizar en cascada en Supabase
+    if supabase:
+        try:
+            supabase.table('stock_items').update({"category": new_name, "updated_at": datetime.now(timezone.utc).isoformat()}).eq('category', old_name).execute()
+        except Exception as e:
+            logging.warning("Error al renombrar categoría en Supabase: %s", e)
+
+    # Actualizar en cascada en Local
+    updated_count = 0
+    for item in _LOCAL_STOCK_ITEMS:
+        if (item.get('category') or '').strip().lower() == old_name.lower():
+            item['category'] = new_name
+            updated_count += 1
+
+    for cat in _DEFAULT_STOCK_CATEGORIES:
+        if cat['name'].lower() == old_name.lower():
+            cat['name'] = new_name
+
+    return jsonify({"success": True, "updated_count": updated_count, "message": f"Categoría actualizada de '{old_name}' a '{new_name}'"})
+
 # --- CHATBOT WEBHOOK (WhatsApp / Telegram Automation) ---
 
 @app.route('/api/bot/webhook', methods=['POST', 'GET'])

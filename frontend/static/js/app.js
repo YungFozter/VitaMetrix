@@ -4145,6 +4145,7 @@ function initStockModule() {
     // Init Modals
     initStockMovementModal();
     initStockHistoryModal();
+    initStockTaxonomyModal();
 }
 
 async function fetchStockItems() {
@@ -4670,4 +4671,206 @@ async function openStockHistoryModal(item) {
         console.error(err);
         listEl.innerHTML = '<div class="text-center py-4 text-danger">Error al cargar historial de movimientos.</div>';
     }
+}
+
+// --- MODAL DE GESTIÓN DE TAXONOMÍAS (CATEGORÍAS Y U/M) ---
+let stockTaxonomiesData = { categories: [], units: [] };
+
+function initStockTaxonomyModal() {
+    const modal = document.getElementById('stock-taxonomy-modal');
+    if (!modal) return;
+
+    const btnOpen = document.getElementById('btn-open-stock-taxonomies');
+    const btnClose = document.getElementById('stock-tax-modal-close');
+    const btnFooterClose = document.getElementById('stock-tax-btn-close');
+
+    const tabCatsBtn = document.getElementById('tab-tax-cats-btn');
+    const tabUnitsBtn = document.getElementById('tab-tax-units-btn');
+    const tabCatsContent = document.getElementById('tab-tax-cats-content');
+    const tabUnitsContent = document.getElementById('tab-tax-units-content');
+
+    const openModal = () => {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+        fetchStockTaxonomies();
+    };
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    };
+
+    if (btnOpen) btnOpen.addEventListener('click', openModal);
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnFooterClose) btnFooterClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Switch Tabs
+    if (tabCatsBtn && tabUnitsBtn) {
+        tabCatsBtn.addEventListener('click', () => {
+            tabCatsBtn.classList.add('active');
+            tabUnitsBtn.classList.remove('active');
+            tabCatsContent?.classList.remove('d-none');
+            tabUnitsContent?.classList.add('d-none');
+        });
+
+        tabUnitsBtn.addEventListener('click', () => {
+            tabUnitsBtn.classList.add('active');
+            tabCatsBtn.classList.remove('active');
+            tabUnitsContent?.classList.remove('d-none');
+            tabCatsContent?.classList.add('d-none');
+        });
+    }
+
+    // Agregar Nueva Categoría
+    const btnAddCat = document.getElementById('btn-add-cat');
+    const inputNewCat = document.getElementById('new-cat-name');
+
+    if (btnAddCat && inputNewCat) {
+        btnAddCat.addEventListener('click', async () => {
+            const catName = inputNewCat.value.trim();
+            if (!catName) {
+                showToast('Ingresa un nombre para la categoría', 'error');
+                return;
+            }
+
+            // Normalización antiduplicados
+            const exists = stockTaxonomiesData.categories.some(c => c.name.toLowerCase() === catName.toLowerCase());
+            if (exists) {
+                showToast(`⚠️ La categoría "${catName}" ya existe en el catálogo`, 'info');
+                return;
+            }
+
+            stockTaxonomiesData.categories.push({
+                name: catName,
+                icon: '📦',
+                description: 'Categoría personalizada',
+                count: 0
+            });
+
+            inputNewCat.value = '';
+            showToast(`✅ Categoría "${catName}" agregada al catálogo`, 'success');
+            renderTaxonomyCategories();
+            updateStockCategoryOptions(allStockItems);
+        });
+    }
+}
+
+async function fetchStockTaxonomies() {
+    try {
+        const res = await fetch('/api/stock/taxonomies');
+        if (res.ok) {
+            stockTaxonomiesData = await res.json();
+            renderTaxonomyCategories();
+            renderTaxonomyUnits();
+        }
+    } catch (err) {
+        console.error('Error al cargar taxonomías de stock:', err);
+    }
+}
+
+function renderTaxonomyCategories() {
+    const listEl = document.getElementById('stock-tax-cat-list');
+    if (!listEl || !stockTaxonomiesData?.categories) return;
+
+    listEl.replaceChildren();
+
+    stockTaxonomiesData.categories.forEach(cat => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
+
+        const leftDiv = document.createElement('div');
+        leftDiv.className = 'd-flex align-items-center gap-2 text-truncate flex-grow-1';
+        leftDiv.innerHTML = `
+            <span class="fs-5">${cat.icon || '📦'}</span>
+            <div class="text-truncate">
+                <div class="fw-bold text-navy text-truncate cat-name-label">${escapeHtml(cat.name)}</div>
+                <div class="text-muted small" style="font-size: 0.72rem;">${cat.count} ${cat.count === 1 ? 'producto' : 'productos'} vinculados</div>
+            </div>
+        `;
+
+        const rightDiv = document.createElement('div');
+        rightDiv.className = 'd-inline-flex align-items-center gap-1.5';
+
+        // Botón Renombrar en Cascada
+        const btnRename = document.createElement('button');
+        btnRename.type = 'button';
+        btnRename.className = 'btn btn-sm btn-outline-secondary py-1 px-2 text-dark font-semibold';
+        btnRename.style.fontSize = '0.75rem';
+        btnRename.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Renombrar';
+        btnRename.title = 'Renombrar y actualizar productos en cascada';
+
+        btnRename.addEventListener('click', () => {
+            promptRenameCategory(cat.name);
+        });
+
+        rightDiv.appendChild(btnRename);
+        itemDiv.append(leftDiv, rightDiv);
+        listEl.appendChild(itemDiv);
+    });
+}
+
+function promptRenameCategory(oldName) {
+    const newName = prompt(`Renombrar categoría "${oldName}". Todos los productos asociados se actualizarán automáticamente:`, oldName);
+    if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+
+    renameCategoryCascade(oldName, newName.trim());
+}
+
+async function renameCategoryCascade(oldName, newName) {
+    try {
+        const res = await fetch('/api/stock/categories/rename', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ old_name: oldName, new_name: newName })
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+            showToast(`✅ Categoría actualizada a "${newName}" (${result.updated_count} productos actualizados)`, 'success');
+            fetchStockTaxonomies();
+            fetchStockItems(); // Recargar tabla y filtros
+        } else {
+            showToast(result.error || 'Error al renombrar categoría', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+function renderTaxonomyUnits() {
+    const listEl = document.getElementById('stock-tax-unit-list');
+    if (!listEl || !stockTaxonomiesData?.units) return;
+
+    listEl.replaceChildren();
+
+    // Agrupar por familia
+    const families = {};
+    stockTaxonomiesData.units.forEach(u => {
+        const fam = u.category || 'Otras';
+        if (!families[fam]) families[fam] = [];
+        families[fam].push(u.name);
+    });
+
+    Object.entries(families).forEach(([famName, unitList]) => {
+        const famCard = document.createElement('div');
+        famCard.className = 'p-2.5 bg-white rounded-3 border mb-1';
+
+        let famIcon = '📦';
+        if (famName === 'Conteo') famIcon = '🔢';
+        if (famName === 'Posología') famIcon = '💊';
+        if (famName === 'Volumen') famIcon = '🧪';
+        if (famName === 'Peso') famIcon = '⚖️';
+
+        famCard.innerHTML = `
+            <div class="fw-bold text-navy small mb-1.5">${famIcon} Familia: ${famName}</div>
+            <div class="d-flex flex-wrap gap-1.5">
+                ${unitList.map(u => `<span class="badge bg-light text-secondary border fw-semibold px-2.5 py-1" style="font-size: 0.76rem;">${escapeHtml(u)}</span>`).join('')}
+            </div>
+        `;
+        listEl.appendChild(famCard);
+    });
 }

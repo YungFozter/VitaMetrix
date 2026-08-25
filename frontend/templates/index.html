@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=88">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=89">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -898,6 +898,72 @@
         </div>
     </div>
 
+    <!-- MODAL: GESTIÓN DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) -->
+    <div id="stock-taxonomy-modal" class="modal-backdrop hidden" style="display: none; z-index: 1060;">
+        <div class="modal-dialog-custom bento-card p-4 shadow-xl" style="max-width: 620px; width: 92%;">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-tags-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h4 class="display-font text-navy fw-bold fs-5 m-0">Catálogo de Categorías y Unidades</h4>
+                        <div class="text-muted small">Estandariza nomenclaturas y gestiona en cascada</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close" aria-label="Cerrar"></button>
+            </div>
+
+            <!-- Tabs de Navegación del Modal -->
+            <ul class="nav nav-pills mb-3 gap-2" id="stock-tax-tabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active small py-1.5 px-3 rounded-pill fw-semibold" id="tab-tax-cats-btn" type="button">
+                        📂 Categorías Maestras
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link small py-1.5 px-3 rounded-pill fw-semibold" id="tab-tax-units-btn" type="button">
+                        ⚖️ Unidades de Medida (U/M)
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Contenido Tab 1: Categorías -->
+            <div id="tab-tax-cats-content">
+                <!-- Formulario Agregar Categoría -->
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Categoría</label>
+                    <div class="input-group">
+                        <input type="text" id="new-cat-name" class="form-control shadow-none small" placeholder="Ej: Fórmulas Magistrales, Inyectables...">
+                        <button type="button" id="btn-add-cat" class="btn btn-primary btn-sm px-3 fw-semibold">
+                            <i class="bi bi-plus-lg me-1"></i> Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Categorías con Conteo y Edición -->
+                <div class="text-muted small fw-bold text-uppercase mb-2">Categorías Activas en Sistema</div>
+                <div id="stock-tax-cat-list" class="d-flex flex-column gap-2" style="max-height: 240px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Contenido Tab 2: Unidades de Medida -->
+            <div id="tab-tax-units-content" class="d-none">
+                <div class="text-muted small mb-2">Familias de Unidades Clínicas Estandarizadas:</div>
+                <div id="stock-tax-unit-list" class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+            </div>
+
+            <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
+                <button type="button" id="stock-tax-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                    Listo
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Leaflet JS (mapa interactivo GPS consultorio) -->
@@ -905,6 +971,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=88"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=89"></script>
 </body>
 </html>
