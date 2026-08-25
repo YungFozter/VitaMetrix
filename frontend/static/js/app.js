@@ -4816,6 +4816,26 @@ function initStockTaxonomyModal() {
             renderTaxonomyUnits(pill.dataset.family || 'all');
         });
     });
+
+    // Controles del Modal de Renombrar Categoría
+    const btnCloseRename = document.getElementById('btn-close-rename-modal');
+    const btnCancelRename = document.getElementById('btn-cancel-rename-modal');
+    const btnConfirmRename = document.getElementById('btn-confirm-rename-modal');
+    const inputRename = document.getElementById('rename-modal-input');
+
+    if (btnCloseRename) btnCloseRename.addEventListener('click', closeRenameCategoryModal);
+    if (btnCancelRename) btnCancelRename.addEventListener('click', closeRenameCategoryModal);
+    if (btnConfirmRename) btnConfirmRename.addEventListener('click', handleConfirmRenameCategory);
+    if (inputRename) {
+        inputRename.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleConfirmRenameCategory();
+            } else if (e.key === 'Escape') {
+                closeRenameCategoryModal();
+            }
+        });
+    }
 }
 
 async function fetchStockTaxonomies() {
@@ -4873,7 +4893,7 @@ function renderTaxonomyCategories(filterText = '') {
         btnRename.setAttribute('aria-label', 'Renombrar categoría');
 
         btnRename.addEventListener('click', () => {
-            promptRenameCategory(cat.name);
+            openRenameCategoryModal(cat.name);
         });
 
         // Botón Eliminar Categoría (Solo Icono)
@@ -4917,11 +4937,50 @@ function renderTaxonomyCategories(filterText = '') {
     });
 }
 
-function promptRenameCategory(oldName) {
-    const newName = prompt(`Renombrar categoría "${oldName}". Todos los productos asociados se actualizarán automáticamente:`, oldName);
-    if (!newName || newName.trim() === '' || newName.trim() === oldName) return;
+function openRenameCategoryModal(oldName) {
+    const modal = document.getElementById('modal-rename-category');
+    const displayOld = document.getElementById('rename-modal-old-name-display');
+    const hiddenOld = document.getElementById('rename-modal-old-name-hidden');
+    const inputNew = document.getElementById('rename-modal-input');
+    if (!modal || !inputNew) return;
 
-    renameCategoryCascade(oldName, newName.trim());
+    if (displayOld) displayOld.textContent = `"${oldName}"`;
+    if (hiddenOld) hiddenOld.value = oldName;
+    inputNew.value = oldName;
+
+    modal.classList.remove('d-none');
+    setTimeout(() => {
+        inputNew.focus();
+        inputNew.select();
+    }, 60);
+}
+
+function closeRenameCategoryModal() {
+    const modal = document.getElementById('modal-rename-category');
+    if (modal) modal.classList.add('d-none');
+}
+
+async function handleConfirmRenameCategory() {
+    const hiddenOld = document.getElementById('rename-modal-old-name-hidden');
+    const inputNew = document.getElementById('rename-modal-input');
+    if (!hiddenOld || !inputNew) return;
+
+    const oldName = hiddenOld.value.trim();
+    const newName = inputNew.value.trim();
+
+    if (!newName) {
+        showToast('El nombre de la categoría no puede estar vacío', 'error');
+        inputNew.focus();
+        return;
+    }
+
+    if (newName.toLowerCase() === oldName.toLowerCase()) {
+        closeRenameCategoryModal();
+        return;
+    }
+
+    closeRenameCategoryModal();
+    await renameCategoryCascade(oldName, newName);
 }
 
 async function renameCategoryCascade(oldName, newName) {
@@ -4935,8 +4994,8 @@ async function renameCategoryCascade(oldName, newName) {
 
         if (res.ok && result.success) {
             showToast(`✅ Categoría actualizada a "${newName}" (${result.updated_count} productos actualizados)`, 'success');
-            fetchStockTaxonomies();
-            fetchStockItems(); // Recargar tabla y filtros
+            await fetchStockTaxonomies();
+            await fetchStockItems(); // Recargar tabla y filtros
         } else {
             showToast(result.error || 'Error al renombrar categoría', 'error');
         }

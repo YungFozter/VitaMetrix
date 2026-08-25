@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=103">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=104">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -1009,6 +1009,42 @@
         </div>
     </div>
 
+    <!-- Modal Personalizado Renombrar Categoría -->
+    <div id="modal-rename-category" class="modal-overlay d-none" style="z-index: 1065;">
+        <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                        <i class="bi bi-pencil-square"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-navy mb-0">Renombrar Categoría</h6>
+                        <small class="text-muted" style="font-size: 0.75rem;">Actualización en tiempo real y en cascada</small>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-rename-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="mb-3">
+                <p class="text-secondary small mb-2.5">
+                    Ingresa el nuevo nombre para <strong id="rename-modal-old-name-display" class="text-navy"></strong>. Todos los productos asociados se actualizarán automáticamente:
+                </p>
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nuevo Nombre <span class="text-danger">*</span></label>
+                <input type="text" id="rename-modal-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Insumos de Laboratorio">
+                <input type="hidden" id="rename-modal-old-name-hidden">
+            </div>
+
+            <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+                <button type="button" id="btn-cancel-rename-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirm-rename-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Leaflet JS (mapa interactivo GPS consultorio) -->
@@ -1016,6 +1052,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=103"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=104"></script>
 </body>
 </html>
