@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=105">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=106">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -908,28 +908,24 @@
                     </div>
                     <div>
                         <h4 class="display-font text-navy fw-bold fs-5 m-0">Catálogo de Categorías y Unidades</h4>
-                        <div class="text-muted small">Estandariza nomenclaturas y gestiona en cascada</div>
                     </div>
                 </div>
                 <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close" aria-label="Cerrar"></button>
             </div>
 
-            <!-- Tabs de Navegación del Modal -->
-            <ul class="nav nav-pills mb-3 gap-2" id="stock-tax-tabs" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active small py-1.5 px-3 rounded-pill fw-semibold" id="tab-tax-cats-btn" type="button">
-                        📂 Categorías Maestras
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link small py-1.5 px-3 rounded-pill fw-semibold" id="tab-tax-units-btn" type="button">
-                        ⚖️ Unidades de Medida (U/M)
-                    </button>
-                </li>
-            </ul>
+            <!-- Selector Segmentado Horizontal con Animación Deslizante -->
+            <div class="stock-segmented-control" id="stock-tax-segmented-control" data-active="cats">
+                <div class="stock-segmented-slider"></div>
+                <button type="button" class="stock-segmented-btn active" id="tab-tax-cats-btn">
+                    <i class="bi bi-folder2-open"></i> Categorías
+                </button>
+                <button type="button" class="stock-segmented-btn" id="tab-tax-units-btn">
+                    <i class="bi bi-rulers"></i> Unidades de Medida
+                </button>
+            </div>
 
             <!-- Contenido Tab 1: Categorías -->
-            <div id="tab-tax-cats-content">
+            <div id="tab-tax-cats-content" class="stock-tab-panel">
                 <!-- Formulario Agregar Categoría -->
                 <div class="p-3 bg-light rounded-3 border mb-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Categoría</label>
@@ -957,7 +953,7 @@
             </div>
 
             <!-- Contenido Tab 2: Unidades de Medida -->
-            <div id="tab-tax-units-content" class="d-none">
+            <div id="tab-tax-units-content" class="stock-tab-panel d-none">
                 <!-- Formulario Agregar Unidad de Medida -->
                 <div class="p-3 bg-light rounded-3 border mb-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Unidad de Medida (U/M)</label>
@@ -1088,6 +1084,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=105"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=106"></script>
 </body>
 </html>

@@ -4709,11 +4709,13 @@ function initStockTaxonomyModal() {
         if (e.target === modal) closeModal();
     });
 
-    // Switch Tabs
+    // Switch Tabs con Segmented Control Deslizante
+    const segmentedControl = document.getElementById('stock-tax-segmented-control');
     if (tabCatsBtn && tabUnitsBtn) {
         tabCatsBtn.addEventListener('click', () => {
             tabCatsBtn.classList.add('active');
             tabUnitsBtn.classList.remove('active');
+            segmentedControl?.setAttribute('data-active', 'cats');
             tabCatsContent?.classList.remove('d-none');
             tabUnitsContent?.classList.add('d-none');
         });
@@ -4721,6 +4723,7 @@ function initStockTaxonomyModal() {
         tabUnitsBtn.addEventListener('click', () => {
             tabUnitsBtn.classList.add('active');
             tabCatsBtn.classList.remove('active');
+            segmentedControl?.setAttribute('data-active', 'units');
             tabUnitsContent?.classList.remove('d-none');
             tabCatsContent?.classList.add('d-none');
         });
