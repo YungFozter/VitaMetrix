@@ -1,0 +1,89 @@
+{
+  "categories": [
+    {
+      "name": "Insumos BIA",
+      "icon": "🩺",
+      "description": "Electrodos, gel conductor, cables y accesorios de bioimpedancia"
+    },
+    {
+      "name": "Suplementos Nutricionales",
+      "icon": "💊",
+      "description": "Proteínas, creatina, aminoácidos, vitaminas y minerales"
+    },
+    {
+      "name": "Material Clínico e Higiene",
+      "icon": "🧼",
+      "description": "Toallitas con alcohol, guantes, papel camilla y desinfección"
+    },
+    {
+      "name": "Accesorios y Equipos",
+      "icon": "📦",
+      "description": "Cintas métricas, tallímetros, calipers y básculas"
+    },
+    {
+      "name": "Medicamentos / Fármacos",
+      "icon": "💉",
+      "description": "Fármacos clínicos de uso o prescripción en consulta"
+    },
+    {
+      "name": "Material de Oficina",
+      "icon": "📝",
+      "description": "Fichas, papel de impresión y suministros administrativos"
+    },
+    {
+      "name": "Otros",
+      "icon": "🏷️",
+      "description": "Artículos varios no clasificados"
+    }
+  ],
+  "units": [
+    {
+      "name": "Pack",
+      "category": "Conteo"
+    },
+    {
+      "name": "Unidad (u)",
+      "category": "Conteo"
+    },
+    {
+      "name": "Frasco / Bote",
+      "category": "Conteo"
+    },
+    {
+      "name": "Caja",
+      "category": "Conteo"
+    },
+    {
+      "name": "Tabletas",
+      "category": "Posología"
+    },
+    {
+      "name": "Cápsulas",
+      "category": "Posología"
+    },
+    {
+      "name": "Sobres",
+      "category": "Posología"
+    },
+    {
+      "name": "Ampollas",
+      "category": "Posología"
+    },
+    {
+      "name": "Mililitros (ml)",
+      "category": "Volumen"
+    },
+    {
+      "name": "Litros (L)",
+      "category": "Volumen"
+    },
+    {
+      "name": "Gramos (g)",
+      "category": "Peso"
+    },
+    {
+      "name": "Kilogramos (kg)",
+      "category": "Peso"
+    }
+  ]
+}

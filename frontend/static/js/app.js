@@ -4738,24 +4738,25 @@ function initStockTaxonomyModal() {
                 return;
             }
 
-            // Normalización antiduplicados
-            const exists = stockTaxonomiesData.categories.some(c => c.name.toLowerCase() === catName.toLowerCase());
-            if (exists) {
-                showToast(`⚠️ La categoría "${catName}" ya existe en el catálogo`, 'info');
-                return;
+            try {
+                const res = await fetch('/api/stock/taxonomies/category', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: catName, icon: '📦' })
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    inputNewCat.value = '';
+                    showToast(`✅ Categoría "${catName}" guardada en el catálogo`, 'success');
+                    await fetchStockTaxonomies();
+                    updateStockCategoryOptions(allStockItems);
+                } else {
+                    showToast(result.error || 'No se pudo guardar la categoría', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión con el servidor', 'error');
             }
-
-            stockTaxonomiesData.categories.push({
-                name: catName,
-                icon: '📦',
-                description: 'Categoría personalizada',
-                count: 0
-            });
-
-            inputNewCat.value = '';
-            showToast(`✅ Categoría "${catName}" agregada al catálogo`, 'success');
-            renderTaxonomyCategories();
-            updateStockCategoryOptions(allStockItems);
         });
     }
 
@@ -4765,7 +4766,7 @@ function initStockTaxonomyModal() {
     const selectNewUnitFamily = document.getElementById('new-unit-family');
 
     if (btnAddUnit && inputNewUnit) {
-        btnAddUnit.addEventListener('click', () => {
+        btnAddUnit.addEventListener('click', async () => {
             const unitName = inputNewUnit.value.trim();
             const fam = selectNewUnitFamily ? (selectNewUnitFamily.value.trim() || 'General') : 'General';
 
@@ -4774,20 +4775,24 @@ function initStockTaxonomyModal() {
                 return;
             }
 
-            const exists = stockTaxonomiesData.units.some(u => u.name.toLowerCase() === unitName.toLowerCase());
-            if (exists) {
-                showToast(`⚠️ La unidad "${unitName}" ya existe en el catálogo`, 'info');
-                return;
+            try {
+                const res = await fetch('/api/stock/taxonomies/unit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: unitName, category: fam })
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    inputNewUnit.value = '';
+                    showToast(`✅ Unidad de medida "${unitName}" (${fam}) guardada en el catálogo`, 'success');
+                    await fetchStockTaxonomies();
+                } else {
+                    showToast(result.error || 'No se pudo guardar la unidad', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión con el servidor', 'error');
             }
-
-            stockTaxonomiesData.units.push({
-                name: unitName,
-                category: fam
-            });
-
-            inputNewUnit.value = '';
-            showToast(`✅ Unidad de medida "${unitName}" (${fam}) agregada al catálogo`, 'success');
-            renderTaxonomyUnits();
         });
     }
 
@@ -4869,7 +4874,40 @@ function renderTaxonomyCategories(filterText = '') {
             promptRenameCategory(cat.name);
         });
 
-        rightDiv.appendChild(btnRename);
+        // Botón Eliminar Categoría
+        const btnDelete = document.createElement('button');
+        btnDelete.type = 'button';
+        btnDelete.className = 'btn btn-sm btn-outline-danger py-1 px-2 font-semibold';
+        btnDelete.style.fontSize = '0.75rem';
+        btnDelete.innerHTML = '<i class="bi bi-trash3 me-1"></i> Eliminar';
+        btnDelete.title = 'Eliminar categoría del catálogo';
+
+        btnDelete.addEventListener('click', async () => {
+            const confirmMsg = cat.count > 0
+                ? `¿Eliminar la categoría "${cat.name}"? Los ${cat.count} productos vinculados se reasignarán a "Otros".`
+                : `¿Eliminar la categoría "${cat.name}" del catálogo?`;
+
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`/api/stock/taxonomies/category/${encodeURIComponent(cat.name)}`, {
+                    method: 'DELETE'
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    showToast(`🗑️ Categoría "${cat.name}" eliminada`, 'success');
+                    await fetchStockTaxonomies();
+                    await fetchStockItems();
+                } else {
+                    showToast(result.error || 'Error al eliminar categoría', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            }
+        });
+
+        rightDiv.append(btnRename, btnDelete);
         itemDiv.append(leftDiv, rightDiv);
         listEl.appendChild(itemDiv);
     });
@@ -4927,7 +4965,7 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
 
     Object.entries(families).forEach(([famName, unitList]) => {
         const famCard = document.createElement('div');
-        famCard.className = 'p-2.5 bg-white rounded-3 border mb-1';
+        famCard.className = 'p-2.5 bg-white rounded-3 border mb-1.5 shadow-2xs';
 
         let famIcon = '📦';
         if (famName === 'Conteo') famIcon = '🔢';
@@ -4936,12 +4974,45 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
         if (famName === 'Peso') famIcon = '⚖️';
 
         famCard.innerHTML = `
-            <div class="fw-bold text-navy small mb-1.5">${famIcon} Familia: ${famName}</div>
-            <div class="d-flex flex-wrap gap-1.5">
-                ${unitList.map(u => `<span class="badge bg-light text-secondary border fw-semibold px-2.5 py-1" style="font-size: 0.76rem;">${escapeHtml(u)}</span>`).join('')}
-            </div>
+            <div class="fw-bold text-navy small mb-2">${famIcon} Familia: ${escapeHtml(famName)}</div>
+            <div class="d-flex flex-wrap gap-1.5"></div>
         `;
         listEl.appendChild(famCard);
+
+        const unitsContainer = famCard.querySelector('div:last-child');
+        unitList.forEach(u => {
+            const badgeSpan = document.createElement('span');
+            badgeSpan.className = 'badge bg-light text-secondary border fw-semibold px-2.5 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs';
+            badgeSpan.style.fontSize = '0.78rem';
+            badgeSpan.innerHTML = `
+                <span>${escapeHtml(u)}</span>
+                <button type="button" class="btn-close shadow-none" style="font-size: 0.55rem; filter: grayscale(1); opacity: 0.65;" title="Eliminar unidad ${escapeHtml(u)}" aria-label="Eliminar"></button>
+            `;
+
+            const btnClose = badgeSpan.querySelector('button');
+            btnClose.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!confirm(`¿Eliminar la unidad de medida "${u}" del catálogo?`)) return;
+
+                try {
+                    const res = await fetch(`/api/stock/taxonomies/unit/${encodeURIComponent(u)}`, {
+                        method: 'DELETE'
+                    });
+                    const result = await res.json();
+                    if (res.ok && result.success) {
+                        showToast(`🗑️ Unidad "${u}" eliminada`, 'success');
+                        await fetchStockTaxonomies();
+                    } else {
+                        showToast(result.error || 'Error al eliminar unidad', 'error');
+                    }
+                } catch (err) {
+                    console.error(err);
+                    showToast('Error de conexión', 'error');
+                }
+            });
+
+            unitsContainer.appendChild(badgeSpan);
+        });
     });
 }
 

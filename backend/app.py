@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import logging
 import time
 import math
@@ -1256,6 +1257,8 @@ def get_stock_movements():
 
 # --- GESTIÓN MAESTRA DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) ---
 
+_TAXONOMIES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_taxonomies.json")
+
 _DEFAULT_STOCK_CATEGORIES = [
     {"name": "Insumos BIA", "icon": "🩺", "description": "Electrodos, gel conductor, cables y accesorios de bioimpedancia"},
     {"name": "Suplementos Nutricionales", "icon": "💊", "description": "Proteínas, creatina, aminoácidos, vitaminas y minerales"},
@@ -1281,8 +1284,32 @@ _DEFAULT_STOCK_UNITS = [
     {"name": "Kilogramos (kg)", "category": "Peso"}
 ]
 
+def _load_persisted_taxonomies():
+    if os.path.exists(_TAXONOMIES_PATH):
+        try:
+            with open(_TAXONOMIES_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                cats = data.get('categories', _DEFAULT_STOCK_CATEGORIES)
+                units = data.get('units', _DEFAULT_STOCK_UNITS)
+                return cats, units
+        except Exception as e:
+            logging.warning("Error al leer stock_taxonomies.json: %s", e)
+    return list(_DEFAULT_STOCK_CATEGORIES), list(_DEFAULT_STOCK_UNITS)
+
+def _save_persisted_taxonomies(categories, units):
+    try:
+        os.makedirs(os.path.dirname(_TAXONOMIES_PATH), exist_ok=True)
+        with open(_TAXONOMIES_PATH, 'w', encoding='utf-8') as f:
+            json.dump({"categories": categories, "units": units}, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar stock_taxonomies.json: %s", e)
+        return False
+
 @app.route('/api/stock/taxonomies', methods=['GET'])
 def get_stock_taxonomies():
+    persisted_cats, persisted_units = _load_persisted_taxonomies()
+
     items = []
     if supabase:
         try:
@@ -1304,28 +1331,113 @@ def get_stock_taxonomies():
 
     categories = []
     seen_cats = set()
-    for cat in _DEFAULT_STOCK_CATEGORIES:
-        seen_cats.add(cat['name'].lower())
+    for cat in persisted_cats:
+        c_name = cat['name']
+        seen_cats.add(c_name.lower())
         categories.append({
-            "name": cat['name'],
+            "name": c_name,
             "icon": cat.get('icon', '📦'),
             "description": cat.get('description', ''),
-            "count": cat_counts.get(cat['name'], 0)
+            "count": cat_counts.get(c_name, 0)
         })
 
+    # Si hay categorías en items no registradas, incorporarlas
     for c_name, count in cat_counts.items():
         if c_name.lower() not in seen_cats:
-            categories.append({
+            new_cat = {
                 "name": c_name,
                 "icon": "📦",
                 "description": "Categoría personalizada",
                 "count": count
-            })
+            }
+            categories.append(new_cat)
+            persisted_cats.append(new_cat)
+            _save_persisted_taxonomies(persisted_cats, persisted_units)
 
     return jsonify({
         "categories": categories,
-        "units": _DEFAULT_STOCK_UNITS
+        "units": persisted_units
     })
+
+@app.route('/api/stock/taxonomies/category', methods=['POST'])
+def add_stock_category():
+    data = request.json or {}
+    name = _clean_str(data.get('name'), max_len=80)
+    icon = _clean_str(data.get('icon'), max_len=10) or '📦'
+    description = _clean_str(data.get('description'), max_len=200) or 'Categoría personalizada'
+
+    if not name:
+        return jsonify({"error": "El nombre de la categoría es obligatorio"}), 400
+
+    cats, units = _load_persisted_taxonomies()
+    if any(c['name'].lower() == name.lower() for c in cats):
+        return jsonify({"error": f"La categoría '{name}' ya existe"}), 409
+
+    new_cat = {"name": name, "icon": icon, "description": description}
+    cats.append(new_cat)
+    _save_persisted_taxonomies(cats, units)
+
+    return jsonify({"success": True, "category": new_cat}), 201
+
+@app.route('/api/stock/taxonomies/category/<string:cat_name>', methods=['DELETE'])
+def delete_stock_category(cat_name):
+    cat_name = _clean_str(cat_name)
+    if not cat_name:
+        return jsonify({"error": "Nombre de categoría inválido"}), 400
+
+    cats, units = _load_persisted_taxonomies()
+    filtered_cats = [c for c in cats if c['name'].lower() != cat_name.lower()]
+
+    if len(filtered_cats) == len(cats):
+        return jsonify({"error": f"Categoría '{cat_name}' no encontrada"}), 404
+
+    # Reasignar productos que tengan esta categoría a 'Otros' en Supabase y local
+    if supabase:
+        try:
+            supabase.table('stock_items').update({"category": "Otros", "updated_at": datetime.now(timezone.utc).isoformat()}).eq('category', cat_name).execute()
+        except Exception as e:
+            logging.warning("Error reasignando categoría en Supabase al eliminar: %s", e)
+
+    for item in _LOCAL_STOCK_ITEMS:
+        if (item.get('category') or '').strip().lower() == cat_name.lower():
+            item['category'] = 'Otros'
+
+    _save_persisted_taxonomies(filtered_cats, units)
+    return jsonify({"success": True, "message": f"Categoría '{cat_name}' eliminada correctamente"})
+
+@app.route('/api/stock/taxonomies/unit', methods=['POST'])
+def add_stock_unit():
+    data = request.json or {}
+    name = _clean_str(data.get('name'), max_len=50)
+    category = _clean_str(data.get('category') or data.get('family'), max_len=50) or 'General'
+
+    if not name:
+        return jsonify({"error": "El nombre de la unidad es obligatorio"}), 400
+
+    cats, units = _load_persisted_taxonomies()
+    if any(u['name'].lower() == name.lower() for u in units):
+        return jsonify({"error": f"La unidad '{name}' ya existe"}), 409
+
+    new_unit = {"name": name, "category": category}
+    units.append(new_unit)
+    _save_persisted_taxonomies(cats, units)
+
+    return jsonify({"success": True, "unit": new_unit}), 201
+
+@app.route('/api/stock/taxonomies/unit/<string:unit_name>', methods=['DELETE'])
+def delete_stock_unit(unit_name):
+    unit_name = _clean_str(unit_name)
+    if not unit_name:
+        return jsonify({"error": "Nombre de unidad inválido"}), 400
+
+    cats, units = _load_persisted_taxonomies()
+    filtered_units = [u for u in units if u['name'].lower() != unit_name.lower()]
+
+    if len(filtered_units) == len(units):
+        return jsonify({"error": f"Unidad '{unit_name}' no encontrada"}), 404
+
+    _save_persisted_taxonomies(cats, filtered_units)
+    return jsonify({"success": True, "message": f"Unidad '{unit_name}' eliminada correctamente"})
 
 @app.route('/api/stock/categories/rename', methods=['PUT'])
 def rename_stock_category():
@@ -1350,9 +1462,11 @@ def rename_stock_category():
             item['category'] = new_name
             updated_count += 1
 
-    for cat in _DEFAULT_STOCK_CATEGORIES:
+    cats, units = _load_persisted_taxonomies()
+    for cat in cats:
         if cat['name'].lower() == old_name.lower():
             cat['name'] = new_name
+    _save_persisted_taxonomies(cats, units)
 
     return jsonify({"success": True, "updated_count": updated_count, "message": f"Categoría actualizada de '{old_name}' a '{new_name}'"})
 
