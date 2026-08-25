@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=76">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=77">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -223,9 +223,14 @@
                 </div>
                 <p class="info-modal-hint">Este valor lo proporciona el reporte impreso o digital de tu analizador de bioimpedancia.</p>
             </div>
-            <div class="modal-actions info-modal-actions">
-                <button type="button" id="info-modal-btn-cancel" class="btn-secondary">Entendido</button>
-                <button type="button" id="info-modal-btn-go" class="btn-primary">Completar en el Formulario ✍️</button>
+            <div class="modal-actions info-modal-actions pt-3 border-top mt-3 d-flex justify-content-end gap-2">
+                <button type="button" id="info-modal-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs" style="font-size: 0.85rem;">
+                    Entendido
+                </button>
+                <button type="button" id="info-modal-btn-go" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem;">
+                    <i class="bi bi-pencil-fill text-warning"></i>
+                    <span>Completar en el Formulario</span>
+                </button>
             </div>
         </div>
     </div>
@@ -294,9 +299,12 @@
                     <input type="text" id="appt-notes" placeholder="Ej: Ayuno de 2h, ropa ligera, hidratación normal" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                 </div>
 
-                <div class="modal-actions info-modal-actions" style="margin-top: 1.4rem;">
-                    <button type="button" id="appt-btn-cancel" class="btn-secondary">Cancelar</button>
-                    <button type="submit" id="appt-btn-save" class="btn-primary">💾 Guardar Cita</button>
+                <div class="modal-actions info-modal-actions pt-3 border-top mt-3 d-flex justify-content-end gap-2">
+                    <button type="button" id="appt-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs" style="font-size: 0.85rem;">Cancelar</button>
+                    <button type="submit" id="appt-btn-save" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem;">
+                        <i class="bi bi-calendar-check-fill text-warning"></i>
+                        <span>Guardar Cita</span>
+                    </button>
                 </div>
             </form>
         </div>
@@ -671,6 +679,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=76"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=77"></script>
 </body>
 </html>
