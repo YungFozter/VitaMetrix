@@ -1692,31 +1692,133 @@ function renderClientsTable(clientsList) {
         }
         tdContact.appendChild(emailDiv);
 
-        // 4. Última Evaluación (Busca en c.last_evaluation o busca en allEvaluationsData)
-        let lastEval = c.last_evaluation;
-        if (!lastEval && allEvaluationsData && allEvaluationsData.length > 0) {
-            const normCName = normalizeText(c.name);
-            const normCIdp = normalizeText(c.idp);
-            lastEval = allEvaluationsData.find(ev => {
-                const evName = normalizeText(ev.patient_name);
-                const evIdp = normalizeText(ev.patient_idp);
-                return (normCIdp && evIdp && evIdp === normCIdp) || (normCName && evName && evName === normCName);
-            });
-        }
+        // 4. Historial de Evaluaciones con Desplegable y Botón 'Evaluar' sobre el listado
+        const normCName = normalizeText(c.name);
+        const normCIdp = normalizeText(c.idp);
+        const patientEvals = (allEvaluationsData || []).filter(ev => {
+            const evName = normalizeText(ev.patient_name);
+            const evIdp = normalizeText(ev.patient_idp);
+            return (normCIdp && evIdp && evIdp === normCIdp) || (normCName && evName && evName === normCName);
+        });
 
         const tdLastEval = document.createElement('td');
-        if (lastEval) {
-            const score = (lastEval.global_score !== undefined && lastEval.global_score !== null) ? lastEval.global_score : (lastEval.score ?? '--');
-            const dateStr = lastEval.created_at ? new Date(lastEval.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
-            tdLastEval.innerHTML = `
-                <div class="d-inline-flex align-items-center gap-1.5 badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
-                    <i class="bi bi-lightning-charge-fill text-warning"></i>
-                    <span>TRU ${score}/100</span>
-                </div>
-                <div class="text-muted small mt-0.5">${dateStr}</div>
-            `;
+
+        if (patientEvals.length === 0) {
+            const noEvalWrap = document.createElement('div');
+            noEvalWrap.className = 'd-inline-flex align-items-center gap-2';
+            noEvalWrap.innerHTML = '<span class="badge bg-light text-muted border small">Sin evaluar</span>';
+
+            const btnEvalZero = document.createElement('button');
+            btnEvalZero.type = 'button';
+            btnEvalZero.className = 'btn btn-sm btn-light border px-2.5 py-1 text-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs';
+            btnEvalZero.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> Evaluar';
+            btnEvalZero.title = 'Realizar primera evaluación de bioimpedancia a este paciente';
+            btnEvalZero.addEventListener('click', () => {
+                const bioNav = document.querySelector('[data-target="bio-view"]');
+                if (bioNav) bioNav.click();
+                fillBioFormFromClient(c);
+                document.getElementById('input-r').focus();
+                showToast(`Ficha de ${c.name} cargada en calculadora`, 'info');
+            });
+            noEvalWrap.appendChild(btnEvalZero);
+            tdLastEval.appendChild(noEvalWrap);
         } else {
-            tdLastEval.innerHTML = '<span class="badge bg-light text-muted border small">Sin evaluar</span>';
+            const latest = patientEvals[0];
+            const latestScore = (latest.global_score !== undefined && latest.global_score !== null) ? latest.global_score : (latest.score ?? '--');
+
+            const dropdownWrap = document.createElement('div');
+            dropdownWrap.className = 'dropdown d-inline-block';
+
+            const dropToggle = document.createElement('button');
+            dropToggle.className = 'btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 dropdown-toggle fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs';
+            dropToggle.type = 'button';
+            dropToggle.setAttribute('data-bs-toggle', 'dropdown');
+            dropToggle.setAttribute('aria-expanded', 'false');
+            dropToggle.innerHTML = `
+                <i class="bi bi-lightning-charge-fill text-warning"></i>
+                <span>TRU ${latestScore}/100</span>
+                <span class="badge bg-primary text-white rounded-pill ms-0.5" style="font-size: 0.68rem;">${patientEvals.length} ${patientEvals.length === 1 ? 'eval.' : 'evals.'}</span>
+            `;
+
+            const dropMenu = document.createElement('ul');
+            dropMenu.className = 'dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2.5';
+            dropMenu.style.minWidth = '320px';
+            dropMenu.style.maxWidth = '360px';
+            dropMenu.style.zIndex = '1060';
+
+            // Cabecera del desplegable con BOTÓN EVALUAR SOBRE EL LISTADO
+            const headerLi = document.createElement('li');
+            headerLi.className = 'p-2.5 bg-light rounded-3 mb-2 border';
+            headerLi.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                    <span class="fw-bold text-navy small text-truncate pe-1">${c.name}</span>
+                    <span class="badge bg-white text-secondary border font-monospace small">${c.idp || ('ID-' + c.code)}</span>
+                </div>
+                <div class="text-muted small mb-2" style="font-size: 0.72rem;">Historial clínico de bioimpedancia</div>
+            `;
+
+            const btnEvalInside = document.createElement('button');
+            btnEvalInside.type = 'button';
+            btnEvalInside.className = 'btn btn-sm btn-primary w-100 py-1.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5 shadow-sm';
+            btnEvalInside.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> ⚡ Evaluar / Nueva Medición';
+            btnEvalInside.title = 'Abrir calculadora de bioimpedancia para este paciente';
+            btnEvalInside.addEventListener('click', () => {
+                const bioNav = document.querySelector('[data-target="bio-view"]');
+                if (bioNav) bioNav.click();
+                fillBioFormFromClient(c);
+                document.getElementById('input-r').focus();
+                showToast(`Ficha de ${c.name} cargada en calculadora`, 'info');
+            });
+            headerLi.appendChild(btnEvalInside);
+            dropMenu.appendChild(headerLi);
+
+            // Título de la lista de evaluaciones
+            const listHeader = document.createElement('li');
+            listHeader.className = 'dropdown-header text-uppercase text-muted px-2 py-1 fw-bold';
+            listHeader.style.fontSize = '0.68rem';
+            listHeader.textContent = `Evaluaciones Guardadas (${patientEvals.length})`;
+            dropMenu.appendChild(listHeader);
+
+            // Contenedor scrollable de evaluaciones
+            const scrollContainer = document.createElement('div');
+            scrollContainer.style.maxHeight = '220px';
+            scrollContainer.style.overflowY = 'auto';
+
+            patientEvals.forEach(ev => {
+                const itemLi = document.createElement('li');
+                const score = (ev.global_score !== undefined && ev.global_score !== null) ? ev.global_score : (ev.score ?? '--');
+                const dateStr = ev.created_at ? new Date(ev.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
+
+                const itemBtn = document.createElement('div');
+                itemBtn.className = 'dropdown-item rounded-3 p-2 mb-1 d-flex align-items-center justify-content-between gap-2 border-bottom-subtle';
+                itemBtn.style.cursor = 'pointer';
+                itemBtn.innerHTML = `
+                    <div>
+                        <div class="fw-bold text-navy small d-flex align-items-center gap-1">
+                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.7rem;">${ev.code || 'EVA-XXX'}</span>
+                            <span class="text-success fw-bold">TRU ${score}/100</span>
+                        </div>
+                        <div class="text-muted mt-0.5" style="font-size: 0.72rem;">📅 ${dateStr} • ${ev.weight || '--'} kg</div>
+                    </div>
+                    <button type="button" class="btn btn-2xs btn-light border px-2 py-1 text-primary fw-semibold rounded-2 d-inline-flex align-items-center gap-1 shadow-2xs">
+                        <i class="bi bi-eye-fill"></i> Abrir
+                    </button>
+                `;
+
+                itemBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openEvaluationDetailModal(ev.id);
+                });
+
+                itemLi.appendChild(itemBtn);
+                scrollContainer.appendChild(itemLi);
+            });
+
+            dropMenu.appendChild(scrollContainer);
+            dropdownWrap.appendChild(dropToggle);
+            dropdownWrap.appendChild(dropMenu);
+            tdLastEval.appendChild(dropdownWrap);
         }
 
         // 5. Acciones
@@ -1725,20 +1827,6 @@ function renderClientsTable(clientsList) {
 
         const actionsWrap = document.createElement('div');
         actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
-
-        // Botón Evaluar en Calculadora
-        const btnEval = document.createElement('button');
-        btnEval.type = 'button';
-        btnEval.className = 'btn btn-sm btn-light border px-2.5 py-1 text-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs';
-        btnEval.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> Evaluar';
-        btnEval.title = 'Abrir en Calculadora de Bioimpedancia';
-        btnEval.addEventListener('click', () => {
-            const bioNav = document.querySelector('[data-target="bio-view"]');
-            if (bioNav) bioNav.click();
-            fillBioFormFromClient(c);
-            document.getElementById('input-r').focus();
-            showToast(`Ficha de ${c.name} cargada en calculadora`, 'info');
-        });
 
         // Botón Enviar WhatsApp / Mensaje
         const btnMsg = document.createElement('button');
@@ -1749,24 +1837,7 @@ function renderClientsTable(clientsList) {
         btnMsg.innerHTML = '<i class="bi bi-whatsapp"></i> Mensaje';
         btnMsg.title = 'Enviar mensaje por WhatsApp o correo';
         btnMsg.addEventListener('click', () => {
-            openPatientMessageModal(c, c.last_evaluation);
-        });
-
-        // Botón Ver Evaluaciones
-        const btnEvals = document.createElement('button');
-        btnEvals.type = 'button';
-        btnEvals.className = 'btn btn-sm btn-primary-evals d-inline-flex align-items-center gap-1 shadow-2xs';
-        btnEvals.innerHTML = '<i class="bi bi-journal-medical"></i>';
-        btnEvals.title = 'Ver historial de evaluaciones';
-        btnEvals.addEventListener('click', () => {
-            const evalNav = document.querySelector('[data-target="evaluaciones-view"]');
-            if (evalNav) evalNav.click();
-            const searchInput = document.getElementById('eval-search-input');
-            if (searchInput) {
-                searchInput.value = c.name || '';
-                filterAndRenderEvaluaciones();
-            }
-            showToast(`Mostrando evaluaciones de ${c.name}`, 'info');
+            openPatientMessageModal(c, patientEvals[0] || c.last_evaluation);
         });
 
         // Botón Editar
@@ -1785,7 +1856,7 @@ function renderClientsTable(clientsList) {
         btnDel.title = 'Eliminar paciente';
         btnDel.addEventListener('click', () => deleteClient(c.id));
 
-        actionsWrap.append(btnEval, btnMsg, btnEvals, btnEdit, btnDel);
+        actionsWrap.append(btnMsg, btnEdit, btnDel);
         tdActions.appendChild(actionsWrap);
 
         tr.append(tdCode, tdName, tdContact, tdLastEval, tdActions);
