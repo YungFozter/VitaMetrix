@@ -255,27 +255,37 @@
 
 /* --- SCROLLBAR DEL MODAL DE ELIMINACIÓN MASIVA --- */
 .batch-delete-scroll-area {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 #f8fafc;
+    max-height: 290px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    display: block !important;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #ffffff;
+    scrollbar-width: thin !important;
+    scrollbar-color: #94a3b8 #f1f5f9 !important;
 }
 
 .batch-delete-scroll-area::-webkit-scrollbar {
-    width: 6px;
+    width: 8px !important;
+    display: block !important;
 }
 
 .batch-delete-scroll-area::-webkit-scrollbar-track {
-    background: #f8fafc;
+    background: #f1f5f9 !important;
     border-radius: 8px;
 }
 
 .batch-delete-scroll-area::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
+    background-color: #94a3b8 !important;
     border-radius: 8px;
+    border: 2px solid #f1f5f9;
 }
 
 .batch-delete-scroll-area::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
+    background-color: #64748b !important;
 }
+
 
 
 
