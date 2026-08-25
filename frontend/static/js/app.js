@@ -1555,13 +1555,22 @@ async function fetchClients() {
     tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>';
 
     try {
-        const res = await fetch('/api/clients');
-        allClientsData = await res.json();
+        const [resClients, resEvals] = await Promise.all([
+            fetch('/api/clients'),
+            (!allEvaluationsData || allEvaluationsData.length === 0) ? fetch('/api/evaluations') : Promise.resolve(null)
+        ]);
+
+        allClientsData = await resClients.json();
+        if (resEvals && resEvals.ok) {
+            try {
+                allEvaluationsData = await resEvals.json();
+            } catch (e) {}
+        }
         
-        const count = (res.ok && Array.isArray(allClientsData)) ? allClientsData.length : 0;
+        const count = (resClients.ok && Array.isArray(allClientsData)) ? allClientsData.length : 0;
         if (totalCountEl) totalCountEl.textContent = count;
 
-        if (!res.ok || !Array.isArray(allClientsData) || allClientsData.length === 0) {
+        if (!resClients.ok || !Array.isArray(allClientsData) || allClientsData.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-5">
@@ -1570,7 +1579,7 @@ async function fetchClients() {
                                 <i class="bi bi-people-fill fs-2"></i>
                             </div>
                             <h5 class="fw-bold text-navy mb-1">No tienes pacientes registrados todavía</h5>
-                            <p class="text-muted small mb-0">Completa el formulario lateral para registrar a tu primer paciente.</p>
+                            <p class="text-muted small mb-0">Completa el formulario superior para registrar a tu primer paciente.</p>
                         </div>
                     </td>
                 </tr>
@@ -1683,11 +1692,22 @@ function renderClientsTable(clientsList) {
         }
         tdContact.appendChild(emailDiv);
 
-        // 4. Última Evaluación
+        // 4. Última Evaluación (Busca en c.last_evaluation o busca en allEvaluationsData)
+        let lastEval = c.last_evaluation;
+        if (!lastEval && allEvaluationsData && allEvaluationsData.length > 0) {
+            const normCName = normalizeText(c.name);
+            const normCIdp = normalizeText(c.idp);
+            lastEval = allEvaluationsData.find(ev => {
+                const evName = normalizeText(ev.patient_name);
+                const evIdp = normalizeText(ev.patient_idp);
+                return (normCIdp && evIdp && evIdp === normCIdp) || (normCName && evName && evName === normCName);
+            });
+        }
+
         const tdLastEval = document.createElement('td');
-        if (c.last_evaluation) {
-            const score = c.last_evaluation.global_score ?? '--';
-            const dateStr = c.last_evaluation.created_at ? new Date(c.last_evaluation.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+        if (lastEval) {
+            const score = (lastEval.global_score !== undefined && lastEval.global_score !== null) ? lastEval.global_score : (lastEval.score ?? '--');
+            const dateStr = lastEval.created_at ? new Date(lastEval.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
             tdLastEval.innerHTML = `
                 <div class="d-inline-flex align-items-center gap-1.5 badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
                     <i class="bi bi-lightning-charge-fill text-warning"></i>

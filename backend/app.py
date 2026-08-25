@@ -574,35 +574,38 @@ def get_clients():
 
         # Adjuntar resumen de última evaluación si existe
         try:
-            evals_res = supabase.table('evaluations').select('id, code, patient_name, patient_idp, global_score, resistance, reactance, smm, fat_mass, created_at').order('created_at', desc=True).execute()
+            evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
             evals = evals_res.data or []
             eval_by_name = {}
             eval_by_idp = {}
             for ev in evals:
-                p_name = (ev.get('patient_name') or '').strip().lower()
-                p_idp = (ev.get('patient_idp') or '').strip()
+                p_name = _clean_str(ev.get('patient_name') or '', max_len=100).lower()
+                p_idp = _clean_str(ev.get('patient_idp') or '', max_len=50)
                 if p_name and p_name not in eval_by_name:
                     eval_by_name[p_name] = ev
                 if p_idp and p_idp not in eval_by_idp:
                     eval_by_idp[p_idp] = ev
 
             for c in clients:
-                c_name = (c.get('name') or '').strip().lower()
-                c_idp = (c.get('idp') or '').strip()
+                c_name = _clean_str(c.get('name') or '', max_len=100).lower()
+                c_idp = _clean_str(c.get('idp') or '', max_len=50)
                 matched_ev = eval_by_idp.get(c_idp) if c_idp else None
                 if not matched_ev and c_name:
                     matched_ev = eval_by_name.get(c_name)
                 
                 if matched_ev:
-                    r = float(matched_ev.get('resistance') or 0)
-                    xc = float(matched_ev.get('reactance') or 0)
-                    biva = get_biva_interpretation(r, xc)
-                    matched_ev['phase_angle'] = biva.get('phase_angle', 0)
-                    matched_ev['cell_status'] = biva.get('cell_status', '')
+                    try:
+                        r = float(matched_ev.get('resistance') or 0)
+                        xc = float(matched_ev.get('reactance') or 0)
+                        biva = get_biva_interpretation(r, xc)
+                        matched_ev['phase_angle'] = biva.get('phase_angle', 0)
+                        matched_ev['cell_status'] = biva.get('cell_status', '')
+                    except Exception:
+                        pass
 
                 c['last_evaluation'] = matched_ev
-        except Exception:
-            pass
+        except Exception as e_ev:
+            logging.error("Error al adjuntar evaluaciones a clientes: %s", e_ev)
 
         return jsonify(clients)
     except Exception as e:
