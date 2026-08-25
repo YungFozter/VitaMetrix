@@ -36,27 +36,27 @@
     margin-top: 0.15rem;
 }
 
-.btn-analyze {
-    width: auto;
-    padding: 0.85rem 1.6rem;
-    margin-top: 0;
-    border-radius: 14px;
-    font-size: 0.95rem;
+.bio-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.bio-form-actions .btn {
+    font-size: 0.84rem;
+    padding: 0.52rem 0.95rem;
+    border-radius: 10px;
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
-    white-space: nowrap;
-    background: #1A2A4A;
-    box-shadow: 0 10px 24px -8px rgba(26, 42, 74, 0.5);
+    gap: 0.45rem;
+    transition: all 0.2s ease;
 }
 
-.btn-analyze:hover {
-    background: #243a63;
-    transform: translateY(-2px);
-    box-shadow: 0 16px 30px -8px rgba(26, 42, 74, 0.55);
+.bio-form-actions .btn:hover {
+    transform: translateY(-1px);
 }
-
-.btn-ico { font-size: 1.05rem; }
 
 /* --- BENTO GRID DE INGRESO DE DATOS BIOELÉCTRICOS --- */
 .bio-input-bento-grid {

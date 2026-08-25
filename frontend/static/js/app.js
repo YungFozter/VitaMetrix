@@ -157,72 +157,77 @@ function initNavigation() {
 }
 
 // --- 3. FORM & API ---
+function getBioFormPayload() {
+    return {
+        patient_idp: document.getElementById('input-idp').value,
+        patient_name: document.getElementById('input-name').value,
+        resistance: parseFloat(document.getElementById('input-r').value),
+        reactance: parseFloat(document.getElementById('input-xc').value),
+        weight: parseFloat(document.getElementById('input-weight').value),
+        height: parseFloat(document.getElementById('input-height').value),
+        age: parseInt(document.getElementById('input-age').value),
+        gender: document.getElementById('input-gender').value,
+        pal: parseFloat(document.getElementById('input-pal').value),
+        // Campos del dispositivo (opcionales)
+        smm: document.getElementById('input-smm').value || null,
+        tbw: document.getElementById('input-tbw').value || null,
+        ecw: document.getElementById('input-ecw').value || null,
+        fat_mass: document.getElementById('input-fat-mass').value || null,
+        visceral_fat: document.getElementById('input-visceral').value || null,
+        waist: document.getElementById('input-waist').value || null,
+        // Fase 3
+        phase_angle_dev: document.getElementById('input-phase-dev').value || null,
+        seg_arm_r: document.getElementById('input-seg-arm-r').value || null,
+        seg_arm_l: document.getElementById('input-seg-arm-l').value || null,
+        seg_torso: document.getElementById('input-seg-torso').value || null,
+        seg_leg_r: document.getElementById('input-seg-leg-r').value || null,
+        seg_leg_l: document.getElementById('input-seg-leg-l').value || null
+    };
+}
+
+function validateBioPayload(payload) {
+    if (isNaN(payload.resistance) || payload.resistance < 100 || payload.resistance > 1500) {
+        showToast('Resistencia (R) fuera de rango válido (100 - 1500 Ω)', 'error');
+        return false;
+    }
+    if (isNaN(payload.reactance) || payload.reactance < 10 || payload.reactance > 200) {
+        showToast('Reactancia (Xc) fuera de rango válido (10 - 200 Ω)', 'error');
+        return false;
+    }
+    if (isNaN(payload.weight) || payload.weight < 20 || payload.weight > 350) {
+        showToast('Peso fuera de rango válido (20 - 350 kg)', 'error');
+        return false;
+    }
+    if (isNaN(payload.height) || payload.height < 50 || payload.height > 250) {
+        showToast('Altura fuera de rango válido (50 - 250 cm)', 'error');
+        return false;
+    }
+    if (isNaN(payload.age) || payload.age < 1 || payload.age > 120) {
+        showToast('Edad fuera de rango válido (1 - 120 años)', 'error');
+        return false;
+    }
+    return true;
+}
+
 function initBioForm() {
     const form = document.getElementById('bio-form');
     if (!form) return;
 
+    // 1. ANALIZAR COMPOSICIÓN (Solo cálculo en memoria / UI, sin persistir en BD)
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        // Change button state
-        const btn = document.querySelector('button[form="bio-form"]') || form.querySelector('button[type="submit"]');
-        let originalText = 'Analizar Composición';
+        const btn = document.getElementById('btn-analyze-submit') || form.querySelector('button[type="submit"]');
+        let originalText = btn ? btn.innerHTML : 'Analizar Composición';
         if (btn) {
-            originalText = btn.innerHTML;
-            btn.innerHTML = '<span class="btn-ico">⏳</span> Calculando...';
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Calculando...';
             btn.disabled = true;
         }
 
-        // Gather data
-        const payload = {
-            patient_idp: document.getElementById('input-idp').value,
-            patient_name: document.getElementById('input-name').value,
-            resistance: parseFloat(document.getElementById('input-r').value),
-            reactance: parseFloat(document.getElementById('input-xc').value),
-            weight: parseFloat(document.getElementById('input-weight').value),
-            height: parseFloat(document.getElementById('input-height').value),
-            age: parseInt(document.getElementById('input-age').value),
-            gender: document.getElementById('input-gender').value,
-            pal: parseFloat(document.getElementById('input-pal').value),
-            // Campos del dispositivo (opcionales)
-            smm: document.getElementById('input-smm').value || null,
-            tbw: document.getElementById('input-tbw').value || null,
-            ecw: document.getElementById('input-ecw').value || null,
-            fat_mass: document.getElementById('input-fat-mass').value || null,
-            visceral_fat: document.getElementById('input-visceral').value || null,
-            waist: document.getElementById('input-waist').value || null,
-            // Fase 3
-            phase_angle_dev: document.getElementById('input-phase-dev').value || null,
-            seg_arm_r: document.getElementById('input-seg-arm-r').value || null,
-            seg_arm_l: document.getElementById('input-seg-arm-l').value || null,
-            seg_torso: document.getElementById('input-seg-torso').value || null,
-            seg_leg_r: document.getElementById('input-seg-leg-r').value || null,
-            seg_leg_l: document.getElementById('input-seg-leg-l').value || null
-        };
+        const payload = getBioFormPayload();
+        payload.save = false; // NO guardar en BD
 
-        // Validar rangos numéricos reales
-        if (isNaN(payload.resistance) || payload.resistance < 100 || payload.resistance > 1500) {
-            showToast('Resistencia (R) fuera de rango válido (100 - 1500 Ω)', 'error');
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-            return;
-        }
-        if (isNaN(payload.reactance) || payload.reactance < 10 || payload.reactance > 200) {
-            showToast('Reactancia (Xc) fuera de rango válido (10 - 200 Ω)', 'error');
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-            return;
-        }
-        if (isNaN(payload.weight) || payload.weight < 20 || payload.weight > 350) {
-            showToast('Peso fuera de rango válido (20 - 350 kg)', 'error');
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-            return;
-        }
-        if (isNaN(payload.height) || payload.height < 50 || payload.height > 250) {
-            showToast('Altura fuera de rango válido (50 - 250 cm)', 'error');
-            if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
-            return;
-        }
-        if (isNaN(payload.age) || payload.age < 1 || payload.age > 120) {
-            showToast('Edad fuera de rango válido (1 - 120 años)', 'error');
+        if (!validateBioPayload(payload)) {
             if (btn) { btn.innerHTML = originalText; btn.disabled = false; }
             return;
         }
@@ -240,14 +245,7 @@ function initBioForm() {
             }
 
             updateBioUI(data, payload);
-            if (data.saved) {
-                showToast("Evaluación guardada en la nube con éxito.", "success");
-            } else {
-                showToast("Análisis listo. No se pudo guardar en la nube.", "info");
-            }
-
-            // Refrescar stats del dashboard
-            fetchDashboardStats();
+            showToast("⚡ Análisis completado. Puedes revisarlo o hacer clic en 'Guardar Análisis'.", "info");
 
         } catch (error) {
             console.error('Error calculating:', error);
@@ -259,6 +257,54 @@ function initBioForm() {
             }
         }
     });
+
+    // 2. GUARDAR ANÁLISIS (Cálculo y persistencia explícita en Supabase)
+    const btnSave = document.getElementById('btn-save-evaluation');
+    if (btnSave) {
+        btnSave.addEventListener('click', async () => {
+            const originalHtml = btnSave.innerHTML;
+            btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Guardando...';
+            btnSave.disabled = true;
+
+            const payload = getBioFormPayload();
+            payload.save = true; // SÍ guardar en BD
+
+            if (!validateBioPayload(payload)) {
+                btnSave.innerHTML = originalHtml;
+                btnSave.disabled = false;
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/dashboard-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al guardar la evaluación');
+                }
+
+                updateBioUI(data, payload);
+                if (data.saved) {
+                    showToast("💾 Evaluación guardada en el historial clínico con éxito.", "success");
+                    fetchDashboardStats();
+                    fetchEvaluaciones();
+                } else {
+                    showToast("Análisis listo, pero no se pudo persistir en la nube.", "warning");
+                }
+
+            } catch (error) {
+                console.error('Error saving evaluation:', error);
+                showToast('Error al guardar en el servidor.', 'error');
+            } finally {
+                btnSave.innerHTML = originalHtml;
+                btnSave.disabled = false;
+            }
+        });
+    }
 }
 
 let populationChart = null;
