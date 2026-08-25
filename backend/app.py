@@ -2,7 +2,9 @@ import os
 import sys
 import logging
 import time
-from datetime import datetime
+import math
+import uuid
+from datetime import datetime, timezone
 
 # Configurar logging seguro
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -1025,7 +1027,7 @@ def get_stock_items():
     if supabase:
         try:
             res = supabase.table('stock_items').select('*').order('created_at', desc=True).execute()
-            if res.data is not None and len(res.data) > 0:
+            if res.data is not None:
                 for item in res.data:
                     item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
                 return jsonify(res.data)

@@ -4158,6 +4158,7 @@ async function fetchStockItems() {
 
     try {
         const res = await fetch('/api/stock');
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
         allStockItems = await res.json();
 
         if (totalCountEl) totalCountEl.textContent = Array.isArray(allStockItems) ? allStockItems.length : 0;
@@ -4165,8 +4166,8 @@ async function fetchStockItems() {
         updateStockKPIs(allStockItems);
         filterAndRenderStock();
     } catch (err) {
-        console.error(err);
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar inventario.</td></tr>';
+        console.error('Error al cargar inventario:', err);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar inventario. Reintenta en unos instantes.</td></tr>';
     }
 }
 
