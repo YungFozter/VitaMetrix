@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=108">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=109">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -964,14 +964,11 @@
                             <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Vial, Tubo 50g, Gotero...">
                         </div>
                         <div class="col-12 col-sm-6">
-                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1 d-flex align-items-center justify-content-between">
-                                <span>Familia / Clasificación</span>
-                                <span class="badge bg-secondary-subtle text-secondary border fw-normal" style="font-size: 0.68rem;" title="Texto que se muestra a la derecha de la opción en el formulario">
-                                    <i class="bi bi-tag-fill me-0.5"></i> Etiqueta derecha
-                                </span>
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">
+                                Familia / Clasificación
                             </label>
                             <div class="input-group">
-                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Ej: Conteo, Inyectable..." value="Conteo">
+                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Ej: Conteo, Inyectable...">
                                 <datalist id="suggested-families-list">
                                     <option value="Conteo">
                                     <option value="Posología">
@@ -1135,6 +1132,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=108"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=109"></script>
 </body>
 </html>

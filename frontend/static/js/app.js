@@ -4787,6 +4787,7 @@ function initStockTaxonomyModal() {
                 const result = await res.json();
                 if (res.ok && result.success) {
                     inputNewUnit.value = '';
+                    if (selectNewUnitFamily) selectNewUnitFamily.value = '';
                     showToast(`✅ Unidad de medida "${unitName}" (${fam}) guardada en el catálogo`, 'success');
                     await fetchStockTaxonomies();
                 } else {
