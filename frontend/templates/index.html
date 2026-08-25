@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=107">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=108">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -998,10 +998,10 @@
                 </div>
 
                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
-                    <div class="text-muted small fw-bold text-uppercase">Filtrar por Familia</div>
-                    <div id="stock-tax-family-pills" class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <div class="text-muted small fw-bold text-uppercase text-nowrap flex-shrink-0">Filtrar por Familia</div>
+                    <div id="stock-tax-family-pills" class="d-flex align-items-center gap-1.5 flex-nowrap overflow-x-auto pb-1 stock-custom-h-scrollbar" style="max-width: 100%; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
                         <!-- Píldoras de familias inyectadas dinámicamente -->
-                        <button type="button" class="btn btn-xs btn-primary border py-1 px-2.5 active tax-unit-pill" data-family="all" style="font-size: 0.8rem;">Todos</button>
+                        <button type="button" class="btn btn-xs btn-primary border py-1 px-2.5 active tax-unit-pill flex-shrink-0 text-nowrap" data-family="all" style="font-size: 0.8rem;">Todos</button>
                     </div>
                 </div>
                 <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
@@ -1135,6 +1135,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=107"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=108"></script>
 </body>
 </html>

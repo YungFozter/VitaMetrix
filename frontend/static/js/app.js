@@ -5164,7 +5164,7 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
         // Píldora "Todos"
         const allPill = document.createElement('button');
         allPill.type = 'button';
-        allPill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill ${selectedFamily === 'all' ? 'btn-primary active' : 'btn-light'}`;
+        allPill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill flex-shrink-0 text-nowrap ${selectedFamily === 'all' ? 'btn-primary active' : 'btn-light'}`;
         allPill.style.fontSize = '0.8rem';
         allPill.textContent = 'Todos';
         allPill.dataset.family = 'all';
@@ -5176,7 +5176,7 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
             const pill = document.createElement('button');
             pill.type = 'button';
             const isActive = selectedFamily.toLowerCase() === fam.toLowerCase();
-            pill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill ${isActive ? 'btn-primary active' : 'btn-light'}`;
+            pill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill flex-shrink-0 text-nowrap ${isActive ? 'btn-primary active' : 'btn-light'}`;
             pill.style.fontSize = '0.8rem';
             pill.textContent = fam;
             pill.dataset.family = fam;
