@@ -21,105 +21,232 @@
                         </div>
 
                         <form id="bio-form">
-                            <div class="form-fields">
-                                <div class="form-group">
-                                    <label>IDP (Paciente)</label>
-                                    <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
+                            <!-- Bento Grid de Entrada Principal (3 Bloques Semánticos) -->
+                            <div class="bio-input-bento-grid mb-3">
+                                
+                                <!-- BLOQUE 1: IDENTIFICACIÓN DEL PACIENTE -->
+                                <div class="bio-bento-card bio-bento-patient">
+                                    <div class="bio-bento-header">
+                                        <div class="bio-bento-icon patient-icon">
+                                            <i class="bi bi-person-badge"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="bio-bento-title">Identificación y Perfil</h4>
+                                            <span class="bio-bento-subtitle">Datos personales del paciente</span>
+                                        </div>
+                                    </div>
+                                    <div class="bio-bento-body">
+                                        <div class="row g-2">
+                                            <div class="col-12 col-sm-4">
+                                                <div class="form-group">
+                                                    <label for="input-idp">IDP (Paciente)</label>
+                                                    <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
+                                                </div>
+                                            </div>
+                                            <div class="col-12 col-sm-8">
+                                                <div class="form-group">
+                                                    <label for="input-name">Nombre Completo</label>
+                                                    <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-age">Edad (años)</label>
+                                                    <input type="number" id="input-age" step="1" required placeholder="Ej: 30" value="30">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-gender">Género</label>
+                                                    <select id="input-gender">
+                                                        <option value="male">Masculino</option>
+                                                        <option value="female">Femenino</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Nombre Completo</label>
-                                    <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO">
+
+                                <!-- BLOQUE 2: ANTROPOMETRÍA Y ESTILO DE VIDA -->
+                                <div class="bio-bento-card bio-bento-anthro">
+                                    <div class="bio-bento-header">
+                                        <div class="bio-bento-icon anthro-icon">
+                                            <i class="bi bi-rulers"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="bio-bento-title">Antropometría</h4>
+                                            <span class="bio-bento-subtitle">Medidas corporales y actividad</span>
+                                        </div>
+                                    </div>
+                                    <div class="bio-bento-body">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-weight">Peso (kg)</label>
+                                                    <input type="number" id="input-weight" step="any" required placeholder="Ej: 75.0" value="75.0">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-height">Altura (cm)</label>
+                                                    <input type="number" id="input-height" step="1" required placeholder="Ej: 175" value="175">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-waist">Cintura (cm)</label>
+                                                    <input type="number" id="input-waist" step="any" placeholder="Ej: 85">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-pal">Actividad (PAL)</label>
+                                                    <select id="input-pal">
+                                                        <option value="1.2">Sedentario (1.2)</option>
+                                                        <option value="1.375">Ligero (1.375)</option>
+                                                        <option value="1.55">Moderado (1.55)</option>
+                                                        <option value="1.725">Activo (1.725)</option>
+                                                        <option value="1.9">Muy Activo (1.9)</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Resistencia (R) - Ω</label>
-                                    <input type="number" id="input-r" step="any" required placeholder="Ej: 575.6" value="575.6">
+
+                                <!-- BLOQUE 3: PARÁMETROS BIOELÉCTRICOS BIA -->
+                                <div class="bio-bento-card bio-bento-electrical">
+                                    <div class="bio-bento-header">
+                                        <div class="bio-bento-icon electrical-icon">
+                                            <i class="bi bi-activity"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="bio-bento-title">Parámetros Eléctricos</h4>
+                                            <span class="bio-bento-subtitle">Impedancia pura (50 kHz)</span>
+                                        </div>
+                                    </div>
+                                    <div class="bio-bento-body d-flex flex-column justify-content-between h-100">
+                                        <div class="row g-2">
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-r">Resistencia (R) - Ω</label>
+                                                    <input type="number" id="input-r" step="any" required placeholder="Ej: 575.6" value="575.6">
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="form-group">
+                                                    <label for="input-xc">Reactancia (Xc) - Ω</label>
+                                                    <input type="number" id="input-xc" step="any" required placeholder="Ej: 59.0" value="59.0">
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="bio-electrical-badge mt-2.5 p-2 rounded-3 text-muted d-flex align-items-center gap-1.5" style="background: rgba(0, 180, 216, 0.08); font-size: 0.76rem;">
+                                            <i class="bi bi-shield-check text-info fs-6"></i>
+                                            <span>Vector $Z$ listo para análisis BIA</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label>Reactancia (Xc) - Ω</label>
-                                    <input type="number" id="input-xc" step="any" required placeholder="Ej: 59.0" value="59.0">
-                                </div>
-                                <div class="form-group">
-                                    <label>Peso (kg)</label>
-                                    <input type="number" id="input-weight" step="any" required placeholder="Ej: 75.0" value="75.0">
-                                </div>
-                                <div class="form-group">
-                                    <label>Altura (cm)</label>
-                                    <input type="number" id="input-height" step="1" required placeholder="Ej: 175" value="175">
-                                </div>
-                                <div class="form-group">
-                                    <label>Edad (años)</label>
-                                    <input type="number" id="input-age" step="1" required placeholder="Ej: 30" value="30">
-                                </div>
-                                <div class="form-group">
-                                    <label>Género</label>
-                                    <select id="input-gender">
-                                        <option value="male">Masculino</option>
-                                        <option value="female">Femenino</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Nivel Actividad (PAL)</label>
-                                    <select id="input-pal">
-                                        <option value="1.2">Sedentario (1.2)</option>
-                                        <option value="1.375">Ligero (1.375)</option>
-                                        <option value="1.55">Moderado (1.55)</option>
-                                        <option value="1.725">Activo (1.725)</option>
-                                        <option value="1.9">Muy Activo (1.9)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>Circunferencia de Cintura (cm)</label>
-                                    <input type="number" id="input-waist" step="any" placeholder="Ej: 85 (del dispositivo)">
-                                </div>
+
                             </div>
 
-                            <details class="device-data">
-                                <summary>Datos del dispositivo (opcional)</summary>
-                                <p class="form-hint">Transcribe los valores que entrega el equipo de bioimpedancia.</p>
-                                <div class="form-fields device-fields">
-                                    <div class="form-group">
-                                        <label>Masa Muscular (SMM) - kg</label>
-                                        <input type="number" id="input-smm" step="any" placeholder="Ej: 32.5">
+                            <!-- BLOQUE DESPLEGABLE: DATOS DEL DISPOSITIVO Y MEDICIONES SEGMENTALES -->
+                            <details class="device-data rounded-4 border p-3">
+                                <summary class="d-flex align-items-center justify-content-between">
+                                    <span class="fw-bold d-flex align-items-center gap-2 text-navy" style="font-size: 0.92rem;">
+                                        <i class="bi bi-cpu text-info"></i> Datos Avanzados del Dispositivo & Mediciones Segmentales
+                                    </span>
+                                    <span class="badge bg-light text-secondary border fw-normal small px-2 py-1">Opcional</span>
+                                </summary>
+                                <p class="form-hint mt-2 mb-3">Transcribe los valores directos que entrega tu analizador de bioimpedancia para enriquecer el reporte clínico.</p>
+                                
+                                <div class="row g-3">
+                                    <!-- Sub-bloque 1: Composición Hídrica y Tejidos -->
+                                    <div class="col-12 col-lg-6">
+                                        <div class="p-3 bg-white rounded-3 border h-100 shadow-xs">
+                                            <h6 class="fw-bold text-navy mb-2.5 d-flex align-items-center gap-2" style="font-size: 0.88rem;">
+                                                <i class="bi bi-droplet-half text-primary"></i> Composición Corporal y Fluidos
+                                            </h6>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-smm">Masa Muscular (SMM) - kg</label>
+                                                        <input type="number" id="input-smm" step="any" placeholder="Ej: 32.5">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-fat-mass">Masa Grasa - kg</label>
+                                                        <input type="number" id="input-fat-mass" step="any" placeholder="Ej: 15.0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-tbw">Agua Total (TBW) - L</label>
+                                                        <input type="number" id="input-tbw" step="any" placeholder="Ej: 42.0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-ecw">Agua Extracelular (ECW) - L</label>
+                                                        <input type="number" id="input-ecw" step="any" placeholder="Ej: 17.5">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-visceral">Grasa Visceral - L</label>
+                                                        <input type="number" id="input-visceral" step="any" placeholder="Ej: 1.2">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-phase-dev">Ángulo Fase Medido (°)</label>
+                                                        <input type="number" id="input-phase-dev" step="any" placeholder="Ej: 5.9">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label>Agua Total (TBW) - L</label>
-                                        <input type="number" id="input-tbw" step="any" placeholder="Ej: 42.0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Agua Extracelular (ECW) - L</label>
-                                        <input type="number" id="input-ecw" step="any" placeholder="Ej: 17.5">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Masa Grasa - kg</label>
-                                        <input type="number" id="input-fat-mass" step="any" placeholder="Ej: 15.0">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Grasa Visceral - L</label>
-                                        <input type="number" id="input-visceral" step="any" placeholder="Ej: 1.2">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Ángulo de Fase medido (°)</label>
-                                        <input type="number" id="input-phase-dev" step="any" placeholder="Ej: 5.9">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Segmental - Brazo Der (kg)</label>
-                                        <input type="number" id="input-seg-arm-r" step="any" placeholder="Ej: 2.6">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Segmental - Brazo Izq (kg)</label>
-                                        <input type="number" id="input-seg-arm-l" step="any" placeholder="Ej: 2.5">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Segmental - Torso (kg)</label>
-                                        <input type="number" id="input-seg-torso" step="any" placeholder="Ej: 12.5">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Segmental - Pierna Der (kg)</label>
-                                        <input type="number" id="input-seg-leg-r" step="any" placeholder="Ej: 7.5">
-                                    </div>
-                                    <div class="form-group">
-                                        <label>Segmental - Pierna Izq (kg)</label>
-                                        <input type="number" id="input-seg-leg-l" step="any" placeholder="Ej: 7.4">
+
+                                    <!-- Sub-bloque 2: Distribución Segmental Anatómica -->
+                                    <div class="col-12 col-lg-6">
+                                        <div class="p-3 bg-white rounded-3 border h-100 shadow-xs">
+                                            <h6 class="fw-bold text-navy mb-2.5 d-flex align-items-center gap-2" style="font-size: 0.88rem;">
+                                                <i class="bi bi-diagram-3 text-info"></i> Análisis Segmental por Extremidades
+                                            </h6>
+                                            <div class="row g-2">
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-seg-arm-r">Brazo Derecho (kg)</label>
+                                                        <input type="number" id="input-seg-arm-r" step="any" placeholder="Ej: 2.6">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-seg-arm-l">Brazo Izquierdo (kg)</label>
+                                                        <input type="number" id="input-seg-arm-l" step="any" placeholder="Ej: 2.5">
+                                                    </div>
+                                                </div>
+                                                <div class="col-12">
+                                                    <div class="form-group">
+                                                        <label for="input-seg-torso">Torso / Tronco (kg)</label>
+                                                        <input type="number" id="input-seg-torso" step="any" placeholder="Ej: 12.5">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-seg-leg-r">Pierna Derecha (kg)</label>
+                                                        <input type="number" id="input-seg-leg-r" step="any" placeholder="Ej: 7.5">
+                                                    </div>
+                                                </div>
+                                                <div class="col-6">
+                                                    <div class="form-group">
+                                                        <label for="input-seg-leg-l">Pierna Izquierda (kg)</label>
+                                                        <input type="number" id="input-seg-leg-l" step="any" placeholder="Ej: 7.4">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </details>
