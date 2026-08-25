@@ -4862,25 +4862,29 @@ function renderTaxonomyCategories(filterText = '') {
         const rightDiv = document.createElement('div');
         rightDiv.className = 'd-inline-flex align-items-center gap-1.5';
 
-        // Botón Renombrar en Cascada
+        // Botón Renombrar (Solo Icono)
         const btnRename = document.createElement('button');
         btnRename.type = 'button';
-        btnRename.className = 'btn btn-sm btn-outline-secondary py-1 px-2 text-dark font-semibold';
-        btnRename.style.fontSize = '0.75rem';
-        btnRename.innerHTML = '<i class="bi bi-pencil-square me-1"></i> Renombrar';
-        btnRename.title = 'Renombrar y actualizar productos en cascada';
+        btnRename.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs text-dark';
+        btnRename.style.width = '30px';
+        btnRename.style.height = '30px';
+        btnRename.innerHTML = '<i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>';
+        btnRename.title = 'Renombrar categoría';
+        btnRename.setAttribute('aria-label', 'Renombrar categoría');
 
         btnRename.addEventListener('click', () => {
             promptRenameCategory(cat.name);
         });
 
-        // Botón Eliminar Categoría
+        // Botón Eliminar Categoría (Solo Icono)
         const btnDelete = document.createElement('button');
         btnDelete.type = 'button';
-        btnDelete.className = 'btn btn-sm btn-outline-danger py-1 px-2 font-semibold';
-        btnDelete.style.fontSize = '0.75rem';
-        btnDelete.innerHTML = '<i class="bi bi-trash3 me-1"></i> Eliminar';
-        btnDelete.title = 'Eliminar categoría del catálogo';
+        btnDelete.className = 'btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs';
+        btnDelete.style.width = '30px';
+        btnDelete.style.height = '30px';
+        btnDelete.innerHTML = '<i class="bi bi-trash3" style="font-size: 0.85rem;"></i>';
+        btnDelete.title = 'Eliminar categoría';
+        btnDelete.setAttribute('aria-label', 'Eliminar categoría');
 
         btnDelete.addEventListener('click', async () => {
             const confirmMsg = cat.count > 0
