@@ -5,7 +5,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initClock();
     initNavigation();
     initBioForm();
+    initBioClientAutocomplete();
     initClients();
+    initPatientMessaging();
     initEvaluaciones();
     initProfileDropdown();
     initSystemMenuListeners();
@@ -1130,39 +1132,346 @@ function drawPALGauge(pal) {
     ctx.textAlign = 'left';
 }
 
-// --- 5. CLIENTES ---
+// --- 3.5 AUTOCOMPLETADO DE PACIENTES EN CALCULADORA BIA ---
+function initBioClientAutocomplete() {
+    const inputName = document.getElementById('input-name');
+    const inputIdp = document.getElementById('input-idp');
+
+    function populateDatalists() {
+        const datalistName = document.getElementById('clients-name-datalist');
+        const datalistIdp = document.getElementById('clients-idp-datalist');
+        const datalistAppt = document.getElementById('clients-datalist');
+
+        if (datalistName) datalistName.innerHTML = '';
+        if (datalistIdp) datalistIdp.innerHTML = '';
+        if (datalistAppt) datalistAppt.innerHTML = '';
+
+        allClientsData.forEach(c => {
+            if (c.name) {
+                if (datalistName) {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = `${c.name} ${c.idp ? '(IDP: ' + c.idp + ')' : ''}`;
+                    datalistName.appendChild(opt);
+                }
+                if (datalistAppt) {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    datalistAppt.appendChild(opt);
+                }
+            }
+            if (c.idp && datalistIdp) {
+                const opt = document.createElement('option');
+                opt.value = c.idp;
+                opt.textContent = `${c.idp} — ${c.name || ''}`;
+                datalistIdp.appendChild(opt);
+            }
+        });
+    }
+
+    if (inputName) {
+        inputName.addEventListener('change', () => {
+            const val = inputName.value.trim().toLowerCase();
+            if (!val) return;
+            const match = allClientsData.find(c => (c.name || '').toLowerCase() === val);
+            if (match) {
+                fillBioFormFromClient(match);
+                showToast(`Datos de ${match.name} completados automáticamente`, 'info');
+            }
+        });
+    }
+
+    if (inputIdp) {
+        inputIdp.addEventListener('change', () => {
+            const val = inputIdp.value.trim().toLowerCase();
+            if (!val) return;
+            const match = allClientsData.find(c => (c.idp || '').toLowerCase() === val);
+            if (match) {
+                fillBioFormFromClient(match);
+                showToast(`Datos de ${match.name} completados automáticamente`, 'info');
+            }
+        });
+    }
+
+    window.updateBioDatalists = populateDatalists;
+}
+
+function fillBioFormFromClient(c) {
+    if (c.idp) document.getElementById('input-idp').value = c.idp;
+    if (c.name) document.getElementById('input-name').value = c.name;
+    if (c.age) document.getElementById('input-age').value = c.age;
+    if (c.gender) {
+        const gVal = (c.gender === 'Femenino' || c.gender === 'female') ? 'female' : 'male';
+        document.getElementById('input-gender').value = gVal;
+    }
+    if (c.height) document.getElementById('input-height').value = c.height;
+}
+
+// --- 3.6 MENSAJERÍA DIRECTA AL PACIENTE (WHATSAPP & CORREO) ---
+let currentMsgPatient = null;
+let currentMsgEval = null;
+let currentMsgTemplate = 'results';
+
+function initPatientMessaging() {
+    const modal = document.getElementById('patient-message-modal');
+    if (!modal) return;
+
+    const btnClose = document.getElementById('msg-modal-close');
+    const btnCancel = document.getElementById('msg-btn-cancel');
+    const btnWhatsapp = document.getElementById('msg-btn-whatsapp');
+    const btnEmail = document.getElementById('msg-btn-email');
+    const chkAttach = document.getElementById('msg-attach-eval');
+    const textarea = document.getElementById('msg-textarea');
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        currentMsgPatient = null;
+        currentMsgEval = null;
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+
+    // Click fuera del modal para cerrar
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Selector de plantillas
+    document.querySelectorAll('.msg-tpl-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.msg-tpl-btn').forEach(b => {
+                b.classList.remove('active', 'btn-outline-primary');
+                b.classList.add('btn-outline-secondary');
+            });
+            btn.classList.add('active', 'btn-outline-primary');
+            btn.classList.remove('btn-outline-secondary');
+            currentMsgTemplate = btn.dataset.template || 'results';
+            updateMessageText();
+        });
+    });
+
+    // Cambio en toggle de métricas
+    if (chkAttach) {
+        chkAttach.addEventListener('change', () => {
+            updateMessageText();
+        });
+    }
+
+    // Botón Enviar WhatsApp
+    if (btnWhatsapp) {
+        btnWhatsapp.addEventListener('click', () => {
+            if (!currentMsgPatient) return;
+            const text = textarea ? textarea.value.trim() : '';
+            if (!text) {
+                showToast('El mensaje no puede estar vacío', 'error');
+                return;
+            }
+
+            let phone = (currentMsgPatient.phone || '').replace(/[^\d+]/g, '');
+            if (!phone) {
+                // Pedir número si no lo tiene
+                const promptPhone = prompt(`Ingresa el número de WhatsApp para ${currentMsgPatient.name} (con código de país, ej: +5491112345678):`);
+                if (!promptPhone) return;
+                phone = promptPhone.replace(/[^\d+]/g, '');
+            }
+
+            // Formatear para WhatsApp API (sin el '+')
+            const cleanPhone = phone.replace(/^\+/, '');
+            const waUrl = `https://api.whatsapp.com/send?phone=${encodeURIComponent(cleanPhone)}&text=${encodeURIComponent(text)}`;
+            window.open(waUrl, '_blank');
+            showToast(`Abriendo WhatsApp para ${currentMsgPatient.name}`, 'success');
+            closeModal();
+        });
+    }
+
+    // Botón Enviar Correo
+    if (btnEmail) {
+        btnEmail.addEventListener('click', () => {
+            if (!currentMsgPatient) return;
+            const text = textarea ? textarea.value.trim() : '';
+            if (!text) {
+                showToast('El mensaje no puede estar vacío', 'error');
+                return;
+            }
+
+            let email = currentMsgPatient.email || '';
+            if (!email) {
+                const promptEmail = prompt(`Ingresa el correo electrónico para ${currentMsgPatient.name}:`);
+                if (!promptEmail) return;
+                email = promptEmail.trim();
+            }
+
+            const subject = 'Informe de Evaluación de Bioimpedancia - VitaMetrix';
+            const mailUrl = `mailto:${encodeURIComponent(email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+            window.location.href = mailUrl;
+            showToast(`Generando correo para ${currentMsgPatient.name}`, 'info');
+            closeModal();
+        });
+    }
+}
+
+function openPatientMessageModal(client, evaluation = null) {
+    currentMsgPatient = client;
+    currentMsgEval = evaluation;
+
+    const modal = document.getElementById('patient-message-modal');
+    if (!modal) return;
+
+    document.getElementById('msg-patient-name').textContent = client.name || 'Paciente';
+    
+    const phoneEl = document.getElementById('msg-patient-phone');
+    if (phoneEl) {
+        phoneEl.innerHTML = client.phone ? `<i class="bi bi-whatsapp text-success me-1"></i> ${client.phone}` : '<i class="bi bi-whatsapp text-muted me-1"></i> Sin teléfono';
+    }
+
+    const emailEl = document.getElementById('msg-patient-email');
+    if (emailEl) {
+        emailEl.innerHTML = client.email ? `<i class="bi bi-envelope text-primary me-1"></i> ${client.email}` : '<i class="bi bi-envelope text-muted me-1"></i> Sin correo';
+    }
+
+    const badgeEl = document.getElementById('msg-eval-badge');
+    if (badgeEl) {
+        badgeEl.textContent = evaluation ? `TRU Score: ${evaluation.global_score ?? '--'}/100` : 'Sin evaluación previa';
+    }
+
+    currentMsgTemplate = 'results';
+    document.querySelectorAll('.msg-tpl-btn').forEach(btn => {
+        const isResults = btn.dataset.template === 'results';
+        btn.classList.toggle('active', isResults);
+        btn.classList.toggle('btn-outline-primary', isResults);
+        btn.classList.toggle('btn-outline-secondary', !isResults);
+    });
+
+    updateMessageText();
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+function updateMessageText() {
+    if (!currentMsgPatient) return;
+    const p = currentMsgPatient;
+    const ev = currentMsgEval;
+    const attachEval = document.getElementById('msg-attach-eval') ? document.getElementById('msg-attach-eval').checked : true;
+    const clinicName = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
+    const doctorName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+
+    let text = '';
+    if (currentMsgTemplate === 'results') {
+        text += `¡Hola ${p.name}! 👋\n\n`;
+        text += `Te compartimos el informe de tu evaluación de composición corporal realizada en *${clinicName}*:\n\n`;
+        
+        if (ev && attachEval) {
+            const dateStr = ev.created_at ? new Date(ev.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Reciente';
+            text += `📅 *Fecha de Evaluación:* ${dateStr}\n`;
+            if (ev.global_score !== undefined && ev.global_score !== null) {
+                text += `📊 *TRU Body Score:* ${ev.global_score}/100\n`;
+            }
+            if (ev.smm) {
+                text += `💪 *Masa Muscular Esquelética (SMM):* ${ev.smm} kg\n`;
+            }
+            if (ev.fat_mass) {
+                text += `⚡ *Masa Grasa:* ${ev.fat_mass} kg\n`;
+            }
+            if (ev.phase_angle) {
+                text += `🔬 *Ángulo de Fase (PhA):* ${ev.phase_angle}°\n`;
+            }
+            if (ev.cell_status) {
+                text += `🩺 *Estado Celular:* ${ev.cell_status}\n`;
+            }
+            text += `\n`;
+        }
+        text += `¡Felicitaciones por tu compromiso! Seguimos a tu disposición para cualquier consulta.\n\n`;
+        text += `Atentamente,\n*${doctorName}*\n${clinicName}`;
+    } else if (currentMsgTemplate === 'reminder') {
+        text += `¡Hola ${p.name}! 👋\n\n`;
+        text += `Te saludamos desde *${clinicName}*.\n\n`;
+        text += `Te recordamos que es momento de agendar tu siguiente *control periódico de bioimpedancia* para evaluar la evolución de tu masa muscular, grasa e hidratación.\n\n`;
+        text += `Responde a este mensaje para coordinar el día y horario que mejor te convenga. 📅\n\n`;
+        text += `¡Que tengas un excelente día!\n*${doctorName}*`;
+    } else {
+        text += `¡Hola ${p.name}! 👋\n\n`;
+        text += `Te escribimos desde *${clinicName}*.\n\n`;
+        if (ev && attachEval && ev.global_score) {
+            text += `📊 Tu último TRU Body Score registrado fue de *${ev.global_score}/100*.\n\n`;
+        }
+        text += `[Escribe tu mensaje personalizado aquí]\n\n`;
+        text += `Saludos cordiales,\n*${doctorName}*`;
+    }
+
+    const textarea = document.getElementById('msg-textarea');
+    if (textarea) textarea.value = text;
+}
+
+// --- 5. CLIENTES (DIRECTORIO GENERAL) ---
+let allClientsData = [];
 let editingClientId = null;
 
 function initClients() {
     const form = document.getElementById('client-form');
     if (!form) return;
 
-    // Cargar tabla inicial
     fetchClients();
 
     const btnCancel = document.getElementById('btn-cancel-client');
     const btnSave = document.getElementById('btn-save-client');
+    const searchInput = document.getElementById('clients-search-input');
 
-    btnCancel.addEventListener('click', () => {
-        form.reset();
-        editingClientId = null;
-        btnSave.textContent = 'Guardar Cliente';
-        btnCancel.classList.add('hidden-view');
-        const h3 = form.previousElementSibling;
-        if (h3) h3.textContent = 'Registrar Cliente';
-    });
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = normalizeText(e.target.value);
+            if (!query) {
+                renderClientsTable(allClientsData);
+                return;
+            }
+            const filtered = allClientsData.filter(c => {
+                const name = normalizeText(c.name);
+                const idp = normalizeText(c.idp);
+                const phone = normalizeText(c.phone);
+                const email = normalizeText(c.email);
+                const code = 'id-' + String(c.code ?? 0).padStart(4, '0');
+                return name.includes(query) || idp.includes(query) || phone.includes(query) || email.includes(query) || code.includes(query);
+            });
+            renderClientsTable(filtered);
+        });
+    }
 
-    // Guardar o Actualizar cliente
+    if (btnCancel) {
+        btnCancel.addEventListener('click', () => {
+            form.reset();
+            editingClientId = null;
+            const btnSaveText = document.getElementById('btn-save-client-text');
+            if (btnSaveText) btnSaveText.textContent = 'Guardar Paciente';
+            btnCancel.classList.add('hidden-view');
+            const titleEl = document.getElementById('client-form-title');
+            if (titleEl) titleEl.textContent = 'Registrar Paciente';
+            const iconEl = document.getElementById('client-form-icon');
+            if (iconEl) iconEl.innerHTML = '<i class="bi bi-person-plus-fill"></i>';
+            const badgeEl = document.getElementById('client-editing-badge');
+            if (badgeEl) badgeEl.style.display = 'none';
+        });
+    }
+
+    // Guardar o Actualizar paciente
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const originalText = btnSave.textContent;
-        btnSave.textContent = 'Guardando...';
-        btnSave.disabled = true;
+        const btnSaveText = document.getElementById('btn-save-client-text');
+        const originalText = btnSaveText ? btnSaveText.textContent : 'Guardar';
+        if (btnSave) {
+            btnSave.disabled = true;
+            if (btnSaveText) btnSaveText.textContent = 'Guardando...';
+        }
 
         const payload = {
-            name: document.getElementById('new-client-name').value,
-            phone: document.getElementById('new-client-phone').value,
-            email: document.getElementById('new-client-email').value
+            idp: document.getElementById('new-client-idp').value.trim() || null,
+            name: document.getElementById('new-client-name').value.trim(),
+            age: document.getElementById('new-client-age').value ? parseInt(document.getElementById('new-client-age').value) : null,
+            gender: document.getElementById('new-client-gender').value || 'Masculino',
+            height: document.getElementById('new-client-height').value ? parseFloat(document.getElementById('new-client-height').value) : null,
+            phone: document.getElementById('new-client-phone').value.trim() || null,
+            email: document.getElementById('new-client-email').value.trim() || null
         };
 
         const method = editingClientId ? 'PUT' : 'POST';
@@ -1178,18 +1487,18 @@ function initClients() {
             if (result.success) {
                 const wasEditing = Boolean(editingClientId);
                 const assignedCode = result.data && result.data.code;
-                btnCancel.click();
+                if (btnCancel) btnCancel.click();
                 fetchClients();
-                showToast(wasEditing ? 'Cliente actualizado exitosamente' : 'Cliente guardado con el código ' + assignedCode, 'success');
+                showToast(wasEditing ? 'Paciente actualizado exitosamente' : `Paciente registrado con el código ID-${String(assignedCode).padStart(4, '0')}`, 'success');
             } else {
                 showToast('Error al guardar: ' + result.error, 'error');
             }
         } catch (err) {
             console.error(err);
-            showToast('Error de conexión.', 'error');
+            showToast('Error de conexión con el servidor.', 'error');
         } finally {
-            btnSave.textContent = originalText;
-            btnSave.disabled = false;
+            if (btnSave) btnSave.disabled = false;
+            if (btnSaveText) btnSaveText.textContent = originalText;
         }
     });
 }
@@ -1199,25 +1508,25 @@ async function fetchClients() {
     const totalCountEl = document.getElementById('clients-total-count');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>';
 
     try {
         const res = await fetch('/api/clients');
-        const clients = await res.json();
+        allClientsData = await res.json();
         
-        const count = (res.ok && Array.isArray(clients)) ? clients.length : 0;
+        const count = (res.ok && Array.isArray(allClientsData)) ? allClientsData.length : 0;
         if (totalCountEl) totalCountEl.textContent = count;
 
-        if (!res.ok || !Array.isArray(clients) || clients.length === 0) {
+        if (!res.ok || !Array.isArray(allClientsData) || allClientsData.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="4" class="text-center py-5">
+                    <td colspan="5" class="text-center py-5">
                         <div class="d-flex flex-column align-items-center justify-content-center py-4">
-                            <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                            <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 58px; height: 58px;">
                                 <i class="bi bi-people-fill fs-2"></i>
                             </div>
                             <h5 class="fw-bold text-navy mb-1">No tienes pacientes registrados todavía</h5>
-                            <p class="text-muted small mb-3">Registra tu primer paciente ahora usando el formulario lateral</p>
+                            <p class="text-muted small mb-3">Registra tu primer paciente usando el formulario lateral</p>
                             <button type="button" class="btn btn-sm btn-primary px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-2" onclick="document.getElementById('new-client-name').focus()">
                                 <i class="bi bi-person-plus-fill"></i> Registrar Primer Paciente
                             </button>
@@ -1228,83 +1537,205 @@ async function fetchClients() {
             return;
         }
 
-        tbody.replaceChildren();
-        clients.forEach(c => {
-            const tr = document.createElement('tr');
-            const tdCode = document.createElement('td');
-            const badge = document.createElement('span');
-            badge.className = 'code-badge';
-            badge.textContent = 'ID-' + String(c.code ?? 0).padStart(4, '0');
-            tdCode.appendChild(badge);
+        renderClientsTable(allClientsData);
 
-            const tdName = document.createElement('td');
-            tdName.style.fontWeight = '600';
-            tdName.textContent = c.name || '';
+        // Actualizar datalists de Bioimpedancia
+        if (window.updateBioDatalists) {
+            window.updateBioDatalists();
+        }
 
-            const tdContact = document.createElement('td');
-            if (c.phone) tdContact.append(`📞 ${c.phone}`);
-            if (c.phone && c.email) tdContact.appendChild(document.createElement('br'));
-            if (c.email) tdContact.append(`📧 ${c.email}`);
-
-            const tdActions = document.createElement('td');
-            tdActions.className = 'text-end';
-
-            const actionsWrap = document.createElement('div');
-            actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
-
-            const btnEvals = document.createElement('button');
-            btnEvals.type = 'button';
-            btnEvals.className = 'btn btn-sm btn-primary-evals d-inline-flex align-items-center gap-1 shadow-xs';
-            btnEvals.innerHTML = '<i class="bi bi-journal-medical"></i> Evaluaciones';
-            btnEvals.title = 'Ver historial de evaluaciones de este paciente';
-            btnEvals.addEventListener('click', () => {
-                const evalNav = document.querySelector('[data-target="evaluaciones-view"]');
-                if (evalNav) evalNav.click();
-                const searchInput = document.getElementById('eval-search-input');
-                if (searchInput) {
-                    searchInput.value = c.name || '';
-                    filterAndRenderEvaluaciones();
-                }
-                showToast(`Mostrando evaluaciones de ${c.name}`, 'info');
-            });
-
-            const btnEdit = document.createElement('button');
-            btnEdit.type = 'button';
-            btnEdit.className = 'btn btn-sm btn-action-edit d-inline-flex align-items-center gap-1';
-            btnEdit.innerHTML = '<i class="bi bi-pencil"></i> Editar';
-            btnEdit.title = 'Editar datos del paciente';
-            btnEdit.addEventListener('click', () => editClient(c.id, c.name || '', c.phone || '', c.email || ''));
-
-            const btnDel = document.createElement('button');
-            btnDel.type = 'button';
-            btnDel.className = 'btn btn-sm btn-action-delete d-inline-flex align-items-center gap-1';
-            btnDel.innerHTML = '<i class="bi bi-trash3"></i> Eliminar';
-            btnDel.title = 'Eliminar paciente';
-            btnDel.addEventListener('click', () => deleteClient(c.id));
-
-            actionsWrap.append(btnEvals, btnEdit, btnDel);
-            tdActions.appendChild(actionsWrap);
-
-            tr.append(tdCode, tdName, tdContact, tdActions);
-            tbody.appendChild(tr);
-        });
     } catch (err) {
         console.error(err);
         if (totalCountEl) totalCountEl.textContent = '0';
-        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error al cargar la lista de pacientes.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-danger">Error al cargar la lista de pacientes.</td></tr>';
     }
+}
+
+function renderClientsTable(clientsList) {
+    const tbody = document.getElementById('clients-tbody');
+    if (!tbody) return;
+
+    if (!clientsList || clientsList.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center py-5">
+                    <div class="d-flex flex-column align-items-center justify-content-center py-4">
+                        <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 54px; height: 54px;">
+                            <i class="bi bi-search fs-3"></i>
+                        </div>
+                        <h6 class="fw-bold text-navy mb-1">No se encontraron pacientes</h6>
+                        <p class="text-muted small mb-0">Modifica el término de búsqueda o registra un paciente nuevo.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.replaceChildren();
+    clientsList.forEach(c => {
+        const tr = document.createElement('tr');
+
+        // 1. Código & IDP
+        const tdCode = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = 'code-badge';
+        badge.textContent = 'ID-' + String(c.code ?? 0).padStart(4, '0');
+        tdCode.appendChild(badge);
+        if (c.idp) {
+            const idpSpan = document.createElement('div');
+            idpSpan.className = 'text-muted small mt-0.5 font-monospace';
+            idpSpan.textContent = `IDP: ${c.idp}`;
+            tdCode.appendChild(idpSpan);
+        }
+
+        // 2. Paciente (Nombre, edad, genero, altura)
+        const tdName = document.createElement('td');
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'fw-bold text-navy';
+        nameDiv.textContent = c.name || '';
+        tdName.appendChild(nameDiv);
+
+        const pillsDiv = document.createElement('div');
+        pillsDiv.className = 'd-flex flex-wrap gap-1 mt-1';
+        if (c.age) {
+            const pill = document.createElement('span');
+            pill.className = 'badge bg-light text-secondary border small';
+            pill.textContent = `${c.age} años`;
+            pillsDiv.appendChild(pill);
+        }
+        if (c.gender) {
+            const pill = document.createElement('span');
+            pill.className = 'badge bg-light text-secondary border small';
+            pill.textContent = (c.gender === 'male' || c.gender === 'Masculino') ? '♂ Masc.' : '♀ Fem.';
+            pillsDiv.appendChild(pill);
+        }
+        if (c.height) {
+            const pill = document.createElement('span');
+            pill.className = 'badge bg-light text-secondary border small';
+            pill.textContent = `${c.height} cm`;
+            pillsDiv.appendChild(pill);
+        }
+        if (pillsDiv.children.length > 0) tdName.appendChild(pillsDiv);
+
+        // 3. Contacto (Teléfono y Email)
+        const tdContact = document.createElement('td');
+        if (c.phone) {
+            const phoneDiv = document.createElement('div');
+            phoneDiv.className = 'small text-secondary d-flex align-items-center gap-1';
+            phoneDiv.innerHTML = `<i class="bi bi-whatsapp text-success"></i> <span>${c.phone}</span>`;
+            tdContact.appendChild(phoneDiv);
+        }
+        if (c.email) {
+            const emailDiv = document.createElement('div');
+            emailDiv.className = 'small text-muted d-flex align-items-center gap-1 mt-0.5';
+            emailDiv.innerHTML = `<i class="bi bi-envelope"></i> <span>${c.email}</span>`;
+            tdContact.appendChild(emailDiv);
+        }
+        if (!c.phone && !c.email) {
+            tdContact.innerHTML = '<span class="text-muted small">Sin contacto</span>';
+        }
+
+        // 4. Última Evaluación
+        const tdLastEval = document.createElement('td');
+        if (c.last_evaluation) {
+            const score = c.last_evaluation.global_score ?? '--';
+            const dateStr = c.last_evaluation.created_at ? new Date(c.last_evaluation.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' }) : '';
+            tdLastEval.innerHTML = `
+                <div class="d-inline-flex align-items-center gap-1.5 badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2 py-1 rounded-pill">
+                    <i class="bi bi-lightning-charge-fill text-warning"></i>
+                    <span>TRU ${score}/100</span>
+                </div>
+                <div class="text-muted small mt-0.5">${dateStr}</div>
+            `;
+        } else {
+            tdLastEval.innerHTML = '<span class="badge bg-light text-muted border small">Sin evaluar</span>';
+        }
+
+        // 5. Acciones
+        const tdActions = document.createElement('td');
+        tdActions.className = 'text-end';
+
+        const actionsWrap = document.createElement('div');
+        actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
+
+        // Botón Evaluar en Calculadora
+        const btnEval = document.createElement('button');
+        btnEval.type = 'button';
+        btnEval.className = 'btn btn-sm btn-light border px-2.5 py-1 text-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs';
+        btnEval.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> Evaluar';
+        btnEval.title = 'Abrir en Calculadora de Bioimpedancia';
+        btnEval.addEventListener('click', () => {
+            const bioNav = document.querySelector('[data-target="bio-view"]');
+            if (bioNav) bioNav.click();
+            fillBioFormFromClient(c);
+            document.getElementById('input-r').focus();
+            showToast(`Ficha de ${c.name} cargada en calculadora`, 'info');
+        });
+
+        // Botón Enviar WhatsApp / Mensaje
+        const btnMsg = document.createElement('button');
+        btnMsg.type = 'button';
+        btnMsg.className = 'btn btn-sm btn-outline-success px-2.5 py-1 fw-semibold d-inline-flex align-items-center gap-1';
+        btnMsg.style.borderColor = '#25D366';
+        btnMsg.style.color = '#128C7E';
+        btnMsg.innerHTML = '<i class="bi bi-whatsapp"></i> Mensaje';
+        btnMsg.title = 'Enviar mensaje por WhatsApp o correo';
+        btnMsg.addEventListener('click', () => {
+            openPatientMessageModal(c, c.last_evaluation);
+        });
+
+        // Botón Ver Evaluaciones
+        const btnEvals = document.createElement('button');
+        btnEvals.type = 'button';
+        btnEvals.className = 'btn btn-sm btn-primary-evals d-inline-flex align-items-center gap-1 shadow-2xs';
+        btnEvals.innerHTML = '<i class="bi bi-journal-medical"></i>';
+        btnEvals.title = 'Ver historial de evaluaciones';
+        btnEvals.addEventListener('click', () => {
+            const evalNav = document.querySelector('[data-target="evaluaciones-view"]');
+            if (evalNav) evalNav.click();
+            const searchInput = document.getElementById('eval-search-input');
+            if (searchInput) {
+                searchInput.value = c.name || '';
+                filterAndRenderEvaluaciones();
+            }
+            showToast(`Mostrando evaluaciones de ${c.name}`, 'info');
+        });
+
+        // Botón Editar
+        const btnEdit = document.createElement('button');
+        btnEdit.type = 'button';
+        btnEdit.className = 'btn btn-sm btn-action-edit d-inline-flex align-items-center gap-1';
+        btnEdit.innerHTML = '<i class="bi bi-pencil"></i>';
+        btnEdit.title = 'Editar datos del paciente';
+        btnEdit.addEventListener('click', () => editClient(c));
+
+        // Botón Eliminar
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'btn btn-sm btn-action-delete d-inline-flex align-items-center gap-1';
+        btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+        btnDel.title = 'Eliminar paciente';
+        btnDel.addEventListener('click', () => deleteClient(c.id));
+
+        actionsWrap.append(btnEval, btnMsg, btnEvals, btnEdit, btnDel);
+        tdActions.appendChild(actionsWrap);
+
+        tr.append(tdCode, tdName, tdContact, tdLastEval, tdActions);
+        tbody.appendChild(tr);
+    });
 }
 
 function deleteClient(id) {
     showConfirm(
-        'Eliminar Cliente',
-        '¿Estás seguro de que deseas eliminar este cliente? Su código será reasignado al próximo cliente nuevo.',
+        'Eliminar Paciente',
+        '¿Estás seguro de que deseas eliminar este paciente del directorio? Su código será reasignado al próximo registro.',
         async () => {
             try {
                 const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
                 const result = await res.json();
                 if (result.success) {
-                    showToast('Cliente eliminado correctamente', 'success');
+                    showToast('Paciente eliminado correctamente', 'success');
                     fetchClients();
                 } else {
                     showToast('Error al eliminar: ' + result.error, 'error');
@@ -1317,18 +1748,35 @@ function deleteClient(id) {
     );
 }
 
-function editClient(id, name, phone, email) {
-    editingClientId = id;
+function editClient(client) {
+    if (!client) return;
+    editingClientId = client.id;
 
-    document.getElementById('new-client-name').value = name;
-    document.getElementById('new-client-phone').value = phone;
-    document.getElementById('new-client-email').value = email;
+    if (document.getElementById('new-client-idp')) document.getElementById('new-client-idp').value = client.idp || '';
+    if (document.getElementById('new-client-name')) document.getElementById('new-client-name').value = client.name || '';
+    if (document.getElementById('new-client-age')) document.getElementById('new-client-age').value = client.age || '';
+    if (document.getElementById('new-client-gender')) {
+        const g = (client.gender === 'Femenino' || client.gender === 'female') ? 'Femenino' : 'Masculino';
+        document.getElementById('new-client-gender').value = g;
+    }
+    if (document.getElementById('new-client-height')) document.getElementById('new-client-height').value = client.height || '';
+    if (document.getElementById('new-client-phone')) document.getElementById('new-client-phone').value = client.phone || '';
+    if (document.getElementById('new-client-email')) document.getElementById('new-client-email').value = client.email || '';
 
-    document.getElementById('btn-save-client').textContent = 'Actualizar Cliente';
-    document.getElementById('btn-cancel-client').classList.remove('hidden-view');
+    const btnSaveText = document.getElementById('btn-save-client-text');
+    if (btnSaveText) btnSaveText.textContent = 'Actualizar Paciente';
+    
+    const btnCancel = document.getElementById('btn-cancel-client');
+    if (btnCancel) btnCancel.classList.remove('hidden-view');
 
-    const h3 = document.querySelector('#client-form').previousElementSibling;
-    if (h3) h3.textContent = 'Editar Cliente';
+    const titleEl = document.getElementById('client-form-title');
+    if (titleEl) titleEl.textContent = 'Editar Paciente';
+    
+    const iconEl = document.getElementById('client-form-icon');
+    if (iconEl) iconEl.innerHTML = '<i class="bi bi-pencil-square"></i>';
+
+    const badgeEl = document.getElementById('client-editing-badge');
+    if (badgeEl) badgeEl.style.display = 'inline-block';
 }
 
 // --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---
@@ -1546,27 +1994,46 @@ function initEvaluaciones() {
         btnEditClient.addEventListener('click', async () => {
             if (!selectedEvaluationData) return;
             const patientName = selectedEvaluationData.patient_name;
+            const patientIdp = selectedEvaluationData.patient_idp;
             modal.classList.add('hidden');
 
             // Switch to clients view
             const clientsNav = document.querySelector('[data-target="clientes-view"]');
             if (clientsNav) clientsNav.click();
 
-            // Try to find matching client by name
-            try {
-                const res = await fetch('/api/clients');
-                const clients = await res.json();
-                const match = clients.find(c => (c.name || '').toLowerCase() === (patientName || '').toLowerCase());
-                if (match) {
-                    editClient(match.id, match.name, match.phone || '', match.email || '');
-                    showToast(`Editando datos de ${match.name}`, 'info');
-                } else {
-                    document.getElementById('new-client-name').value = patientName || '';
-                    showToast(`Creando/Editando registro para ${patientName}`, 'info');
-                }
-            } catch (err) {
-                console.error(err);
+            // Try to find matching client
+            let match = allClientsData.find(c => (patientIdp && c.idp === patientIdp) || (c.name || '').toLowerCase() === (patientName || '').toLowerCase());
+            if (match) {
+                editClient(match);
+                showToast(`Editando ficha de ${match.name}`, 'info');
+            } else {
+                if (document.getElementById('new-client-name')) document.getElementById('new-client-name').value = patientName || '';
+                if (document.getElementById('new-client-idp')) document.getElementById('new-client-idp').value = patientIdp || '';
+                showToast(`Creando registro para ${patientName}`, 'info');
             }
+        });
+    }
+
+    // Modal action: Share WhatsApp / Message
+    const btnShareWa = document.getElementById('btn-modal-share-wa');
+    if (btnShareWa) {
+        btnShareWa.addEventListener('click', () => {
+            if (!selectedEvaluationData) return;
+            const patientName = selectedEvaluationData.patient_name;
+            const patientIdp = selectedEvaluationData.patient_idp;
+
+            let match = allClientsData.find(c => (patientIdp && c.idp === patientIdp) || (c.name || '').toLowerCase() === (patientName || '').toLowerCase());
+            if (!match) {
+                match = {
+                    name: patientName || 'Paciente',
+                    idp: patientIdp || null,
+                    phone: '',
+                    email: ''
+                };
+            }
+
+            modal.classList.add('hidden');
+            openPatientMessageModal(match, selectedEvaluationData);
         });
     }
 

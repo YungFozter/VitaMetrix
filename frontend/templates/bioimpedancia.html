@@ -47,13 +47,15 @@
                                             <div class="col-12 col-sm-4">
                                                 <div class="form-group">
                                                     <label for="input-idp">IDP (Paciente)</label>
-                                                    <input type="text" id="input-idp" required placeholder="Ej: 1234567" value="1234567">
+                                                    <input type="text" id="input-idp" list="clients-idp-datalist" required placeholder="Ej: 1234567" value="1234567" autocomplete="off">
+                                                    <datalist id="clients-idp-datalist"></datalist>
                                                 </div>
                                             </div>
                                             <div class="col-12 col-sm-8">
                                                 <div class="form-group">
                                                     <label for="input-name">Nombre Completo</label>
-                                                    <input type="text" id="input-name" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO">
+                                                    <input type="text" id="input-name" list="clients-name-datalist" required placeholder="Ej: SENAS PINTO, M." value="SENAS PINTO, MABEL ROSARIO" autocomplete="off">
+                                                    <datalist id="clients-name-datalist"></datalist>
                                                 </div>
                                             </div>
                                             <div class="col-6">

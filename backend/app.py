@@ -509,7 +509,41 @@ def get_clients():
         return jsonify([]), 200
     try:
         res = supabase.table('clients').select('*').order('code').execute()
-        return jsonify(res.data or [])
+        clients = res.data or []
+
+        # Adjuntar resumen de última evaluación si existe
+        try:
+            evals_res = supabase.table('evaluations').select('id, code, patient_name, patient_idp, global_score, resistance, reactance, smm, fat_mass, created_at').order('created_at', desc=True).execute()
+            evals = evals_res.data or []
+            eval_by_name = {}
+            eval_by_idp = {}
+            for ev in evals:
+                p_name = (ev.get('patient_name') or '').strip().lower()
+                p_idp = (ev.get('patient_idp') or '').strip()
+                if p_name and p_name not in eval_by_name:
+                    eval_by_name[p_name] = ev
+                if p_idp and p_idp not in eval_by_idp:
+                    eval_by_idp[p_idp] = ev
+
+            for c in clients:
+                c_name = (c.get('name') or '').strip().lower()
+                c_idp = (c.get('idp') or '').strip()
+                matched_ev = eval_by_idp.get(c_idp) if c_idp else None
+                if not matched_ev and c_name:
+                    matched_ev = eval_by_name.get(c_name)
+                
+                if matched_ev:
+                    r = float(matched_ev.get('resistance') or 0)
+                    xc = float(matched_ev.get('reactance') or 0)
+                    biva = get_biva_interpretation(r, xc)
+                    matched_ev['phase_angle'] = biva.get('phase_angle', 0)
+                    matched_ev['cell_status'] = biva.get('cell_status', '')
+
+                c['last_evaluation'] = matched_ev
+        except Exception:
+            pass
+
+        return jsonify(clients)
     except Exception as e:
         logging.error("Error al obtener clientes: %s", e, exc_info=True)
         return jsonify({"error": "Error al obtener clientes"}), 500
@@ -522,6 +556,22 @@ def add_client():
     name = _clean_str(data.get('name'), max_len=100)
     phone = _clean_str(data.get('phone'), max_len=30)
     email = _clean_str(data.get('email'), max_len=100)
+    idp = _clean_str(data.get('idp'), max_len=50)
+    gender = data.get('gender') or None
+    
+    age = None
+    if data.get('age'):
+        try:
+            age = int(data.get('age'))
+        except (ValueError, TypeError):
+            pass
+
+    height = None
+    if data.get('height'):
+        try:
+            height = float(data.get('height'))
+        except (ValueError, TypeError):
+            pass
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -543,9 +593,18 @@ def add_client():
             "code": new_code,
             "name": name,
             "phone": phone,
-            "email": email
+            "email": email,
+            "idp": idp or None,
+            "age": age,
+            "gender": gender,
+            "height": height
         }
-        res_insert = supabase.table('clients').insert(new_client).execute()
+        try:
+            res_insert = supabase.table('clients').insert(new_client).execute()
+        except Exception:
+            # Fallback en caso de que la tabla clients en Supabase no tenga columnas extra aún
+            fallback_client = {"code": new_code, "name": name, "phone": phone, "email": email}
+            res_insert = supabase.table('clients').insert(fallback_client).execute()
         
         return jsonify({"success": True, "data": res_insert.data[0] if res_insert.data else {}})
     except Exception as e:
@@ -560,6 +619,22 @@ def update_client(client_id):
     name = _clean_str(data.get('name'), max_len=100)
     phone = _clean_str(data.get('phone'), max_len=30)
     email = _clean_str(data.get('email'), max_len=100)
+    idp = _clean_str(data.get('idp'), max_len=50)
+    gender = data.get('gender') or None
+
+    age = None
+    if data.get('age'):
+        try:
+            age = int(data.get('age'))
+        except (ValueError, TypeError):
+            pass
+
+    height = None
+    if data.get('height'):
+        try:
+            height = float(data.get('height'))
+        except (ValueError, TypeError):
+            pass
     
     if not name:
         return jsonify({"error": "El nombre es obligatorio"}), 400
@@ -568,9 +643,18 @@ def update_client(client_id):
         updated_data = {
             "name": name,
             "phone": phone,
-            "email": email
+            "email": email,
+            "idp": idp or None,
+            "age": age,
+            "gender": gender,
+            "height": height
         }
-        res = supabase.table('clients').update(updated_data).eq('id', client_id).execute()
+        try:
+            res = supabase.table('clients').update(updated_data).eq('id', client_id).execute()
+        except Exception:
+            fallback_updated = {"name": name, "phone": phone, "email": email}
+            res = supabase.table('clients').update(fallback_updated).eq('id', client_id).execute()
+            
         return jsonify({"success": True, "data": res.data[0] if res.data else {}})
     except Exception as e:
         logging.error("Error al actualizar cliente: %s", e, exc_info=True)

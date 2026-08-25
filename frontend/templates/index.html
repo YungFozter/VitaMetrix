@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=77">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=78">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -654,18 +654,104 @@
 
             <!-- Footer con Botones Estilizados del Sistema -->
             <div class="p-3.5 px-4 bg-light bg-opacity-75 border-top d-flex flex-wrap align-items-center justify-content-between gap-2.5 flex-shrink-0">
-                <button type="button" id="btn-modal-edit-client" class="btn btn-outline-primary px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 text-primary" style="font-size: 0.88rem;">
-                    <i class="bi bi-pencil-square"></i>
-                    <span>Editar Datos Cliente</span>
-                </button>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" id="btn-modal-print-eval" class="btn btn-light border px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 text-secondary shadow-2xs" onclick="window.print()" style="font-size: 0.88rem;">
-                        <i class="bi bi-printer-fill text-muted"></i>
-                        <span>Imprimir Ficha</span>
+                    <button type="button" id="btn-modal-edit-client" class="btn btn-outline-primary px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-primary" style="font-size: 0.85rem;">
+                        <i class="bi bi-pencil-square"></i>
+                        <span>Editar Datos</span>
                     </button>
-                    <button type="button" id="btn-modal-open-calc" class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-2 shadow-sm" style="font-size: 0.88rem;">
+                    <button type="button" id="btn-modal-share-wa" class="btn btn-outline-success px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem; border-color: #25D366; color: #128C7E;">
+                        <i class="bi bi-whatsapp"></i>
+                        <span>Enviar WhatsApp</span>
+                    </button>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-modal-print-eval" class="btn btn-light border px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-secondary shadow-2xs" onclick="window.print()" style="font-size: 0.85rem;">
+                        <i class="bi bi-printer-fill text-muted"></i>
+                        <span>Imprimir</span>
+                    </button>
+                    <button type="button" id="btn-modal-open-calc" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm" style="font-size: 0.85rem;">
                         <i class="bi bi-lightning-charge-fill text-warning"></i>
                         <span>Recargar en Calculadora</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE MENSAJERÍA DIRECTA AL PACIENTE (WHATSAPP & EMAIL) -->
+    <div id="patient-message-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; z-index: 100000; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-box bg-white rounded-4 shadow-xl border-0" style="max-width: 580px; width: 100%; max-height: 92vh; overflow-y: auto; text-align: left; padding: 1.6rem;">
+            <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+                <div class="d-flex align-items-center gap-2.5">
+                    <span class="fs-4 text-success"><i class="bi bi-chat-dots-fill"></i></span>
+                    <div>
+                        <h3 class="fw-bold text-navy fs-5 m-0">Mensaje Directo al Paciente</h3>
+                        <p class="text-muted small m-0">Envío predeterminado o personalizado con reporte clínico</p>
+                    </div>
+                </div>
+                <button type="button" class="btn-close shadow-none" id="msg-modal-close" aria-label="Cerrar modal"></button>
+            </div>
+
+            <!-- Banner Resumen del Paciente -->
+            <div class="p-3 rounded-3 bg-light border mb-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h4 class="fw-bold text-navy fs-6 m-0" id="msg-patient-name">Cargando paciente...</h4>
+                        <div class="text-muted small mt-1 d-flex flex-wrap align-items-center gap-3">
+                            <span id="msg-patient-phone"><i class="bi bi-whatsapp text-success me-1"></i> Sin teléfono</span>
+                            <span id="msg-patient-email"><i class="bi bi-envelope text-muted me-1"></i> Sin email</span>
+                        </div>
+                    </div>
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-pill small" id="msg-eval-badge">
+                        Evaluación BIA
+                    </span>
+                </div>
+            </div>
+
+            <!-- Selector de Plantillas Predeterminadas -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1.5">Seleccionar Plantilla</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary active msg-tpl-btn" data-template="results">
+                        <i class="bi bi-clipboard2-pulse-fill me-1"></i> Resultados BIA
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary msg-tpl-btn" data-template="reminder">
+                        <i class="bi bi-calendar-event me-1"></i> Recordatorio Control
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary msg-tpl-btn" data-template="custom">
+                        <i class="bi bi-pencil me-1"></i> Mensaje Libre
+                    </button>
+                </div>
+            </div>
+
+            <!-- Interruptor para incluir / excluir métricas -->
+            <div class="form-check form-switch mb-3 p-2.5 px-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+                <label class="form-check-label text-secondary fw-semibold small m-0" for="msg-attach-eval">
+                    📊 Adjuntar métricas de última evaluación (TRU Score, Músculo, Grasa, PhA)
+                </label>
+                <input class="form-check-input ms-2" type="checkbox" role="switch" id="msg-attach-eval" checked>
+            </div>
+
+            <!-- Textarea con el mensaje editable -->
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Contenido del Mensaje</label>
+                <textarea id="msg-textarea" class="form-control shadow-none font-monospace small" rows="8" placeholder="Escribe el mensaje aquí..." style="resize: vertical; font-size: 0.88rem;"></textarea>
+                <div class="form-text small text-muted text-end mt-1">Puedes personalizar el texto antes de enviar.</div>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <button type="button" id="msg-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold">
+                    Cancelar
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="msg-btn-email" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                        <i class="bi bi-envelope-fill text-muted"></i>
+                        <span>Enviar por Correo</span>
+                    </button>
+                    <button type="button" id="msg-btn-whatsapp" class="btn btn-success px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-2" style="background-color: #25D366; border-color: #25D366;">
+                        <i class="bi bi-whatsapp fs-6"></i>
+                        <span>Abrir en WhatsApp</span>
                     </button>
                 </div>
             </div>
@@ -679,6 +765,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=77"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=78"></script>
 </body>
 </html>
