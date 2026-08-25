@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=92">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=93">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -942,8 +942,13 @@
                 </div>
 
                 <!-- Lista de Categorías con Conteo y Edición -->
-                <div class="text-muted small fw-bold text-uppercase mb-2">Categorías Activas en Sistema</div>
-                <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 250px; overflow-y: auto; padding-right: 6px;">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <div class="text-muted small fw-bold text-uppercase">Categorías Activas</div>
+                    <div style="width: 220px;">
+                        <input type="text" id="search-tax-cats" class="form-control form-control-sm shadow-none" style="font-size: 0.76rem;" placeholder="🔍 Filtrar categoría...">
+                    </div>
+                </div>
+                <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
                     <!-- Inyectado dinámicamente -->
                 </div>
             </div>
@@ -974,8 +979,17 @@
                     </div>
                 </div>
 
-                <div class="text-muted small fw-bold text-uppercase mb-2">Familias de Unidades Clínicas</div>
-                <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 250px; overflow-y: auto; padding-right: 6px;">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-1.5 mb-2">
+                    <div class="text-muted small fw-bold text-uppercase">Familias Clínicas</div>
+                    <div class="d-flex align-items-center gap-1 flex-wrap">
+                        <button type="button" class="btn btn-xs btn-primary border py-0.5 px-2 active tax-unit-pill" data-family="all" style="font-size: 0.72rem;">Todos</button>
+                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Conteo" style="font-size: 0.72rem;">Conteo</button>
+                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Posología" style="font-size: 0.72rem;">Posología</button>
+                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Volumen" style="font-size: 0.72rem;">Volumen</button>
+                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Peso" style="font-size: 0.72rem;">Peso</button>
+                    </div>
+                </div>
+                <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
                     <!-- Inyectado dinámicamente -->
                 </div>
             </div>
@@ -995,6 +1009,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=92"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=93"></script>
 </body>
 </html>

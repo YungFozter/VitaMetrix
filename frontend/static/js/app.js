@@ -4789,6 +4789,27 @@ function initStockTaxonomyModal() {
             renderTaxonomyUnits();
         });
     }
+
+    // Buscador en tiempo real de Categorías en Modal
+    const searchTaxCats = document.getElementById('search-tax-cats');
+    if (searchTaxCats) {
+        searchTaxCats.addEventListener('input', (e) => {
+            renderTaxonomyCategories(e.target.value);
+        });
+    }
+
+    // Filtros de Familias de Unidades en Modal
+    document.querySelectorAll('.tax-unit-pill').forEach(pill => {
+        pill.addEventListener('click', () => {
+            document.querySelectorAll('.tax-unit-pill').forEach(p => {
+                p.classList.remove('active', 'btn-primary');
+                p.classList.add('btn-light');
+            });
+            pill.classList.add('active', 'btn-primary');
+            pill.classList.remove('btn-light');
+            renderTaxonomyUnits(pill.dataset.family || 'all');
+        });
+    });
 }
 
 async function fetchStockTaxonomies() {
@@ -4804,13 +4825,21 @@ async function fetchStockTaxonomies() {
     }
 }
 
-function renderTaxonomyCategories() {
+function renderTaxonomyCategories(filterText = '') {
     const listEl = document.getElementById('stock-tax-cat-list');
     if (!listEl || !stockTaxonomiesData?.categories) return;
 
     listEl.replaceChildren();
 
-    stockTaxonomiesData.categories.forEach(cat => {
+    const norm = normalizeText(filterText);
+    const filtered = stockTaxonomiesData.categories.filter(c => !norm || normalizeText(c.name).includes(norm));
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="p-3 text-muted small text-center bg-light rounded-3">No se encontraron categorías coincidentes.</div>';
+        return;
+    }
+
+    filtered.forEach(cat => {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
 
@@ -4874,7 +4903,7 @@ async function renameCategoryCascade(oldName, newName) {
     }
 }
 
-function renderTaxonomyUnits() {
+function renderTaxonomyUnits(selectedFamily = 'all') {
     const listEl = document.getElementById('stock-tax-unit-list');
     if (!listEl || !stockTaxonomiesData?.units) return;
 
@@ -4884,9 +4913,16 @@ function renderTaxonomyUnits() {
     const families = {};
     stockTaxonomiesData.units.forEach(u => {
         const fam = u.category || 'Otras';
-        if (!families[fam]) families[fam] = [];
-        families[fam].push(u.name);
+        if (selectedFamily === 'all' || fam.toLowerCase() === selectedFamily.toLowerCase()) {
+            if (!families[fam]) families[fam] = [];
+            families[fam].push(u.name);
+        }
     });
+
+    if (Object.keys(families).length === 0) {
+        listEl.innerHTML = '<div class="p-3 text-muted small text-center bg-light rounded-3">No hay unidades en esta familia.</div>';
+        return;
+    }
 
     Object.entries(families).forEach(([famName, unitList]) => {
         const famCard = document.createElement('div');
@@ -4915,20 +4951,56 @@ function initStockFormCustomDropdowns() {
     const inputUnit = document.getElementById('stock-unit');
     const dropUnit = document.getElementById('stock-unit-dropdown');
 
-    const setupDropdown = (input, dropdown, getItemsFunc) => {
+    const setupDropdown = (input, dropdown, getItemsFunc, showFamilyHeader = false) => {
         if (!input || !dropdown) return;
+
+        let activeFamilyFilter = 'all';
 
         const renderItems = (filterText = '') => {
             const items = getItemsFunc();
             const normFilter = normalizeText(filterText);
-            const filtered = items.filter(it => !normFilter || normalizeText(it.name || it).includes(normFilter));
+
+            let filtered = items;
+            if (showFamilyHeader && activeFamilyFilter !== 'all') {
+                filtered = filtered.filter(it => (it.tag || '').toLowerCase() === activeFamilyFilter.toLowerCase());
+            }
+
+            if (normFilter) {
+                filtered = filtered.filter(it => normalizeText(it.name || it).includes(normFilter));
+            }
+
+            dropdown.replaceChildren();
+
+            // Cabecera con Chips de Filtro rápido de Familias (si aplica)
+            if (showFamilyHeader) {
+                const headerDiv = document.createElement('div');
+                headerDiv.className = 'd-flex align-items-center gap-1 p-1.5 border-bottom bg-light rounded-2 mb-1 sticky-top flex-wrap';
+                headerDiv.style.fontSize = '0.72rem';
+
+                const families = ['all', 'Conteo', 'Posología', 'Volumen', 'Peso'];
+                families.forEach(f => {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = `btn btn-xs py-0.5 px-1.5 rounded ${activeFamilyFilter === f ? 'btn-primary fw-bold' : 'btn-light border text-secondary'}`;
+                    btn.textContent = f === 'all' ? 'Todos' : f;
+                    btn.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        activeFamilyFilter = f;
+                        renderItems(input.value);
+                    });
+                    headerDiv.appendChild(btn);
+                });
+                dropdown.appendChild(headerDiv);
+            }
 
             if (filtered.length === 0) {
-                dropdown.innerHTML = '<div class="p-2 text-muted small text-center">Sin coincidencias. Puedes ingresar tu propio valor.</div>';
+                const noResult = document.createElement('div');
+                noResult.className = 'p-2 text-muted small text-center';
+                noResult.textContent = 'Sin coincidencias. Puedes ingresar tu propio valor.';
+                dropdown.appendChild(noResult);
                 return;
             }
 
-            dropdown.innerHTML = '';
             filtered.forEach(it => {
                 const name = typeof it === 'string' ? it : it.name;
                 const icon = it.icon || '';
@@ -4989,7 +5061,7 @@ function initStockFormCustomDropdowns() {
             });
         }
         return Array.from(knownCats.values());
-    });
+    }, false);
 
     setupDropdown(inputUnit, dropUnit, () => [
         { name: "Pack", tag: "Conteo" },
@@ -5004,5 +5076,5 @@ function initStockFormCustomDropdowns() {
         { name: "Litros (L)", tag: "Volumen" },
         { name: "Gramos (gr)", tag: "Peso" },
         { name: "Kilogramos (kg)", tag: "Peso" }
-    ]);
+    ], true);
 }
