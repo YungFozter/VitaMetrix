@@ -998,12 +998,16 @@ async function fetchClients() {
             if (c.email) tdContact.append(`📧 ${c.email}`);
 
             const tdActions = document.createElement('td');
+            tdActions.className = 'text-end';
+
+            const actionsWrap = document.createElement('div');
+            actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
 
             const btnEvals = document.createElement('button');
-            btnEvals.className = 'btn-primary';
-            btnEvals.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 0.4rem; background: #00b4d8; border: none;';
-            btnEvals.innerHTML = '📋 Evaluaciones';
-            btnEvals.title = 'Ver historial de evaluaciones de este cliente';
+            btnEvals.type = 'button';
+            btnEvals.className = 'btn btn-sm btn-primary-evals d-inline-flex align-items-center gap-1 shadow-xs';
+            btnEvals.innerHTML = '<i class="bi bi-journal-medical"></i> Evaluaciones';
+            btnEvals.title = 'Ver historial de evaluaciones de este paciente';
             btnEvals.addEventListener('click', () => {
                 const evalNav = document.querySelector('[data-target="evaluaciones-view"]');
                 if (evalNav) evalNav.click();
@@ -1016,18 +1020,21 @@ async function fetchClients() {
             });
 
             const btnEdit = document.createElement('button');
-            btnEdit.className = 'btn-edit';
-            btnEdit.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem; margin-right: 0.4rem;';
-            btnEdit.textContent = 'Editar';
+            btnEdit.type = 'button';
+            btnEdit.className = 'btn btn-sm btn-action-edit d-inline-flex align-items-center gap-1';
+            btnEdit.innerHTML = '<i class="bi bi-pencil"></i> Editar';
+            btnEdit.title = 'Editar datos del paciente';
             btnEdit.addEventListener('click', () => editClient(c.id, c.name || '', c.phone || '', c.email || ''));
 
             const btnDel = document.createElement('button');
-            btnDel.className = 'btn-danger';
-            btnDel.style.cssText = 'padding: 0.35rem 0.65rem; font-size: 0.8rem;';
-            btnDel.textContent = 'Eliminar';
+            btnDel.type = 'button';
+            btnDel.className = 'btn btn-sm btn-action-delete d-inline-flex align-items-center gap-1';
+            btnDel.innerHTML = '<i class="bi bi-trash3"></i> Eliminar';
+            btnDel.title = 'Eliminar paciente';
             btnDel.addEventListener('click', () => deleteClient(c.id));
 
-            tdActions.append(btnEvals, btnEdit, btnDel);
+            actionsWrap.append(btnEvals, btnEdit, btnDel);
+            tdActions.appendChild(actionsWrap);
 
             tr.append(tdCode, tdName, tdContact, tdActions);
             tbody.appendChild(tr);

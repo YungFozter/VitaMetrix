@@ -69,35 +69,63 @@
     font-size: 0.85rem;
 }
 
-.btn-danger {
-    background: #fff;
-    color: #b94a4a;
-    border: 1px solid #b94a4a;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
+/* --- BOTONES DE ACCIÓN DE PACIENTES --- */
+.btn-primary-evals {
+    background: linear-gradient(135deg, #00b4d8 0%, #0077b6 100%) !important;
+    color: #ffffff !important;
+    border: none !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0.35rem 0.7rem !important;
+    border-radius: 8px !important;
+    box-shadow: 0 2px 6px rgba(0, 180, 216, 0.25) !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
 }
 
-.btn-danger:hover {
-    background: #b94a4a;
-    color: #fff;
+.btn-primary-evals:hover {
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 10px rgba(0, 180, 216, 0.4) !important;
+    color: #ffffff !important;
 }
 
-.btn-edit {
-    background: #fff;
-    color: #00b4d8;
-    border: 1px solid #00b4d8;
-    padding: 0.4rem 0.8rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 0.8rem;
-    transition: all 0.2s;
-    margin-right: 0.5rem;
+.btn-action-edit {
+    background: #f1f5f9 !important;
+    color: #0284c7 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
 }
 
-.btn-edit:hover {
+.btn-action-edit:hover {
+    background: #0284c7 !important;
+    color: #ffffff !important;
+    border-color: #0284c7 !important;
+    transform: translateY(-1px) !important;
+}
+
+.btn-action-delete {
+    background: #f1f5f9 !important;
+    color: #e11d48 !important;
+    border: 1px solid #cbd5e1 !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    padding: 0.35rem 0.65rem !important;
+    border-radius: 8px !important;
+    transition: all 0.2s ease !important;
+    white-space: nowrap !important;
+}
+
+.btn-action-delete:hover {
+    background: #e11d48 !important;
+    color: #ffffff !important;
+    border-color: #e11d48 !important;
+    transform: translateY(-1px) !important;
+}
     background: #00b4d8;
     color: #fff;
 }
