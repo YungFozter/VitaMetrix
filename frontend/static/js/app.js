@@ -1827,6 +1827,62 @@ function initDemoDataInjector() {
     });
 }
 
+// --- PROFILE & WORKSTATION STATE CONTROLLER (OPCIÓN 1) ---
+function updateUserProfileUI() {
+    const name = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+    const title = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
+    const clinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
+    const mp = localStorage.getItem('vm_pdf_mp') || 'MP: 45892 / MN: 1204';
+    const phone = localStorage.getItem('vm_pdf_phone') || '+54 9 11 4455-6677';
+    
+    // Topbar update
+    const topName = document.getElementById('topbar-user-name');
+    const topTitle = document.getElementById('topbar-user-title');
+    const topAvatar = document.getElementById('topbar-user-avatar');
+    if (topName) topName.textContent = name;
+    if (topTitle) topTitle.textContent = title;
+    if (topAvatar) {
+        topAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00b4d8&color=fff`;
+    }
+
+    // Modal Profile update
+    const modalName = document.getElementById('profile-modal-name');
+    const modalTitle = document.getElementById('profile-modal-title');
+    const modalAvatar = document.getElementById('profile-modal-avatar');
+    const modalMp = document.getElementById('profile-modal-mp');
+    const modalClinic = document.getElementById('profile-modal-clinic');
+    const modalPhone = document.getElementById('profile-modal-phone');
+
+    if (modalName) modalName.textContent = name;
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalAvatar) {
+        modalAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffffff&color=0284c7&size=128`;
+    }
+    if (modalMp) modalMp.innerHTML = `<i class="bi bi-card-heading text-primary me-1"></i>${mp}`;
+    if (modalClinic) modalClinic.innerHTML = `<i class="bi bi-hospital text-info me-1"></i>${clinic}`;
+    if (modalPhone) modalPhone.innerHTML = `<i class="bi bi-telephone text-success me-1"></i>${phone}`;
+
+    // Update live stats in modal
+    const statPatients = document.getElementById('profile-modal-stat-patients');
+    const statEvals = document.getElementById('profile-modal-stat-evals');
+    const statAppts = document.getElementById('profile-modal-stat-appts');
+
+    if (statPatients) {
+        const clientsTotalEl = document.getElementById('clients-total-count');
+        const dashPatientsEl = document.getElementById('dash-total-patients');
+        statPatients.textContent = (clientsTotalEl && clientsTotalEl.textContent !== '0') ? clientsTotalEl.textContent : (dashPatientsEl ? dashPatientsEl.textContent : '0');
+    }
+    if (statEvals) {
+        const dashEvalsEl = document.getElementById('dash-total-evals');
+        statEvals.textContent = (typeof allEvaluationsData !== 'undefined' && allEvaluationsData.length > 0) ? allEvaluationsData.length : (dashEvalsEl ? dashEvalsEl.textContent : '0');
+    }
+    if (statAppts) {
+        const todayStr = new Date().toISOString().split('T')[0];
+        const todayCount = (typeof clinicAppointments !== 'undefined') ? clinicAppointments.filter(a => a.date === todayStr).length : 0;
+        statAppts.textContent = todayCount;
+    }
+}
+
 function initSystemMenuListeners() {
     // Listeners para módulos del sistema y perfil
     const stockBtn = document.getElementById('nav-stock-btn');
@@ -1840,26 +1896,136 @@ function initSystemMenuListeners() {
     if (dropSettingsBtn) {
         dropSettingsBtn.addEventListener('click', (e) => {
             e.preventDefault();
+            const dropdown = document.getElementById('profile-dropdown');
+            if (dropdown) dropdown.classList.add('hidden');
             const configNav = document.getElementById('nav-settings-btn');
             if (configNav) configNav.click();
         });
     }
 
+    // Modal de Perfil Profesional (Opción 1: Credencial Digital y Estado de Sesión)
     const dropProfileBtn = document.getElementById('dropdown-profile-btn');
+    const profileModal = document.getElementById('profile-card-modal');
+    const profileModalClose = document.getElementById('profile-modal-close');
+    const profileModalBtnClose = document.getElementById('profile-modal-btn-close');
+    const profileModalBtnEdit = document.getElementById('profile-modal-btn-edit');
+    const profileModalBtnSwitch = document.getElementById('profile-modal-btn-switch');
+
+    const openProfileModal = () => {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+        updateUserProfileUI();
+        if (profileModal) profileModal.classList.remove('hidden');
+    };
+
+    const closeProfileModal = () => {
+        if (profileModal) profileModal.classList.add('hidden');
+    };
+
     if (dropProfileBtn) {
-        dropProfileBtn.addEventListener('click', () => {
-            const curName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
-            const curTitle = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
-            showToast(`👤 Usuario activo: ${curName} (${curTitle})`, 'info');
+        dropProfileBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openProfileModal();
         });
     }
 
-    const dropLogoutBtn = document.getElementById('dropdown-logout-btn');
-    if (dropLogoutBtn) {
-        dropLogoutBtn.addEventListener('click', () => {
-            showToast('ℹ️ Modo Estación Clínica Local activo.', 'info');
+    if (profileModalClose) profileModalClose.addEventListener('click', closeProfileModal);
+    if (profileModalBtnClose) profileModalBtnClose.addEventListener('click', closeProfileModal);
+
+    // Cerrar al hacer clic en el backdrop oscuro
+    if (profileModal) {
+        profileModal.addEventListener('click', (e) => {
+            if (e.target === profileModal) closeProfileModal();
         });
     }
+
+    // Botón "Editar en Configuración" dentro del modal de perfil
+    if (profileModalBtnEdit) {
+        profileModalBtnEdit.addEventListener('click', () => {
+            closeProfileModal();
+            const configNav = document.getElementById('nav-settings-btn');
+            if (configNav) {
+                configNav.click();
+                setTimeout(() => {
+                    const cfgCard = document.querySelector('#configuracion-view .card');
+                    const userNameInput = document.getElementById('cfg-user-name');
+                    if (cfgCard) {
+                        cfgCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        cfgCard.classList.remove('highlight-pulse');
+                        void cfgCard.offsetWidth; // Trigger reflow
+                        cfgCard.classList.add('highlight-pulse');
+                    }
+                    if (userNameInput) userNameInput.focus();
+                }, 250);
+            }
+        });
+    }
+
+    // Switch User Modal (Cambiar Especialista)
+    const switchModal = document.getElementById('switch-user-modal');
+    const switchModalClose = document.getElementById('switch-user-modal-close');
+    const switchModalBtnCancel = document.getElementById('switch-user-btn-cancel');
+    const switchForm = document.getElementById('switch-user-form');
+    const dropLogoutBtn = document.getElementById('dropdown-logout-btn');
+
+    const openSwitchModal = () => {
+        const dropdown = document.getElementById('profile-dropdown');
+        if (dropdown) dropdown.classList.add('hidden');
+        closeProfileModal();
+
+        const curName = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
+        const curTitle = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
+
+        const inputName = document.getElementById('switch-user-name');
+        const inputTitle = document.getElementById('switch-user-title');
+        if (inputName) inputName.value = curName;
+        if (inputTitle) inputTitle.value = curTitle;
+
+        if (switchModal) switchModal.classList.remove('hidden');
+    };
+
+    const closeSwitchModal = () => {
+        if (switchModal) switchModal.classList.add('hidden');
+    };
+
+    if (profileModalBtnSwitch) profileModalBtnSwitch.addEventListener('click', openSwitchModal);
+    if (dropLogoutBtn) {
+        dropLogoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            openSwitchModal();
+        });
+    }
+
+    if (switchModalClose) switchModalClose.addEventListener('click', closeSwitchModal);
+    if (switchModalBtnCancel) switchModalBtnCancel.addEventListener('click', closeSwitchModal);
+    if (switchModal) {
+        switchModal.addEventListener('click', (e) => {
+            if (e.target === switchModal) closeSwitchModal();
+        });
+    }
+
+    if (switchForm) {
+        switchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const newName = (document.getElementById('switch-user-name')?.value || '').trim() || 'Dra. Audrey';
+            const newTitle = (document.getElementById('switch-user-title')?.value || '').trim() || 'Especialista BIA';
+
+            localStorage.setItem('vm_user_name', newName);
+            localStorage.setItem('vm_user_title', newTitle);
+
+            const cfgName = document.getElementById('cfg-user-name');
+            const cfgTitle = document.getElementById('cfg-user-title');
+            if (cfgName) cfgName.value = newName;
+            if (cfgTitle) cfgTitle.value = newTitle;
+
+            updateUserProfileUI();
+            closeSwitchModal();
+            showToast(`👨‍⚕️ Turno activo para ${newName} (${newTitle})`, 'success');
+        });
+    }
+
+    // Inicializar UI de perfil al cargar
+    updateUserProfileUI();
 }
 
 // ============================================================
@@ -2308,11 +2474,8 @@ function initConfiguracionView() {
             applyThemeMode(darkTheme);
         }
 
-        // Actualizar header UI
-        const userInfo = document.querySelector('.user-info');
-        if (userInfo) {
-            userInfo.innerHTML = `<strong>${name}</strong><span>${title}</span>`;
-        }
+        // Actualizar header UI y perfil
+        updateUserProfileUI();
     };
 
     loadAllSettings();
