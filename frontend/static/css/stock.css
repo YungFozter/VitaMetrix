@@ -249,6 +249,16 @@
     .stock-kpi-value {
         font-size: 1.2rem;
     }
+
+    #search-tax-cats {
+        font-size: 0.95rem !important;
+        height: 40px !important;
+    }
+
+    .tax-unit-pill {
+        padding: 0.35rem 0.65rem !important;
+        font-size: 0.82rem !important;
+    }
 }
 
 /* Custom Autocomplete Dropdown & Stacking Context Fix */

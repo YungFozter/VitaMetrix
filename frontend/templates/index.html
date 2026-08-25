@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=99">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=100">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -942,10 +942,13 @@
                 </div>
 
                 <!-- Lista de Categorías con Conteo y Edición -->
-                <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
                     <div class="text-muted small fw-bold text-uppercase">Categorías Activas</div>
-                    <div style="width: 220px;">
-                        <input type="text" id="search-tax-cats" class="form-control form-control-sm shadow-none" style="font-size: 0.76rem;" placeholder="🔍 Filtrar categoría...">
+                    <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
+                        <div class="input-group input-group-sm rounded-3 shadow-2xs">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
+                            <input type="text" id="search-tax-cats" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Filtrar categorías...">
+                        </div>
                     </div>
                 </div>
                 <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
@@ -983,14 +986,14 @@
                     </div>
                 </div>
 
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-1.5 mb-2">
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
                     <div class="text-muted small fw-bold text-uppercase">Familias Clínicas</div>
-                    <div class="d-flex align-items-center gap-1 flex-wrap">
-                        <button type="button" class="btn btn-xs btn-primary border py-0.5 px-2 active tax-unit-pill" data-family="all" style="font-size: 0.72rem;">Todos</button>
-                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Conteo" style="font-size: 0.72rem;">Conteo</button>
-                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Posología" style="font-size: 0.72rem;">Posología</button>
-                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Volumen" style="font-size: 0.72rem;">Volumen</button>
-                        <button type="button" class="btn btn-xs btn-light border py-0.5 px-2 tax-unit-pill" data-family="Peso" style="font-size: 0.72rem;">Peso</button>
+                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <button type="button" class="btn btn-xs btn-primary border py-1 px-2.5 active tax-unit-pill" data-family="all" style="font-size: 0.8rem;">Todos</button>
+                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Conteo" style="font-size: 0.8rem;">Conteo</button>
+                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Posología" style="font-size: 0.8rem;">Posología</button>
+                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Volumen" style="font-size: 0.8rem;">Volumen</button>
+                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Peso" style="font-size: 0.8rem;">Peso</button>
                     </div>
                 </div>
                 <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
@@ -1013,6 +1016,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=99"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=100"></script>
 </body>
 </html>
