@@ -4858,6 +4858,30 @@ function initStockTaxonomyModal() {
             }
         });
     }
+
+    // Controles del Modal de Edición de Unidad de Medida (U/M)
+    const btnCloseEditUnit = document.getElementById('btn-close-edit-unit-modal');
+    const btnCancelEditUnit = document.getElementById('btn-cancel-edit-unit-modal');
+    const btnConfirmEditUnit = document.getElementById('btn-confirm-edit-unit-modal');
+    const inputEditUnitName = document.getElementById('edit-unit-modal-name-input');
+    const inputEditUnitFam = document.getElementById('edit-unit-modal-family-input');
+
+    if (btnCloseEditUnit) btnCloseEditUnit.addEventListener('click', closeEditUnitModal);
+    if (btnCancelEditUnit) btnCancelEditUnit.addEventListener('click', closeEditUnitModal);
+    if (btnConfirmEditUnit) btnConfirmEditUnit.addEventListener('click', handleConfirmEditUnit);
+
+    [inputEditUnitName, inputEditUnitFam].forEach(inp => {
+        if (inp) {
+            inp.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleConfirmEditUnit();
+                } else if (e.key === 'Escape') {
+                    closeEditUnitModal();
+                }
+            });
+        }
+    });
 }
 
 async function fetchStockTaxonomies() {
@@ -5062,16 +5086,109 @@ function closeConfirmDeleteTaxonomyModal() {
     pendingDeleteTaxonomyCallback = null;
 }
 
+function openEditUnitModal(unitName, currentFamily) {
+    const modal = document.getElementById('modal-edit-unit');
+    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
+    const inputName = document.getElementById('edit-unit-modal-name-input');
+    const inputFam = document.getElementById('edit-unit-modal-family-input');
+    if (!modal || !inputName) return;
+
+    if (hiddenOld) hiddenOld.value = unitName;
+    inputName.value = unitName;
+    if (inputFam) inputFam.value = currentFamily || 'Conteo';
+
+    modal.classList.remove('d-none');
+    setTimeout(() => {
+        inputName.focus();
+        inputName.select();
+    }, 60);
+}
+
+function closeEditUnitModal() {
+    const modal = document.getElementById('modal-edit-unit');
+    if (modal) modal.classList.add('d-none');
+}
+
+async function handleConfirmEditUnit() {
+    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
+    const inputName = document.getElementById('edit-unit-modal-name-input');
+    const inputFam = document.getElementById('edit-unit-modal-family-input');
+    if (!hiddenOld || !inputName) return;
+
+    const oldName = hiddenOld.value.trim();
+    const newName = inputName.value.trim();
+    const newFamily = inputFam ? (inputFam.value.trim() || 'General') : 'General';
+
+    if (!newName) {
+        showToast('El nombre de la unidad no puede estar vacío', 'error');
+        inputName.focus();
+        return;
+    }
+
+    closeEditUnitModal();
+
+    try {
+        const res = await fetch('/api/stock/taxonomies/unit', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ old_name: oldName, new_name: newName, family: newFamily })
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+            showToast(`✅ Unidad "${newName}" (${newFamily}) actualizada`, 'success');
+            await fetchStockTaxonomies();
+            await fetchStockItems();
+        } else {
+            showToast(result.error || 'Error al actualizar unidad', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Error de conexión', 'error');
+    }
+}
+
 function renderTaxonomyUnits(selectedFamily = 'all') {
     const listEl = document.getElementById('stock-tax-unit-list');
+    const pillsContainer = document.getElementById('stock-tax-family-pills');
     if (!listEl || !stockTaxonomiesData?.units) return;
 
     listEl.replaceChildren();
 
+    // Extraer familias dinámicas únicas
+    const allUniqueFamilies = Array.from(new Set(stockTaxonomiesData.units.map(u => u.category || 'General'))).filter(Boolean);
+
+    // Renderizar píldoras de filtro por familia
+    if (pillsContainer) {
+        pillsContainer.replaceChildren();
+        
+        // Píldora "Todos"
+        const allPill = document.createElement('button');
+        allPill.type = 'button';
+        allPill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill ${selectedFamily === 'all' ? 'btn-primary active' : 'btn-light'}`;
+        allPill.style.fontSize = '0.8rem';
+        allPill.textContent = 'Todos';
+        allPill.dataset.family = 'all';
+        allPill.addEventListener('click', () => renderTaxonomyUnits('all'));
+        pillsContainer.appendChild(allPill);
+
+        // Píldoras para cada familia existente
+        allUniqueFamilies.forEach(fam => {
+            const pill = document.createElement('button');
+            pill.type = 'button';
+            const isActive = selectedFamily.toLowerCase() === fam.toLowerCase();
+            pill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill ${isActive ? 'btn-primary active' : 'btn-light'}`;
+            pill.style.fontSize = '0.8rem';
+            pill.textContent = fam;
+            pill.dataset.family = fam;
+            pill.addEventListener('click', () => renderTaxonomyUnits(fam));
+            pillsContainer.appendChild(pill);
+        });
+    }
+
     // Agrupar por familia
     const families = {};
     stockTaxonomiesData.units.forEach(u => {
-        const fam = u.category || 'Otras';
+        const fam = u.category || 'General';
         if (selectedFamily === 'all' || fam.toLowerCase() === selectedFamily.toLowerCase()) {
             if (!families[fam]) families[fam] = [];
             families[fam].push(u.name);
@@ -5088,10 +5205,12 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
         famCard.className = 'p-2.5 bg-white rounded-3 border mb-1.5 shadow-2xs';
 
         let famIcon = '📦';
-        if (famName === 'Conteo') famIcon = '🔢';
-        if (famName === 'Posología') famIcon = '💊';
-        if (famName === 'Volumen') famIcon = '🧪';
-        if (famName === 'Peso') famIcon = '⚖️';
+        if (famName.toLowerCase().includes('conteo')) famIcon = '🔢';
+        else if (famName.toLowerCase().includes('posolog')) famIcon = '💊';
+        else if (famName.toLowerCase().includes('volumen')) famIcon = '🧪';
+        else if (famName.toLowerCase().includes('peso')) famIcon = '⚖️';
+        else if (famName.toLowerCase().includes('inyect')) famIcon = '💉';
+        else if (famName.toLowerCase().includes('tópic') || famName.toLowerCase().includes('topic')) famIcon = '🧴';
 
         famCard.innerHTML = `
             <div class="fw-bold text-navy small mb-2">${famIcon} Familia: ${escapeHtml(famName)}</div>
@@ -5103,13 +5222,26 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
         unitList.forEach(u => {
             const badgeSpan = document.createElement('span');
             badgeSpan.className = 'badge bg-light text-secondary border fw-semibold px-2.5 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs';
-            badgeSpan.style.fontSize = '0.78rem';
+            badgeSpan.style.fontSize = '0.8rem';
             badgeSpan.innerHTML = `
-                <span>${escapeHtml(u)}</span>
-                <button type="button" class="btn-close shadow-none" style="font-size: 0.55rem; filter: grayscale(1); opacity: 0.65;" title="Eliminar unidad ${escapeHtml(u)}" aria-label="Eliminar"></button>
+                <span class="text-dark">${escapeHtml(u)}</span>
+                <div class="d-inline-flex align-items-center gap-1 ms-1">
+                    <button type="button" class="btn btn-link p-0 text-secondary hover:text-primary btn-edit-unit" title="Editar ${escapeHtml(u)}" style="font-size: 0.72rem; text-decoration: none; line-height: 1;">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button type="button" class="btn-close shadow-none btn-delete-unit" style="font-size: 0.52rem; filter: grayscale(1); opacity: 0.65;" title="Eliminar ${escapeHtml(u)}" aria-label="Eliminar"></button>
+                </div>
             `;
 
-            const btnClose = badgeSpan.querySelector('button');
+            // Editar U/M
+            const btnEdit = badgeSpan.querySelector('.btn-edit-unit');
+            btnEdit.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openEditUnitModal(u, famName);
+            });
+
+            // Eliminar U/M
+            const btnClose = badgeSpan.querySelector('.btn-delete-unit');
             btnClose.addEventListener('click', (e) => {
                 e.stopPropagation();
 

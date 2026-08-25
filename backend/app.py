@@ -1439,6 +1439,44 @@ def delete_stock_unit(unit_name):
     _save_persisted_taxonomies(cats, filtered_units)
     return jsonify({"success": True, "message": f"Unidad '{unit_name}' eliminada correctamente"})
 
+@app.route('/api/stock/taxonomies/unit', methods=['PUT'])
+def update_stock_unit():
+    data = request.json or {}
+    old_name = _clean_str(data.get('old_name'))
+    new_name = _clean_str(data.get('new_name'), max_len=50)
+    new_family = _clean_str(data.get('family') or data.get('category'), max_len=50)
+
+    if not old_name or not new_name:
+        return jsonify({"error": "El nombre actual y el nuevo nombre son obligatorios"}), 400
+
+    cats, units = _load_persisted_taxonomies()
+    found = False
+    for u in units:
+        if u['name'].lower() == old_name.lower():
+            u['name'] = new_name
+            if new_family:
+                u['category'] = new_family
+            found = True
+            break
+
+    if not found:
+        return jsonify({"error": f"Unidad '{old_name}' no encontrada"}), 404
+
+    # Actualizar en cascada en Supabase stock_items
+    if old_name.lower() != new_name.lower() and supabase:
+        try:
+            supabase.table('stock_items').update({"unit": new_name, "updated_at": datetime.now(timezone.utc).isoformat()}).eq('unit', old_name).execute()
+        except Exception as e:
+            logging.warning("Error actualizando unidad en Supabase: %s", e)
+
+    # Actualizar en local
+    for item in _LOCAL_STOCK_ITEMS:
+        if (item.get('unit') or '').strip().lower() == old_name.lower():
+            item['unit'] = new_name
+
+    _save_persisted_taxonomies(cats, units)
+    return jsonify({"success": True, "message": f"Unidad '{old_name}' actualizada correctamente"})
+
 @app.route('/api/stock/categories/rename', methods=['PUT'])
 def rename_stock_category():
     data = request.json or {}

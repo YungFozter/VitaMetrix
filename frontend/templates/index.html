@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=106">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=107">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -956,14 +956,22 @@
             <div id="tab-tax-units-content" class="stock-tab-panel d-none">
                 <!-- Formulario Agregar Unidad de Medida -->
                 <div class="p-3 bg-light rounded-3 border mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Unidad de Medida (U/M)</label>
-                    <div class="row g-2">
+                    <div class="row g-2 mb-2">
                         <div class="col-12 col-sm-6">
-                            <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Nombre U/M (Ej: Vial, Tubo 50g, Gotero...)">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">
+                                Nombre de la U/M <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Vial, Tubo 50g, Gotero...">
                         </div>
                         <div class="col-12 col-sm-6">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1 d-flex align-items-center justify-content-between">
+                                <span>Familia / Clasificación</span>
+                                <span class="badge bg-secondary-subtle text-secondary border fw-normal" style="font-size: 0.68rem;" title="Texto que se muestra a la derecha de la opción en el formulario">
+                                    <i class="bi bi-tag-fill me-0.5"></i> Etiqueta derecha
+                                </span>
+                            </label>
                             <div class="input-group">
-                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Familia / Tipo (Ej: Conteo, Inyectable...)" value="Conteo">
+                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Ej: Conteo, Inyectable..." value="Conteo">
                                 <datalist id="suggested-families-list">
                                     <option value="Conteo">
                                     <option value="Posología">
@@ -980,16 +988,20 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Banner Aclarativo -->
+                    <div class="d-flex align-items-start gap-1.5 p-2 bg-white rounded-2 border text-muted small" style="font-size: 0.74rem;">
+                        <i class="bi bi-info-circle-fill text-primary mt-0.5"></i>
+                        <div>
+                            El campo <strong>Familia / Clasificación</strong> (ej: <em>Conteo, Posología, Inyectable</em>) es la etiqueta informativa que aparece a la derecha de cada opción en el selector del formulario para orientar al profesional de salud.
+                        </div>
+                    </div>
                 </div>
 
                 <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
-                    <div class="text-muted small fw-bold text-uppercase">Familias Clínicas</div>
-                    <div class="d-flex align-items-center gap-1.5 flex-wrap">
+                    <div class="text-muted small fw-bold text-uppercase">Filtrar por Familia</div>
+                    <div id="stock-tax-family-pills" class="d-flex align-items-center gap-1.5 flex-wrap">
+                        <!-- Píldoras de familias inyectadas dinámicamente -->
                         <button type="button" class="btn btn-xs btn-primary border py-1 px-2.5 active tax-unit-pill" data-family="all" style="font-size: 0.8rem;">Todos</button>
-                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Conteo" style="font-size: 0.8rem;">Conteo</button>
-                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Posología" style="font-size: 0.8rem;">Posología</button>
-                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Volumen" style="font-size: 0.8rem;">Volumen</button>
-                        <button type="button" class="btn btn-xs btn-light border py-1 px-2.5 tax-unit-pill" data-family="Peso" style="font-size: 0.8rem;">Peso</button>
                     </div>
                 </div>
                 <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
@@ -1000,6 +1012,45 @@
             <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
                 <button type="button" id="stock-tax-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
                     Listo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Personalizado Editar / Renombrar Unidad de Medida -->
+    <div id="modal-edit-unit" class="modal-overlay d-none" style="z-index: 1065;">
+        <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                        <i class="bi bi-rulers"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-navy mb-0">Editar Unidad de Medida</h6>
+                        <small class="text-muted" style="font-size: 0.75rem;">Actualiza el nombre o su familia clínica</small>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-edit-unit-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+            </div>
+
+            <div class="mb-3">
+                <div class="mb-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span class="text-danger">*</span></label>
+                    <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Vial, Cápsula, Ampolla...">
+                    <input type="hidden" id="edit-unit-modal-old-name-hidden">
+                </div>
+                <div>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Familia / Clasificación (Etiqueta Derecha)</label>
+                    <input type="text" id="edit-unit-modal-family-input" class="form-control rounded-3 py-2 px-3 shadow-none" list="suggested-families-list" placeholder="Ej: Conteo, Posología, Inyectables...">
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+                <button type="button" id="btn-cancel-edit-unit-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirm-edit-unit-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                    <i class="bi bi-check-lg"></i> Guardar Cambios
                 </button>
             </div>
         </div>
@@ -1084,6 +1135,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=106"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=107"></script>
 </body>
 </html>
