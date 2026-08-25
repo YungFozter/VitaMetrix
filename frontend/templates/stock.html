@@ -31,7 +31,7 @@
             </div>
             <div class="stock-kpi-data">
                 <span class="stock-kpi-label">Valorización Estimada</span>
-                <span class="stock-kpi-value text-success" id="stock-kpi-val">$ 0.00</span>
+                <span class="stock-kpi-value text-success" id="stock-kpi-val">Bs. 0.00</span>
                 <span class="stock-kpi-sub">Costo total inventariado</span>
             </div>
         </div>
@@ -79,29 +79,39 @@
                     <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Electrodos BIA Desechables (Pack x100)" required>
                 </div>
 
-                <!-- 3. Categoría -->
+                <!-- 3. Categoría (Manual con Sugerencias Datalist) -->
                 <div class="col-12 col-md-4 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
-                    <select id="stock-category" class="form-select shadow-none small">
-                        <option value="Insumos BIA">🩺 Insumos BIA</option>
-                        <option value="Suplementos Nutricionales">💊 Suplementos Nutricionales</option>
-                        <option value="Material Clínico e Higiene">🧼 Material Clínico e Higiene</option>
-                        <option value="Accesorios y Equipos">📦 Accesorios y Equipos</option>
-                        <option value="Otros">Otros</option>
-                    </select>
+                    <input type="text" id="stock-category" class="form-control shadow-none small" list="stock-categories-datalist" placeholder="Escribe o selecciona...">
+                    <datalist id="stock-categories-datalist">
+                        <option value="Insumos BIA">
+                        <option value="Suplementos Nutricionales">
+                        <option value="Material Clínico e Higiene">
+                        <option value="Accesorios y Equipos">
+                        <option value="Medicamentos / Fármacos">
+                        <option value="Material de Oficina">
+                        <option value="Otros">
+                    </datalist>
                 </div>
 
-                <!-- 4. Unidad de Medida -->
+                <!-- 4. Unidad de Medida (Manual con Sugerencias Datalist) -->
                 <div class="col-12 col-md-3 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
-                    <select id="stock-unit" class="form-select shadow-none small">
-                        <option value="Pack">Pack</option>
-                        <option value="Unidad">Unidad (u)</option>
-                        <option value="Frasco">Frasco / Bote</option>
-                        <option value="Caja">Caja</option>
-                        <option value="Mililitros (ml)">Mililitros (ml)</option>
-                        <option value="Gramos (gr)">Gramos (gr)</option>
-                    </select>
+                    <input type="text" id="stock-unit" class="form-control shadow-none small" list="stock-units-datalist" placeholder="Escribe o selecciona...">
+                    <datalist id="stock-units-datalist">
+                        <option value="Pack">
+                        <option value="Unidad">
+                        <option value="Frasco">
+                        <option value="Caja">
+                        <option value="Tabletas">
+                        <option value="Cápsulas">
+                        <option value="Sobres">
+                        <option value="Ampollas">
+                        <option value="Mililitros (ml)">
+                        <option value="Litros (L)">
+                        <option value="Gramos (gr)">
+                        <option value="Kilogramos (kg)">
+                    </datalist>
                 </div>
 
                 <!-- 5. Cantidad Actual -->
@@ -116,15 +126,15 @@
                     <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="any" value="5">
                 </div>
 
-                <!-- 7. Costo Unitario -->
+                <!-- 7. Costo Unitario (Bs.) -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario ($)</label>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario (Bs.)</label>
                     <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
                 </div>
 
-                <!-- 8. Precio Venta -->
+                <!-- 8. Precio Venta (Bs.) -->
                 <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta ($)</label>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta (Bs.)</label>
                     <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
                 </div>
 
@@ -213,7 +223,7 @@
                         <th>PRODUCTO / INSUMO</th>
                         <th>CATEGORÍA</th>
                         <th>EXISTENCIA & NIVEL</th>
-                        <th>PRECIOS (COSTO / VENTA)</th>
+                        <th>PRECIOS (BS.)</th>
                         <th>UBICACIÓN / PROVEEDOR</th>
                         <th class="text-end">ACCIONES</th>
                     </tr>

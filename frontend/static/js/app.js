@@ -4159,11 +4159,65 @@ async function fetchStockItems() {
         allStockItems = await res.json();
 
         if (totalCountEl) totalCountEl.textContent = Array.isArray(allStockItems) ? allStockItems.length : 0;
+        updateStockCategoryOptions(allStockItems);
         updateStockKPIs(allStockItems);
         filterAndRenderStock();
     } catch (err) {
         console.error(err);
         tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar inventario.</td></tr>';
+    }
+}
+
+function updateStockCategoryOptions(items) {
+    if (!Array.isArray(items)) return;
+    const catFilter = document.getElementById('stock-filter-category');
+    const catDatalist = document.getElementById('stock-categories-datalist');
+    if (!catFilter) return;
+
+    const currentVal = catFilter.value;
+    const defaultCats = [
+        "Insumos BIA",
+        "Suplementos Nutricionales",
+        "Material Clínico e Higiene",
+        "Accesorios y Equipos",
+        "Medicamentos / Fármacos",
+        "Material de Oficina",
+        "Otros"
+    ];
+
+    const uniqueCats = new Set(defaultCats);
+    items.forEach(i => {
+        if (i.category && i.category.trim()) {
+            uniqueCats.add(i.category.trim());
+        }
+    });
+
+    // Update Filter Select
+    catFilter.innerHTML = '<option value="all">📁 Todas las Categorías</option>';
+    uniqueCats.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        let icon = '📦';
+        if (cat.includes('BIA')) icon = '🩺';
+        else if (cat.includes('Suplementos')) icon = '💊';
+        else if (cat.includes('Material') || cat.includes('Higiene')) icon = '🧼';
+        else if (cat.includes('Medicamentos')) icon = '💉';
+        opt.textContent = `${icon} ${cat}`;
+        catFilter.appendChild(opt);
+    });
+
+    if (uniqueCats.has(currentVal) || currentVal === 'all') {
+        catFilter.value = currentVal;
+    }
+
+    // Update Datalist
+    if (catDatalist) {
+        catDatalist.innerHTML = '';
+        uniqueCats.forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            catDatalist.appendChild(opt);
+        });
     }
 }
 
@@ -4198,7 +4252,7 @@ function updateStockKPIs(items) {
         return acc + (qty * cost);
     }, 0);
 
-    if (valEl) valEl.textContent = `$ ${totalVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (valEl) valEl.textContent = `Bs. ${totalVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function filterAndRenderStock() {
@@ -4317,13 +4371,13 @@ function renderStockTable(items) {
             </div>
         `;
 
-        // 5. Precios (Costo / Venta)
+        // 5. Precios (Costo / Venta Bs.)
         const tdPrices = document.createElement('td');
         const cost = parseFloat(item.cost_price) || 0;
         const sale = parseFloat(item.sale_price) || 0;
         tdPrices.innerHTML = `
-            <div class="small text-secondary">Costo: <strong class="font-monospace text-dark">$${cost.toFixed(2)}</strong></div>
-            ${sale > 0 ? `<div class="small text-success">Venta: <strong class="font-monospace">$${sale.toFixed(2)}</strong></div>` : '<div class="text-muted small" style="font-size: 0.72rem;">Uso interno</div>'}
+            <div class="small text-secondary">Costo: <strong class="font-monospace text-dark">Bs. ${cost.toFixed(2)}</strong></div>
+            ${sale > 0 ? `<div class="small text-success">Venta: <strong class="font-monospace">Bs. ${sale.toFixed(2)}</strong></div>` : '<div class="text-muted small" style="font-size: 0.72rem;">Uso interno</div>'}
         `;
 
         // 6. Ubicación / Proveedor
