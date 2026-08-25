@@ -30,3 +30,9 @@ body {
     --vm-radius-lg: 24px;
     --vm-t-hover: 0.2s ease;
 }
+
+/* Global utility */
+.hidden {
+    display: none !important;
+}
+

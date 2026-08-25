@@ -229,7 +229,17 @@
 }
 
 .eval-bulk-bar {
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(0, 180, 216, 0.35);
+    border-left: 5px solid #ef4444;
+    border-radius: 18px;
+    box-shadow: 0 12px 28px -6px rgba(0, 180, 216, 0.15), 0 4px 12px rgba(26, 42, 74, 0.04);
     animation: bulkBarSlideDown 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.eval-bulk-bar.hidden {
+    display: none !important;
 }
 
 @keyframes bulkBarSlideDown {
@@ -242,4 +252,5 @@
         transform: translateY(0);
     }
 }
+
 

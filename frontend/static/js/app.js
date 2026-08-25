@@ -1355,11 +1355,13 @@ function updateBulkActionsToolbar() {
 
     if (selectedEvaluationIds.size > 0) {
         bar.classList.remove('hidden');
+        bar.style.display = 'flex';
         if (countText) {
             countText.textContent = `${selectedEvaluationIds.size} evaluación${selectedEvaluationIds.size > 1 ? 'es' : ''} seleccionada${selectedEvaluationIds.size > 1 ? 's' : ''}`;
         }
     } else {
         bar.classList.add('hidden');
+        bar.style.display = 'none';
     }
 }
 
