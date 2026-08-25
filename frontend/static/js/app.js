@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initSystemMenuListeners();
     initAppointmentsCalendar();
     initConfiguracionView();
+    initStockModule();
     fetchDashboardStats();
 });
 
@@ -3040,13 +3041,6 @@ function updateUserProfileUI() {
 
 function initSystemMenuListeners() {
     // Listeners para módulos del sistema y perfil
-    const stockBtn = document.getElementById('nav-stock-btn');
-    if (stockBtn) {
-        stockBtn.addEventListener('click', () => {
-            showToast('📦 Módulo de Stock Control en desarrollo para VitaMetrix v2.0', 'info');
-        });
-    }
-
     const dropSettingsBtn = document.getElementById('dropdown-settings-btn');
     if (dropSettingsBtn) {
         dropSettingsBtn.addEventListener('click', (e) => {
@@ -4057,4 +4051,558 @@ function importBackupJSON(e) {
         }
     };
     reader.readAsText(file);
+}
+
+// --- 7. STOCK CONTROL & INVENTARIO CLÍNICO ---
+let allStockItems = [];
+let allStockMovements = [];
+let editingStockId = null;
+let currentStockMovementItem = null;
+let currentMovementType = 'IN';
+
+function initStockModule() {
+    const form = document.getElementById('stock-form');
+    if (!form) return;
+
+    fetchStockItems();
+    fetchStockMovements();
+
+    // Form submit listener
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const btnSave = document.getElementById('btn-save-stock');
+        const originalText = btnSave.innerHTML;
+        btnSave.disabled = true;
+        btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
+
+        const payload = {
+            code: document.getElementById('stock-code').value.trim(),
+            name: document.getElementById('stock-name').value.trim(),
+            category: document.getElementById('stock-category').value,
+            unit: document.getElementById('stock-unit').value,
+            stock_quantity: parseFloat(document.getElementById('stock-quantity').value) || 0,
+            min_stock: parseFloat(document.getElementById('stock-min').value) || 5,
+            cost_price: parseFloat(document.getElementById('stock-cost').value) || 0,
+            sale_price: parseFloat(document.getElementById('stock-sale').value) || 0,
+            location: document.getElementById('stock-location').value.trim(),
+            supplier: document.getElementById('stock-supplier').value.trim(),
+            notes: document.getElementById('stock-notes').value.trim()
+        };
+
+        try {
+            const url = editingStockId ? `/api/stock/${editingStockId}` : '/api/stock';
+            const method = editingStockId ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const result = await res.json();
+
+            if (res.ok && (result.success || result.id)) {
+                showToast(editingStockId ? '✅ Insumo actualizado correctamente' : '✅ Insumo registrado en inventario', 'success');
+                resetStockForm();
+                fetchStockItems();
+            } else {
+                showToast(result.error || 'Error al guardar ítem', 'error');
+            }
+        } catch (err) {
+            console.error(err);
+            showToast('Error de conexión al guardar inventario', 'error');
+        } finally {
+            btnSave.disabled = false;
+            btnSave.innerHTML = originalText;
+        }
+    });
+
+    // Cancel edit button
+    const btnCancel = document.getElementById('btn-cancel-stock');
+    if (btnCancel) {
+        btnCancel.addEventListener('click', resetStockForm);
+    }
+
+    // Live search & filters
+    const searchInput = document.getElementById('stock-search-input');
+    const catFilter = document.getElementById('stock-filter-category');
+    const statusFilter = document.getElementById('stock-filter-status');
+
+    if (searchInput) searchInput.addEventListener('input', filterAndRenderStock);
+    if (catFilter) catFilter.addEventListener('change', filterAndRenderStock);
+    if (statusFilter) statusFilter.addEventListener('change', filterAndRenderStock);
+
+    // Init Modals
+    initStockMovementModal();
+    initStockHistoryModal();
+}
+
+async function fetchStockItems() {
+    const tbody = document.getElementById('stock-tbody');
+    const totalCountEl = document.getElementById('stock-total-count');
+    if (!tbody) return;
+
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>';
+
+    try {
+        const res = await fetch('/api/stock');
+        allStockItems = await res.json();
+
+        if (totalCountEl) totalCountEl.textContent = Array.isArray(allStockItems) ? allStockItems.length : 0;
+        updateStockKPIs(allStockItems);
+        filterAndRenderStock();
+    } catch (err) {
+        console.error(err);
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar inventario.</td></tr>';
+    }
+}
+
+async function fetchStockMovements() {
+    try {
+        const res = await fetch('/api/stock/movements');
+        if (res.ok) {
+            allStockMovements = await res.json();
+            const movsEl = document.getElementById('stock-kpi-movs');
+            if (movsEl) movsEl.textContent = Array.isArray(allStockMovements) ? allStockMovements.length : 0;
+        }
+    } catch (e) {
+        console.warn(e);
+    }
+}
+
+function updateStockKPIs(items) {
+    if (!Array.isArray(items)) return;
+
+    const totalEl = document.getElementById('stock-kpi-total');
+    const lowEl = document.getElementById('stock-kpi-low');
+    const valEl = document.getElementById('stock-kpi-val');
+
+    if (totalEl) totalEl.textContent = items.length;
+
+    const lowCount = items.filter(i => (parseFloat(i.stock_quantity) || 0) <= (parseFloat(i.min_stock) || 5)).length;
+    if (lowEl) lowEl.textContent = lowCount;
+
+    const totalVal = items.reduce((acc, curr) => {
+        const qty = parseFloat(curr.stock_quantity) || 0;
+        const cost = parseFloat(curr.cost_price) || 0;
+        return acc + (qty * cost);
+    }, 0);
+
+    if (valEl) valEl.textContent = `$ ${totalVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function filterAndRenderStock() {
+    const tbody = document.getElementById('stock-tbody');
+    if (!tbody || !Array.isArray(allStockItems)) return;
+
+    const search = normalizeText(document.getElementById('stock-search-input')?.value);
+    const cat = document.getElementById('stock-filter-category')?.value || 'all';
+    const status = document.getElementById('stock-filter-status')?.value || 'all';
+
+    const filtered = allStockItems.filter(item => {
+        const normName = normalizeText(item.name);
+        const normCode = normalizeText(item.code);
+        const normLoc = normalizeText(item.location);
+        const normSupp = normalizeText(item.supplier);
+
+        const matchSearch = !search || normName.includes(search) || normCode.includes(search) || normLoc.includes(search) || normSupp.includes(search);
+        const matchCat = cat === 'all' || item.category === cat;
+        
+        let itemStatus = item.status;
+        if (!itemStatus) {
+            const qty = parseFloat(item.stock_quantity) || 0;
+            const min = parseFloat(item.min_stock) || 5;
+            itemStatus = qty <= 0 ? 'out' : (qty <= min ? 'low' : 'optimal');
+        }
+        const matchStatus = status === 'all' || itemStatus === status;
+
+        return matchSearch && matchCat && matchStatus;
+    });
+
+    renderStockTable(filtered);
+}
+
+function renderStockTable(items) {
+    const tbody = document.getElementById('stock-tbody');
+    if (!tbody) return;
+
+    if (!items || items.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5">
+                    <div class="d-flex flex-column align-items-center justify-content-center py-3">
+                        <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-2 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                            <i class="bi bi-box-seam fs-4"></i>
+                        </div>
+                        <h6 class="fw-bold text-navy mb-1">No se encontraron artículos</h6>
+                        <p class="text-muted small mb-0">Registra un nuevo insumo o modifica los filtros de búsqueda.</p>
+                    </div>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.replaceChildren();
+    items.forEach(item => {
+        const tr = document.createElement('tr');
+
+        const qty = parseFloat(item.stock_quantity) || 0;
+        const minQty = parseFloat(item.min_stock) || 5;
+        let status = item.status;
+        if (!status) {
+            status = qty <= 0 ? 'out' : (qty <= minQty ? 'low' : 'optimal');
+        }
+
+        // 1. SKU / Código
+        const tdCode = document.createElement('td');
+        tdCode.innerHTML = `<span class="badge bg-light text-secondary border font-monospace fw-bold">${item.code || 'SKU-000'}</span>`;
+
+        // 2. Producto & U/M
+        const tdName = document.createElement('td');
+        tdName.innerHTML = `
+            <div class="fw-bold text-navy">${item.name}</div>
+            <div class="d-flex align-items-center gap-1.5 mt-0.5">
+                <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${item.unit || 'Unidad'}</span>
+                ${item.notes ? `<span class="text-muted small text-truncate" style="max-width: 220px;" title="${item.notes}">• ${item.notes}</span>` : ''}
+            </div>
+        `;
+
+        // 3. Categoría
+        const tdCat = document.createElement('td');
+        let catIcon = '📦';
+        if (item.category?.includes('BIA')) catIcon = '🩺';
+        if (item.category?.includes('Suplementos')) catIcon = '💊';
+        if (item.category?.includes('Material') || item.category?.includes('Higiene')) catIcon = '🧼';
+        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${item.category || 'Insumos BIA'}</span>`;
+
+        // 4. Existencia & Nivel
+        const tdStock = document.createElement('td');
+        let statusBadge = '';
+        let barClass = 'optimal';
+        let barPercent = Math.min(100, Math.round((qty / (minQty * 3 || 15)) * 100));
+
+        if (status === 'out') {
+            statusBadge = '<span class="stock-status-badge out"><i class="bi bi-x-circle-fill"></i> Agotado</span>';
+            barClass = 'out';
+            barPercent = 0;
+        } else if (status === 'low') {
+            statusBadge = '<span class="stock-status-badge low"><i class="bi bi-exclamation-circle-fill"></i> Stock Bajo</span>';
+            barClass = 'low';
+        } else {
+            statusBadge = '<span class="stock-status-badge optimal"><i class="bi bi-check-circle-fill"></i> Óptimo</span>';
+            barClass = 'optimal';
+        }
+
+        tdStock.innerHTML = `
+            <div class="d-flex align-items-center gap-2">
+                <span class="font-monospace fw-bold fs-6 text-dark">${qty}</span>
+                ${statusBadge}
+            </div>
+            <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="stock-bar-wrap">
+                    <div class="stock-bar-fill ${barClass}" style="width: ${barPercent}%"></div>
+                </div>
+                <span class="text-muted" style="font-size: 0.7rem;">Mín: ${minQty}</span>
+            </div>
+        `;
+
+        // 5. Precios (Costo / Venta)
+        const tdPrices = document.createElement('td');
+        const cost = parseFloat(item.cost_price) || 0;
+        const sale = parseFloat(item.sale_price) || 0;
+        tdPrices.innerHTML = `
+            <div class="small text-secondary">Costo: <strong class="font-monospace text-dark">$${cost.toFixed(2)}</strong></div>
+            ${sale > 0 ? `<div class="small text-success">Venta: <strong class="font-monospace">$${sale.toFixed(2)}</strong></div>` : '<div class="text-muted small" style="font-size: 0.72rem;">Uso interno</div>'}
+        `;
+
+        // 6. Ubicación / Proveedor
+        const tdLoc = document.createElement('td');
+        tdLoc.innerHTML = `
+            <div class="small text-dark fw-semibold"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i> ${item.location || 'Consultorio BIA'}</div>
+            <div class="small text-muted mt-0.5"><i class="bi bi-truck text-secondary opacity-50"></i> ${item.supplier || 'No especificado'}</div>
+        `;
+
+        // 7. Acciones
+        const tdActions = document.createElement('td');
+        tdActions.className = 'text-end';
+
+        const actionsWrap = document.createElement('div');
+        actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
+
+        // Botón Ajustar Existencia
+        const btnAdjust = document.createElement('button');
+        btnAdjust.type = 'button';
+        btnAdjust.className = 'btn btn-sm btn-stock-adjust shadow-2xs';
+        btnAdjust.innerHTML = '<i class="bi bi-plus-slash-minus"></i> Ajustar';
+        btnAdjust.title = 'Registrar entrada o salida de inventario';
+        btnAdjust.addEventListener('click', () => openStockMovementModal(item));
+
+        // Botón Historial de Movimientos
+        const btnHist = document.createElement('button');
+        btnHist.type = 'button';
+        btnHist.className = 'btn btn-sm btn-light border px-2 py-1 text-secondary rounded-2 shadow-2xs';
+        btnHist.innerHTML = '<i class="bi bi-clock-history"></i>';
+        btnHist.title = 'Ver historial de movimientos';
+        btnHist.addEventListener('click', () => openStockHistoryModal(item));
+
+        // Botón Editar
+        const btnEdit = document.createElement('button');
+        btnEdit.type = 'button';
+        btnEdit.className = 'btn btn-sm btn-action-edit';
+        btnEdit.innerHTML = '<i class="bi bi-pencil"></i>';
+        btnEdit.title = 'Editar datos del artículo';
+        btnEdit.addEventListener('click', () => editStockItem(item));
+
+        // Botón Eliminar
+        const btnDel = document.createElement('button');
+        btnDel.type = 'button';
+        btnDel.className = 'btn btn-sm btn-action-delete';
+        btnDel.innerHTML = '<i class="bi bi-trash3"></i>';
+        btnDel.title = 'Eliminar artículo';
+        btnDel.addEventListener('click', () => deleteStockItem(item.id, item.name));
+
+        actionsWrap.append(btnAdjust, btnHist, btnEdit, btnDel);
+        tdActions.appendChild(actionsWrap);
+
+        tr.append(tdCode, tdName, tdCat, tdStock, tdPrices, tdLoc, tdActions);
+        tbody.appendChild(tr);
+    });
+}
+
+function resetStockForm() {
+    editingStockId = null;
+    const form = document.getElementById('stock-form');
+    if (form) form.reset();
+
+    const titleEl = document.getElementById('stock-form-title');
+    const iconEl = document.getElementById('stock-form-icon');
+    const saveTextEl = document.getElementById('btn-save-stock-text');
+    const btnCancel = document.getElementById('btn-cancel-stock');
+
+    if (titleEl) titleEl.textContent = 'Registrar Nuevo Insumo / Producto';
+    if (iconEl) iconEl.className = 'bi bi-plus-circle-fill fs-5';
+    if (saveTextEl) saveTextEl.textContent = 'Guardar Ítem en Inventario';
+    if (btnCancel) btnCancel.classList.add('d-none');
+}
+
+function editStockItem(item) {
+    editingStockId = item.id;
+    document.getElementById('stock-code').value = item.code || '';
+    document.getElementById('stock-name').value = item.name || '';
+    document.getElementById('stock-category').value = item.category || 'Insumos BIA';
+    document.getElementById('stock-unit').value = item.unit || 'Unidad';
+    document.getElementById('stock-quantity').value = item.stock_quantity ?? 0;
+    document.getElementById('stock-min').value = item.min_stock ?? 5;
+    document.getElementById('stock-cost').value = item.cost_price ?? 0;
+    document.getElementById('stock-sale').value = item.sale_price ?? 0;
+    document.getElementById('stock-location').value = item.location || '';
+    document.getElementById('stock-supplier').value = item.supplier || '';
+    document.getElementById('stock-notes').value = item.notes || '';
+
+    const titleEl = document.getElementById('stock-form-title');
+    const iconEl = document.getElementById('stock-form-icon');
+    const saveTextEl = document.getElementById('btn-save-stock-text');
+    const btnCancel = document.getElementById('btn-cancel-stock');
+
+    if (titleEl) titleEl.textContent = `Editar: ${item.name}`;
+    if (iconEl) iconEl.className = 'bi bi-pencil-square fs-5';
+    if (saveTextEl) saveTextEl.textContent = 'Actualizar Cambios en Ítem';
+    if (btnCancel) btnCancel.classList.remove('d-none');
+
+    document.getElementById('stock-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function deleteStockItem(id, name) {
+    showConfirm(
+        'Eliminar Insumo / Producto',
+        `¿Estás seguro de eliminar "${name || 'este artículo'}" del inventario?`,
+        async () => {
+            try {
+                const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
+                if (res.ok) {
+                    showToast('🗑️ Artículo eliminado del inventario', 'success');
+                    fetchStockItems();
+                } else {
+                    showToast('Error al eliminar artículo', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            }
+        }
+    );
+}
+
+// --- MODAL DE AJUSTE RÁPIDO DE STOCK ---
+function initStockMovementModal() {
+    const modal = document.getElementById('stock-movement-modal');
+    if (!modal) return;
+
+    const btnClose = document.getElementById('stock-mov-modal-close');
+    const btnCancel = document.getElementById('stock-mov-btn-cancel');
+    const form = document.getElementById('stock-movement-form');
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        currentStockMovementItem = null;
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    // Toggle tipo de movimiento
+    document.querySelectorAll('.stock-type-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.stock-type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentMovementType = btn.dataset.type || 'IN';
+        });
+    });
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!currentStockMovementItem) return;
+
+            const qty = parseFloat(document.getElementById('stock-mov-qty').value);
+            const reason = document.getElementById('stock-mov-reason').value.trim();
+
+            if (!qty || qty <= 0) {
+                showToast('Ingresa una cantidad válida mayor a 0', 'error');
+                return;
+            }
+
+            const btnSave = document.getElementById('stock-mov-btn-save');
+            const originalText = btnSave.innerHTML;
+            btnSave.disabled = true;
+            btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando...';
+
+            try {
+                const res = await fetch(`/api/stock/${currentStockMovementItem.id}/movement`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: currentMovementType,
+                        quantity: qty,
+                        reason: reason
+                    })
+                });
+                const result = await res.json();
+
+                if (res.ok && result.success) {
+                    showToast(`✅ Movimiento de ${currentMovementType === 'IN' ? 'Entrada' : 'Salida'} registrado`, 'success');
+                    closeModal();
+                    fetchStockItems();
+                    fetchStockMovements();
+                } else {
+                    showToast(result.error || 'Error al registrar movimiento', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión al registrar movimiento', 'error');
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerHTML = originalText;
+            }
+        });
+    }
+}
+
+function openStockMovementModal(item) {
+    currentStockMovementItem = item;
+    currentMovementType = 'IN';
+
+    const modal = document.getElementById('stock-movement-modal');
+    if (!modal) return;
+
+    document.getElementById('stock-mov-modal-subtitle').textContent = `Producto: ${item.name} (${item.code || 'SKU'})`;
+    document.getElementById('stock-mov-current-qty').value = `${item.stock_quantity ?? 0} ${item.unit || 'u'}`;
+    document.getElementById('stock-mov-qty').value = '';
+    document.getElementById('stock-mov-reason').value = '';
+
+    document.querySelectorAll('.stock-type-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.type === 'IN');
+    });
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
+// --- MODAL DE HISTORIAL DE MOVIMIENTOS ---
+function initStockHistoryModal() {
+    const modal = document.getElementById('stock-history-modal');
+    if (!modal) return;
+
+    const btnClose = document.getElementById('stock-hist-modal-close');
+    const btnFooterClose = document.getElementById('stock-hist-btn-close');
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnFooterClose) btnFooterClose.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+}
+
+async function openStockHistoryModal(item) {
+    const modal = document.getElementById('stock-history-modal');
+    const titleEl = document.getElementById('stock-hist-item-name');
+    const listEl = document.getElementById('stock-hist-list');
+    if (!modal || !listEl) return;
+
+    if (titleEl) titleEl.textContent = `Producto: ${item.name} (${item.code || 'SKU'})`;
+    listEl.innerHTML = '<div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Cargando historial...</div>';
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+
+    try {
+        const res = await fetch(`/api/stock/movements?item_id=${item.id}`);
+        const movements = await res.json();
+
+        if (!Array.isArray(movements) || movements.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-center py-4 bg-light rounded-3 border">
+                    <i class="bi bi-clock-history text-muted fs-3 mb-1 d-block"></i>
+                    <div class="fw-semibold text-navy small">Sin movimientos registrados para este artículo</div>
+                    <div class="text-muted small mt-0.5">Usa el botón "Ajustar" para registrar entradas o salidas.</div>
+                </div>
+            `;
+            return;
+        }
+
+        listEl.innerHTML = '';
+        movements.forEach(m => {
+            const isIN = m.type === 'IN';
+            const dateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
+
+            const card = document.createElement('div');
+            card.className = `stock-movement-card ${isIN ? 'in' : 'out'}`;
+            card.innerHTML = `
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge ${isIN ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} fw-bold">
+                            <i class="bi ${isIN ? 'bi-arrow-down-left' : 'bi-arrow-up-right'}"></i> ${isIN ? 'ENTRADA' : 'SALIDA'}
+                        </span>
+                        <strong class="font-monospace fs-6 ${isIN ? 'text-success' : 'text-danger'}">${isIN ? '+' : '-'}${m.quantity} ${item.unit || 'u'}</strong>
+                    </div>
+                    <span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-calendar3 me-1"></i>${dateStr}</span>
+                </div>
+                <div class="small text-dark mt-1"><strong>Motivo:</strong> ${m.reason || 'Ajuste de inventario'}</div>
+                <div class="text-muted small mt-0.5" style="font-size: 0.72rem;">Stock previo: ${m.previous_quantity} ➔ Nuevo stock: <strong>${m.new_quantity}</strong></div>
+            `;
+            listEl.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        listEl.innerHTML = '<div class="text-center py-4 text-danger">Error al cargar historial de movimientos.</div>';
+    }
 }

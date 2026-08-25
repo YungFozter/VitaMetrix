@@ -1,0 +1,228 @@
+<!-- VISTA STOCK CONTROL & INVENTARIO CLÍNICO -->
+<div id="stock-view" class="view hidden-view stock-view-container">
+
+    <!-- KPI BENTO CARDS DE INVENTARIO -->
+    <div class="stock-kpi-grid">
+        <div class="stock-kpi-card">
+            <div class="stock-kpi-icon primary">
+                <i class="bi bi-box-seam-fill"></i>
+            </div>
+            <div class="stock-kpi-data">
+                <span class="stock-kpi-label">Total Artículos</span>
+                <span class="stock-kpi-value" id="stock-kpi-total">0</span>
+                <span class="stock-kpi-sub">En catálogo clínico</span>
+            </div>
+        </div>
+
+        <div class="stock-kpi-card">
+            <div class="stock-kpi-icon warning">
+                <i class="bi bi-exclamation-triangle-fill"></i>
+            </div>
+            <div class="stock-kpi-data">
+                <span class="stock-kpi-label">Stock Bajo / Crítico</span>
+                <span class="stock-kpi-value text-warning" id="stock-kpi-low">0</span>
+                <span class="stock-kpi-sub">Requieren reposición</span>
+            </div>
+        </div>
+
+        <div class="stock-kpi-card">
+            <div class="stock-kpi-icon success">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="stock-kpi-data">
+                <span class="stock-kpi-label">Valorización Estimada</span>
+                <span class="stock-kpi-value text-success" id="stock-kpi-val">$ 0.00</span>
+                <span class="stock-kpi-sub">Costo total inventariado</span>
+            </div>
+        </div>
+
+        <div class="stock-kpi-card">
+            <div class="stock-kpi-icon info">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+            <div class="stock-kpi-data">
+                <span class="stock-kpi-label">Movimientos Registrados</span>
+                <span class="stock-kpi-value" id="stock-kpi-movs">0</span>
+                <span class="stock-kpi-sub">Entradas y salidas</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULARIO: REGISTRAR / EDITAR INSUMO O PRODUCTO -->
+    <div class="bento-card mb-4 p-4">
+        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-plus-circle-fill fs-5" id="stock-form-icon"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-navy mb-0" id="stock-form-title">Registrar Nuevo Insumo / Producto</h5>
+                    <p class="text-muted small mb-0">Gestiona electrodos BIA, suplementos y material clínico.</p>
+                </div>
+            </div>
+            <button type="button" id="btn-cancel-stock" class="btn btn-sm btn-outline-secondary d-none">
+                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+            </button>
+        </div>
+
+        <form id="stock-form" autocomplete="off">
+            <div class="row g-3">
+                <!-- 1. SKU / Código -->
+                <div class="col-12 col-md-3 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
+                    <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
+                </div>
+
+                <!-- 2. Nombre del Producto -->
+                <div class="col-12 col-md-5 col-lg-4">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre del Insumo / Producto <span class="text-danger">*</span></label>
+                    <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Electrodos BIA Desechables (Pack x100)" required>
+                </div>
+
+                <!-- 3. Categoría -->
+                <div class="col-12 col-md-4 col-lg-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
+                    <select id="stock-category" class="form-select shadow-none small">
+                        <option value="Insumos BIA">🩺 Insumos BIA</option>
+                        <option value="Suplementos Nutricionales">💊 Suplementos Nutricionales</option>
+                        <option value="Material Clínico e Higiene">🧼 Material Clínico e Higiene</option>
+                        <option value="Accesorios y Equipos">📦 Accesorios y Equipos</option>
+                        <option value="Otros">Otros</option>
+                    </select>
+                </div>
+
+                <!-- 4. Unidad de Medida -->
+                <div class="col-12 col-md-3 col-lg-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
+                    <select id="stock-unit" class="form-select shadow-none small">
+                        <option value="Pack">Pack</option>
+                        <option value="Unidad">Unidad (u)</option>
+                        <option value="Frasco">Frasco / Bote</option>
+                        <option value="Caja">Caja</option>
+                        <option value="Mililitros (ml)">Mililitros (ml)</option>
+                        <option value="Gramos (gr)">Gramos (gr)</option>
+                    </select>
+                </div>
+
+                <!-- 5. Cantidad Actual -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual <span class="text-danger">*</span></label>
+                    <input type="number" id="stock-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0" step="any" required>
+                </div>
+
+                <!-- 6. Stock Mínimo (Alerta) -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Mínimo</label>
+                    <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="any" value="5">
+                </div>
+
+                <!-- 7. Costo Unitario -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario ($)</label>
+                    <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                </div>
+
+                <!-- 8. Precio Venta -->
+                <div class="col-6 col-md-3 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta ($)</label>
+                    <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                </div>
+
+                <!-- 9. Ubicación en Consultorio -->
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Ubicación</label>
+                    <input type="text" id="stock-location" class="form-control shadow-none small" placeholder="Ej: Gabinete 1 - Estante B">
+                </div>
+
+                <!-- 10. Proveedor -->
+                <div class="col-12 col-md-4 col-lg-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Proveedor</label>
+                    <input type="text" id="stock-supplier" class="form-control shadow-none small" placeholder="Ej: BIA Supplies S.R.L.">
+                </div>
+
+                <!-- 11. Notas / Descripción -->
+                <div class="col-12 col-lg-8">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Notas / Lote / Descripción</label>
+                    <input type="text" id="stock-notes" class="form-control shadow-none small" placeholder="Lote, fecha de caducidad o instrucciones de almacenamiento...">
+                </div>
+
+                <!-- Botón Guardar -->
+                <div class="col-12 col-lg-4 d-flex align-items-end">
+                    <button type="submit" id="btn-save-stock" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span id="btn-save-stock-text">Guardar Ítem en Inventario</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- DIRECTORIO DE INVENTARIO Y SUMINISTROS -->
+    <div class="bento-card p-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+            <div>
+                <h5 class="fw-bold text-navy mb-0">Directorio de Inventario y Suministros</h5>
+                <p class="text-muted small mb-0">Control de existencias, umbrales de alerta y movimientos.</p>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                    Total Registros: <span id="stock-total-count">0</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- Barra de Filtros y Búsqueda -->
+        <div class="row g-2 mb-3 align-items-center">
+            <!-- Buscador -->
+            <div class="col-12 col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="stock-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre, SKU, ubicación o proveedor...">
+                </div>
+            </div>
+
+            <!-- Filtro Categoría -->
+            <div class="col-6 col-md-4">
+                <select id="stock-filter-category" class="form-select shadow-none small">
+                    <option value="all">📁 Todas las Categorías</option>
+                    <option value="Insumos BIA">🩺 Insumos BIA</option>
+                    <option value="Suplementos Nutricionales">💊 Suplementos Nutricionales</option>
+                    <option value="Material Clínico e Higiene">🧼 Material Clínico e Higiene</option>
+                    <option value="Accesorios y Equipos">📦 Accesorios y Equipos</option>
+                    <option value="Otros">Otros</option>
+                </select>
+            </div>
+
+            <!-- Filtro Estado -->
+            <div class="col-6 col-md-3">
+                <select id="stock-filter-status" class="form-select shadow-none small">
+                    <option value="all">⚡ Todos los Estados</option>
+                    <option value="optimal">🟢 Óptimo</option>
+                    <option value="low">🟡 Stock Bajo (Alerta)</option>
+                    <option value="out">🔴 Agotado</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tabla de Inventario -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle stock-table mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>CÓDIGO / SKU</th>
+                        <th>PRODUCTO / INSUMO</th>
+                        <th>CATEGORÍA</th>
+                        <th>EXISTENCIA & NIVEL</th>
+                        <th>PRECIOS (COSTO / VENTA)</th>
+                        <th>UBICACIÓN / PROVEEDOR</th>
+                        <th class="text-end">ACCIONES</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-tbody">
+                    <tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>

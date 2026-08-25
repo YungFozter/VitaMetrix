@@ -880,6 +880,346 @@ def delete_appointment(appt_id):
     _LOCAL_APPOINTMENTS = [a for a in _LOCAL_APPOINTMENTS if a.get('id') != appt_id]
     return jsonify({"success": True})
 
+# --- STOCK CONTROL & INVENTARIO CLÍNICO ---
+
+_LOCAL_STOCK_ITEMS = [
+    {
+        "id": "stk-001",
+        "code": "SKU-BIA-001",
+        "name": "Electrodos BIA Desechables (Pack x100)",
+        "category": "Insumos BIA",
+        "unit": "Pack",
+        "stock_quantity": 48,
+        "min_stock": 15,
+        "cost_price": 18.50,
+        "sale_price": 28.00,
+        "supplier": "BIA Medical Supplies",
+        "location": "Gabinete 1 - Estante A",
+        "notes": "Parches adhesivos con hidrogel de baja impedancia",
+        "created_at": "2026-08-01T10:00:00Z"
+    },
+    {
+        "id": "stk-002",
+        "code": "SKU-BIA-002",
+        "name": "Gel Conductor BIA Hipoalergénico 250ml",
+        "category": "Insumos BIA",
+        "unit": "Frasco",
+        "stock_quantity": 8,
+        "min_stock": 10,
+        "cost_price": 12.00,
+        "sale_price": 19.50,
+        "supplier": "Lab FarmaBolivia",
+        "location": "Gabinete 1 - Estante B",
+        "notes": "Alta conductividad para mediciones en piel seca",
+        "created_at": "2026-08-05T11:30:00Z"
+    },
+    {
+        "id": "stk-003",
+        "code": "SKU-SUP-001",
+        "name": "Proteína Whey Isolate 100% (Bote 900g Vainilla)",
+        "category": "Suplementos Nutricionales",
+        "unit": "Frasco",
+        "stock_quantity": 14,
+        "min_stock": 5,
+        "cost_price": 45.00,
+        "sale_price": 68.00,
+        "supplier": "NutriFit Import",
+        "location": "Mostrador Recepción - Vitrina",
+        "notes": "Recomendada para pacientes en ganancia de masa muscular (SMM)",
+        "created_at": "2026-08-10T14:00:00Z"
+    },
+    {
+        "id": "stk-004",
+        "code": "SKU-SUP-002",
+        "name": "Creatina Monohidratada Creapure 300g",
+        "category": "Suplementos Nutricionales",
+        "unit": "Frasco",
+        "stock_quantity": 3,
+        "min_stock": 6,
+        "cost_price": 24.00,
+        "sale_price": 38.00,
+        "supplier": "NutriFit Import",
+        "location": "Mostrador Recepción - Vitrina",
+        "notes": "Suplementación clínica celular y fuerza muscular",
+        "created_at": "2026-08-12T16:20:00Z"
+    },
+    {
+        "id": "stk-005",
+        "code": "SKU-MED-001",
+        "name": "Toallitas con Alcohol Isopropílico 70% (Caja x200)",
+        "category": "Material Clínico e Higiene",
+        "unit": "Caja",
+        "stock_quantity": 22,
+        "min_stock": 8,
+        "cost_price": 8.50,
+        "sale_price": 14.00,
+        "supplier": "Droguería Médica Santa Cruz",
+        "location": "Mesa de Consulta BIA",
+        "notes": "Limpieza de puntos de contacto cutáneos antes de la medición",
+        "created_at": "2026-08-15T09:00:00Z"
+    },
+    {
+        "id": "stk-006",
+        "code": "SKU-ACC-001",
+        "name": "Cinta Métrica Antropométrica Ergonómica Seca 201",
+        "category": "Accesorios y Equipos",
+        "unit": "Unidad",
+        "stock_quantity": 5,
+        "min_stock": 2,
+        "cost_price": 22.00,
+        "sale_price": 35.00,
+        "supplier": "Equipos Médicos La Paz",
+        "location": "Gabinete 2 - Cajón Superior",
+        "notes": "Medición de circunferencia de cintura y cadera",
+        "created_at": "2026-08-18T12:00:00Z"
+    }
+]
+
+_LOCAL_STOCK_MOVEMENTS = [
+    {
+        "id": "mov-001",
+        "stock_item_id": "stk-001",
+        "item_name": "Electrodos BIA Desechables (Pack x100)",
+        "type": "IN",
+        "quantity": 50,
+        "previous_quantity": 0,
+        "new_quantity": 50,
+        "reason": "Compra inicial de insumos de bioimpedancia",
+        "created_at": "2026-08-01T10:05:00Z"
+    },
+    {
+        "id": "mov-002",
+        "stock_item_id": "stk-001",
+        "item_name": "Electrodos BIA Desechables (Pack x100)",
+        "type": "OUT",
+        "quantity": 2,
+        "previous_quantity": 50,
+        "new_quantity": 48,
+        "reason": "Consumo en consultas clínicas de la semana",
+        "created_at": "2026-08-20T17:30:00Z"
+    }
+]
+
+def _calc_item_status(qty, min_qty):
+    qty = float(qty or 0)
+    min_qty = float(min_qty or 0)
+    if qty <= 0:
+        return "out" # Agotado
+    elif qty <= min_qty:
+        return "low" # Stock Bajo / Alerta
+    return "optimal" # Óptimo
+
+@app.route('/api/stock', methods=['GET'])
+def get_stock_items():
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('*').order('created_at', desc=True).execute()
+            if res.data is not None and len(res.data) > 0:
+                for item in res.data:
+                    item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
+                return jsonify(res.data)
+        except Exception as e:
+            logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
+
+    # Fallback local enriquecido
+    items = []
+    for item in _LOCAL_STOCK_ITEMS:
+        item_copy = dict(item)
+        item_copy['status'] = _calc_item_status(item_copy.get('stock_quantity'), item_copy.get('min_stock'))
+        items.append(item_copy)
+    return jsonify(items)
+
+@app.route('/api/stock', methods=['POST'])
+def create_stock_item():
+    data = request.json or {}
+    name = _clean_str(data.get('name'))
+    if not name:
+        return jsonify({"error": "El nombre del producto/insumo es obligatorio"}), 400
+
+    item_id = str(uuid.uuid4())
+    code = _clean_str(data.get('code'))
+    if not code:
+        cat_prefix = "BIA" if "bia" in (data.get('category') or '').lower() else ("SUP" if "sup" in (data.get('category') or '').lower() else "ITM")
+        code = f"SKU-{cat_prefix}-{len(_LOCAL_STOCK_ITEMS) + 1:03d}"
+
+    qty = float(data.get('stock_quantity') or 0)
+    min_qty = float(data.get('min_stock') or 5)
+    cost = float(data.get('cost_price') or 0)
+    sale = float(data.get('sale_price') or 0) if data.get('sale_price') is not None else 0
+
+    new_item = {
+        "id": item_id,
+        "code": code,
+        "name": name,
+        "category": _clean_str(data.get('category')) or "Insumos BIA",
+        "unit": _clean_str(data.get('unit')) or "Unidad",
+        "stock_quantity": qty,
+        "min_stock": min_qty,
+        "cost_price": cost,
+        "sale_price": sale,
+        "supplier": _clean_str(data.get('supplier')),
+        "location": _clean_str(data.get('location')),
+        "notes": _clean_str(data.get('notes')),
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    if supabase:
+        try:
+            res = supabase.table('stock_items').insert(new_item).execute()
+            if res.data:
+                item_res = res.data[0]
+                item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
+                return jsonify({"success": True, "data": item_res}), 201
+        except Exception as e:
+            logging.warning("Error al insertar en Supabase stock_items: %s", e)
+
+    _LOCAL_STOCK_ITEMS.insert(0, new_item)
+    new_item['status'] = _calc_item_status(qty, min_qty)
+    return jsonify({"success": True, "data": new_item}), 201
+
+@app.route('/api/stock/<string:item_id>', methods=['PUT'])
+def update_stock_item(item_id):
+    data = request.json or {}
+    updated = {
+        "name": _clean_str(data.get('name')),
+        "code": _clean_str(data.get('code')),
+        "category": _clean_str(data.get('category')),
+        "unit": _clean_str(data.get('unit')),
+        "stock_quantity": float(data.get('stock_quantity')) if data.get('stock_quantity') is not None else None,
+        "min_stock": float(data.get('min_stock')) if data.get('min_stock') is not None else None,
+        "cost_price": float(data.get('cost_price')) if data.get('cost_price') is not None else None,
+        "sale_price": float(data.get('sale_price')) if data.get('sale_price') is not None else None,
+        "supplier": _clean_str(data.get('supplier')),
+        "location": _clean_str(data.get('location')),
+        "notes": _clean_str(data.get('notes')),
+        "updated_at": datetime.now(timezone.utc).isoformat()
+    }
+    updated = {k: v for k, v in updated.items() if v is not None}
+
+    if supabase:
+        try:
+            res = supabase.table('stock_items').update(updated).eq('id', item_id).execute()
+            if res.data:
+                item_res = res.data[0]
+                item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
+                return jsonify({"success": True, "data": item_res})
+        except Exception as e:
+            logging.warning("Error al actualizar en Supabase stock_items: %s", e)
+
+    for item in _LOCAL_STOCK_ITEMS:
+        if item.get('id') == item_id:
+            item.update(updated)
+            item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
+            return jsonify({"success": True, "data": item})
+
+    return jsonify({"success": True, "message": "Actualizado"})
+
+@app.route('/api/stock/<string:item_id>', methods=['DELETE'])
+def delete_stock_item(item_id):
+    if supabase:
+        try:
+            supabase.table('stock_items').delete().eq('id', item_id).execute()
+            return jsonify({"success": True})
+        except Exception as e:
+            logging.warning("Error al eliminar en Supabase stock_items: %s", e)
+
+    global _LOCAL_STOCK_ITEMS
+    _LOCAL_STOCK_ITEMS = [item for item in _LOCAL_STOCK_ITEMS if item.get('id') != item_id]
+    return jsonify({"success": True})
+
+@app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
+def record_stock_movement(item_id):
+    data = request.json or {}
+    mov_type = (data.get('type') or 'IN').upper() # IN, OUT, ADJUST
+    qty = float(data.get('quantity') or 0)
+    reason = _clean_str(data.get('reason')) or ("Entrada de stock" if mov_type == 'IN' else "Salida / Consumo clínico")
+
+    if qty <= 0 and mov_type != 'ADJUST':
+        return jsonify({"error": "La cantidad debe ser mayor a 0"}), 400
+
+    # Buscar ítem actual
+    target_item = None
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('*').eq('id', item_id).execute()
+            if res.data:
+                target_item = res.data[0]
+        except Exception as e:
+            logging.warning("Error al buscar ítem en Supabase: %s", e)
+
+    if not target_item:
+        for item in _LOCAL_STOCK_ITEMS:
+            if item.get('id') == item_id:
+                target_item = item
+                break
+
+    if not target_item:
+        return jsonify({"error": "Artículo no encontrado"}), 404
+
+    current_qty = float(target_item.get('stock_quantity') or 0)
+    if mov_type == 'IN':
+        new_qty = current_qty + qty
+    elif mov_type == 'OUT':
+        if current_qty < qty:
+            return jsonify({"error": f"Stock insuficiente. Existencia actual: {current_qty}"}), 400
+        new_qty = current_qty - qty
+    else: # ADJUST
+        new_qty = qty
+
+    mov_record = {
+        "id": str(uuid.uuid4()),
+        "stock_item_id": item_id,
+        "item_name": target_item.get('name'),
+        "type": mov_type,
+        "quantity": qty,
+        "previous_quantity": current_qty,
+        "new_quantity": new_qty,
+        "reason": reason,
+        "created_at": datetime.now(timezone.utc).isoformat()
+    }
+
+    # Actualizar stock en Supabase
+    if supabase:
+        try:
+            supabase.table('stock_items').update({"stock_quantity": new_qty}).eq('id', item_id).execute()
+            try:
+                supabase.table('stock_movements').insert(mov_record).execute()
+            except Exception:
+                pass
+        except Exception as e:
+            logging.warning("Error al actualizar movimiento en Supabase: %s", e)
+
+    # Actualizar local
+    target_item['stock_quantity'] = new_qty
+    target_item['status'] = _calc_item_status(new_qty, target_item.get('min_stock'))
+    _LOCAL_STOCK_MOVEMENTS.insert(0, mov_record)
+
+    return jsonify({
+        "success": True,
+        "data": target_item,
+        "movement": mov_record
+    })
+
+@app.route('/api/stock/movements', methods=['GET'])
+def get_stock_movements():
+    item_id = request.args.get('item_id')
+    if supabase:
+        try:
+            query = supabase.table('stock_movements').select('*').order('created_at', desc=True)
+            if item_id:
+                query = query.eq('stock_item_id', item_id)
+            res = query.limit(50).execute()
+            if res.data is not None and len(res.data) > 0:
+                return jsonify(res.data)
+        except Exception as e:
+            logging.warning("Error al consultar movimientos en Supabase: %s", e)
+
+    if item_id:
+        movs = [m for m in _LOCAL_STOCK_MOVEMENTS if m.get('stock_item_id') == item_id]
+    else:
+        movs = _LOCAL_STOCK_MOVEMENTS
+    return jsonify(movs[:50])
+
 # --- CHATBOT WEBHOOK (WhatsApp / Telegram Automation) ---
 
 @app.route('/api/bot/webhook', methods=['POST', 'GET'])

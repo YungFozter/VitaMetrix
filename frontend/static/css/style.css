@@ -28,3 +28,6 @@
 
 /* Vista Configuración General & Mapa Consultorio */
 @import url('configuracion.css');
+
+/* Vista Stock Control & Inventario Clínico */
+@import url('stock.css');
