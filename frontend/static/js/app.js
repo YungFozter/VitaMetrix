@@ -452,6 +452,87 @@ function updateBioUI(data, inputs) {
     
     document.getElementById('rank-badge').textContent = data.rank;
 
+    const gScore = data.score || 0;
+    const gRank = data.rank || 'HIERRO';
+
+    // Actualizar Rango y Barra de Progreso TRU Body Score
+    const elRank = document.getElementById('rank-badge');
+    const elTruStatus = document.getElementById('tru-score-status');
+    const elTruNext = document.getElementById('tru-next-rank-text');
+    const elTruPctLabel = document.getElementById('tru-pct-label');
+    const elTruBar = document.getElementById('tru-progress-bar');
+    const elTruDiag = document.getElementById('tru-summary-diag');
+
+    if (elRank) {
+        elRank.textContent = gRank;
+        if (gRank === 'ORO') {
+            elRank.style.background = 'linear-gradient(135deg, #fef08a 0%, #eab308 100%)';
+            elRank.style.color = '#713f12';
+            elRank.style.boxShadow = '0 4px 12px rgba(234, 179, 8, 0.35)';
+        } else if (gRank === 'PLATA') {
+            elRank.style.background = 'linear-gradient(135deg, #f1f5f9 0%, #cbd5e1 100%)';
+            elRank.style.color = '#334155';
+            elRank.style.boxShadow = '0 4px 12px rgba(148, 163, 184, 0.35)';
+        } else if (gRank === 'BRONCE') {
+            elRank.style.background = 'linear-gradient(135deg, #fed7aa 0%, #ea580c 100%)';
+            elRank.style.color = '#7c2d12';
+            elRank.style.boxShadow = '0 4px 12px rgba(234, 88, 12, 0.35)';
+        } else {
+            elRank.style.background = 'linear-gradient(135deg, #e2e8f0 0%, #64748b 100%)';
+            elRank.style.color = '#ffffff';
+            elRank.style.boxShadow = '0 4px 12px rgba(100, 116, 139, 0.25)';
+        }
+    }
+
+    if (elTruStatus) {
+        if (gScore >= 95) {
+            elTruStatus.textContent = 'Nivel Élite / Excelente';
+            elTruStatus.style.background = 'rgba(234, 179, 8, 0.15)';
+            elTruStatus.style.color = '#a16207';
+        } else if (gScore >= 90) {
+            elTruStatus.textContent = 'Alto Rendimiento';
+            elTruStatus.style.background = 'rgba(148, 163, 184, 0.2)';
+            elTruStatus.style.color = '#334155';
+        } else if (gScore >= 80) {
+            elTruStatus.textContent = 'Buena Condición';
+            elTruStatus.style.background = 'rgba(234, 88, 12, 0.15)';
+            elTruStatus.style.color = '#c2410c';
+        } else {
+            elTruStatus.textContent = 'En Optimización';
+            elTruStatus.style.background = 'rgba(0, 180, 216, 0.15)';
+            elTruStatus.style.color = '#0284c7';
+        }
+    }
+
+    if (elTruPctLabel) elTruPctLabel.textContent = `${gScore}%`;
+    if (elTruBar) elTruBar.style.width = `${Math.min(Math.max(gScore, 5), 100)}%`;
+
+    if (elTruNext) {
+        if (gScore >= 95) elTruNext.textContent = '¡Rango Máximo Alcanzado!';
+        else if (gScore >= 90) elTruNext.textContent = `A ${95 - gScore} pts de alcanzar ORO`;
+        else if (gScore >= 80) elTruNext.textContent = `A ${90 - gScore} pts de alcanzar PLATA`;
+        else elTruNext.textContent = `A ${80 - gScore} pts de alcanzar BRONCE`;
+    }
+
+    // Pilares
+    const elPillarPhase = document.getElementById('tru-pillar-phase');
+    const elPillarMuscle = document.getElementById('tru-pillar-muscle');
+    const elPillarFat = document.getElementById('tru-pillar-fat');
+
+    if (elPillarPhase) elPillarPhase.textContent = `${data.phase_angle || inputs.phase_angle || '--'}°`;
+    if (elPillarMuscle) elPillarMuscle.textContent = `${data.muscle_score || 0} pts`;
+    if (elPillarFat) elPillarFat.textContent = `${data.fat_score || 0} pts`;
+
+    if (elTruDiag) {
+        if (gScore >= 90) {
+            elTruDiag.textContent = 'Integridad celular y reserva magra en niveles óptimos de salud.';
+        } else if (gScore >= 80) {
+            elTruDiag.textContent = 'Balance bioeléctrico adecuado con buena densidad celular.';
+        } else {
+            elTruDiag.textContent = 'Oportunidad de progresión muscular y optimización de hidratación celular.';
+        }
+    }
+
     // Circular Gauges for Muscle and Fat
     const muscleGauge = document.getElementById('muscle-gauge');
     const fatGauge = document.getElementById('fat-gauge');
