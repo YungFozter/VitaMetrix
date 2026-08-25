@@ -4766,7 +4766,7 @@ function initStockTaxonomyModal() {
     if (btnAddUnit && inputNewUnit) {
         btnAddUnit.addEventListener('click', () => {
             const unitName = inputNewUnit.value.trim();
-            const fam = selectNewUnitFamily?.value || 'Otras';
+            const fam = selectNewUnitFamily ? (selectNewUnitFamily.value.trim() || 'General') : 'General';
 
             if (!unitName) {
                 showToast('Ingresa un nombre para la Unidad de Medida', 'error');

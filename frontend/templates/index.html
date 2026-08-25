@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=98">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=99">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -959,18 +959,22 @@
                 <div class="p-3 bg-light rounded-3 border mb-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Unidad de Medida (U/M)</label>
                     <div class="row g-2">
-                        <div class="col-7">
-                            <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Tubo, Ampolla 5ml, Gotero...">
+                        <div class="col-12 col-sm-6">
+                            <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Nombre U/M (Ej: Vial, Tubo 50g, Gotero...)">
                         </div>
-                        <div class="col-5">
+                        <div class="col-12 col-sm-6">
                             <div class="input-group">
-                                <select id="new-unit-family" class="form-select shadow-none small">
-                                    <option value="Conteo">Conteo</option>
-                                    <option value="Posología">Posología</option>
-                                    <option value="Volumen">Volumen</option>
-                                    <option value="Peso">Peso</option>
-                                    <option value="Otras">Otras</option>
-                                </select>
+                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Familia / Tipo (Ej: Conteo, Inyectable...)" value="Conteo">
+                                <datalist id="suggested-families-list">
+                                    <option value="Conteo">
+                                    <option value="Posología">
+                                    <option value="Volumen">
+                                    <option value="Peso">
+                                    <option value="Inyectables">
+                                    <option value="Tópicos / Geles">
+                                    <option value="Descartables">
+                                    <option value="General">
+                                </datalist>
                                 <button type="button" id="btn-add-unit" class="btn btn-primary btn-sm px-3 fw-semibold">
                                     <i class="bi bi-plus-lg me-1"></i> Agregar
                                 </button>
@@ -1009,6 +1013,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=98"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=99"></script>
 </body>
 </html>
