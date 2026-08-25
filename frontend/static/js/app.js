@@ -4142,7 +4142,8 @@ function initStockModule() {
     if (catFilter) catFilter.addEventListener('change', filterAndRenderStock);
     if (statusFilter) statusFilter.addEventListener('change', filterAndRenderStock);
 
-    // Init Modals
+    // Init Custom Dropdowns & Modals
+    initStockFormCustomDropdowns();
     initStockMovementModal();
     initStockHistoryModal();
     initStockTaxonomyModal();
@@ -4873,4 +4874,103 @@ function renderTaxonomyUnits() {
         `;
         listEl.appendChild(famCard);
     });
+}
+
+// --- AUTOCOMPLETE ESTILIZADO DE CATEGORÍAS Y U/M ---
+function initStockFormCustomDropdowns() {
+    const inputCat = document.getElementById('stock-category');
+    const dropCat = document.getElementById('stock-category-dropdown');
+    const inputUnit = document.getElementById('stock-unit');
+    const dropUnit = document.getElementById('stock-unit-dropdown');
+
+    const setupDropdown = (input, dropdown, getItemsFunc) => {
+        if (!input || !dropdown) return;
+
+        const renderItems = (filterText = '') => {
+            const items = getItemsFunc();
+            const normFilter = normalizeText(filterText);
+            const filtered = items.filter(it => !normFilter || normalizeText(it.name || it).includes(normFilter));
+
+            if (filtered.length === 0) {
+                dropdown.innerHTML = '<div class="p-2 text-muted small text-center">Sin coincidencias. Puedes ingresar tu propio valor.</div>';
+                return;
+            }
+
+            dropdown.innerHTML = '';
+            filtered.forEach(it => {
+                const name = typeof it === 'string' ? it : it.name;
+                const icon = it.icon || '';
+                const tag = it.tag || '';
+
+                const div = document.createElement('div');
+                div.className = 'stock-dropdown-item';
+                div.innerHTML = `
+                    <div class="d-flex align-items-center gap-2 text-truncate">
+                        ${icon ? `<span>${icon}</span>` : ''}
+                        <span class="text-truncate">${escapeHtml(name)}</span>
+                    </div>
+                    ${tag ? `<span class="badge bg-light text-secondary border">${escapeHtml(tag)}</span>` : ''}
+                `;
+
+                div.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    input.value = name;
+                    dropdown.classList.remove('show');
+                });
+
+                dropdown.appendChild(div);
+            });
+        };
+
+        input.addEventListener('focus', () => {
+            renderItems(input.value);
+            dropdown.classList.add('show');
+        });
+
+        input.addEventListener('input', () => {
+            renderItems(input.value);
+            dropdown.classList.add('show');
+        });
+
+        input.addEventListener('blur', () => {
+            setTimeout(() => dropdown.classList.remove('show'), 160);
+        });
+    };
+
+    setupDropdown(inputCat, dropCat, () => {
+        const defaultCats = [
+            { name: "Insumos BIA", icon: "🩺" },
+            { name: "Suplementos Nutricionales", icon: "💊" },
+            { name: "Material Clínico e Higiene", icon: "🧼" },
+            { name: "Accesorios y Equipos", icon: "📦" },
+            { name: "Medicamentos / Fármacos", icon: "💉" },
+            { name: "Material de Oficina", icon: "📝" },
+            { name: "Otros", icon: "🏷️" }
+        ];
+        const knownCats = new Map(defaultCats.map(c => [c.name.toLowerCase(), c]));
+
+        if (Array.isArray(allStockItems)) {
+            allStockItems.forEach(i => {
+                if (i.category && !knownCats.has(i.category.toLowerCase())) {
+                    knownCats.set(i.category.toLowerCase(), { name: i.category, icon: "📦" });
+                }
+            });
+        }
+        return Array.from(knownCats.values());
+    });
+
+    setupDropdown(inputUnit, dropUnit, () => [
+        { name: "Pack", tag: "Conteo" },
+        { name: "Unidad (u)", tag: "Conteo" },
+        { name: "Frasco / Bote", tag: "Conteo" },
+        { name: "Caja", tag: "Conteo" },
+        { name: "Tabletas", tag: "Posología" },
+        { name: "Cápsulas", tag: "Posología" },
+        { name: "Sobres", tag: "Posología" },
+        { name: "Ampollas", tag: "Posología" },
+        { name: "Mililitros (ml)", tag: "Volumen" },
+        { name: "Litros (L)", tag: "Volumen" },
+        { name: "Gramos (gr)", tag: "Peso" },
+        { name: "Kilogramos (kg)", tag: "Peso" }
+    ]);
 }

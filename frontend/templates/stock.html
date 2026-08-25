@@ -79,39 +79,22 @@
                     <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Electrodos BIA Desechables (Pack x100)" required>
                 </div>
 
-                <!-- 3. Categoría (Manual con Sugerencias Datalist) -->
+                <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
                 <div class="col-12 col-md-4 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
-                    <input type="text" id="stock-category" class="form-control shadow-none small" list="stock-categories-datalist" placeholder="Escribe o selecciona...">
-                    <datalist id="stock-categories-datalist">
-                        <option value="Insumos BIA">
-                        <option value="Suplementos Nutricionales">
-                        <option value="Material Clínico e Higiene">
-                        <option value="Accesorios y Equipos">
-                        <option value="Medicamentos / Fármacos">
-                        <option value="Material de Oficina">
-                        <option value="Otros">
-                    </datalist>
+                    <div class="stock-custom-dropdown-wrap">
+                        <input type="text" id="stock-category" class="form-control shadow-none small" placeholder="Escribe o selecciona..." autocomplete="off">
+                        <div id="stock-category-dropdown" class="stock-custom-dropdown"></div>
+                    </div>
                 </div>
 
-                <!-- 4. Unidad de Medida (Manual con Sugerencias Datalist) -->
+                <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas) -->
                 <div class="col-12 col-md-3 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
-                    <input type="text" id="stock-unit" class="form-control shadow-none small" list="stock-units-datalist" placeholder="Escribe o selecciona...">
-                    <datalist id="stock-units-datalist">
-                        <option value="Pack">
-                        <option value="Unidad">
-                        <option value="Frasco">
-                        <option value="Caja">
-                        <option value="Tabletas">
-                        <option value="Cápsulas">
-                        <option value="Sobres">
-                        <option value="Ampollas">
-                        <option value="Mililitros (ml)">
-                        <option value="Litros (L)">
-                        <option value="Gramos (gr)">
-                        <option value="Kilogramos (kg)">
-                    </datalist>
+                    <div class="stock-custom-dropdown-wrap">
+                        <input type="text" id="stock-unit" class="form-control shadow-none small" placeholder="Escribe o selecciona..." autocomplete="off">
+                        <div id="stock-unit-dropdown" class="stock-custom-dropdown"></div>
+                    </div>
                 </div>
 
                 <!-- 5. Cantidad Actual -->
