@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=62">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=63">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -392,16 +392,8 @@
                         <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width: 18px; height: 18px;" title="Estación en línea"></span>
                     </div>
                     <div class="flex-grow-1">
-                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1.5">
-                            <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold shadow-xs" style="font-size: 0.78rem;">
-                                <i class="bi bi-shield-fill-check me-1"></i>Credencial Activa
-                            </span>
-                            <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.78rem;">
-                                <i class="bi bi-cpu-fill me-1"></i>VitaMetrix Workstation
-                            </span>
-                        </div>
                         <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name" style="letter-spacing: -0.5px;">Dra. Audrey</h2>
-                        <p class="m-0 fs-6 fw-medium mt-0.5" id="profile-modal-title" style="color: #bae6fd;">Manager / Especialista BIA</p>
+                        <p class="m-0 fs-6 fw-medium mt-1" id="profile-modal-title" style="color: #bae6fd;">Manager / Especialista BIA</p>
                     </div>
                 </div>
             </div>
@@ -461,14 +453,8 @@
                 </div>
 
                 <!-- Métricas de Actividad Clínica -->
-                <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h4 class="display-font text-navy fw-bold fs-5 m-0 d-flex align-items-center gap-2">
-                        <i class="bi bi-graph-up-arrow text-primary"></i>
-                        <span>Resumen de Actividad</span>
-                    </h4>
-                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.75rem;">
-                        <i class="bi bi-arrow-repeat me-1"></i>Sincronizado en tiempo real
-                    </span>
+                <div class="mb-3">
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0">Resumen de Actividad</h4>
                 </div>
                 <div class="row g-3 mb-4 text-center">
                     <div class="col-4">
