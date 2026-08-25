@@ -18,7 +18,18 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchDashboardStats();
 });
 
-// --- 0. TOASTS & MODALS ---
+// --- 0. UTILS & ESCAPING ---
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// --- 0.1 TOASTS & MODALS ---
 function showToast(message, type = 'info') {
     const container = document.getElementById('toast-container');
     if (!container) return;
@@ -4255,15 +4266,15 @@ function renderStockTable(items) {
 
         // 1. SKU / Código
         const tdCode = document.createElement('td');
-        tdCode.innerHTML = `<span class="badge bg-light text-secondary border font-monospace fw-bold">${item.code || 'SKU-000'}</span>`;
+        tdCode.innerHTML = `<span class="badge bg-light text-secondary border font-monospace fw-bold">${escapeHtml(item.code || 'SKU-000')}</span>`;
 
         // 2. Producto & U/M
         const tdName = document.createElement('td');
         tdName.innerHTML = `
-            <div class="fw-bold text-navy">${item.name}</div>
+            <div class="fw-bold text-navy">${escapeHtml(item.name)}</div>
             <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${item.unit || 'Unidad'}</span>
-                ${item.notes ? `<span class="text-muted small text-truncate" style="max-width: 220px;" title="${item.notes}">• ${item.notes}</span>` : ''}
+                <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${escapeHtml(item.unit || 'Unidad')}</span>
+                ${item.notes ? `<span class="text-muted small text-truncate" style="max-width: 220px;" title="${escapeHtml(item.notes)}">• ${escapeHtml(item.notes)}</span>` : ''}
             </div>
         `;
 
@@ -4273,7 +4284,7 @@ function renderStockTable(items) {
         if (item.category?.includes('BIA')) catIcon = '🩺';
         if (item.category?.includes('Suplementos')) catIcon = '💊';
         if (item.category?.includes('Material') || item.category?.includes('Higiene')) catIcon = '🧼';
-        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${item.category || 'Insumos BIA'}</span>`;
+        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${escapeHtml(item.category || 'Insumos BIA')}</span>`;
 
         // 4. Existencia & Nivel
         const tdStock = document.createElement('td');
@@ -4318,8 +4329,8 @@ function renderStockTable(items) {
         // 6. Ubicación / Proveedor
         const tdLoc = document.createElement('td');
         tdLoc.innerHTML = `
-            <div class="small text-dark fw-semibold"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i> ${item.location || 'Consultorio BIA'}</div>
-            <div class="small text-muted mt-0.5"><i class="bi bi-truck text-secondary opacity-50"></i> ${item.supplier || 'No especificado'}</div>
+            <div class="small text-dark fw-semibold"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i> ${escapeHtml(item.location || 'Consultorio BIA')}</div>
+            <div class="small text-muted mt-0.5"><i class="bi bi-truck text-secondary opacity-50"></i> ${escapeHtml(item.supplier || 'No especificado')}</div>
         `;
 
         // 7. Acciones
@@ -4471,7 +4482,7 @@ function initStockMovementModal() {
             const qty = parseFloat(document.getElementById('stock-mov-qty').value);
             const reason = document.getElementById('stock-mov-reason').value.trim();
 
-            if (!qty || qty <= 0) {
+            if (!qty || qty <= 0 || isNaN(qty)) {
                 showToast('Ingresa una cantidad válida mayor a 0', 'error');
                 return;
             }
@@ -4592,11 +4603,11 @@ async function openStockHistoryModal(item) {
                         <span class="badge ${isIN ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} fw-bold">
                             <i class="bi ${isIN ? 'bi-arrow-down-left' : 'bi-arrow-up-right'}"></i> ${isIN ? 'ENTRADA' : 'SALIDA'}
                         </span>
-                        <strong class="font-monospace fs-6 ${isIN ? 'text-success' : 'text-danger'}">${isIN ? '+' : '-'}${m.quantity} ${item.unit || 'u'}</strong>
+                        <strong class="font-monospace fs-6 ${isIN ? 'text-success' : 'text-danger'}">${isIN ? '+' : '-'}${m.quantity} ${escapeHtml(item.unit || 'u')}</strong>
                     </div>
                     <span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-calendar3 me-1"></i>${dateStr}</span>
                 </div>
-                <div class="small text-dark mt-1"><strong>Motivo:</strong> ${m.reason || 'Ajuste de inventario'}</div>
+                <div class="small text-dark mt-1"><strong>Motivo:</strong> ${escapeHtml(m.reason || 'Ajuste de inventario')}</div>
                 <div class="text-muted small mt-0.5" style="font-size: 0.72rem;">Stock previo: ${m.previous_quantity} ➔ Nuevo stock: <strong>${m.new_quantity}</strong></div>
             `;
             listEl.appendChild(card);

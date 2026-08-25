@@ -1000,9 +1000,20 @@ _LOCAL_STOCK_MOVEMENTS = [
     }
 ]
 
+def _safe_stock_float(val, default=0.0, min_val=None):
+    try:
+        f = float(val)
+        if math.isnan(f) or math.isinf(f):
+            return default
+        if min_val is not None:
+            f = max(min_val, f)
+        return round(f, 2)
+    except (ValueError, TypeError):
+        return default
+
 def _calc_item_status(qty, min_qty):
-    qty = float(qty or 0)
-    min_qty = float(min_qty or 0)
+    qty = _safe_stock_float(qty, 0.0)
+    min_qty = _safe_stock_float(min_qty, 0.0)
     if qty <= 0:
         return "out" # Agotado
     elif qty <= min_qty:
@@ -1032,34 +1043,34 @@ def get_stock_items():
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
     data = request.json or {}
-    name = _clean_str(data.get('name'))
+    name = _clean_str(data.get('name'), max_len=150)
     if not name:
         return jsonify({"error": "El nombre del producto/insumo es obligatorio"}), 400
 
     item_id = str(uuid.uuid4())
-    code = _clean_str(data.get('code'))
+    code = _clean_str(data.get('code'), max_len=50)
     if not code:
         cat_prefix = "BIA" if "bia" in (data.get('category') or '').lower() else ("SUP" if "sup" in (data.get('category') or '').lower() else "ITM")
         code = f"SKU-{cat_prefix}-{len(_LOCAL_STOCK_ITEMS) + 1:03d}"
 
-    qty = float(data.get('stock_quantity') or 0)
-    min_qty = float(data.get('min_stock') or 5)
-    cost = float(data.get('cost_price') or 0)
-    sale = float(data.get('sale_price') or 0) if data.get('sale_price') is not None else 0
+    qty = _safe_stock_float(data.get('stock_quantity'), default=0.0, min_val=0.0)
+    min_qty = _safe_stock_float(data.get('min_stock'), default=5.0, min_val=0.0)
+    cost = _safe_stock_float(data.get('cost_price'), default=0.0, min_val=0.0)
+    sale = _safe_stock_float(data.get('sale_price'), default=0.0, min_val=0.0)
 
     new_item = {
         "id": item_id,
         "code": code,
         "name": name,
-        "category": _clean_str(data.get('category')) or "Insumos BIA",
-        "unit": _clean_str(data.get('unit')) or "Unidad",
+        "category": _clean_str(data.get('category'), max_len=80) or "Insumos BIA",
+        "unit": _clean_str(data.get('unit'), max_len=30) or "Unidad",
         "stock_quantity": qty,
         "min_stock": min_qty,
         "cost_price": cost,
         "sale_price": sale,
-        "supplier": _clean_str(data.get('supplier')),
-        "location": _clean_str(data.get('location')),
-        "notes": _clean_str(data.get('notes')),
+        "supplier": _clean_str(data.get('supplier'), max_len=150),
+        "location": _clean_str(data.get('location'), max_len=150),
+        "notes": _clean_str(data.get('notes'), max_len=500),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
@@ -1069,6 +1080,8 @@ def create_stock_item():
             if res.data:
                 item_res = res.data[0]
                 item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
+                # Sincronizar también en local
+                _LOCAL_STOCK_ITEMS.insert(0, item_res)
                 return jsonify({"success": True, "data": item_res}), 201
         except Exception as e:
             logging.warning("Error al insertar en Supabase stock_items: %s", e)
@@ -1080,21 +1093,34 @@ def create_stock_item():
 @app.route('/api/stock/<string:item_id>', methods=['PUT'])
 def update_stock_item(item_id):
     data = request.json or {}
-    updated = {
-        "name": _clean_str(data.get('name')),
-        "code": _clean_str(data.get('code')),
-        "category": _clean_str(data.get('category')),
-        "unit": _clean_str(data.get('unit')),
-        "stock_quantity": float(data.get('stock_quantity')) if data.get('stock_quantity') is not None else None,
-        "min_stock": float(data.get('min_stock')) if data.get('min_stock') is not None else None,
-        "cost_price": float(data.get('cost_price')) if data.get('cost_price') is not None else None,
-        "sale_price": float(data.get('sale_price')) if data.get('sale_price') is not None else None,
-        "supplier": _clean_str(data.get('supplier')),
-        "location": _clean_str(data.get('location')),
-        "notes": _clean_str(data.get('notes')),
-        "updated_at": datetime.now(timezone.utc).isoformat()
-    }
-    updated = {k: v for k, v in updated.items() if v is not None}
+    updated = {}
+
+    if 'name' in data:
+        name = _clean_str(data.get('name'), max_len=150)
+        if name:
+            updated['name'] = name
+    if 'code' in data:
+        updated['code'] = _clean_str(data.get('code'), max_len=50)
+    if 'category' in data:
+        updated['category'] = _clean_str(data.get('category'), max_len=80)
+    if 'unit' in data:
+        updated['unit'] = _clean_str(data.get('unit'), max_len=30)
+    if 'stock_quantity' in data:
+        updated['stock_quantity'] = _safe_stock_float(data.get('stock_quantity'), default=0.0, min_val=0.0)
+    if 'min_stock' in data:
+        updated['min_stock'] = _safe_stock_float(data.get('min_stock'), default=5.0, min_val=0.0)
+    if 'cost_price' in data:
+        updated['cost_price'] = _safe_stock_float(data.get('cost_price'), default=0.0, min_val=0.0)
+    if 'sale_price' in data:
+        updated['sale_price'] = _safe_stock_float(data.get('sale_price'), default=0.0, min_val=0.0)
+    if 'supplier' in data:
+        updated['supplier'] = _clean_str(data.get('supplier'), max_len=150)
+    if 'location' in data:
+        updated['location'] = _clean_str(data.get('location'), max_len=150)
+    if 'notes' in data:
+        updated['notes'] = _clean_str(data.get('notes'), max_len=500)
+
+    updated['updated_at'] = datetime.now(timezone.utc).isoformat()
 
     if supabase:
         try:
@@ -1102,6 +1128,10 @@ def update_stock_item(item_id):
             if res.data:
                 item_res = res.data[0]
                 item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
+                for local_it in _LOCAL_STOCK_ITEMS:
+                    if local_it.get('id') == item_id:
+                        local_it.update(item_res)
+                        break
                 return jsonify({"success": True, "data": item_res})
         except Exception as e:
             logging.warning("Error al actualizar en Supabase stock_items: %s", e)
@@ -1119,7 +1149,6 @@ def delete_stock_item(item_id):
     if supabase:
         try:
             supabase.table('stock_items').delete().eq('id', item_id).execute()
-            return jsonify({"success": True})
         except Exception as e:
             logging.warning("Error al eliminar en Supabase stock_items: %s", e)
 
@@ -1130,9 +1159,12 @@ def delete_stock_item(item_id):
 @app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
 def record_stock_movement(item_id):
     data = request.json or {}
-    mov_type = (data.get('type') or 'IN').upper() # IN, OUT, ADJUST
-    qty = float(data.get('quantity') or 0)
-    reason = _clean_str(data.get('reason')) or ("Entrada de stock" if mov_type == 'IN' else "Salida / Consumo clínico")
+    mov_type = (data.get('type') or 'IN').upper()
+    if mov_type not in ['IN', 'OUT', 'ADJUST']:
+        mov_type = 'IN'
+
+    qty = _safe_stock_float(data.get('quantity'), default=0.0, min_val=0.0)
+    reason = _clean_str(data.get('reason'), max_len=250) or ("Entrada de stock" if mov_type == 'IN' else "Salida / Consumo clínico")
 
     if qty <= 0 and mov_type != 'ADJUST':
         return jsonify({"error": "La cantidad debe ser mayor a 0"}), 400
@@ -1156,15 +1188,15 @@ def record_stock_movement(item_id):
     if not target_item:
         return jsonify({"error": "Artículo no encontrado"}), 404
 
-    current_qty = float(target_item.get('stock_quantity') or 0)
+    current_qty = _safe_stock_float(target_item.get('stock_quantity'), 0.0)
     if mov_type == 'IN':
-        new_qty = current_qty + qty
+        new_qty = round(current_qty + qty, 2)
     elif mov_type == 'OUT':
         if current_qty < qty:
             return jsonify({"error": f"Stock insuficiente. Existencia actual: {current_qty}"}), 400
-        new_qty = current_qty - qty
+        new_qty = round(current_qty - qty, 2)
     else: # ADJUST
-        new_qty = qty
+        new_qty = round(qty, 2)
 
     mov_record = {
         "id": str(uuid.uuid4()),
@@ -1181,7 +1213,7 @@ def record_stock_movement(item_id):
     # Actualizar stock en Supabase
     if supabase:
         try:
-            supabase.table('stock_items').update({"stock_quantity": new_qty}).eq('id', item_id).execute()
+            supabase.table('stock_items').update({"stock_quantity": new_qty, "updated_at": datetime.now(timezone.utc).isoformat()}).eq('id', item_id).execute()
             try:
                 supabase.table('stock_movements').insert(mov_record).execute()
             except Exception:
@@ -1202,7 +1234,7 @@ def record_stock_movement(item_id):
 
 @app.route('/api/stock/movements', methods=['GET'])
 def get_stock_movements():
-    item_id = request.args.get('item_id')
+    item_id = _clean_str(request.args.get('item_id'))
     if supabase:
         try:
             query = supabase.table('stock_movements').select('*').order('created_at', desc=True)
