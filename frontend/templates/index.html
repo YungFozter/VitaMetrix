@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=89">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=90">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -899,8 +899,8 @@
     </div>
 
     <!-- MODAL: GESTIÓN DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) -->
-    <div id="stock-taxonomy-modal" class="modal-backdrop hidden" style="display: none; z-index: 1060;">
-        <div class="modal-dialog-custom bento-card p-4 shadow-xl" style="max-width: 620px; width: 92%;">
+    <div id="stock-taxonomy-modal" class="modal-overlay hidden" style="display: none; z-index: 1060;">
+        <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 620px; width: 92%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
@@ -971,6 +971,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=89"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=90"></script>
 </body>
 </html>
