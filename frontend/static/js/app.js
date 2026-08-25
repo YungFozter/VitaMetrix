@@ -947,15 +947,35 @@ function initClients() {
 
 async function fetchClients() {
     const tbody = document.getElementById('clients-tbody');
+    const totalCountEl = document.getElementById('clients-total-count');
     if (!tbody) return;
 
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem;">Cargando...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>';
 
     try {
         const res = await fetch('/api/clients');
         const clients = await res.json();
+        
+        const count = (res.ok && Array.isArray(clients)) ? clients.length : 0;
+        if (totalCountEl) totalCountEl.textContent = count;
+
         if (!res.ok || !Array.isArray(clients) || clients.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 2rem; color: #7a8aa0;">No hay clientes registrados.</td></tr>';
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="d-flex flex-column align-items-center justify-content-center py-4">
+                            <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-3 d-inline-flex align-items-center justify-content-center" style="width: 64px; height: 64px;">
+                                <i class="bi bi-people-fill fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold text-navy mb-1">No tienes pacientes registrados todavía</h5>
+                            <p class="text-muted small mb-3">Registra tu primer paciente ahora usando el formulario lateral</p>
+                            <button type="button" class="btn btn-sm btn-primary px-3 py-2 rounded-3 shadow-sm d-inline-flex align-items-center gap-2" onclick="document.getElementById('new-client-name').focus()">
+                                <i class="bi bi-person-plus-fill"></i> Registrar Primer Paciente
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
             return;
         }
 
@@ -1014,7 +1034,8 @@ async function fetchClients() {
         });
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: red;">Error cargando clientes.</td></tr>';
+        if (totalCountEl) totalCountEl.textContent = '0';
+        tbody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-danger">Error al cargar la lista de pacientes.</td></tr>';
     }
 }
 
