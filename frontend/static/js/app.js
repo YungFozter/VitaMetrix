@@ -4836,6 +4836,25 @@ function initStockTaxonomyModal() {
             }
         });
     }
+
+    // Controles del Modal de Confirmación de Eliminación
+    const btnCloseDelete = document.getElementById('btn-close-delete-tax-modal');
+    const btnCancelDelete = document.getElementById('btn-cancel-delete-tax-modal');
+    const btnConfirmDelete = document.getElementById('btn-confirm-delete-tax-modal');
+
+    if (btnCloseDelete) btnCloseDelete.addEventListener('click', closeConfirmDeleteTaxonomyModal);
+    if (btnCancelDelete) btnCancelDelete.addEventListener('click', closeConfirmDeleteTaxonomyModal);
+    if (btnConfirmDelete) {
+        btnConfirmDelete.addEventListener('click', async () => {
+            if (typeof pendingDeleteTaxonomyCallback === 'function') {
+                const cb = pendingDeleteTaxonomyCallback;
+                closeConfirmDeleteTaxonomyModal();
+                await cb();
+            } else {
+                closeConfirmDeleteTaxonomyModal();
+            }
+        });
+    }
 }
 
 async function fetchStockTaxonomies() {
@@ -4906,29 +4925,34 @@ function renderTaxonomyCategories(filterText = '') {
         btnDelete.title = 'Eliminar categoría';
         btnDelete.setAttribute('aria-label', 'Eliminar categoría');
 
-        btnDelete.addEventListener('click', async () => {
-            const confirmMsg = cat.count > 0
-                ? `¿Eliminar la categoría "${cat.name}"? Los ${cat.count} productos vinculados se reasignarán a "Otros".`
-                : `¿Eliminar la categoría "${cat.name}" del catálogo?`;
+        btnDelete.addEventListener('click', () => {
+            const warningText = cat.count > 0 
+                ? `Esta categoría tiene ${cat.count} ${cat.count === 1 ? 'producto vinculado' : 'productos vinculados'}. Al eliminarla, serán reasignados automáticamente a la categoría "Otros".`
+                : null;
 
-            if (!confirm(confirmMsg)) return;
-
-            try {
-                const res = await fetch(`/api/stock/taxonomies/category/${encodeURIComponent(cat.name)}`, {
-                    method: 'DELETE'
-                });
-                const result = await res.json();
-                if (res.ok && result.success) {
-                    showToast(`🗑️ Categoría "${cat.name}" eliminada`, 'success');
-                    await fetchStockTaxonomies();
-                    await fetchStockItems();
-                } else {
-                    showToast(result.error || 'Error al eliminar categoría', 'error');
+            showConfirmDeleteTaxonomyModal({
+                title: 'Eliminar Categoría',
+                message: `¿Estás seguro de que deseas eliminar la categoría <strong class="text-navy">"${escapeHtml(cat.name)}"</strong> del catálogo?`,
+                warningText: warningText,
+                onConfirm: async () => {
+                    try {
+                        const res = await fetch(`/api/stock/taxonomies/category/${encodeURIComponent(cat.name)}`, {
+                            method: 'DELETE'
+                        });
+                        const result = await res.json();
+                        if (res.ok && result.success) {
+                            showToast(`🗑️ Categoría "${cat.name}" eliminada`, 'success');
+                            await fetchStockTaxonomies();
+                            await fetchStockItems();
+                        } else {
+                            showToast(result.error || 'Error al eliminar categoría', 'error');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast('Error de conexión', 'error');
+                    }
                 }
-            } catch (err) {
-                console.error(err);
-                showToast('Error de conexión', 'error');
-            }
+            });
         });
 
         rightDiv.append(btnRename, btnDelete);
@@ -5005,6 +5029,36 @@ async function renameCategoryCascade(oldName, newName) {
     }
 }
 
+let pendingDeleteTaxonomyCallback = null;
+
+function showConfirmDeleteTaxonomyModal({ title, message, warningText, onConfirm }) {
+    const modal = document.getElementById('modal-confirm-delete-taxonomy');
+    const titleEl = document.getElementById('delete-tax-modal-title');
+    const messageEl = document.getElementById('delete-tax-modal-message');
+    const warningEl = document.getElementById('delete-tax-modal-warning');
+    const warningTextEl = document.getElementById('delete-tax-modal-warning-text');
+    if (!modal) return;
+
+    if (titleEl) titleEl.textContent = title || 'Confirmar Eliminación';
+    if (messageEl) messageEl.innerHTML = message || '¿Estás seguro de que deseas eliminar este elemento?';
+
+    if (warningText) {
+        if (warningTextEl) warningTextEl.textContent = warningText;
+        warningEl?.classList.remove('d-none');
+    } else {
+        warningEl?.classList.add('d-none');
+    }
+
+    pendingDeleteTaxonomyCallback = onConfirm;
+    modal.classList.remove('d-none');
+}
+
+function closeConfirmDeleteTaxonomyModal() {
+    const modal = document.getElementById('modal-confirm-delete-taxonomy');
+    if (modal) modal.classList.add('d-none');
+    pendingDeleteTaxonomyCallback = null;
+}
+
 function renderTaxonomyUnits(selectedFamily = 'all') {
     const listEl = document.getElementById('stock-tax-unit-list');
     if (!listEl || !stockTaxonomiesData?.units) return;
@@ -5053,25 +5107,31 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
             `;
 
             const btnClose = badgeSpan.querySelector('button');
-            btnClose.addEventListener('click', async (e) => {
+            btnClose.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (!confirm(`¿Eliminar la unidad de medida "${u}" del catálogo?`)) return;
 
-                try {
-                    const res = await fetch(`/api/stock/taxonomies/unit/${encodeURIComponent(u)}`, {
-                        method: 'DELETE'
-                    });
-                    const result = await res.json();
-                    if (res.ok && result.success) {
-                        showToast(`🗑️ Unidad "${u}" eliminada`, 'success');
-                        await fetchStockTaxonomies();
-                    } else {
-                        showToast(result.error || 'Error al eliminar unidad', 'error');
+                showConfirmDeleteTaxonomyModal({
+                    title: 'Eliminar Unidad de Medida',
+                    message: `¿Estás seguro de que deseas eliminar la unidad <strong class="text-navy">"${escapeHtml(u)}"</strong> del catálogo?`,
+                    warningText: null,
+                    onConfirm: async () => {
+                        try {
+                            const res = await fetch(`/api/stock/taxonomies/unit/${encodeURIComponent(u)}`, {
+                                method: 'DELETE'
+                            });
+                            const result = await res.json();
+                            if (res.ok && result.success) {
+                                showToast(`🗑️ Unidad "${u}" eliminada`, 'success');
+                                await fetchStockTaxonomies();
+                            } else {
+                                showToast(result.error || 'Error al eliminar unidad', 'error');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                            showToast('Error de conexión', 'error');
+                        }
                     }
-                } catch (err) {
-                    console.error(err);
-                    showToast('Error de conexión', 'error');
-                }
+                });
             });
 
             unitsContainer.appendChild(badgeSpan);
