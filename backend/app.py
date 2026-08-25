@@ -361,6 +361,67 @@ def _run_analysis(data):
                 insert_payload.pop('code', None)
                 supabase.table('evaluations').insert(insert_payload).execute()
 
+            # --- AUTO-REGISTRO / VINCULACIÓN SILENCIOSA DE PACIENTE EN CLIENTS ---
+            try:
+                clients_res = supabase.table('clients').select('*').execute()
+                existing_clients = clients_res.data or []
+                
+                match_client = None
+                p_name_norm = (patient_name or '').strip().lower()
+                p_idp_norm = (patient_idp or '').strip()
+
+                for cl in existing_clients:
+                    c_name = (cl.get('name') or '').strip().lower()
+                    c_idp = (cl.get('idp') or '').strip()
+                    if (p_idp_norm and c_idp == p_idp_norm) or (p_name_norm and c_name == p_name_norm):
+                        match_client = cl
+                        break
+
+                gender_formatted = 'Femenino' if gender in ('female', 'Femenino') else 'Masculino'
+
+                if not match_client:
+                    c_codes = [row['code'] for row in existing_clients if row.get('code') is not None]
+                    c_codes.sort()
+                    new_c_code = 1
+                    for cc in c_codes:
+                        if cc == new_c_code:
+                            new_c_code += 1
+                        elif cc > new_c_code:
+                            break
+                    
+                    final_patient_idp = patient_idp if (patient_idp and patient_idp not in ('Auto-asignado', 'Auto', '1234567')) else f"IDP-{new_c_code:04d}"
+
+                    new_client_record = {
+                        "code": new_c_code,
+                        "name": patient_name,
+                        "idp": final_patient_idp,
+                        "age": age,
+                        "gender": gender_formatted,
+                        "height": height,
+                        "phone": None,
+                        "email": None
+                    }
+                    try:
+                        supabase.table('clients').insert(new_client_record).execute()
+                    except Exception:
+                        fallback_c = {"code": new_c_code, "name": patient_name, "phone": None, "email": None}
+                        supabase.table('clients').insert(fallback_c).execute()
+                else:
+                    update_fields = {}
+                    if age and match_client.get('age') != age:
+                        update_fields['age'] = age
+                    if height and match_client.get('height') != height:
+                        update_fields['height'] = height
+                    if gender_formatted and match_client.get('gender') != gender_formatted:
+                        update_fields['gender'] = gender_formatted
+                    if update_fields:
+                        try:
+                            supabase.table('clients').update(update_fields).eq('id', match_client['id']).execute()
+                        except Exception:
+                            pass
+            except Exception as e_cl:
+                logging.error("Error en auto-registro silencioso de paciente: %s", e_cl)
+
             saved = True
         except Exception as e:
             logging.error("Error al guardar evaluación en Supabase: %s", e)

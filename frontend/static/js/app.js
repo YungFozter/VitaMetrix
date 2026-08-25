@@ -294,6 +294,7 @@ function initBioForm() {
                     showToast("💾 Evaluación guardada en el historial clínico con éxito.", "success");
                     fetchDashboardStats();
                     fetchEvaluaciones();
+                    fetchClients();
                 } else {
                     showToast("Análisis listo, pero no se pudo persistir en la nube.", "warning");
                 }
@@ -1664,21 +1665,23 @@ function renderClientsTable(clientsList) {
 
         // 3. Contacto (Teléfono y Email)
         const tdContact = document.createElement('td');
+        const phoneDiv = document.createElement('div');
+        phoneDiv.className = 'small d-flex align-items-center gap-1.5';
         if (c.phone) {
-            const phoneDiv = document.createElement('div');
-            phoneDiv.className = 'small text-secondary d-flex align-items-center gap-1';
-            phoneDiv.innerHTML = `<i class="bi bi-whatsapp text-success"></i> <span>${c.phone}</span>`;
-            tdContact.appendChild(phoneDiv);
+            phoneDiv.innerHTML = `<i class="bi bi-whatsapp text-success"></i> <span class="text-secondary fw-semibold font-monospace">${c.phone}</span>`;
+        } else {
+            phoneDiv.innerHTML = `<i class="bi bi-whatsapp text-muted opacity-50"></i> <span class="badge bg-light text-muted border px-1.5 py-0.5" style="font-size: 0.7rem;">S/A</span>`;
         }
+        tdContact.appendChild(phoneDiv);
+
+        const emailDiv = document.createElement('div');
+        emailDiv.className = 'small d-flex align-items-center gap-1.5 mt-0.5';
         if (c.email) {
-            const emailDiv = document.createElement('div');
-            emailDiv.className = 'small text-muted d-flex align-items-center gap-1 mt-0.5';
-            emailDiv.innerHTML = `<i class="bi bi-envelope"></i> <span>${c.email}</span>`;
-            tdContact.appendChild(emailDiv);
+            emailDiv.innerHTML = `<i class="bi bi-envelope text-primary"></i> <span class="text-muted">${c.email}</span>`;
+        } else {
+            emailDiv.innerHTML = `<i class="bi bi-envelope text-muted opacity-50"></i> <span class="badge bg-light text-muted border px-1.5 py-0.5" style="font-size: 0.7rem;">S/A</span>`;
         }
-        if (!c.phone && !c.email) {
-            tdContact.innerHTML = '<span class="text-muted small">Sin contacto</span>';
-        }
+        tdContact.appendChild(emailDiv);
 
         // 4. Última Evaluación
         const tdLastEval = document.createElement('td');
