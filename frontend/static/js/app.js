@@ -4948,20 +4948,45 @@ function renderTaxonomyUnits(selectedFamily = 'all') {
 function initStockFormCustomDropdowns() {
     const inputCat = document.getElementById('stock-category');
     const dropCat = document.getElementById('stock-category-dropdown');
+    const btnClearCat = document.getElementById('btn-clear-category');
+
     const inputUnit = document.getElementById('stock-unit');
     const dropUnit = document.getElementById('stock-unit-dropdown');
+    const btnClearUnit = document.getElementById('btn-clear-unit');
 
-    const setupDropdown = (input, dropdown, getItemsFunc, showFamilyHeader = false) => {
+    const setupDropdown = (input, dropdown, btnClear, getItemsFunc, familyList = null) => {
         if (!input || !dropdown) return;
 
         let activeFamilyFilter = 'all';
 
+        const updateClearBtnVisibility = () => {
+            if (!btnClear) return;
+            if (input.value && input.value.trim() !== '') {
+                btnClear.classList.remove('d-none');
+            } else {
+                btnClear.classList.add('d-none');
+            }
+        };
+
+        if (btnClear) {
+            btnClear.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                input.value = '';
+                updateClearBtnVisibility();
+                input.focus();
+                renderItems('');
+                dropdown.classList.add('show');
+            });
+        }
+
         const renderItems = (filterText = '') => {
+            updateClearBtnVisibility();
             const items = getItemsFunc();
             const normFilter = normalizeText(filterText);
 
             let filtered = items;
-            if (showFamilyHeader && activeFamilyFilter !== 'all') {
+            if (familyList && activeFamilyFilter !== 'all') {
                 filtered = filtered.filter(it => (it.tag || '').toLowerCase() === activeFamilyFilter.toLowerCase());
             }
 
@@ -4972,13 +4997,12 @@ function initStockFormCustomDropdowns() {
             dropdown.replaceChildren();
 
             // Cabecera con Chips de Filtro rápido de Familias (si aplica)
-            if (showFamilyHeader) {
+            if (familyList && familyList.length > 0) {
                 const headerDiv = document.createElement('div');
                 headerDiv.className = 'd-flex align-items-center gap-1 p-1.5 border-bottom bg-light rounded-2 mb-1 sticky-top flex-wrap';
                 headerDiv.style.fontSize = '0.72rem';
 
-                const families = ['all', 'Conteo', 'Posología', 'Volumen', 'Peso'];
-                families.forEach(f => {
+                familyList.forEach(f => {
                     const btn = document.createElement('button');
                     btn.type = 'button';
                     btn.className = `btn btn-xs py-0.5 px-1.5 rounded ${activeFamilyFilter === f ? 'btn-primary fw-bold' : 'btn-light border text-secondary'}`;
@@ -5019,6 +5043,7 @@ function initStockFormCustomDropdowns() {
                 div.addEventListener('mousedown', (e) => {
                     e.preventDefault();
                     input.value = name;
+                    updateClearBtnVisibility();
                     dropdown.classList.remove('show');
                 });
 
@@ -5039,31 +5064,33 @@ function initStockFormCustomDropdowns() {
         input.addEventListener('blur', () => {
             setTimeout(() => dropdown.classList.remove('show'), 160);
         });
+
+        updateClearBtnVisibility();
     };
 
-    setupDropdown(inputCat, dropCat, () => {
+    setupDropdown(inputCat, dropCat, btnClearCat, () => {
         const defaultCats = [
-            { name: "Insumos BIA", icon: "🩺" },
-            { name: "Suplementos Nutricionales", icon: "💊" },
-            { name: "Material Clínico e Higiene", icon: "🧼" },
-            { name: "Accesorios y Equipos", icon: "📦" },
-            { name: "Medicamentos / Fármacos", icon: "💉" },
-            { name: "Material de Oficina", icon: "📝" },
-            { name: "Otros", icon: "🏷️" }
+            { name: "Insumos BIA", icon: "🩺", tag: "BIA" },
+            { name: "Suplementos Nutricionales", icon: "💊", tag: "Nutrición" },
+            { name: "Material Clínico e Higiene", icon: "🧼", tag: "Higiene" },
+            { name: "Accesorios y Equipos", icon: "📦", tag: "Equipos" },
+            { name: "Medicamentos / Fármacos", icon: "💉", tag: "Clínica" },
+            { name: "Material de Oficina", icon: "📝", tag: "Gestión" },
+            { name: "Otros", icon: "🏷️", tag: "Varios" }
         ];
         const knownCats = new Map(defaultCats.map(c => [c.name.toLowerCase(), c]));
 
         if (Array.isArray(allStockItems)) {
             allStockItems.forEach(i => {
                 if (i.category && !knownCats.has(i.category.toLowerCase())) {
-                    knownCats.set(i.category.toLowerCase(), { name: i.category, icon: "📦" });
+                    knownCats.set(i.category.toLowerCase(), { name: i.category, icon: "📦", tag: "Personalizado" });
                 }
             });
         }
         return Array.from(knownCats.values());
-    }, false);
+    }, ['all', 'BIA', 'Nutrición', 'Higiene', 'Equipos', 'Clínica']);
 
-    setupDropdown(inputUnit, dropUnit, () => [
+    setupDropdown(inputUnit, dropUnit, btnClearUnit, () => [
         { name: "Pack", tag: "Conteo" },
         { name: "Unidad (u)", tag: "Conteo" },
         { name: "Frasco / Bote", tag: "Conteo" },
@@ -5076,5 +5103,5 @@ function initStockFormCustomDropdowns() {
         { name: "Litros (L)", tag: "Volumen" },
         { name: "Gramos (gr)", tag: "Peso" },
         { name: "Kilogramos (kg)", tag: "Peso" }
-    ], true);
+    ], ['all', 'Conteo', 'Posología', 'Volumen', 'Peso']);
 }

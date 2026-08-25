@@ -82,18 +82,20 @@
                 <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
                 <div class="col-12 col-md-4 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
-                    <div class="stock-custom-dropdown-wrap">
-                        <input type="text" id="stock-category" class="form-control shadow-none small" placeholder="Escribe o selecciona..." autocomplete="off">
-                        <div id="stock-category-dropdown" class="stock-custom-dropdown"></div>
+                    <div class="stock-custom-dropdown-wrap position-relative">
+                        <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
+                        <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                        <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
                     </div>
                 </div>
 
                 <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas) -->
                 <div class="col-12 col-md-3 col-lg-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
-                    <div class="stock-custom-dropdown-wrap">
-                        <input type="text" id="stock-unit" class="form-control shadow-none small" placeholder="Escribe o selecciona..." autocomplete="off">
-                        <div id="stock-unit-dropdown" class="stock-custom-dropdown"></div>
+                    <div class="stock-custom-dropdown-wrap position-relative">
+                        <input type="text" id="stock-unit" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
+                        <button type="button" id="btn-clear-unit" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                        <div id="stock-unit-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
                     </div>
                 </div>
 
