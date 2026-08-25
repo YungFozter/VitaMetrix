@@ -5070,25 +5070,25 @@ function initStockFormCustomDropdowns() {
 
     setupDropdown(inputCat, dropCat, btnClearCat, () => {
         const defaultCats = [
-            { name: "Insumos BIA", icon: "🩺", tag: "BIA" },
-            { name: "Suplementos Nutricionales", icon: "💊", tag: "Nutrición" },
-            { name: "Material Clínico e Higiene", icon: "🧼", tag: "Higiene" },
-            { name: "Accesorios y Equipos", icon: "📦", tag: "Equipos" },
-            { name: "Medicamentos / Fármacos", icon: "💉", tag: "Clínica" },
-            { name: "Material de Oficina", icon: "📝", tag: "Gestión" },
-            { name: "Otros", icon: "🏷️", tag: "Varios" }
+            { name: "Insumos BIA", icon: "🩺" },
+            { name: "Suplementos Nutricionales", icon: "💊" },
+            { name: "Material Clínico e Higiene", icon: "🧼" },
+            { name: "Accesorios y Equipos", icon: "📦" },
+            { name: "Medicamentos / Fármacos", icon: "💉" },
+            { name: "Material de Oficina", icon: "📝" },
+            { name: "Otros", icon: "🏷️" }
         ];
         const knownCats = new Map(defaultCats.map(c => [c.name.toLowerCase(), c]));
 
         if (Array.isArray(allStockItems)) {
             allStockItems.forEach(i => {
                 if (i.category && !knownCats.has(i.category.toLowerCase())) {
-                    knownCats.set(i.category.toLowerCase(), { name: i.category, icon: "📦", tag: "Personalizado" });
+                    knownCats.set(i.category.toLowerCase(), { name: i.category, icon: "📦" });
                 }
             });
         }
         return Array.from(knownCats.values());
-    }, ['all', 'BIA', 'Nutrición', 'Higiene', 'Equipos', 'Clínica']);
+    }, null);
 
     setupDropdown(inputUnit, dropUnit, btnClearUnit, () => [
         { name: "Pack", tag: "Conteo" },
