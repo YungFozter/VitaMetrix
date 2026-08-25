@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=60">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=62">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -382,94 +382,125 @@
 
     <!-- MODAL DE PERFIL PROFESIONAL / CREDENCIAL DIGITAL (OPCIÓN 1) -->
     <div id="profile-card-modal" class="modal-overlay hidden" style="z-index: 9998;">
-        <div class="modal-box bg-white rounded-4 shadow-lg border-0 p-0 overflow-hidden" style="max-width: 540px; width: 92%; text-align: left;">
-            <!-- Banner Superior Degradado -->
-            <div class="position-relative p-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0284c7 100%);">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow-none" id="profile-modal-close" aria-label="Cerrar"></button>
-                <div class="d-flex align-items-center gap-3 mt-1">
+        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden" style="max-width: 760px; width: 94%; text-align: left;">
+            <!-- Header Banner Grande con Degradado Profundo -->
+            <div class="position-relative p-4 sm:p-5 text-white" style="background: linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%);">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 shadow-none" id="profile-modal-close" aria-label="Cerrar" style="opacity: 0.85;"></button>
+                <div class="d-flex flex-wrap align-items-center gap-4 mt-2">
                     <div class="position-relative">
-                        <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Dra+Audrey&background=ffffff&color=0284c7&size=128" alt="Avatar" class="rounded-circle border border-3 border-white shadow" style="width: 72px; height: 72px; object-fit: cover;">
-                        <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width: 14px; height: 14px;" title="Estación en línea"></span>
+                        <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Dra+Audrey&background=ffffff&color=0284c7&size=128" alt="Avatar" class="rounded-circle border border-4 border-white shadow-md" style="width: 88px; height: 88px; object-fit: cover;">
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width: 18px; height: 18px;" title="Estación en línea"></span>
                     </div>
-                    <div>
-                        <div class="d-flex align-items-center gap-2 mb-1">
-                            <span class="badge bg-info-subtle text-info border border-info-subtle rounded-pill px-2.5 py-0.5 small fw-semibold" style="font-size: 0.72rem;">
-                                <i class="bi bi-shield-check me-1"></i>Credencial Activa
+                    <div class="flex-grow-1">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1.5">
+                            <span class="badge bg-success text-white rounded-pill px-3 py-1 fw-bold shadow-xs" style="font-size: 0.78rem;">
+                                <i class="bi bi-shield-fill-check me-1"></i>Credencial Activa
                             </span>
-                            <span class="badge bg-white bg-opacity-20 text-white rounded-pill px-2 py-0.5 small" style="font-size: 0.72rem;">
-                                VitaMetrix Pro
+                            <span class="badge bg-white bg-opacity-20 text-white border border-white border-opacity-30 rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.78rem;">
+                                <i class="bi bi-cpu-fill me-1"></i>VitaMetrix Workstation
                             </span>
                         </div>
-                        <h3 class="display-font fw-bold text-white fs-4 m-0" id="profile-modal-name">Dra. Audrey</h3>
-                        <p class="m-0 text-white-50 small fw-medium" id="profile-modal-title">Manager / Especialista BIA</p>
+                        <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name" style="letter-spacing: -0.5px;">Dra. Audrey</h2>
+                        <p class="m-0 fs-6 fw-medium mt-0.5" id="profile-modal-title" style="color: #bae6fd;">Manager / Especialista BIA</p>
                     </div>
                 </div>
             </div>
 
             <!-- Cuerpo de la Credencial -->
-            <div class="p-4">
-                <!-- Ficha de Datos Clínicos (Solo lectura de lo configurado) -->
-                <div class="bg-light rounded-4 p-3 mb-3 border">
-                    <div class="row g-2.5 small">
-                        <div class="col-12 col-sm-6">
-                            <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.7rem; letter-spacing: 0.5px;">Matrícula Profesional</span>
-                            <strong class="text-navy" id="profile-modal-mp"><i class="bi bi-card-heading text-primary me-1"></i>MP: 45892 / MN: 1204</strong>
+            <div class="p-4 sm:p-5">
+                <!-- Ficha de Datos Clínicos (4 Bento Cards con alto contraste) -->
+                <div class="row g-3 mb-4">
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #e0f2fe; color: #0284c7; width: 44px; height: 44px;">
+                                <i class="bi bi-award-fill fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Matrícula Profesional</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-mp">MP: 45892 / MN: 1204</strong>
+                            </div>
                         </div>
-                        <div class="col-12 col-sm-6">
-                            <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.7rem; letter-spacing: 0.5px;">Centro Clínico Asignado</span>
-                            <strong class="text-navy text-truncate d-block" id="profile-modal-clinic"><i class="bi bi-hospital text-info me-1"></i>Centro Médico VitaMetrix</strong>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #e0e7ff; color: #4338ca; width: 44px; height: 44px;">
+                                <i class="bi bi-hospital-fill fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Centro Clínico Asignado</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-clinic">Centro Médico VitaMetrix</strong>
+                            </div>
                         </div>
-                        <div class="col-12 col-sm-6 mt-2">
-                            <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.7rem; letter-spacing: 0.5px;">Contacto / Teléfono</span>
-                            <span class="text-secondary" id="profile-modal-phone"><i class="bi bi-telephone text-success me-1"></i>+54 9 11 4455-6677</span>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #dcfce7; color: #15803d; width: 44px; height: 44px;">
+                                <i class="bi bi-telephone-fill fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Contacto / Teléfono</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-phone">+54 9 11 4455-6677</strong>
+                            </div>
                         </div>
-                        <div class="col-12 col-sm-6 mt-2">
-                            <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.7rem; letter-spacing: 0.5px;">Estación de Trabajo</span>
-                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 py-0.5" style="font-size: 0.72rem;">
-                                <i class="bi bi-circle-fill text-success me-1" style="font-size: 6px;"></i>Estación Local Activa
-                            </span>
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #fef3c7; color: #b45309; width: 44px; height: 44px;">
+                                <i class="bi bi-shield-lock-fill fs-5"></i>
+                            </div>
+                            <div class="flex-grow-1 min-w-0">
+                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Modo de Estación</span>
+                                <div class="mt-1">
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                        <i class="bi bi-check-circle-fill me-1"></i>Estación Local Activa
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Métricas de Actividad Clínica -->
-                <div class="d-flex align-items-center justify-content-between mb-2">
-                    <h4 class="display-font text-navy fw-bold fs-6 m-0">
-                        <i class="bi bi-activity text-primary me-1"></i>Resumen de Actividad
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0 d-flex align-items-center gap-2">
+                        <i class="bi bi-graph-up-arrow text-primary"></i>
+                        <span>Resumen de Actividad</span>
                     </h4>
-                    <span class="text-muted small" style="font-size: 0.75rem;">Sincronizado en tiempo real</span>
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-repeat me-1"></i>Sincronizado en tiempo real
+                    </span>
                 </div>
-                <div class="row g-2 mb-4 text-center">
+                <div class="row g-3 mb-4 text-center">
                     <div class="col-4">
-                        <div class="border rounded-3 p-2.5 bg-white shadow-xs">
-                            <span class="d-block display-font fw-bold text-primary fs-4 lh-1 mb-1" id="profile-modal-stat-patients">0</span>
-                            <span class="text-muted small fw-medium" style="font-size: 0.72rem;">Pacientes</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold text-primary fs-2 lh-1 mb-1" id="profile-modal-stat-patients">0</span>
+                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Pacientes</span>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="border rounded-3 p-2.5 bg-white shadow-xs">
-                            <span class="d-block display-font fw-bold text-info fs-4 lh-1 mb-1" id="profile-modal-stat-evals">0</span>
-                            <span class="text-muted small fw-medium" style="font-size: 0.72rem;">Estudios BIA</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold text-info fs-2 lh-1 mb-1" id="profile-modal-stat-evals" style="color: #0891b2 !important;">0</span>
+                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Estudios BIA</span>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="border rounded-3 p-2.5 bg-white shadow-xs">
-                            <span class="d-block display-font fw-bold text-warning fs-4 lh-1 mb-1" id="profile-modal-stat-appts">0</span>
-                            <span class="text-muted small fw-medium" style="font-size: 0.72rem;">Citas Hoy</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold fs-2 lh-1 mb-1" id="profile-modal-stat-appts" style="color: #d97706 !important;">0</span>
+                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Citas de Hoy</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Acciones Rápidas -->
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 border-top">
-                    <button type="button" id="profile-modal-btn-switch" class="btn btn-outline-danger btn-sm d-inline-flex align-items-center gap-1.5 rounded-3 px-3 py-1.5">
-                        <i class="bi bi-person-gear"></i>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-4 border-top" style="border-color: #e2e8f0;">
+                    <button type="button" id="profile-modal-btn-switch" class="btn btn-outline-danger d-inline-flex align-items-center gap-2 rounded-3 px-4 py-2.5 fw-semibold shadow-xs">
+                        <i class="bi bi-person-gear fs-5"></i>
                         <span>Cambiar Especialista</span>
                     </button>
-                    <div class="d-flex align-items-center gap-2">
-                        <button type="button" id="profile-modal-btn-close" class="btn btn-light btn-sm px-3 rounded-3 border">Cerrar</button>
-                        <button type="button" id="profile-modal-btn-edit" class="btn btn-primary btn-sm px-3 py-1.5 fw-semibold d-inline-flex align-items-center gap-1.5 rounded-3 shadow-sm">
-                            <i class="bi bi-gear-fill"></i>
+                    <div class="d-flex align-items-center gap-3">
+                        <button type="button" id="profile-modal-btn-close" class="btn btn-light px-4 py-2.5 rounded-3 fw-semibold border text-dark shadow-xs" style="background-color: #f1f5f9; border-color: #cbd5e1;">Cerrar</button>
+                        <button type="button" id="profile-modal-btn-edit" class="btn btn-primary px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md">
+                            <i class="bi bi-gear-fill fs-5"></i>
                             <span>Editar en Configuración</span>
                         </button>
                     </div>
@@ -515,6 +546,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=60"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=62"></script>
 </body>
 </html>

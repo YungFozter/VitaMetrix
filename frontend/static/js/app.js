@@ -1858,9 +1858,9 @@ function updateUserProfileUI() {
     if (modalAvatar) {
         modalAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffffff&color=0284c7&size=128`;
     }
-    if (modalMp) modalMp.innerHTML = `<i class="bi bi-card-heading text-primary me-1"></i>${mp}`;
-    if (modalClinic) modalClinic.innerHTML = `<i class="bi bi-hospital text-info me-1"></i>${clinic}`;
-    if (modalPhone) modalPhone.innerHTML = `<i class="bi bi-telephone text-success me-1"></i>${phone}`;
+    if (modalMp) modalMp.textContent = mp || 'Sin matrícula registrada';
+    if (modalClinic) modalClinic.textContent = clinic || 'Centro Médico VitaMetrix';
+    if (modalPhone) modalPhone.textContent = phone || 'Sin teléfono de contacto';
 
     // Update live stats in modal
     const statPatients = document.getElementById('profile-modal-stat-patients');
