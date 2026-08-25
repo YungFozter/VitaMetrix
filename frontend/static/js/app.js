@@ -1132,18 +1132,40 @@ function drawPALGauge(pal) {
     ctx.textAlign = 'left';
 }
 
-// --- 3.5 AUTOCOMPLETADO DE PACIENTES EN CALCULADORA BIA ---
+// --- 3.5 AUTOCOMPLETADO Y ASIGNACIÓN AUTOMÁTICA DE IDP EN BIA Y CLIENTES ---
+function getNextAvailableIDP() {
+    if (!allClientsData || allClientsData.length === 0) {
+        return 'IDP-0001';
+    }
+    const existingCodes = allClientsData
+        .map(c => {
+            if (c.code) return parseInt(c.code);
+            if (c.idp && c.idp.startsWith('IDP-')) return parseInt(c.idp.replace('IDP-', ''));
+            return null;
+        })
+        .filter(n => typeof n === 'number' && !isNaN(n) && n > 0)
+        .sort((a, b) => a - b);
+
+    let nextCode = 1;
+    for (const code of existingCodes) {
+        if (code === nextCode) {
+            nextCode++;
+        } else if (code > nextCode) {
+            break; // Se encontró un hueco reciclado disponible
+        }
+    }
+    return `IDP-${String(nextCode).padStart(4, '0')}`;
+}
+
 function initBioClientAutocomplete() {
     const inputName = document.getElementById('input-name');
     const inputIdp = document.getElementById('input-idp');
 
     function populateDatalists() {
         const datalistName = document.getElementById('clients-name-datalist');
-        const datalistIdp = document.getElementById('clients-idp-datalist');
         const datalistAppt = document.getElementById('clients-datalist');
 
         if (datalistName) datalistName.innerHTML = '';
-        if (datalistIdp) datalistIdp.innerHTML = '';
         if (datalistAppt) datalistAppt.innerHTML = '';
 
         allClientsData.forEach(c => {
@@ -1160,51 +1182,65 @@ function initBioClientAutocomplete() {
                     datalistAppt.appendChild(opt);
                 }
             }
-            if (c.idp && datalistIdp) {
-                const opt = document.createElement('option');
-                opt.value = c.idp;
-                opt.textContent = `${c.idp} — ${c.name || ''}`;
-                datalistIdp.appendChild(opt);
-            }
         });
+
+        // Actualizar campo IDP inicial en Bioimpedancia
+        updateBioIDPField();
+    }
+
+    function updateBioIDPField() {
+        if (!inputIdp) return;
+        const currentName = (inputName ? inputName.value.trim().toLowerCase() : '');
+        if (!currentName) {
+            inputIdp.value = getNextAvailableIDP();
+            return;
+        }
+        const match = allClientsData.find(c => (c.name || '').toLowerCase() === currentName);
+        if (match) {
+            inputIdp.value = match.idp || ('IDP-' + String(match.code || 1).padStart(4, '0'));
+        } else {
+            inputIdp.value = getNextAvailableIDP();
+        }
     }
 
     if (inputName) {
+        inputName.addEventListener('input', () => {
+            updateBioIDPField();
+        });
+
         inputName.addEventListener('change', () => {
             const val = inputName.value.trim().toLowerCase();
-            if (!val) return;
+            if (!val) {
+                if (inputIdp) inputIdp.value = getNextAvailableIDP();
+                return;
+            }
             const match = allClientsData.find(c => (c.name || '').toLowerCase() === val);
             if (match) {
                 fillBioFormFromClient(match);
-                showToast(`Datos de ${match.name} completados automáticamente`, 'info');
+                showToast(`Datos de ${match.name} completados automáticamente (${match.idp || 'IDP auto'})`, 'info');
+            } else {
+                updateBioIDPField();
             }
         });
     }
 
-    if (inputIdp) {
-        inputIdp.addEventListener('change', () => {
-            const val = inputIdp.value.trim().toLowerCase();
-            if (!val) return;
-            const match = allClientsData.find(c => (c.idp || '').toLowerCase() === val);
-            if (match) {
-                fillBioFormFromClient(match);
-                showToast(`Datos de ${match.name} completados automáticamente`, 'info');
-            }
-        });
-    }
+    // Inicializar al cargar
+    updateBioIDPField();
 
     window.updateBioDatalists = populateDatalists;
+    window.getNextAvailableIDP = getNextAvailableIDP;
 }
 
 function fillBioFormFromClient(c) {
-    if (c.idp) document.getElementById('input-idp').value = c.idp;
-    if (c.name) document.getElementById('input-name').value = c.name;
-    if (c.age) document.getElementById('input-age').value = c.age;
-    if (c.gender) {
+    const nextIdp = c.idp || ('IDP-' + String(c.code || 1).padStart(4, '0'));
+    if (document.getElementById('input-idp')) document.getElementById('input-idp').value = nextIdp;
+    if (c.name && document.getElementById('input-name')) document.getElementById('input-name').value = c.name;
+    if (c.age && document.getElementById('input-age')) document.getElementById('input-age').value = c.age;
+    if (c.gender && document.getElementById('input-gender')) {
         const gVal = (c.gender === 'Femenino' || c.gender === 'female') ? 'female' : 'male';
         document.getElementById('input-gender').value = gVal;
     }
-    if (c.height) document.getElementById('input-height').value = c.height;
+    if (c.height && document.getElementById('input-height')) document.getElementById('input-height').value = c.height;
 }
 
 // --- 3.6 MENSAJERÍA DIRECTA AL PACIENTE (WHATSAPP & CORREO) ---
@@ -1543,9 +1579,13 @@ async function fetchClients() {
 
         renderClientsTable(allClientsData);
 
-        // Actualizar datalists de Bioimpedancia
+        // Actualizar datalists de Bioimpedancia y campo IDP
         if (window.updateBioDatalists) {
             window.updateBioDatalists();
+        }
+        const clientFormIdp = document.getElementById('new-client-idp');
+        if (clientFormIdp && !editingClientId) {
+            clientFormIdp.value = getNextAvailableIDP();
         }
 
     } catch (err) {

@@ -46,9 +46,8 @@
                                         <div class="row g-2">
                                             <div class="col-12 col-sm-4">
                                                 <div class="form-group">
-                                                    <label for="input-idp">IDP (Paciente)</label>
-                                                    <input type="text" id="input-idp" list="clients-idp-datalist" required placeholder="Ej: 1234567" value="1234567" autocomplete="off">
-                                                    <datalist id="clients-idp-datalist"></datalist>
+                                                    <label for="input-idp">IDP (Auto-Asignado)</label>
+                                                    <input type="text" id="input-idp" class="bg-light text-muted font-monospace" required placeholder="Auto-asignado" value="IDP-0001" readonly title="El IDP se asigna automáticamente según el paciente o el próximo código reciclado libre">
                                                 </div>
                                             </div>
                                             <div class="col-12 col-sm-8">

@@ -548,6 +548,30 @@ def get_clients():
         logging.error("Error al obtener clientes: %s", e, exc_info=True)
         return jsonify({"error": "Error al obtener clientes"}), 500
 
+@app.route('/api/clients/next-idp', methods=['GET'])
+def get_next_client_idp():
+    if not supabase:
+        return jsonify({"code": 1, "idp": "IDP-0001"}), 200
+    try:
+        res = supabase.table('clients').select('code').execute()
+        codes = [row['code'] for row in (res.data or []) if row.get('code') is not None]
+        codes.sort()
+        
+        new_code = 1
+        for code in codes:
+            if code == new_code:
+                new_code += 1
+            elif code > new_code:
+                break
+                
+        return jsonify({
+            "code": new_code,
+            "idp": f"IDP-{new_code:04d}"
+        }), 200
+    except Exception as e:
+        logging.error("Error al calcular siguiente IDP: %s", e)
+        return jsonify({"code": 1, "idp": "IDP-0001"}), 200
+
 @app.route('/api/clients', methods=['POST'])
 def add_client():
     if not supabase:
@@ -589,8 +613,8 @@ def add_client():
             elif code > new_code:
                 break
                 
-        if not idp or idp == "Auto-asignado":
-            idp = str(1000000 + new_code)
+        if not idp or idp in ("Auto-asignado", "Auto", "Auto-Asignado"):
+            idp = f"IDP-{new_code:04d}"
 
         new_client = {
             "code": new_code,
