@@ -4757,6 +4757,38 @@ function initStockTaxonomyModal() {
             updateStockCategoryOptions(allStockItems);
         });
     }
+
+    // Agregar Nueva Unidad de Medida (U/M)
+    const btnAddUnit = document.getElementById('btn-add-unit');
+    const inputNewUnit = document.getElementById('new-unit-name');
+    const selectNewUnitFamily = document.getElementById('new-unit-family');
+
+    if (btnAddUnit && inputNewUnit) {
+        btnAddUnit.addEventListener('click', () => {
+            const unitName = inputNewUnit.value.trim();
+            const fam = selectNewUnitFamily?.value || 'Otras';
+
+            if (!unitName) {
+                showToast('Ingresa un nombre para la Unidad de Medida', 'error');
+                return;
+            }
+
+            const exists = stockTaxonomiesData.units.some(u => u.name.toLowerCase() === unitName.toLowerCase());
+            if (exists) {
+                showToast(`⚠️ La unidad "${unitName}" ya existe en el catálogo`, 'info');
+                return;
+            }
+
+            stockTaxonomiesData.units.push({
+                name: unitName,
+                category: fam
+            });
+
+            inputNewUnit.value = '';
+            showToast(`✅ Unidad de medida "${unitName}" (${fam}) agregada al catálogo`, 'success');
+            renderTaxonomyUnits();
+        });
+    }
 }
 
 async function fetchStockTaxonomies() {

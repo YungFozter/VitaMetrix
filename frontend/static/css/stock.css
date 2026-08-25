@@ -322,3 +322,39 @@
     background: rgba(0, 180, 216, 0.18);
     color: #38bdf8;
 }
+
+/* Scrollbar Ultra-Fluido y Ligero para Modales */
+.stock-custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+.stock-custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+.stock-custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.stock-custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 9999px;
+    transition: background-color 0.2s ease;
+}
+
+.stock-custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+}
+
+[data-bs-theme="dark"] .stock-custom-scrollbar {
+    scrollbar-color: #475569 transparent;
+}
+
+[data-bs-theme="dark"] .stock-custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #475569;
+}
