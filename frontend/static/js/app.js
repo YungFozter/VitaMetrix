@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initBioClientAutocomplete();
     initClients();
     initPatientMessaging();
+    initPatientHistoryModal();
     initEvaluaciones();
     initProfileDropdown();
     initSystemMenuListeners();
@@ -1442,6 +1443,124 @@ function updateMessageText() {
     if (textarea) textarea.value = text;
 }
 
+// --- 3.7 MODAL DE HISTORIAL DE EVALUACIONES DE UN PACIENTE ---
+let currentHistPatient = null;
+
+function initPatientHistoryModal() {
+    const modal = document.getElementById('patient-history-modal');
+    if (!modal) return;
+
+    const btnClose = document.getElementById('hist-modal-close');
+    const btnFooterClose = document.getElementById('hist-modal-btn-close');
+    const btnNewEval = document.getElementById('hist-btn-new-eval');
+
+    const closeModal = () => {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        currentHistPatient = null;
+    };
+
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnFooterClose) btnFooterClose.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    if (btnNewEval) {
+        btnNewEval.addEventListener('click', () => {
+            if (!currentHistPatient) return;
+            const targetPatient = currentHistPatient;
+            closeModal();
+            const bioNav = document.querySelector('[data-target="bio-view"]');
+            if (bioNav) bioNav.click();
+            fillBioFormFromClient(targetPatient);
+            document.getElementById('input-r').focus();
+            showToast(`Ficha de ${targetPatient.name} cargada en calculadora`, 'info');
+        });
+    }
+}
+
+function openPatientHistoryModal(client) {
+    currentHistPatient = client;
+    const modal = document.getElementById('patient-history-modal');
+    if (!modal) return;
+
+    const nameEl = document.getElementById('hist-modal-patient-name');
+    const idpEl = document.getElementById('hist-modal-patient-idp');
+    const countEl = document.getElementById('hist-modal-eval-count');
+    const listEl = document.getElementById('hist-modal-evals-list');
+
+    if (nameEl) nameEl.textContent = client.name || 'Historial del Paciente';
+    if (idpEl) idpEl.textContent = `IDP: ${client.idp || ('ID-' + client.code)}`;
+
+    const normCName = normalizeText(client.name);
+    const normCIdp = normalizeText(client.idp);
+    const patientEvals = (allEvaluationsData || []).filter(ev => {
+        const evName = normalizeText(ev.patient_name);
+        const evIdp = normalizeText(ev.patient_idp);
+        return (normCIdp && evIdp && evIdp === normCIdp) || (normCName && evName && evName === normCName);
+    });
+
+    if (countEl) countEl.textContent = `${patientEvals.length} evaluación${patientEvals.length === 1 ? '' : 'es'}`;
+
+    if (listEl) {
+        listEl.innerHTML = '';
+        if (patientEvals.length === 0) {
+            listEl.innerHTML = `
+                <div class="text-center py-4 bg-light rounded-3 border">
+                    <i class="bi bi-journal-x text-muted fs-3 mb-1 d-block"></i>
+                    <div class="fw-semibold text-navy small">No hay evaluaciones registradas aún</div>
+                    <div class="text-muted small mt-0.5">Haz clic en el botón superior para realizar la primera medición.</div>
+                </div>
+            `;
+        } else {
+            patientEvals.forEach((ev, idx) => {
+                const score = (ev.global_score !== undefined && ev.global_score !== null) ? ev.global_score : (ev.score ?? '--');
+                const dateStr = ev.created_at ? new Date(ev.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
+
+                const card = document.createElement('div');
+                card.className = 'card border rounded-3 p-3 bg-white hover-shadow-sm transition-all shadow-2xs';
+                card.style.borderLeft = '4px solid #00b4d8 !important';
+                card.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 font-monospace fw-bold">${ev.code || ('EVA-' + String(idx + 1).padStart(3, '0'))}</span>
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 fw-bold"><i class="bi bi-lightning-charge-fill text-warning"></i> TRU ${score}/100</span>
+                                ${ev.phase_angle ? `<span class="badge bg-light text-secondary border small">PhA: ${ev.phase_angle}°</span>` : ''}
+                            </div>
+                            <div class="text-muted small mt-1.5 d-flex align-items-center gap-3">
+                                <span><i class="bi bi-calendar3 me-1"></i> ${dateStr}</span>
+                                ${ev.weight ? `<span><i class="bi bi-speedometer2 me-1"></i> ${ev.weight} kg</span>` : ''}
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-light border px-3 py-1.5 text-primary fw-semibold rounded-3 d-inline-flex align-items-center gap-1.5 shadow-2xs btn-open-eval-detail">
+                            <i class="bi bi-eye-fill"></i>
+                            <span>Abrir Reporte</span>
+                        </button>
+                    </div>
+                `;
+
+                const btnOpen = card.querySelector('.btn-open-eval-detail');
+                if (btnOpen) {
+                    btnOpen.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        modal.classList.add('hidden');
+                        modal.style.display = 'none';
+                        openEvaluationDetailModal(ev.id);
+                    });
+                }
+
+                listEl.appendChild(card);
+            });
+        }
+    }
+
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+}
+
 // --- 5. CLIENTES (DIRECTORIO GENERAL) ---
 let allClientsData = [];
 let editingClientId = null;
@@ -1692,7 +1811,7 @@ function renderClientsTable(clientsList) {
         }
         tdContact.appendChild(emailDiv);
 
-        // 4. Historial de Evaluaciones con Desplegable y Botón 'Evaluar' sobre el listado
+        // 4. Historial de Evaluaciones con botón directo a Modal de Historial
         const normCName = normalizeText(c.name);
         const normCIdp = normalizeText(c.idp);
         const patientEvals = (allEvaluationsData || []).filter(ev => {
@@ -1726,99 +1845,22 @@ function renderClientsTable(clientsList) {
             const latest = patientEvals[0];
             const latestScore = (latest.global_score !== undefined && latest.global_score !== null) ? latest.global_score : (latest.score ?? '--');
 
-            const dropdownWrap = document.createElement('div');
-            dropdownWrap.className = 'dropdown d-inline-block';
-
-            const dropToggle = document.createElement('button');
-            dropToggle.className = 'btn btn-sm btn-outline-primary rounded-pill px-2.5 py-1 dropdown-toggle fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs';
-            dropToggle.type = 'button';
-            dropToggle.setAttribute('data-bs-toggle', 'dropdown');
-            dropToggle.setAttribute('aria-expanded', 'false');
-            dropToggle.innerHTML = `
+            const btnHistory = document.createElement('button');
+            btnHistory.type = 'button';
+            btnHistory.className = 'btn btn-sm btn-outline-primary rounded-pill px-3 py-1 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs';
+            btnHistory.title = `Ver historial de ${patientEvals.length} evaluación(es) de ${c.name}`;
+            btnHistory.innerHTML = `
                 <i class="bi bi-lightning-charge-fill text-warning"></i>
                 <span>TRU ${latestScore}/100</span>
-                <span class="badge bg-primary text-white rounded-pill ms-0.5" style="font-size: 0.68rem;">${patientEvals.length} ${patientEvals.length === 1 ? 'eval.' : 'evals.'}</span>
+                <span class="badge bg-primary text-white rounded-pill ms-1" style="font-size: 0.68rem;">${patientEvals.length} eval${patientEvals.length > 1 ? 's' : ''} ▾</span>
             `;
 
-            const dropMenu = document.createElement('ul');
-            dropMenu.className = 'dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-2.5';
-            dropMenu.style.minWidth = '320px';
-            dropMenu.style.maxWidth = '360px';
-            dropMenu.style.zIndex = '1060';
-
-            // Cabecera del desplegable con BOTÓN EVALUAR SOBRE EL LISTADO
-            const headerLi = document.createElement('li');
-            headerLi.className = 'p-2.5 bg-light rounded-3 mb-2 border';
-            headerLi.innerHTML = `
-                <div class="d-flex align-items-center justify-content-between mb-1.5">
-                    <span class="fw-bold text-navy small text-truncate pe-1">${c.name}</span>
-                    <span class="badge bg-white text-secondary border font-monospace small">${c.idp || ('ID-' + c.code)}</span>
-                </div>
-                <div class="text-muted small mb-2" style="font-size: 0.72rem;">Historial clínico de bioimpedancia</div>
-            `;
-
-            const btnEvalInside = document.createElement('button');
-            btnEvalInside.type = 'button';
-            btnEvalInside.className = 'btn btn-sm btn-primary w-100 py-1.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5 shadow-sm';
-            btnEvalInside.innerHTML = '<i class="bi bi-lightning-charge-fill text-warning"></i> ⚡ Evaluar / Nueva Medición';
-            btnEvalInside.title = 'Abrir calculadora de bioimpedancia para este paciente';
-            btnEvalInside.addEventListener('click', () => {
-                const bioNav = document.querySelector('[data-target="bio-view"]');
-                if (bioNav) bioNav.click();
-                fillBioFormFromClient(c);
-                document.getElementById('input-r').focus();
-                showToast(`Ficha de ${c.name} cargada en calculadora`, 'info');
-            });
-            headerLi.appendChild(btnEvalInside);
-            dropMenu.appendChild(headerLi);
-
-            // Título de la lista de evaluaciones
-            const listHeader = document.createElement('li');
-            listHeader.className = 'dropdown-header text-uppercase text-muted px-2 py-1 fw-bold';
-            listHeader.style.fontSize = '0.68rem';
-            listHeader.textContent = `Evaluaciones Guardadas (${patientEvals.length})`;
-            dropMenu.appendChild(listHeader);
-
-            // Contenedor scrollable de evaluaciones
-            const scrollContainer = document.createElement('div');
-            scrollContainer.style.maxHeight = '220px';
-            scrollContainer.style.overflowY = 'auto';
-
-            patientEvals.forEach(ev => {
-                const itemLi = document.createElement('li');
-                const score = (ev.global_score !== undefined && ev.global_score !== null) ? ev.global_score : (ev.score ?? '--');
-                const dateStr = ev.created_at ? new Date(ev.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : '--';
-
-                const itemBtn = document.createElement('div');
-                itemBtn.className = 'dropdown-item rounded-3 p-2 mb-1 d-flex align-items-center justify-content-between gap-2 border-bottom-subtle';
-                itemBtn.style.cursor = 'pointer';
-                itemBtn.innerHTML = `
-                    <div>
-                        <div class="fw-bold text-navy small d-flex align-items-center gap-1">
-                            <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.7rem;">${ev.code || 'EVA-XXX'}</span>
-                            <span class="text-success fw-bold">TRU ${score}/100</span>
-                        </div>
-                        <div class="text-muted mt-0.5" style="font-size: 0.72rem;">📅 ${dateStr} • ${ev.weight || '--'} kg</div>
-                    </div>
-                    <button type="button" class="btn btn-2xs btn-light border px-2 py-1 text-primary fw-semibold rounded-2 d-inline-flex align-items-center gap-1 shadow-2xs">
-                        <i class="bi bi-eye-fill"></i> Abrir
-                    </button>
-                `;
-
-                itemBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    openEvaluationDetailModal(ev.id);
-                });
-
-                itemLi.appendChild(itemBtn);
-                scrollContainer.appendChild(itemLi);
+            btnHistory.addEventListener('click', (e) => {
+                e.stopPropagation();
+                openPatientHistoryModal(c);
             });
 
-            dropMenu.appendChild(scrollContainer);
-            dropdownWrap.appendChild(dropToggle);
-            dropdownWrap.appendChild(dropMenu);
-            tdLastEval.appendChild(dropdownWrap);
+            tdLastEval.appendChild(btnHistory);
         }
 
         // 5. Acciones
