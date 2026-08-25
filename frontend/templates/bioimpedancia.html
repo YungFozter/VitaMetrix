@@ -278,30 +278,103 @@
                             </div>
                         </section>
 
-                        <!-- CARD 2: Músculo y Grasa -->
+                        <!-- CARD 2: Músculo y Grasa (Balance de Composición Corporal) -->
                         <section class="bento-card bio-glass card-muscle-fat" style="grid-area: muscle; display: flex; flex-direction: column;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Composición Corporal</div>
-                            <div style="display: flex; gap: 1rem; flex-grow: 1; align-items: center; justify-content: space-around; flex-wrap: wrap; margin-top: 1rem;">
-                                <!-- Circular Gauge Muscle -->
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div id="muscle-gauge" class="circle-gauge" style="position: relative; width: 90px; height: 90px; border-radius: 50%; background: conic-gradient(#2d7a4a var(--muscle-pct, 0%), #e2e8f0 0);">
-                                        <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                            <span id="muscle-score" style="font-size: 1.5rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
-                                            <span style="font-size: 0.6rem; color: #5a6f8c; font-weight: 600;">PTS</span>
+                            <div class="card-header d-flex align-items-center justify-content-between" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">
+                                <span>Composición Corporal (Muscle & Fat Score)</span>
+                                <button type="button" class="field-info-btn" data-info-title="Composición Corporal (Muscle vs Fat Score)" data-info-desc="Puntuaciones estandarizadas (0-100 pts) calculadas a partir del ángulo de fase celular, reactancia y balance magro/adiposo del paciente." data-info-req="Datos básicos de bioimpedancia y masa muscular/grasa" title="Ver información clínica">ℹ</button>
+                            </div>
+
+                            <div class="row g-3 my-auto pt-2">
+                                <!-- Columna Músculo (Muscle Score) -->
+                                <div class="col-12 col-sm-6">
+                                    <div class="p-3 rounded-4 border bg-white shadow-xs h-100 d-flex flex-column justify-content-between">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fw-bold text-navy" style="font-size: 0.88rem;">
+                                                💪 Muscle Score
+                                            </span>
+                                            <span id="muscle-score-status" class="badge rounded-pill fw-semibold" style="background: rgba(45,122,74,0.12); color: #2d7a4a; font-size: 0.74rem;">--</span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-3 my-2">
+                                            <div id="muscle-gauge" class="circle-gauge flex-shrink-0" style="position: relative; width: 78px; height: 78px; border-radius: 50%; background: conic-gradient(#2d7a4a var(--muscle-pct, 0%), #e2e8f0 0);">
+                                                <div style="position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                                    <span id="muscle-score" style="font-size: 1.35rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
+                                                    <span style="font-size: 0.58rem; color: #5a6f8c; font-weight: 600;">PTS</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-muted small" style="font-size: 0.75rem;">Masa Muscular:</div>
+                                                <div class="fw-bold text-navy" style="font-size: 1.05rem;">
+                                                    <span id="muscle-mass-real">--</span> <span class="text-muted small fw-normal" id="muscle-pct-real">(--)</span>
+                                                </div>
+                                                <div class="text-secondary small" style="font-size: 0.72rem;">Calidad y densidad celular</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Escala de Comparación -->
+                                        <div class="mt-2 pt-2 border-top">
+                                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
+                                                <span>&lt;40 Bajo</span>
+                                                <span>40-60 Acep.</span>
+                                                <span class="text-success fw-bold">60-80 Óptimo</span>
+                                                <span>&gt;80 Exc.</span>
+                                            </div>
+                                            <div class="w-100 rounded-pill mt-1" style="height: 5px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #10b981 70%, #059669 100%);"></div>
                                         </div>
                                     </div>
-                                    <div style="text-align: center; font-size: 0.85rem; font-weight: 600; color: #2a3a52;">💪 Muscle Score</div>
                                 </div>
 
-                                <!-- Circular Gauge Fat -->
-                                <div style="display: flex; flex-direction: column; align-items: center; gap: 0.5rem;">
-                                    <div id="fat-gauge" class="circle-gauge" style="position: relative; width: 90px; height: 90px; border-radius: 50%; background: conic-gradient(#b94a4a var(--fat-pct, 0%), #e2e8f0 0);">
-                                        <div style="position: absolute; top: 10px; left: 10px; right: 10px; bottom: 10px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
-                                            <span id="fat-score" style="font-size: 1.5rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
-                                            <span style="font-size: 0.6rem; color: #5a6f8c; font-weight: 600;">PTS</span>
+                                <!-- Columna Grasa (Fat Score) -->
+                                <div class="col-12 col-sm-6">
+                                    <div class="p-3 rounded-4 border bg-white shadow-xs h-100 d-flex flex-column justify-content-between">
+                                        <div class="d-flex align-items-center justify-content-between mb-2">
+                                            <span class="fw-bold text-navy" style="font-size: 0.88rem;">
+                                                ⚡ Fat Score
+                                            </span>
+                                            <span id="fat-score-status" class="badge rounded-pill fw-semibold" style="background: rgba(205,127,50,0.12); color: #cd7f32; font-size: 0.74rem;">--</span>
+                                        </div>
+
+                                        <div class="d-flex align-items-center gap-3 my-2">
+                                            <div id="fat-gauge" class="circle-gauge flex-shrink-0" style="position: relative; width: 78px; height: 78px; border-radius: 50%; background: conic-gradient(#b94a4a var(--fat-pct, 0%), #e2e8f0 0);">
+                                                <div style="position: absolute; top: 8px; left: 8px; right: 8px; bottom: 8px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-direction: column;">
+                                                    <span id="fat-score" style="font-size: 1.35rem; font-weight: 700; color: #1A2A4A; line-height: 1;">--</span>
+                                                    <span style="font-size: 0.58rem; color: #5a6f8c; font-weight: 600;">PTS</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <div class="text-muted small" style="font-size: 0.75rem;">Masa Grasa:</div>
+                                                <div class="fw-bold text-navy" style="font-size: 1.05rem;">
+                                                    <span id="fat-mass-real">--</span> <span class="text-muted small fw-normal" id="fat-pct-real">(--)</span>
+                                                </div>
+                                                <div class="text-secondary small" style="font-size: 0.72rem;">Impacto metabólico adiposo</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Escala de Comparación -->
+                                        <div class="mt-2 pt-2 border-top">
+                                            <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem;">
+                                                <span>&lt;20 Bajo</span>
+                                                <span class="text-success fw-bold">20-50 Saludable</span>
+                                                <span>50-70 Elev.</span>
+                                                <span>&gt;70 Exc.</span>
+                                            </div>
+                                            <div class="w-100 rounded-pill mt-1" style="height: 5px; background: linear-gradient(90deg, #0284c7 0%, #10b981 35%, #f59e0b 70%, #ef4444 100%);"></div>
                                         </div>
                                     </div>
-                                    <div style="text-align: center; font-size: 0.85rem; font-weight: 600; color: #2a3a52;">⚡ Fat Score</div>
+                                </div>
+                            </div>
+
+                            <!-- Footer Bar: Ratio Músculo/Grasa y Balance -->
+                            <div class="mt-3 p-2.5 rounded-3 d-flex flex-wrap align-items-center justify-content-between gap-2" style="background: rgba(0, 180, 216, 0.06); border: 1px dashed rgba(0, 180, 216, 0.3);">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="text-muted small fw-medium" style="font-size: 0.78rem;">⚖️ Ratio Músculo / Grasa:</span>
+                                    <strong class="text-navy" id="muscle-fat-ratio" style="font-size: 0.88rem;">--</strong>
+                                    <span id="muscle-fat-ratio-status" class="badge bg-light text-secondary border small" style="font-size: 0.7rem;">--</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <span class="text-muted small" style="font-size: 0.78rem;">Balance:</span>
+                                    <strong class="text-primary small" id="body-balance-desc" style="font-size: 0.78rem;">Evaluando...</strong>
                                 </div>
                             </div>
                         </section>

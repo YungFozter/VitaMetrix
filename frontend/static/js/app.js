@@ -472,6 +472,110 @@ function updateBioUI(data, inputs) {
         }
     }
 
+    // Actualizar estados cualitativos y rangos clínicos para Muscle Score & Fat Score
+    const mScore = data.muscle_score || 0;
+    const fScore = data.fat_score || 0;
+
+    // Muscle Status Badge
+    const elMStatus = document.getElementById('muscle-score-status');
+    if (elMStatus) {
+        if (mScore >= 80) {
+            elMStatus.textContent = 'Excelente';
+            elMStatus.style.background = 'rgba(16, 185, 129, 0.15)';
+            elMStatus.style.color = '#059669';
+        } else if (mScore >= 60) {
+            elMStatus.textContent = 'Óptimo';
+            elMStatus.style.background = 'rgba(45, 122, 74, 0.15)';
+            elMStatus.style.color = '#2d7a4a';
+        } else if (mScore >= 40) {
+            elMStatus.textContent = 'Aceptable';
+            elMStatus.style.background = 'rgba(245, 158, 11, 0.15)';
+            elMStatus.style.color = '#d97706';
+        } else {
+            elMStatus.textContent = 'Bajo';
+            elMStatus.style.background = 'rgba(239, 68, 68, 0.15)';
+            elMStatus.style.color = '#dc2626';
+        }
+    }
+
+    // Fat Status Badge
+    const elFStatus = document.getElementById('fat-score-status');
+    if (elFStatus) {
+        if (fScore < 20) {
+            elFStatus.textContent = 'Bajo';
+            elFStatus.style.background = 'rgba(2, 132, 199, 0.15)';
+            elFStatus.style.color = '#0284c7';
+        } else if (fScore <= 50) {
+            elFStatus.textContent = 'Saludable';
+            elFStatus.style.background = 'rgba(16, 185, 129, 0.15)';
+            elFStatus.style.color = '#059669';
+        } else if (fScore <= 70) {
+            elFStatus.textContent = 'Elevado';
+            elFStatus.style.background = 'rgba(245, 158, 11, 0.15)';
+            elFStatus.style.color = '#d97706';
+        } else {
+            elFStatus.textContent = 'Exceso';
+            elFStatus.style.background = 'rgba(239, 68, 68, 0.15)';
+            elFStatus.style.color = '#dc2626';
+        }
+    }
+
+    // Masas Reales (Masa Muscular y Grasa)
+    const weightVal = parseFloat(inputs.weight) || 70;
+    const smmVal = parseFloat(inputs.smm) || (data.smm ? parseFloat(data.smm) : (weightVal * (mScore / 100) * 0.45));
+    const fatVal = parseFloat(inputs.fat_mass) || (data.fat_mass ? parseFloat(data.fat_mass) : (weightVal * (fScore / 100) * 0.28));
+
+    const elMReal = document.getElementById('muscle-mass-real');
+    const elMPct = document.getElementById('muscle-pct-real');
+    if (elMReal) elMReal.textContent = smmVal > 0 ? `${smmVal.toFixed(1)} kg` : '-- kg';
+    if (elMPct) elMPct.textContent = (smmVal > 0 && weightVal > 0) ? `(${(smmVal / weightVal * 100).toFixed(1)}%)` : '';
+
+    const elFReal = document.getElementById('fat-mass-real');
+    const elFPct = document.getElementById('fat-pct-real');
+    if (elFReal) elFReal.textContent = fatVal > 0 ? `${fatVal.toFixed(1)} kg` : '-- kg';
+    if (elFPct) elFPct.textContent = (fatVal > 0 && weightVal > 0) ? `(${(fatVal / weightVal * 100).toFixed(1)}%)` : '';
+
+    // Ratio Músculo / Grasa
+    const elRatio = document.getElementById('muscle-fat-ratio');
+    const elRatioStatus = document.getElementById('muscle-fat-ratio-status');
+    const elBalanceDesc = document.getElementById('body-balance-desc');
+
+    if (smmVal > 0 && fatVal > 0) {
+        const ratio = (smmVal / fatVal);
+        if (elRatio) elRatio.textContent = ratio.toFixed(2);
+        if (elRatioStatus) {
+            if (ratio >= 2.0) {
+                elRatioStatus.textContent = 'Excelente';
+                elRatioStatus.className = 'badge bg-success-subtle text-success border';
+            } else if (ratio >= 1.4) {
+                elRatioStatus.textContent = 'Favorable';
+                elRatioStatus.className = 'badge bg-success-subtle text-success border';
+            } else if (ratio >= 1.0) {
+                elRatioStatus.textContent = 'Equilibrado';
+                elRatioStatus.className = 'badge bg-warning-subtle text-warning border';
+            } else {
+                elRatioStatus.textContent = 'Predominio Graso';
+                elRatioStatus.className = 'badge bg-danger-subtle text-danger border';
+            }
+        }
+        if (elBalanceDesc) {
+            if (ratio >= 1.5) {
+                elBalanceDesc.textContent = 'Predominio Músculo-Estructural';
+                elBalanceDesc.className = 'text-success small fw-semibold';
+            } else if (ratio >= 1.0) {
+                elBalanceDesc.textContent = 'Balance Normotrófico';
+                elBalanceDesc.className = 'text-primary small fw-semibold';
+            } else {
+                elBalanceDesc.textContent = 'Atención a Balance Adiposo';
+                elBalanceDesc.className = 'text-danger small fw-semibold';
+            }
+        }
+    } else {
+        if (elRatio) elRatio.textContent = '--';
+        if (elRatioStatus) elRatioStatus.textContent = 'Sin datos';
+        if (elBalanceDesc) elBalanceDesc.textContent = 'Introduce SMM y Grasa para balance';
+    }
+
     document.getElementById('res-value').textContent = inputs.resistance;
     document.getElementById('xc-value').textContent = inputs.reactance;
     document.getElementById('phase-value').textContent = data.phase_angle;
