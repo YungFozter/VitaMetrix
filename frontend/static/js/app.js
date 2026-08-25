@@ -1477,6 +1477,12 @@ function initEvaluaciones() {
             if (inp.ecw) document.getElementById('input-ecw').value = inp.ecw;
             if (inp.fat_mass) document.getElementById('input-fat-mass').value = inp.fat_mass;
             if (inp.visceral_fat) document.getElementById('input-visceral').value = inp.visceral_fat;
+            if (inp.phase_angle_dev) document.getElementById('input-phase-dev').value = inp.phase_angle_dev;
+            if (inp.seg_arm_r) document.getElementById('input-seg-arm-r').value = inp.seg_arm_r;
+            if (inp.seg_arm_l) document.getElementById('input-seg-arm-l').value = inp.seg_arm_l;
+            if (inp.seg_torso) document.getElementById('input-seg-torso').value = inp.seg_torso;
+            if (inp.seg_leg_r) document.getElementById('input-seg-leg-r').value = inp.seg_leg_r;
+            if (inp.seg_leg_l) document.getElementById('input-seg-leg-l').value = inp.seg_leg_l;
 
             modal.classList.add('hidden');
 
@@ -1484,13 +1490,7 @@ function initEvaluaciones() {
             const bioNav = document.querySelector('[data-target="bio-view"]');
             if (bioNav) bioNav.click();
 
-            showToast('Evaluación cargada en el formulario de bioimpedancia', 'success');
-
-            // Trigger submit calculation automatically
-            const form = document.getElementById('bio-form');
-            if (form) {
-                form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
-            }
+            showToast('Datos de la evaluación cargados en el formulario', 'info');
         });
     }
 
@@ -2278,13 +2278,7 @@ function initDemoDataInjector() {
             input.classList.add('input-highlight-pulse');
         });
 
-        showToast('🧪 Caso de prueba completo inyectado. Calculando...', 'success');
-
-        // 4. Disparar el análisis automáticamente
-        const form = document.getElementById('bio-form');
-        if (form) {
-            form.requestSubmit ? form.requestSubmit() : form.dispatchEvent(new Event('submit', { cancelable: true }));
-        }
+        showToast('🧪 Caso de prueba cargado en el formulario', 'info');
     });
 }
 

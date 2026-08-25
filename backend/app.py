@@ -303,10 +303,11 @@ def _run_analysis(data):
             "muscle_pct": round(smm / weight * 100, 1)
         }
 
-    # Guardar en Supabase con reciclaje seguro de códigos EVA-XXX
+    # Guardar en Supabase con reciclaje seguro de códigos EVA-XXX (solo si should_save es True)
     saved = False
     assigned_code = None
-    if supabase:
+    should_save = data.get('save', True)
+    if supabase and should_save:
         try:
             existing_codes = []
             try:
@@ -457,7 +458,8 @@ def get_evaluation_by_id(eval_id):
             "ecw": raw_eval.get('ecw'),
             "fat_mass": raw_eval.get('fat_mass'),
             "visceral_fat": raw_eval.get('visceral_fat'),
-            "waist": raw_eval.get('waist')
+            "waist": raw_eval.get('waist'),
+            "save": False
         }
         full_analysis = _run_analysis(payload)
         full_analysis["id"] = raw_eval.get("id")
