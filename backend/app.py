@@ -482,6 +482,23 @@ def delete_evaluation(eval_id):
         logging.error("Error al eliminar evaluación: %s", e, exc_info=True)
         return jsonify({"error": "Error al eliminar la evaluación"}), 500
 
+@app.route('/api/evaluations/batch-delete', methods=['POST'])
+def batch_delete_evaluations():
+    if not supabase:
+        return jsonify({"error": "Base de datos no configurada"}), 503
+    try:
+        payload = request.get_json() or {}
+        eval_ids = payload.get('ids', [])
+        if not eval_ids or not isinstance(eval_ids, list):
+            return jsonify({"error": "No se especificaron IDs válidos para eliminar"}), 400
+
+        # Eliminar registros en lote en Supabase
+        supabase.table('evaluations').delete().in_('id', eval_ids).execute()
+        return jsonify({"success": True, "deleted_count": len(eval_ids)})
+    except Exception as e:
+        logging.error("Error en batch delete de evaluaciones: %s", e, exc_info=True)
+        return jsonify({"error": f"Error al eliminar lote de evaluaciones: {str(e)}"}), 500
+
 # --- RUTAS DE CLIENTES ---
 
 @app.route('/api/clients', methods=['GET'])

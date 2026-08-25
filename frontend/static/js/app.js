@@ -1085,6 +1085,8 @@ function editClient(id, name, phone, email) {
 // --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---
 let allEvaluationsData = [];
 let selectedEvaluationData = null;
+let selectedEvaluationIds = new Set();
+let currentPageVisibleItems = [];
 let evalCurrentPage = 1;
 let evalPageSize = '25';
 
@@ -1095,6 +1097,9 @@ function initEvaluaciones() {
     const pageSizeSelect = document.getElementById('eval-page-size');
     const btnPrev = document.getElementById('eval-btn-prev');
     const btnNext = document.getElementById('eval-btn-next');
+    const masterCheckbox = document.getElementById('eval-select-all');
+    const btnBulkDeselect = document.getElementById('btn-eval-bulk-deselect');
+    const btnBulkDelete = document.getElementById('btn-eval-bulk-delete');
 
     if (btnRefresh) {
         btnRefresh.addEventListener('click', () => {
@@ -1142,6 +1147,92 @@ function initEvaluaciones() {
         filterStatus.addEventListener('change', () => {
             evalCurrentPage = 1;
             filterAndRenderEvaluaciones();
+        });
+    }
+
+    // Master Checkbox in table header (Selecciona/deselecciona las visibles en esta página)
+    if (masterCheckbox) {
+        masterCheckbox.addEventListener('change', (e) => {
+            const isChecked = e.target.checked;
+            currentPageVisibleItems.forEach(item => {
+                const idStr = String(item.id);
+                if (isChecked) {
+                    selectedEvaluationIds.add(idStr);
+                } else {
+                    selectedEvaluationIds.delete(idStr);
+                }
+            });
+            filterAndRenderEvaluaciones();
+        });
+    }
+
+    // Botón Deseleccionar todas
+    if (btnBulkDeselect) {
+        btnBulkDeselect.addEventListener('click', () => {
+            selectedEvaluationIds.clear();
+            filterAndRenderEvaluaciones();
+            showToast('Se han desmarcado todas las evaluaciones', 'info');
+        });
+    }
+
+    // Botón Eliminar Marcadas (Abre el modal con el listado)
+    if (btnBulkDelete) {
+        btnBulkDelete.addEventListener('click', () => {
+            openBatchDeleteModal();
+        });
+    }
+
+    // Modal de Eliminación Masiva
+    const batchModal = document.getElementById('batch-delete-evals-modal');
+    const batchCloseBtn = document.getElementById('batch-delete-modal-close');
+    const batchCancelBtn = document.getElementById('batch-delete-btn-cancel');
+    const batchConfirmBtn = document.getElementById('batch-delete-btn-confirm');
+
+    const closeBatchModal = () => {
+        if (batchModal) batchModal.classList.add('hidden');
+    };
+
+    if (batchCloseBtn) batchCloseBtn.addEventListener('click', closeBatchModal);
+    if (batchCancelBtn) batchCancelBtn.addEventListener('click', closeBatchModal);
+    if (batchModal) {
+        batchModal.addEventListener('click', (e) => {
+            if (e.target === batchModal) closeBatchModal();
+        });
+    }
+
+    if (batchConfirmBtn) {
+        batchConfirmBtn.addEventListener('click', async () => {
+            if (selectedEvaluationIds.size === 0) return;
+            
+            const countToDelete = selectedEvaluationIds.size;
+            const originalText = batchConfirmBtn.innerHTML;
+            batchConfirmBtn.disabled = true;
+            batchConfirmBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminando...';
+
+            try {
+                const res = await fetch('/api/evaluations/batch-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ids: Array.from(selectedEvaluationIds) })
+                });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    closeBatchModal();
+                    selectedEvaluationIds.clear();
+                    showToast(`🗑️ Se eliminaron ${result.deleted_count || countToDelete} evaluaciones correctamente`, 'success');
+                    fetchEvaluaciones();
+                    fetchDashboardStats();
+                    updateUserProfileUI();
+                } else {
+                    showToast('Error al eliminar evaluaciones: ' + (result.error || 'Error desconocido'), 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión al eliminar evaluaciones', 'error');
+            } finally {
+                batchConfirmBtn.disabled = false;
+                batchConfirmBtn.innerHTML = originalText;
+            }
         });
     }
 
@@ -1244,7 +1335,7 @@ async function fetchEvaluaciones() {
         filterAndRenderEvaluaciones();
     } catch (err) {
         console.error(err);
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2.5rem; color: red;">Error al cargar las evaluaciones.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 2.5rem; color: red;">Error al cargar las evaluaciones.</td></tr>';
     }
 }
 
@@ -1255,6 +1346,85 @@ function normalizeText(str) {
         .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .trim();
+}
+
+function updateBulkActionsToolbar() {
+    const bar = document.getElementById('eval-bulk-actions-bar');
+    const countText = document.getElementById('eval-bulk-count-text');
+    if (!bar) return;
+
+    if (selectedEvaluationIds.size > 0) {
+        bar.classList.remove('hidden');
+        if (countText) {
+            countText.textContent = `${selectedEvaluationIds.size} evaluación${selectedEvaluationIds.size > 1 ? 'es' : ''} seleccionada${selectedEvaluationIds.size > 1 ? 's' : ''}`;
+        }
+    } else {
+        bar.classList.add('hidden');
+    }
+}
+
+function updateMasterCheckboxState(pageItems) {
+    const masterCheckbox = document.getElementById('eval-select-all');
+    if (!masterCheckbox) return;
+
+    if (!pageItems || pageItems.length === 0) {
+        masterCheckbox.checked = false;
+        masterCheckbox.indeterminate = false;
+        return;
+    }
+
+    const selectedOnCurrentPage = pageItems.filter(item => selectedEvaluationIds.has(String(item.id))).length;
+
+    if (selectedOnCurrentPage === pageItems.length) {
+        masterCheckbox.checked = true;
+        masterCheckbox.indeterminate = false;
+    } else if (selectedOnCurrentPage > 0) {
+        masterCheckbox.checked = false;
+        masterCheckbox.indeterminate = true;
+    } else {
+        masterCheckbox.checked = false;
+        masterCheckbox.indeterminate = false;
+    }
+}
+
+function openBatchDeleteModal() {
+    if (selectedEvaluationIds.size === 0) {
+        showToast('No hay evaluaciones seleccionadas', 'info');
+        return;
+    }
+
+    const modal = document.getElementById('batch-delete-evals-modal');
+    const tbody = document.getElementById('batch-delete-list-tbody');
+    const countText = document.getElementById('batch-delete-count-text');
+    const btnCount = document.getElementById('batch-delete-btn-count');
+
+    if (!modal || !tbody) return;
+
+    // Filter evaluations matching the selected IDs
+    const selectedList = allEvaluationsData.filter(e => selectedEvaluationIds.has(String(e.id)));
+
+    tbody.innerHTML = '';
+    selectedList.forEach(ev => {
+        const rawName = (ev.patient_name || '').trim();
+        const displayPatientName = (!rawName || rawName.toLowerCase() === 'unknown') ? 'Paciente sin registrar' : rawName;
+        const displayIdp = (ev.patient_idp && ev.patient_idp !== '000000') ? ev.patient_idp : '--';
+        const formattedDate = (ev.created_at || '').replace('T', ' ').substring(0, 16) || '--';
+
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="ps-3"><span class="code-badge" style="background: rgba(0, 180, 216, 0.1); color: #00b4d8; font-weight: 700; font-size: 0.78rem;">${ev.code || 'EVA-000'}</span></td>
+            <td><strong>${displayPatientName}</strong> <span class="text-muted small">(${displayIdp})</span></td>
+            <td><span class="text-secondary">${formattedDate}</span></td>
+            <td><span class="badge bg-success-subtle text-success">${ev.global_score ?? 0} pts</span></td>
+            <td class="pe-3 text-end"><strong class="text-info">${ev.phase_angle ?? '--'}°</strong></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    if (countText) countText.textContent = `${selectedEvaluationIds.size} evaluación${selectedEvaluationIds.size > 1 ? 'es' : ''}`;
+    if (btnCount) btnCount.textContent = selectedEvaluationIds.size;
+
+    modal.classList.remove('hidden');
 }
 
 function filterAndRenderEvaluaciones() {
@@ -1291,6 +1461,7 @@ function filterAndRenderEvaluaciones() {
     const startIndex = (evalCurrentPage - 1) * limit;
     const endIndex = Math.min(startIndex + limit, totalItems);
     const pageItems = isAll ? filtered : filtered.slice(startIndex, endIndex);
+    currentPageVisibleItems = pageItems;
 
     // Update pagination controls in UI
     const infoRange = document.getElementById('eval-info-range');
@@ -1305,14 +1476,46 @@ function filterAndRenderEvaluaciones() {
     if (btnPrev) btnPrev.disabled = evalCurrentPage <= 1;
     if (btnNext) btnNext.disabled = evalCurrentPage >= totalPages;
 
+    updateMasterCheckboxState(pageItems);
+    updateBulkActionsToolbar();
+
     if (filtered.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2.5rem; color: #5a6f8c;">No se encontraron evaluaciones registradas.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 2.5rem; color: #5a6f8c;">No se encontraron evaluaciones registradas.</td></tr>';
         return;
     }
 
     tbody.replaceChildren();
     pageItems.forEach(ev => {
+        const idStr = String(ev.id);
+        const isSelected = selectedEvaluationIds.has(idStr);
+
         const tr = document.createElement('tr');
+        if (isSelected) tr.classList.add('table-row-selected');
+
+        // Checkbox Column
+        const tdCheck = document.createElement('td');
+        tdCheck.style.textAlign = 'center';
+        tdCheck.style.verticalAlign = 'middle';
+        
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'form-check-input eval-checkbox shadow-none';
+        chk.checked = isSelected;
+        chk.title = `Marcar evaluación ${ev.code || ''}`;
+        
+        chk.addEventListener('click', (e) => e.stopPropagation());
+        chk.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                selectedEvaluationIds.add(idStr);
+                tr.classList.add('table-row-selected');
+            } else {
+                selectedEvaluationIds.delete(idStr);
+                tr.classList.remove('table-row-selected');
+            }
+            updateMasterCheckboxState(pageItems);
+            updateBulkActionsToolbar();
+        });
+        tdCheck.appendChild(chk);
 
         // Code Badge (EVA-XXX)
         const tdCode = document.createElement('td');
@@ -1382,17 +1585,40 @@ function filterAndRenderEvaluaciones() {
         const btnView = document.createElement('button');
         btnView.className = 'eval-btn-open';
         btnView.innerHTML = '<i class="bi bi-eye-fill"></i> Abrir';
-        btnView.addEventListener('click', () => openEvaluationDetailModal(ev.id));
+        btnView.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openEvaluationDetailModal(ev.id);
+        });
 
         const btnDel = document.createElement('button');
         btnDel.className = 'eval-btn-delete';
         btnDel.innerHTML = '<i class="bi bi-trash3-fill"></i>';
         btnDel.title = 'Eliminar Evaluación';
-        btnDel.addEventListener('click', () => deleteEvaluation(ev.id));
+        btnDel.addEventListener('click', (e) => {
+            e.stopPropagation();
+            deleteEvaluation(ev.id);
+        });
 
         btnGroup.append(btnView, btnDel);
         tdActions.appendChild(btnGroup);
-        tr.append(tdCode, tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
+
+        // Row click to toggle selection
+        tr.addEventListener('click', (e) => {
+            // Ignore if clicked on a button or link
+            if (e.target.closest('button') || e.target.closest('a')) return;
+            chk.checked = !chk.checked;
+            if (chk.checked) {
+                selectedEvaluationIds.add(idStr);
+                tr.classList.add('table-row-selected');
+            } else {
+                selectedEvaluationIds.delete(idStr);
+                tr.classList.remove('table-row-selected');
+            }
+            updateMasterCheckboxState(pageItems);
+            updateBulkActionsToolbar();
+        });
+
+        tr.append(tdCheck, tdCode, tdDate, tdPatient, tdBase, tdScore, tdPhase, tdStatus, tdActions);
         tbody.appendChild(tr);
     });
 }

@@ -44,12 +44,37 @@
         </div>
     </div>
 
+    <!-- Barra de Acciones Masivas (Aparece al seleccionar 1 o más) -->
+    <div id="eval-bulk-actions-bar" class="eval-bulk-bar mb-3 p-3 rounded-4 text-white d-flex flex-wrap align-items-center justify-content-between gap-3 shadow-lg hidden" style="background: linear-gradient(135deg, #091e3a 0%, #1e293b 100%); border: 1px solid rgba(255,255,255,0.15);">
+        <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle p-2 bg-danger bg-opacity-25 text-danger d-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                <i class="bi bi-check2-square fs-5"></i>
+            </div>
+            <div>
+                <strong class="d-block text-white fs-6" id="eval-bulk-count-text">0 evaluaciones seleccionadas</strong>
+                <span class="text-white-50 small" style="font-size: 0.78rem;">La selección se mantiene activa al navegar entre páginas</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <button type="button" id="btn-eval-bulk-deselect" class="btn btn-sm btn-outline-light rounded-3 px-3 py-1.5 fw-medium">
+                Deseleccionar todas
+            </button>
+            <button type="button" id="btn-eval-bulk-delete" class="btn btn-sm btn-danger rounded-3 px-3.5 py-1.5 fw-bold shadow-sm d-flex align-items-center gap-2">
+                <i class="bi bi-trash3-fill"></i>
+                <span>Eliminar Evaluaciones Marcadas</span>
+            </button>
+        </div>
+    </div>
+
     <!-- Tabla Bento de Evaluaciones con Contenedor Scrolleable Propio -->
     <div class="bento-card no-hover" style="padding: 1.5rem;">
         <div class="evals-table-scroll-container">
             <table class="clients-table">
                 <thead>
                     <tr>
+                        <th style="width: 44px; text-align: center; vertical-align: middle;">
+                            <input type="checkbox" id="eval-select-all" class="form-check-input eval-checkbox shadow-none cursor-pointer" style="width: 18px; height: 18px; cursor: pointer;" title="Seleccionar/Deseleccionar todas en esta página">
+                        </th>
                         <th>Código</th>
                         <th>Fecha / Hora</th>
                         <th>IDP / Paciente</th>
@@ -61,7 +86,7 @@
                     </tr>
                 </thead>
                 <tbody id="evaluaciones-tbody">
-                    <tr><td colspan="8" style="text-align: center; padding: 3rem; color: #5a6f8c;">Cargando historial de evaluaciones...</td></tr>
+                    <tr><td colspan="9" style="text-align: center; padding: 3rem; color: #5a6f8c;">Cargando historial de evaluaciones...</td></tr>
                 </tbody>
             </table>
         </div>
