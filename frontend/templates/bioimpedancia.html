@@ -436,25 +436,66 @@
 
                         <!-- CARD 8: Percentiles -->
                         <section class="bento-card bio-glass card-percentiles" style="grid-area: percentiles;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Percentiles (vs edad)</div>
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Percentiles & Curvas Poblacionales (vs edad)</div>
                             <div id="pct-na" class="card-na">Introduce SMM (y/o ángulo medido) para estimar percentiles.</div>
                             <div id="pct-grid" style="display:none;">
-                                <div class="pct-row">
-                                    <div class="pct-head"><span class="pct-label">Ángulo de Fase</span><span class="pct-val" id="ph-pct-val">--</span></div>
-                                    <div class="bar-container"><div class="bar-fill pct-bar" id="ph-pct-bar" style="width:0%"></div></div>
-                                </div>
-                                <div class="pct-row">
-                                    <div class="pct-head"><span class="pct-label">Masa Muscular (SMM)</span><span class="pct-val" id="smm-pct-val">--</span></div>
-                                    <div class="bar-container"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
-                                </div>
-                                <div class="pct-curves-grid">
-                                    <div class="smm-curve-wrap">
-                                        <span class="ci-label" style="font-size:0.78rem; font-weight:600; color:#5a6f8c; margin-bottom: 0.35rem; display:block;">Curva de referencia SMM × edad</span>
-                                        <canvas id="smmCurveCanvas" width="450" height="180" style="width:100%; height:auto; border-radius: 12px;"></canvas>
+                                <div class="pct-summary-row row g-3 mb-3">
+                                    <div class="col-12 col-md-6">
+                                        <div class="pct-card-box p-3 rounded-3 border bg-white shadow-xs">
+                                            <div class="pct-head d-flex justify-content-between align-items-center mb-2">
+                                                <span class="pct-label fw-bold text-navy"><i class="bi bi-activity text-info me-1"></i> Ángulo de Fase</span>
+                                                <span class="pct-val fs-5 fw-bold text-primary" id="ph-pct-val">--</span>
+                                            </div>
+                                            <div class="bar-container" style="height: 8px;"><div class="bar-fill pct-bar" id="ph-pct-bar" style="width:0%"></div></div>
+                                            <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.72rem;">
+                                                <span>P5 (Bajo)</span>
+                                                <span>P50 (Medio)</span>
+                                                <span>P95 (Alto)</span>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div class="smm-curve-wrap">
-                                        <span class="ci-label" style="font-size:0.78rem; font-weight:600; color:#5a6f8c; margin-bottom: 0.35rem; display:block;">Curva de referencia PhA × edad</span>
-                                        <canvas id="phaCurveCanvas" width="450" height="180" style="width:100%; height:auto; border-radius: 12px;"></canvas>
+                                    <div class="col-12 col-md-6">
+                                        <div class="pct-card-box p-3 rounded-3 border bg-white shadow-xs">
+                                            <div class="pct-head d-flex justify-content-between align-items-center mb-2">
+                                                <span class="pct-label fw-bold text-navy"><i class="bi bi-heart-pulse text-success me-1"></i> Masa Muscular (SMM)</span>
+                                                <span class="pct-val fs-5 fw-bold text-success" id="smm-pct-val">--</span>
+                                            </div>
+                                            <div class="bar-container" style="height: 8px;"><div class="bar-fill pct-bar" id="smm-pct-bar" style="width:0%"></div></div>
+                                            <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.72rem;">
+                                                <span>P5 (Bajo)</span>
+                                                <span>P50 (Medio)</span>
+                                                <span>P95 (Alto)</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="pct-curves-grid row g-3">
+                                    <div class="col-12 col-lg-6">
+                                        <div class="smm-curve-card p-3 rounded-3 border bg-white shadow-xs h-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="ci-label fw-bold text-navy" style="font-size: 0.82rem;">
+                                                    <i class="bi bi-graph-up text-primary me-1"></i> Curva de referencia SMM × edad
+                                                </span>
+                                                <span class="badge bg-light text-secondary border small" style="font-size: 0.7rem;">Masa Muscular</span>
+                                            </div>
+                                            <div class="curve-canvas-wrapper d-flex justify-content-center">
+                                                <canvas id="smmCurveCanvas" width="400" height="155" style="max-width: 100%; height: auto; border-radius: 8px;"></canvas>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-lg-6">
+                                        <div class="smm-curve-card p-3 rounded-3 border bg-white shadow-xs h-100">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="ci-label fw-bold text-navy" style="font-size: 0.82rem;">
+                                                    <i class="bi bi-graph-up text-info me-1"></i> Curva de referencia PhA × edad
+                                                </span>
+                                                <span class="badge bg-light text-secondary border small" style="font-size: 0.7rem;">Ángulo de Fase</span>
+                                            </div>
+                                            <div class="curve-canvas-wrapper d-flex justify-content-center">
+                                                <canvas id="phaCurveCanvas" width="400" height="155" style="max-width: 100%; height: auto; border-radius: 8px;"></canvas>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

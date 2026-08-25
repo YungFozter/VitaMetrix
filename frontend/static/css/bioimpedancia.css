@@ -358,12 +358,46 @@
     padding: 0.5rem 0.8rem; border-radius: 12px; font-size: 0.8rem; font-weight: 600;
 }
 
-/* CARD 8: PERCENTILES */
-.pct-row { margin-bottom: 0.9rem; }
-.pct-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.4rem; }
-.pct-label { font-size: 0.85rem; font-weight: 500; color: #3a4a62; }
-.pct-val { font-size: 1.3rem; font-weight: 700; color: #1A2A4A; }
-.pct-bar { background: linear-gradient(90deg, #2d7a4a, #cd7f32, #b94a4a); }
+/* CARD 8: PERCENTILES & CURVAS POBLACIONALES */
+.pct-card-box {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    transition: all 0.2s ease;
+}
+
+.pct-card-box:hover {
+    border-color: rgba(0, 180, 216, 0.3);
+    box-shadow: 0 4px 15px -3px rgba(0, 180, 216, 0.08);
+}
+
+.pct-bar {
+    background: linear-gradient(90deg, #2d7a4a 0%, #cd7f32 50%, #b94a4a 100%);
+}
+
+.smm-curve-card {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid rgba(226, 232, 240, 0.9);
+    border-radius: 14px;
+    transition: all 0.2s ease;
+}
+
+.smm-curve-card:hover {
+    border-color: rgba(0, 180, 216, 0.3);
+    box-shadow: 0 6px 20px -4px rgba(0, 180, 216, 0.1);
+}
+
+.curve-canvas-wrapper {
+    width: 100%;
+    max-height: 160px;
+    overflow: hidden;
+}
+
+.curve-canvas-wrapper canvas {
+    max-height: 155px;
+    width: 100%;
+    height: auto;
+    display: block;
+}
 
 /* CARD 9: ANÁLISIS HÍDRICO */
 #water-grid { display: flex; flex-direction: column; gap: 0.6rem; }

@@ -752,28 +752,40 @@ function drawSMMCurve(curves, patientAge, patientSMM) {
     const allVals = [].concat(curves.p5, curves.p25, curves.p50, curves.p75, curves.p95, [patientSMM || 0]);
     const vMin = Math.min(...allVals) - 3, vMax = Math.max(...allVals) + 3;
 
-    const padL = 30, padR = 12, padT = 12, padB = 22;
+    const padL = 34, padR = 14, padT = 14, padB = 22;
     const plotW = w - padL - padR, plotH = h - padT - padB;
     const xOf = (age) => padL + ((age - aMin) / (aMax - aMin || 1)) * plotW;
     const yOf = (val) => padT + plotH - ((val - vMin) / (vMax - vMin || 1)) * plotH;
 
-    // Ejes
-    ctx.strokeStyle = '#c0c8d8';
+    // Grid suave
+    ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + plotH / 2); ctx.lineTo(padL + plotW, padT + plotH / 2);
+    ctx.moveTo(padL + plotW / 2, padT); ctx.lineTo(padL + plotW / 2, padT + plotH);
+    ctx.stroke();
+
+    // Ejes
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); 
+    ctx.moveTo(padL, padT); 
+    ctx.lineTo(padL, padT + plotH); 
+    ctx.lineTo(padL + plotW, padT + plotH); 
+    ctx.stroke();
 
     // Curvas de referencia (P5, P25, P50, P75, P95)
     const series = [
-        { key: 'p5', color: 'rgba(185,74,74,0.5)' },
-        { key: 'p25', color: 'rgba(205,127,50,0.7)' },
-        { key: 'p50', color: '#1A2A4A' },
-        { key: 'p75', color: 'rgba(205,127,50,0.7)' },
-        { key: 'p95', color: 'rgba(185,74,74,0.5)' }
+        { key: 'p5', color: 'rgba(239, 68, 68, 0.55)', width: 1.2, dash: [3, 3] },
+        { key: 'p25', color: 'rgba(245, 158, 11, 0.65)', width: 1.2, dash: [4, 3] },
+        { key: 'p50', color: '#1A2A4A', width: 2.2, dash: [] },
+        { key: 'p75', color: 'rgba(245, 158, 11, 0.65)', width: 1.2, dash: [4, 3] },
+        { key: 'p95', color: 'rgba(239, 68, 68, 0.55)', width: 1.2, dash: [3, 3] }
     ];
     series.forEach(s => {
         ctx.strokeStyle = s.color;
-        ctx.lineWidth = (s.key === 'p50') ? 2.2 : 1.3;
-        ctx.setLineDash(s.key === 'p50' ? [] : [4, 3]);
+        ctx.lineWidth = s.width;
+        ctx.setLineDash(s.dash);
         ctx.beginPath();
         ages.forEach((age, i) => {
             const x = xOf(age), y = yOf(curves[s.key][i]);
@@ -786,25 +798,31 @@ function drawSMMCurve(curves, patientAge, patientSMM) {
     // Punto del paciente
     if (patientSMM && patientAge >= aMin && patientAge <= aMax) {
         const px = xOf(patientAge), py = yOf(patientSMM);
+        // Halo
         ctx.beginPath();
-        ctx.arc(px, py, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#2d7a4a';
-        ctx.shadowColor = 'rgba(45,122,74,0.5)';
-        ctx.shadowBlur = 8;
+        ctx.arc(px, py, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(16, 185, 129, 0.2)';
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(px, py, 5.5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#10b981';
+        ctx.shadowColor = 'rgba(16, 185, 129, 0.6)';
+        ctx.shadowBlur = 6;
         ctx.fill();
         ctx.shadowBlur = 0;
-        ctx.strokeStyle = 'white';
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
     }
 
     // Etiquetas
-    ctx.fillStyle = '#5a6a82';
-    ctx.font = '9px Inter';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Inter, sans-serif';
     ctx.fillText(aMin + 'a', padL, h - 6);
-    ctx.fillText(aMax + 'a', padL + plotW - 18, h - 6);
-    ctx.fillText(Math.round(vMax), 4, padT + 6);
-    ctx.fillText(Math.round(vMin), 4, padT + plotH);
+    ctx.fillText(aMax + 'a', padL + plotW - 20, h - 6);
+    ctx.fillText(Math.round(vMax) + 'kg', 4, padT + 6);
+    ctx.fillText(Math.round(vMin) + 'kg', 4, padT + plotH);
 }
 
 // --- 4c. VELOCÍMETRO PAL (Módulo 7) ---
@@ -1721,26 +1739,39 @@ function drawPhACurve(curves, patientAge, patientPhA) {
     const allVals = [].concat(curves.p5, curves.p25, curves.p50, curves.p75, curves.p95, [patientPhA || 0]);
     const vMin = Math.min(...allVals) - 1, vMax = Math.max(...allVals) + 1;
 
-    const padL = 30, padR = 12, padT = 12, padB = 22;
+    const padL = 34, padR = 14, padT = 14, padB = 22;
     const plotW = w - padL - padR, plotH = h - padT - padB;
     const xOf = (age) => padL + ((age - aMin) / (aMax - aMin || 1)) * plotW;
     const yOf = (val) => padT + plotH - ((val - vMin) / (vMax - vMin || 1)) * plotH;
 
-    ctx.strokeStyle = '#c0c8d8';
+    // Grid suave
+    ctx.strokeStyle = 'rgba(226, 232, 240, 0.7)';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(padL, padT); ctx.lineTo(padL, padT + plotH); ctx.lineTo(padL + plotW, padT + plotH); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + plotH / 2); ctx.lineTo(padL + plotW, padT + plotH / 2);
+    ctx.moveTo(padL + plotW / 2, padT); ctx.lineTo(padL + plotW / 2, padT + plotH);
+    ctx.stroke();
+
+    // Ejes
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath(); 
+    ctx.moveTo(padL, padT); 
+    ctx.lineTo(padL, padT + plotH); 
+    ctx.lineTo(padL + plotW, padT + plotH); 
+    ctx.stroke();
 
     const series = [
-        { key: 'p5', color: 'rgba(185,74,74,0.5)' },
-        { key: 'p25', color: 'rgba(205,127,50,0.7)' },
-        { key: 'p50', color: '#1A2A4A' },
-        { key: 'p75', color: 'rgba(205,127,50,0.7)' },
-        { key: 'p95', color: 'rgba(185,74,74,0.5)' }
+        { key: 'p5', color: 'rgba(239, 68, 68, 0.55)', width: 1.2, dash: [3, 3] },
+        { key: 'p25', color: 'rgba(245, 158, 11, 0.65)', width: 1.2, dash: [4, 3] },
+        { key: 'p50', color: '#1A2A4A', width: 2.2, dash: [] },
+        { key: 'p75', color: 'rgba(245, 158, 11, 0.65)', width: 1.2, dash: [4, 3] },
+        { key: 'p95', color: 'rgba(239, 68, 68, 0.55)', width: 1.2, dash: [3, 3] }
     ];
     series.forEach(s => {
         ctx.strokeStyle = s.color;
-        ctx.lineWidth = (s.key === 'p50') ? 2.2 : 1.3;
-        ctx.setLineDash(s.key === 'p50' ? [] : [4, 3]);
+        ctx.lineWidth = s.width;
+        ctx.setLineDash(s.dash);
         ctx.beginPath();
         ages.forEach((age, i) => {
             const x = xOf(age), y = yOf(curves[s.key][i]);
@@ -1752,14 +1783,31 @@ function drawPhACurve(curves, patientAge, patientPhA) {
 
     if (patientPhA && patientAge >= aMin && patientAge <= aMax) {
         const px = xOf(patientAge), py = yOf(patientPhA);
+        // Halo
         ctx.beginPath();
-        ctx.arc(px, py, 6, 0, 2 * Math.PI);
-        ctx.fillStyle = '#2d7a4a';
+        ctx.arc(px, py, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = 'rgba(0, 180, 216, 0.2)';
         ctx.fill();
-        ctx.strokeStyle = '#fff';
+
+        ctx.beginPath();
+        ctx.arc(px, py, 5.5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#00b4d8';
+        ctx.shadowColor = 'rgba(0, 180, 216, 0.6)';
+        ctx.shadowBlur = 6;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+        ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
         ctx.stroke();
     }
+
+    // Etiquetas
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText(aMin + 'a', padL, h - 6);
+    ctx.fillText(aMax + 'a', padL + plotW - 20, h - 6);
+    ctx.fillText(Math.round(vMax * 10) / 10 + '°', 4, padT + 6);
+    ctx.fillText(Math.round(vMin * 10) / 10 + '°', 4, padT + plotH);
 }
 
 // --- 4d. GRÁFICO BCC (SCATTER PLOT MÚSCULO VS GRASA) ---
