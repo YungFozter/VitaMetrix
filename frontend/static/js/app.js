@@ -1854,16 +1854,16 @@ async function openEvaluationDetailModal(evalId) {
         if (inputsGrid && data.raw_inputs) {
             const inp = data.raw_inputs;
             inputsGrid.innerHTML = `
-                <div><strong>Peso:</strong> ${inp.weight || '--'} kg</div>
-                <div><strong>Altura:</strong> ${inp.height || '--'} cm</div>
-                <div><strong>Edad:</strong> ${inp.age || '--'} años</div>
-                <div><strong>Género:</strong> ${inp.gender === 'female' ? 'Femenino' : 'Masculino'}</div>
-                <div><strong>Resistencia (R):</strong> ${inp.resistance || '--'} Ω</div>
-                <div><strong>Reactancia (Xc):</strong> ${inp.reactance || '--'} Ω</div>
-                <div><strong>Masa Muscular (SMM):</strong> ${inp.smm ? inp.smm + ' kg' : 'N/A'}</div>
-                <div><strong>Masa Grasa:</strong> ${inp.fat_mass ? inp.fat_mass + ' kg' : 'N/A'}</div>
-                <div><strong>Grasa Visceral:</strong> ${inp.visceral_fat ? inp.visceral_fat + ' L' : 'N/A'}</div>
-                <div><strong>PAL (Actividad):</strong> ${inp.pal || '--'}</div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Peso:</span><strong class="text-navy">${inp.weight || '--'} kg</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Altura:</span><strong class="text-navy">${inp.height || '--'} cm</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Edad:</span><strong class="text-navy">${inp.age || '--'} años</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Género:</span><strong class="text-navy">${inp.gender === 'female' ? 'Femenino' : 'Masculino'}</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Resistencia (R):</span><strong class="text-navy">${inp.resistance || '--'} Ω</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Reactancia (Xc):</span><strong class="text-navy">${inp.reactance || '--'} Ω</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Masa Muscular:</span><strong class="text-success">${inp.smm ? inp.smm + ' kg' : 'N/A'}</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Masa Grasa:</span><strong class="text-danger">${inp.fat_mass ? inp.fat_mass + ' kg' : 'N/A'}</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">Grasa Visceral:</span><strong class="text-navy">${inp.visceral_fat ? inp.visceral_fat + ' L' : 'N/A'}</strong></div>
+                <div class="p-2 rounded-3 bg-white border d-flex justify-content-between align-items-center shadow-2xs"><span class="text-muted">PAL (Actividad):</span><strong class="text-navy">${inp.pal || '--'}</strong></div>
             `;
         }
 

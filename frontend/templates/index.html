@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=72">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=73">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -579,6 +579,91 @@
         </div>
     </div>
 
+    <!-- MODAL DE DETALLE COMPLETO DE EVALUACIÓN CLÍNICA (Centrado en viewport) -->
+    <div id="eval-detail-modal" class="modal-overlay hidden" style="z-index: 9999;">
+        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden d-flex flex-column" style="max-width: 900px; width: 95%; max-height: 90vh; text-align: left;">
+            <!-- Header Modal -->
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between flex-shrink-0" style="background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%);">
+                <div>
+                    <span class="badge rounded-pill fw-bold text-uppercase px-2.5 py-1 mb-1.5" style="background: rgba(0, 180, 216, 0.12); color: #00b4d8; font-size: 0.75rem; letter-spacing: 0.5px;">
+                        <i class="bi bi-file-earmark-medical me-1"></i> EVALUACIÓN MÉDICA
+                    </span>
+                    <h3 id="eval-modal-name" class="display-font fw-bold text-navy fs-4 m-0">Paciente</h3>
+                    <div style="font-size: 0.82rem; color: #5a6f8c;" id="eval-modal-meta" class="mt-0.5">IDP: -- | Fecha: --</div>
+                </div>
+                <button type="button" class="btn-close shadow-none" id="eval-modal-close" aria-label="Cerrar modal"></button>
+            </div>
+
+            <!-- Body Modal con Scroll -->
+            <div id="eval-modal-body" class="p-4 d-flex flex-column gap-3.5 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+                <!-- Resumen de Métricas Clave -->
+                <div class="row g-3">
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Global TRU Score</span>
+                            <div id="eval-modal-score" class="display-font fw-extrabold text-navy my-1" style="font-size: 2.2rem; line-height: 1;">0</div>
+                            <div id="eval-modal-rank" class="badge rounded-pill fw-bold mx-auto px-3 py-1" style="font-size: 0.75rem; background: rgba(45, 122, 74, 0.12); color: #2d7a4a;">--</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Ángulo de Fase</span>
+                            <div id="eval-modal-phase" class="display-font fw-extrabold text-info my-1" style="font-size: 2.2rem; line-height: 1;">0.0°</div>
+                            <div id="eval-modal-cell" class="small fw-semibold text-secondary" style="font-size: 0.76rem;">--</div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Gasto Calórico TEE</span>
+                            <div id="eval-modal-tee" class="display-font fw-extrabold text-success my-1" style="font-size: 2.2rem; line-height: 1; color: #2d7a4a !important;">0</div>
+                            <div class="text-muted small" style="font-size: 0.76rem;">kcal/día</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Parámetros de Entrada -->
+                <div class="p-3.5 rounded-4 border bg-light bg-opacity-50" style="border-color: #e2e8f0;">
+                    <h5 class="fw-bold text-navy mb-2.5 d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+                        <i class="bi bi-sliders text-primary"></i>
+                        <span>Parámetros Físicos & Bioimpedancia</span>
+                    </h5>
+                    <div id="eval-modal-inputs-grid" class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); font-size: 0.84rem;">
+                        <!-- Llenado dinámico por JS -->
+                    </div>
+                </div>
+
+                <!-- Interpretación Clínica -->
+                <div class="p-3.5 rounded-4 border bg-white shadow-xs" style="border-color: #e2e8f0;">
+                    <h5 class="fw-bold text-navy mb-2 d-flex align-items-center gap-2" style="font-size: 0.9rem;">
+                        <i class="bi bi-clipboard2-pulse text-info"></i>
+                        <span>Diagnóstico & Hallazgos Clínicos</span>
+                    </h5>
+                    <div id="eval-modal-clinical" class="text-secondary small" style="font-size: 0.88rem; line-height: 1.55;">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer con Botones Estilizados del Sistema -->
+            <div class="p-3.5 px-4 bg-light bg-opacity-75 border-top d-flex flex-wrap align-items-center justify-content-between gap-2.5 flex-shrink-0">
+                <button type="button" id="btn-modal-edit-client" class="btn btn-outline-primary px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 text-primary" style="font-size: 0.88rem;">
+                    <i class="bi bi-pencil-square"></i>
+                    <span>Editar Datos Cliente</span>
+                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-modal-print-eval" class="btn btn-light border px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-2 text-secondary shadow-2xs" onclick="window.print()" style="font-size: 0.88rem;">
+                        <i class="bi bi-printer-fill text-muted"></i>
+                        <span>Imprimir Ficha</span>
+                    </button>
+                    <button type="button" id="btn-modal-open-calc" class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-2 shadow-sm" style="font-size: 0.88rem;">
+                        <i class="bi bi-lightning-charge-fill text-warning"></i>
+                        <span>Recargar en Calculadora</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Leaflet JS (mapa interactivo GPS consultorio) -->
@@ -586,6 +671,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=72"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=73"></script>
 </body>
 </html>
