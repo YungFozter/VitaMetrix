@@ -589,12 +589,15 @@ def add_client():
             elif code > new_code:
                 break
                 
+        if not idp or idp == "Auto-asignado":
+            idp = str(1000000 + new_code)
+
         new_client = {
             "code": new_code,
             "name": name,
             "phone": phone,
             "email": email,
-            "idp": idp or None,
+            "idp": idp,
             "age": age,
             "gender": gender,
             "height": height

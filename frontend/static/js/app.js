@@ -1441,6 +1441,13 @@ function initClients() {
     if (btnCancel) {
         btnCancel.addEventListener('click', () => {
             form.reset();
+            const phoneInput = document.getElementById('new-client-phone');
+            if (phoneInput) phoneInput.value = '+591 ';
+            const idpInput = document.getElementById('new-client-idp');
+            if (idpInput) {
+                idpInput.value = '';
+                idpInput.placeholder = 'Auto-asignado';
+            }
             editingClientId = null;
             const btnSaveText = document.getElementById('btn-save-client-text');
             if (btnSaveText) btnSaveText.textContent = 'Guardar Paciente';
@@ -1757,7 +1764,7 @@ function editClient(client) {
         document.getElementById('new-client-gender').value = g;
     }
     if (document.getElementById('new-client-height')) document.getElementById('new-client-height').value = client.height || '';
-    if (document.getElementById('new-client-phone')) document.getElementById('new-client-phone').value = client.phone || '';
+    if (document.getElementById('new-client-phone')) document.getElementById('new-client-phone').value = client.phone || '+591 ';
     if (document.getElementById('new-client-email')) document.getElementById('new-client-email').value = client.email || '';
 
     const btnSaveText = document.getElementById('btn-save-client-text');
@@ -1767,13 +1774,20 @@ function editClient(client) {
     if (btnCancel) btnCancel.classList.remove('hidden-view');
 
     const titleEl = document.getElementById('client-form-title');
-    if (titleEl) titleEl.textContent = 'Editar Paciente';
+    if (titleEl) titleEl.textContent = `Editar Paciente (${client.name})`;
     
     const iconEl = document.getElementById('client-form-icon');
     if (iconEl) iconEl.innerHTML = '<i class="bi bi-pencil-square"></i>';
 
     const badgeEl = document.getElementById('client-editing-badge');
     if (badgeEl) badgeEl.style.display = 'inline-block';
+
+    const form = document.getElementById('client-form');
+    if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const nameInput = document.getElementById('new-client-name');
+        if (nameInput) nameInput.focus();
+    }
 }
 
 // --- 4. EVALUACIONES (HISTORIAL Y DETALLE) ---

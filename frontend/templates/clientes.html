@@ -1,115 +1,116 @@
 <!-- VIEW 3: DIRECTORIO DE CLIENTES / PACIENTES -->
 <div id="clientes-view" class="view hidden-view">
-    <div class="row g-4">
-        <!-- Formulario de Nuevo/Editar Paciente (5 columnas en pantallas grandes) -->
-        <div class="col-12 col-xl-5">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
-                <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="fs-4 text-primary" id="client-form-icon"><i class="bi bi-person-plus-fill"></i></span>
-                        <div>
-                            <h3 class="display-font text-navy fw-bold fs-5 m-0" id="client-form-title">Registrar Paciente</h3>
-                            <p class="text-muted small m-0">Ficha clínica y datos de contacto</p>
-                        </div>
+    <div class="d-flex flex-column gap-4">
+
+        <!-- 1. Formulario Horizontal de Nuevo/Editar Paciente (Full-width arriba) -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4 text-primary" id="client-form-icon"><i class="bi bi-person-plus-fill"></i></span>
+                    <div>
+                        <h3 class="display-font text-navy fw-bold fs-5 m-0" id="client-form-title">Registrar Paciente</h3>
+                        <p class="text-muted small m-0">Ficha clínica de bioimpedancia y datos de contacto</p>
                     </div>
-                    <span class="badge bg-light text-secondary border px-2.5 py-1.5 rounded-pill" id="client-editing-badge" style="display: none;">
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-pill small" id="client-editing-badge" style="display: none;">
                         Modo Edición
                     </span>
+                    <button type="button" id="btn-cancel-client" class="btn btn-sm btn-light border px-3 py-1.5 rounded-3 text-secondary fw-semibold hidden-view" title="Cancelar modo edición">
+                        <i class="bi bi-x-lg me-1"></i> Cancelar Edición
+                    </button>
                 </div>
-                <form id="client-form" class="row g-3">
-                    <div class="col-12 col-sm-5">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">IDP (Paciente)</label>
-                        <input type="text" id="new-client-idp" class="form-control shadow-none" placeholder="Ej: 1234567">
-                    </div>
-                    <div class="col-12 col-sm-7">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre Completo *</label>
-                        <input type="text" id="new-client-name" class="form-control shadow-none fw-semibold" required placeholder="Ej: Perez, Juan">
-                    </div>
-                    <div class="col-6 col-sm-4">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Edad (años)</label>
-                        <input type="number" id="new-client-age" min="1" max="120" class="form-control shadow-none" placeholder="Ej: 30">
-                    </div>
-                    <div class="col-6 col-sm-4">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Género</label>
-                        <select id="new-client-gender" class="form-select shadow-none">
-                            <option value="Masculino">Masculino</option>
-                            <option value="Femenino">Femenino</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-sm-4">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Altura (cm)</label>
-                        <input type="number" step="0.5" id="new-client-height" min="50" max="250" class="form-control shadow-none" placeholder="Ej: 170">
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Teléfono (WhatsApp)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted"><i class="bi bi-whatsapp"></i></span>
-                            <input type="tel" id="new-client-phone" class="form-control shadow-none" placeholder="Ej: +5491112345678">
-                        </div>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Correo Electrónico</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
-                            <input type="email" id="new-client-email" class="form-control shadow-none" placeholder="Ej: juan@email.com">
-                        </div>
-                    </div>
-                    <div class="col-12 mt-3 pt-2 border-top d-flex gap-2">
-                        <button type="submit" id="btn-save-client" class="btn btn-primary flex-grow-1 py-2.5 rounded-3 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
-                            <i class="bi bi-floppy-fill"></i>
-                            <span id="btn-save-client-text">Guardar Paciente</span>
-                        </button>
-                        <button type="button" id="btn-cancel-client" class="btn btn-light border px-3 py-2.5 rounded-3 text-secondary fw-semibold hidden-view" title="Cancelar modo edición">
-                            Cancelar
-                        </button>
-                    </div>
-                </form>
             </div>
-        </div>
 
-        <!-- Lista y Tabla de Pacientes (7 columnas en pantallas grandes) -->
-        <div class="col-12 col-xl-7">
-            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100" style="min-height: 520px;">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="fs-4 text-info"><i class="bi bi-folder-fill"></i></span>
-                        <div>
-                            <h3 class="display-font text-navy fw-bold fs-5 m-0">Directorio General de Pacientes</h3>
-                            <p class="text-muted small m-0">Historial de pacientes y evaluaciones vinculadas</p>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge bg-light text-dark border px-3 py-2 fw-semibold" id="clients-total-badge">
-                            Total Registros: <span id="clients-total-count">0</span>
-                        </span>
-                    </div>
+            <form id="client-form" class="row g-3 align-items-end">
+                <div class="col-12 col-sm-6 col-md-3 col-xl-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">IDP (Auto)</label>
+                    <input type="text" id="new-client-idp" class="form-control shadow-none bg-light text-muted font-monospace" placeholder="Auto-asignado" readonly title="El IDP es asignado automáticamente por el sistema">
                 </div>
-
-                <!-- Buscador de pacientes -->
-                <div class="mb-3">
+                <div class="col-12 col-sm-6 col-md-9 col-xl-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre Completo *</label>
+                    <input type="text" id="new-client-name" class="form-control shadow-none fw-semibold" required placeholder="Ej: Perez, Juan">
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-1">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Edad</label>
+                    <input type="number" id="new-client-age" min="1" max="120" class="form-control shadow-none" placeholder="30">
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-2">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Género</label>
+                    <select id="new-client-gender" class="form-select shadow-none">
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                    </select>
+                </div>
+                <div class="col-6 col-sm-4 col-md-3 col-xl-1">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Altura (cm)</label>
+                    <input type="number" step="0.5" id="new-client-height" min="50" max="250" class="form-control shadow-none" placeholder="170">
+                </div>
+                <div class="col-6 col-sm-6 col-md-6 col-xl-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Teléfono (WhatsApp)</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                        <input type="text" id="clients-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar paciente por nombre, IDP o teléfono...">
+                        <span class="input-group-text bg-light text-success"><i class="bi bi-whatsapp"></i></span>
+                        <input type="tel" id="new-client-phone" class="form-control shadow-none font-monospace" placeholder="+591 XXXXXXXX" value="+591 ">
                     </div>
                 </div>
+                <div class="col-12 col-sm-6 col-md-6 col-xl-3">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Correo Electrónico</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-muted"><i class="bi bi-envelope"></i></span>
+                        <input type="email" id="new-client-email" class="form-control shadow-none" placeholder="juan@email.com">
+                    </div>
+                </div>
+                <div class="col-12 col-md-3 col-xl-2">
+                    <button type="submit" id="btn-save-client" class="btn btn-primary w-100 py-2 rounded-3 fw-semibold shadow-sm d-inline-flex align-items-center justify-content-center gap-2">
+                        <i class="bi bi-floppy-fill"></i>
+                        <span id="btn-save-client-text">Guardar Paciente</span>
+                    </button>
+                </div>
+            </form>
+        </div>
 
-                <div class="table-responsive">
-                    <table class="table table-hover align-middle clients-table mb-0">
-                        <thead class="table-light">
-                            <tr>
-                                <th>CÓDIGO / IDP</th>
-                                <th>PACIENTE</th>
-                                <th>CONTACTO</th>
-                                <th>ÚLTIMA EVAL.</th>
-                                <th class="text-end">ACCIONES</th>
-                            </tr>
-                        </thead>
-                        <tbody id="clients-tbody">
-                            <tr><td colspan="5" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>
-                        </tbody>
-                    </table>
+        <!-- 2. Tabla Espaciosa de Directorio General de Pacientes (Full-width abajo) -->
+        <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4 text-info"><i class="bi bi-folder-fill"></i></span>
+                    <div>
+                        <h3 class="display-font text-navy fw-bold fs-5 m-0">Directorio General de Pacientes</h3>
+                        <p class="text-muted small m-0">Historial clínico y evaluaciones vinculadas</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border px-3 py-2 fw-semibold" id="clients-total-badge">
+                        Total Registros: <span id="clients-total-count">0</span>
+                    </span>
                 </div>
             </div>
+
+            <!-- Buscador de pacientes -->
+            <div class="mb-3">
+                <div class="input-group" style="max-width: 480px;">
+                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" id="clients-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre, IDP, código o teléfono...">
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle clients-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>CÓDIGO / IDP</th>
+                            <th>PACIENTE</th>
+                            <th>CONTACTO</th>
+                            <th>ÚLTIMA EVALUACIÓN</th>
+                            <th class="text-end">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-tbody">
+                        <tr><td colspan="5" class="text-center py-5 text-muted">Cargando pacientes...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
     </div>
 </div>
