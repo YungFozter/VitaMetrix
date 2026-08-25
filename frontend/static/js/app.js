@@ -4954,10 +4954,8 @@ function initStockFormCustomDropdowns() {
     const dropUnit = document.getElementById('stock-unit-dropdown');
     const btnClearUnit = document.getElementById('btn-clear-unit');
 
-    const setupDropdown = (input, dropdown, btnClear, getItemsFunc, familyList = null) => {
+    const setupDropdown = (input, dropdown, btnClear, getItemsFunc) => {
         if (!input || !dropdown) return;
-
-        let activeFamilyFilter = 'all';
 
         const updateClearBtnVisibility = () => {
             if (!btnClear) return;
@@ -4985,37 +4983,11 @@ function initStockFormCustomDropdowns() {
             const items = getItemsFunc();
             const normFilter = normalizeText(filterText);
 
-            let filtered = items;
-            if (familyList && activeFamilyFilter !== 'all') {
-                filtered = filtered.filter(it => (it.tag || '').toLowerCase() === activeFamilyFilter.toLowerCase());
-            }
-
-            if (normFilter) {
-                filtered = filtered.filter(it => normalizeText(it.name || it).includes(normFilter));
-            }
+            const filtered = normFilter
+                ? items.filter(it => normalizeText(it.name || it).includes(normFilter))
+                : items;
 
             dropdown.replaceChildren();
-
-            // Cabecera con Chips de Filtro rápido de Familias (si aplica)
-            if (familyList && familyList.length > 0) {
-                const headerDiv = document.createElement('div');
-                headerDiv.className = 'd-flex align-items-center gap-1 p-1.5 border-bottom bg-light rounded-2 mb-1 sticky-top flex-wrap';
-                headerDiv.style.fontSize = '0.72rem';
-
-                familyList.forEach(f => {
-                    const btn = document.createElement('button');
-                    btn.type = 'button';
-                    btn.className = `btn btn-xs py-0.5 px-1.5 rounded ${activeFamilyFilter === f ? 'btn-primary fw-bold' : 'btn-light border text-secondary'}`;
-                    btn.textContent = f === 'all' ? 'Todos' : f;
-                    btn.addEventListener('mousedown', (e) => {
-                        e.preventDefault();
-                        activeFamilyFilter = f;
-                        renderItems(input.value);
-                    });
-                    headerDiv.appendChild(btn);
-                });
-                dropdown.appendChild(headerDiv);
-            }
 
             if (filtered.length === 0) {
                 const noResult = document.createElement('div');
@@ -5088,20 +5060,39 @@ function initStockFormCustomDropdowns() {
             });
         }
         return Array.from(knownCats.values());
-    }, null);
+    });
 
-    setupDropdown(inputUnit, dropUnit, btnClearUnit, () => [
-        { name: "Pack", tag: "Conteo" },
-        { name: "Unidad (u)", tag: "Conteo" },
-        { name: "Frasco / Bote", tag: "Conteo" },
-        { name: "Caja", tag: "Conteo" },
-        { name: "Tabletas", tag: "Posología" },
-        { name: "Cápsulas", tag: "Posología" },
-        { name: "Sobres", tag: "Posología" },
-        { name: "Ampollas", tag: "Posología" },
-        { name: "Mililitros (ml)", tag: "Volumen" },
-        { name: "Litros (L)", tag: "Volumen" },
-        { name: "Gramos (gr)", tag: "Peso" },
-        { name: "Kilogramos (kg)", tag: "Peso" }
-    ], ['all', 'Conteo', 'Posología', 'Volumen', 'Peso']);
+    setupDropdown(inputUnit, dropUnit, btnClearUnit, () => {
+        const defaultUnits = [
+            { name: "Pack", tag: "Conteo" },
+            { name: "Unidad (u)", tag: "Conteo" },
+            { name: "Frasco / Bote", tag: "Conteo" },
+            { name: "Caja", tag: "Conteo" },
+            { name: "Tabletas", tag: "Posología" },
+            { name: "Cápsulas", tag: "Posología" },
+            { name: "Sobres", tag: "Posología" },
+            { name: "Ampollas", tag: "Posología" },
+            { name: "Mililitros (ml)", tag: "Volumen" },
+            { name: "Litros (L)", tag: "Volumen" },
+            { name: "Gramos (gr)", tag: "Peso" },
+            { name: "Kilogramos (kg)", tag: "Peso" }
+        ];
+        const knownUnits = new Map(defaultUnits.map(u => [u.name.toLowerCase(), u]));
+
+        if (stockTaxonomiesData?.units) {
+            stockTaxonomiesData.units.forEach(u => {
+                if (u.name && !knownUnits.has(u.name.toLowerCase())) {
+                    knownUnits.set(u.name.toLowerCase(), { name: u.name, tag: u.category || 'Otras' });
+                }
+            });
+        }
+        if (Array.isArray(allStockItems)) {
+            allStockItems.forEach(i => {
+                if (i.unit && !knownUnits.has(i.unit.toLowerCase())) {
+                    knownUnits.set(i.unit.toLowerCase(), { name: i.unit, tag: 'Personalizado' });
+                }
+            });
+        }
+        return Array.from(knownUnits.values());
+    });
 }
