@@ -5,6 +5,7 @@ import logging
 import time
 import math
 import uuid
+import re
 from datetime import datetime, timezone
 
 # Configurar logging seguro
@@ -1084,6 +1085,82 @@ def get_stock_items():
 
     return jsonify(combined_items)
 
+def _generate_next_sku(raw_code=None):
+    """
+    Genera o calcula el código SKU correlativo con relleno de huecos (gap filling / reciclaje).
+    Reglas:
+    - Si el usuario ingresa un prefijo (2-5 caracteres alfanuméricos, ej: 'WHEY', 'PRO', 'BIA', 'SUP'):
+      Se extrae el prefijo en mayúsculas (2-5 letras/números).
+    - Si no ingresa nada o está vacío, el prefijo por defecto es 'SKU'.
+    - Busca todos los códigos existentes con PREFIX-XXX y encuentra el menor número disponible (1, 2, 3...).
+    - Devuelve PREFIX-001, PREFIX-002, etc.
+    """
+    prefix = "SKU"
+    desired_num = None
+
+    if raw_code:
+        cleaned = re.sub(r'[^A-Za-z0-9\-]', '', str(raw_code).strip()).upper()
+        if '-' in cleaned:
+            parts = cleaned.split('-', 1)
+            p_candidate = re.sub(r'[^A-Za-z0-9]', '', parts[0])
+            if 2 <= len(p_candidate) <= 5:
+                prefix = p_candidate
+            elif len(p_candidate) > 5:
+                prefix = p_candidate[:5]
+            
+            num_part = re.sub(r'\D', '', parts[1])
+            if num_part:
+                try:
+                    desired_num = int(num_part)
+                except ValueError:
+                    desired_num = None
+        else:
+            p_candidate = re.sub(r'[^A-Za-z0-9]', '', cleaned)
+            if 2 <= len(p_candidate) <= 5:
+                prefix = p_candidate
+            elif len(p_candidate) > 5:
+                prefix = p_candidate[:5]
+            elif 1 <= len(p_candidate) < 2:
+                prefix = (p_candidate + "X")[:2]
+
+    # Recopilar todos los códigos existentes (locales y remotos)
+    existing_codes = set()
+    for it in _LOCAL_STOCK_ITEMS:
+        c = it.get('code')
+        if c:
+            existing_codes.add(str(c).upper().strip())
+    
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('code').execute()
+            for r in (res.data or []):
+                c = r.get('code')
+                if c:
+                    existing_codes.add(str(c).upper().strip())
+        except Exception:
+            pass
+
+    # Extraer números usados con este prefijo
+    pattern = re.compile(rf'^{re.escape(prefix)}-(\d+)$')
+    used_numbers = set()
+    for code in existing_codes:
+        m = pattern.match(code)
+        if m:
+            try:
+                used_numbers.add(int(m.group(1)))
+            except ValueError:
+                pass
+
+    if desired_num is not None and desired_num > 0 and desired_num not in used_numbers:
+        return f"{prefix}-{desired_num:03d}"
+
+    # Relleno de huecos (menor correlativo disponible)
+    next_num = 1
+    while next_num in used_numbers:
+        next_num += 1
+
+    return f"{prefix}-{next_num:03d}"
+
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
     data = request.json or {}
@@ -1092,10 +1169,12 @@ def create_stock_item():
         return jsonify({"error": "El nombre del producto/insumo es obligatorio"}), 400
 
     item_id = str(uuid.uuid4())
-    code = _clean_str(data.get('code'), max_len=50)
-    if not code:
-        cat_prefix = "BIA" if "bia" in (data.get('category') or '').lower() else ("SUP" if "sup" in (data.get('category') or '').lower() else "ITM")
-        code = f"SKU-{cat_prefix}-{len(_LOCAL_STOCK_ITEMS) + 1:03d}"
+    raw_code = _clean_str(data.get('code'), max_len=50)
+    code = _generate_next_sku(raw_code)
+
+    category = _clean_str(data.get('category'), max_len=80)
+    if not category or category.strip().lower() in ("", "all", "todas las categorías", "todas"):
+        category = "Sin Categoría"
 
     qty = _safe_stock_float(data.get('stock_quantity'), default=0.0, min_val=0.0)
     min_qty = _safe_stock_float(data.get('min_stock'), default=5.0, min_val=0.0)
@@ -1106,7 +1185,7 @@ def create_stock_item():
         "id": item_id,
         "code": code,
         "name": name,
-        "category": _clean_str(data.get('category'), max_len=80) or "Insumos BIA",
+        "category": category,
         "unit": _clean_str(data.get('unit'), max_len=30) or "Unidad (u)",
         "stock_quantity": qty,
         "min_stock": min_qty,
@@ -1157,11 +1236,14 @@ def update_stock_item(item_id):
         if name:
             updated['name'] = name
     if 'code' in data:
-        updated['code'] = _clean_str(data.get('code'), max_len=50)
+        raw_code = _clean_str(data.get('code'), max_len=50)
+        if raw_code:
+            updated['code'] = raw_code.upper().strip()
     if 'category' in data:
-        updated['category'] = _clean_str(data.get('category'), max_len=80)
+        cat_val = _clean_str(data.get('category'), max_len=80)
+        updated['category'] = cat_val if cat_val and cat_val.strip() else "Sin Categoría"
     if 'unit' in data:
-        updated['unit'] = _clean_str(data.get('unit'), max_len=30)
+        updated['unit'] = _clean_str(data.get('unit'), max_len=30) or "Unidad (u)"
     if 'stock_quantity' in data:
         updated['stock_quantity'] = _safe_stock_float(data.get('stock_quantity'), default=0.0, min_val=0.0)
     if 'min_stock' in data:
@@ -1203,7 +1285,7 @@ def update_stock_item(item_id):
             item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
             return jsonify({"success": True, "data": item})
 
-    return jsonify({"success": True, "message": "Actualizado"})
+    return jsonify({"error": "Artículo no encontrado"}), 404
 
 @app.route('/api/stock/<string:item_id>', methods=['DELETE'])
 def delete_stock_item(item_id):

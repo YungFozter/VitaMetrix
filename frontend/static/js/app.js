@@ -4309,9 +4309,9 @@ function initStockForm() {
         btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Guardando...';
 
         const payload = {
-            code: document.getElementById('stock-code').value.trim(),
+            code: document.getElementById('stock-code').value.trim().toUpperCase(),
             name: document.getElementById('stock-name').value.trim(),
-            category: document.getElementById('stock-category').value.trim() || 'Insumos BIA',
+            category: document.getElementById('stock-category').value.trim() || 'Sin Categoría',
             unit: document.getElementById('stock-unit').value.trim() || 'Unidad (u)',
             stock_quantity: parseFloat(document.getElementById('stock-qty')?.value ?? document.getElementById('stock-quantity')?.value) || 0,
             min_stock: parseFloat(document.getElementById('stock-min').value) || 5,
@@ -4354,6 +4354,19 @@ function initStockForm() {
 
     const btnCancel = document.getElementById('btn-cancel-stock');
     if (btnCancel) btnCancel.addEventListener('click', resetStockForm);
+
+    // Formateo en tiempo real del campo CÓDIGO / SKU (Mayúsculas y prefijo 2 a 5 letras/números)
+    const codeInput = document.getElementById('stock-code');
+    if (codeInput) {
+        codeInput.addEventListener('input', () => {
+            let val = codeInput.value.toUpperCase().replace(/[^A-Z0-9\-]/g, '');
+            // Si el usuario solo está escribiendo el prefijo sin guión, limitar a 5 caracteres
+            if (!val.includes('-') && val.length > 5) {
+                val = val.slice(0, 5);
+            }
+            codeInput.value = val;
+        });
+    }
 
     // Toggle para colapsar / expandir formulario de stock
     const toggleBtn = document.getElementById('btn-toggle-stock-form');
@@ -4414,6 +4427,7 @@ function updateStockCategoryOptions(items) {
         "Accesorios y Equipos",
         "Medicamentos / Fármacos",
         "Material de Oficina",
+        "Sin Categoría",
         "Otros"
     ];
 
@@ -4438,6 +4452,7 @@ function updateStockCategoryOptions(items) {
         if (cat.includes('Medicamentos') || cat.includes('Fármacos')) return '💉';
         if (cat.includes('Accesorios') || cat.includes('Equipos')) return '📦';
         if (cat.includes('Oficina') || cat.includes('Papel')) return '📝';
+        if (cat.includes('Sin') || cat === 'Sin Categoría') return '🏷️';
         return '🏷️';
     };
 

@@ -115,7 +115,7 @@
                         <!-- 1. SKU / Código -->
                         <div class="col-12 col-md-3 col-lg-2">
                             <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
-                            <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
+                            <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light text-uppercase" placeholder="Auto / Ej: WHEY" maxlength="10" title="Ingresa de 2 a 5 letras/números (ej: WHEY) para autoincrementar (WHEY-001) o déjalo vacío para SKU-001">
                         </div>
 
                         <!-- 2. Nombre del Producto -->
@@ -128,7 +128,7 @@
                         <div class="col-12 col-md-4 col-lg-3">
                             <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
                             <div class="stock-custom-dropdown-wrap position-relative">
-                                <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
+                                <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona (Sin Categoría)..." autocomplete="off">
                                 <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
                                 <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
                             </div>
