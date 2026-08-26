@@ -4333,6 +4333,17 @@ function initStockMarginCalculator() {
     updateModeUI();
 }
 
+// --- DESPLAZAMIENTO SUAVE AL DIRECTORIO DE INVENTARIO ---
+function scrollToStockInventory() {
+    const section = document.getElementById('stock-inventory-section');
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        const input = document.getElementById('stock-search-input');
+        if (input) input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
 // --- FORMULARIO Y TABLA DE CATÁLOGO / STOCK ---
 function initStockForm() {
     const form = document.getElementById('stock-form');
@@ -4442,6 +4453,7 @@ function initStockForm() {
             if (statusFilter) statusFilter.value = 'all';
             if (searchInput) searchInput.value = '';
             filterAndRenderStock();
+            scrollToStockInventory();
             showToast('📋 Mostrando todos los artículos del catálogo', 'info');
         });
     }
@@ -4450,6 +4462,7 @@ function initStockForm() {
         cardOptimal.addEventListener('click', () => {
             if (statusFilter) statusFilter.value = 'optimal';
             filterAndRenderStock();
+            scrollToStockInventory();
             showToast('🟢 Filtrando por artículos con Stock Óptimo', 'info');
         });
     }
@@ -4458,6 +4471,7 @@ function initStockForm() {
         cardLow.addEventListener('click', () => {
             if (statusFilter) statusFilter.value = 'low';
             filterAndRenderStock();
+            scrollToStockInventory();
             showToast('🟡 Filtrando por artículos con Stock Bajo / Reposición', 'warning');
         });
     }
@@ -4702,7 +4716,8 @@ async function updateStockKPIs(items) {
                             if (searchInput) {
                                 searchInput.value = top.name;
                                 filterAndRenderStock();
-                                showToast(`🔍 Buscando "${top.name}" en inventario`, 'info');
+                                scrollToStockInventory();
+                                showToast(`🔍 Localizando "${top.name}" en inventario`, 'info');
                             }
                         });
                         topListEl.appendChild(badge);
