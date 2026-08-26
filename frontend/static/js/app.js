@@ -4687,9 +4687,14 @@ async function updateStockKPIs(items) {
                         const badge = document.createElement('div');
                         badge.className = `stock-top-item-badge rank-${idx + 1}`;
                         badge.title = `Clic para buscar "${top.name}" en la tabla (${top.quantity} unidades vendidas)`;
+                        // Unidad compacta para no saturar el badge
+                        const unitClean = top.unit && top.unit.length <= 4 ? top.unit : 'u';
                         badge.innerHTML = `
-                            <span class="text-truncate me-1"><span class="rank">${medals[idx]}</span>${escapeHtml(top.name)}</span>
-                            <span class="badge bg-white text-dark border px-1" style="font-size: 0.68rem;">${top.quantity} ${escapeHtml(top.unit || 'u')}</span>
+                            <div class="d-flex align-items-center text-truncate flex-grow-1" style="min-width: 0;">
+                                <span class="rank me-1 flex-shrink-0">${medals[idx]}</span>
+                                <span class="text-truncate fw-semibold" style="font-size: 0.72rem;">${escapeHtml(top.name)}</span>
+                            </div>
+                            <span class="badge bg-white text-dark border px-1.5 py-0.5 flex-shrink-0 ms-1 shadow-none" style="font-size: 0.68rem; font-weight: 700;">${top.quantity} ${escapeHtml(unitClean)}</span>
                         `;
                         badge.addEventListener('click', (e) => {
                             e.stopPropagation();
