@@ -1025,23 +1025,35 @@ def _calc_item_status(qty, min_qty):
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock_items():
+    remote_items = []
     if supabase:
         try:
             res = supabase.table('stock_items').select('*').order('created_at', desc=True).execute()
             if res.data is not None:
-                for item in res.data:
-                    item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
-                return jsonify(res.data)
+                remote_items = res.data
         except Exception as e:
             logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
 
-    # Fallback local enriquecido
-    items = []
-    for item in _LOCAL_STOCK_ITEMS:
-        item_copy = dict(item)
-        item_copy['status'] = _calc_item_status(item_copy.get('stock_quantity'), item_copy.get('min_stock'))
-        items.append(item_copy)
-    return jsonify(items)
+    # Combinar registros locales y remotos
+    seen_ids = set()
+    combined_items = []
+
+    for it in _LOCAL_STOCK_ITEMS:
+        it_copy = dict(it)
+        it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
+        if it_copy.get('id'):
+            seen_ids.add(it_copy.get('id'))
+        combined_items.append(it_copy)
+
+    for it in remote_items:
+        if it.get('id') not in seen_ids:
+            it_copy = dict(it)
+            it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
+            if it_copy.get('id'):
+                seen_ids.add(it_copy.get('id'))
+            combined_items.append(it_copy)
+
+    return jsonify(combined_items)
 
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
@@ -1066,13 +1078,15 @@ def create_stock_item():
         "code": code,
         "name": name,
         "category": _clean_str(data.get('category'), max_len=80) or "Insumos BIA",
-        "unit": _clean_str(data.get('unit'), max_len=30) or "Unidad",
+        "unit": _clean_str(data.get('unit'), max_len=30) or "Unidad (u)",
         "stock_quantity": qty,
         "min_stock": min_qty,
         "cost_price": cost,
         "sale_price": sale,
         "supplier": _clean_str(data.get('supplier'), max_len=150),
         "location": _clean_str(data.get('location'), max_len=150),
+        "batch_number": _clean_str(data.get('batch_number'), max_len=100),
+        "expiry_date": _clean_str(data.get('expiry_date'), max_len=20),
         "notes": _clean_str(data.get('notes'), max_len=500),
         "created_at": datetime.now(timezone.utc).isoformat()
     }
@@ -1083,11 +1097,22 @@ def create_stock_item():
             if res.data:
                 item_res = res.data[0]
                 item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
-                # Sincronizar también en local
                 _LOCAL_STOCK_ITEMS.insert(0, item_res)
                 return jsonify({"success": True, "data": item_res}), 201
-        except Exception as e:
-            logging.warning("Error al insertar en Supabase stock_items: %s", e)
+        except Exception:
+            try:
+                # Reintento sin columnas adicionales si el esquema remoto aún no fue migrado
+                fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date']}
+                res = supabase.table('stock_items').insert(fallback_item).execute()
+                if res.data:
+                    item_res = res.data[0]
+                    item_res['batch_number'] = new_item.get('batch_number')
+                    item_res['expiry_date'] = new_item.get('expiry_date')
+                    item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
+                    _LOCAL_STOCK_ITEMS.insert(0, item_res)
+                    return jsonify({"success": True, "data": item_res}), 201
+            except Exception as e:
+                logging.warning("Error al insertar en Supabase stock_items: %s", e)
 
     _LOCAL_STOCK_ITEMS.insert(0, new_item)
     new_item['status'] = _calc_item_status(qty, min_qty)
@@ -1120,6 +1145,10 @@ def update_stock_item(item_id):
         updated['supplier'] = _clean_str(data.get('supplier'), max_len=150)
     if 'location' in data:
         updated['location'] = _clean_str(data.get('location'), max_len=150)
+    if 'batch_number' in data:
+        updated['batch_number'] = _clean_str(data.get('batch_number'), max_len=100)
+    if 'expiry_date' in data:
+        updated['expiry_date'] = _clean_str(data.get('expiry_date'), max_len=20)
     if 'notes' in data:
         updated['notes'] = _clean_str(data.get('notes'), max_len=500)
 
@@ -1238,24 +1267,40 @@ def record_stock_movement(item_id):
 @app.route('/api/stock/movements', methods=['GET'])
 def get_stock_movements():
     item_id = _clean_str(request.args.get('item_id'))
+    remote_movs = []
     if supabase:
         try:
             query = supabase.table('stock_movements').select('*').order('created_at', desc=True)
             if item_id:
                 query = query.eq('stock_item_id', item_id)
             res = query.limit(50).execute()
-            if res.data is not None and len(res.data) > 0:
-                return jsonify(res.data)
+            if res.data is not None:
+                remote_movs = res.data
         except Exception as e:
             logging.warning("Error al consultar movimientos en Supabase: %s", e)
 
-    if item_id:
-        movs = [m for m in _LOCAL_STOCK_MOVEMENTS if m.get('stock_item_id') == item_id]
-    else:
-        movs = _LOCAL_STOCK_MOVEMENTS
-    return jsonify(movs[:50])
+    seen_ids = set()
+    combined_movs = []
 
-# --- GESTIÓN MAESTRA DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) ---
+    # 1. Movimientos locales (incluyen ventas recientes y cancelaciones)
+    local_source = [m for m in _LOCAL_STOCK_MOVEMENTS if not item_id or m.get('stock_item_id') == item_id or m.get('item_id') == item_id]
+    for m in local_source:
+        m_id = m.get('id')
+        if m_id:
+            seen_ids.add(m_id)
+        combined_movs.append(m)
+
+    # 2. Movimientos remotos de Supabase
+    for m in remote_movs:
+        m_id = m.get('id')
+        if m_id not in seen_ids:
+            if m_id:
+                seen_ids.add(m_id)
+            combined_movs.append(m)
+
+    return jsonify(combined_movs[:100])
+
+# --- GESTIÓN MAESTRA DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M - OPCIÓN 1) ---
 
 _TAXONOMIES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_taxonomies.json")
 
@@ -1270,18 +1315,20 @@ _DEFAULT_STOCK_CATEGORIES = [
 ]
 
 _DEFAULT_STOCK_UNITS = [
-    {"name": "Pack", "category": "Conteo"},
-    {"name": "Unidad (u)", "category": "Conteo"},
-    {"name": "Frasco / Bote", "category": "Conteo"},
-    {"name": "Caja", "category": "Conteo"},
-    {"name": "Tabletas", "category": "Posología"},
-    {"name": "Cápsulas", "category": "Posología"},
-    {"name": "Sobres", "category": "Posología"},
-    {"name": "Ampollas", "category": "Posología"},
-    {"name": "Mililitros (ml)", "category": "Volumen"},
-    {"name": "Litros (L)", "category": "Volumen"},
-    {"name": "Gramos (g)", "category": "Peso"},
-    {"name": "Kilogramos (kg)", "category": "Peso"}
+    {"name": "Unidad (u)"},
+    {"name": "Frasco / Bote"},
+    {"name": "Caja"},
+    {"name": "Pack"},
+    {"name": "Cápsulas"},
+    {"name": "Tabletas"},
+    {"name": "Sobres"},
+    {"name": "Ampollas"},
+    {"name": "Tubo"},
+    {"name": "Gotero"},
+    {"name": "Mililitros (ml)"},
+    {"name": "Litros (L)"},
+    {"name": "Gramos (g)"},
+    {"name": "Kilogramos (kg)"}
 ]
 
 def _load_persisted_taxonomies():
@@ -1290,8 +1337,14 @@ def _load_persisted_taxonomies():
             with open(_TAXONOMIES_PATH, 'r', encoding='utf-8') as f:
                 data = json.load(f)
                 cats = data.get('categories', _DEFAULT_STOCK_CATEGORIES)
-                units = data.get('units', _DEFAULT_STOCK_UNITS)
-                return cats, units
+                raw_units = data.get('units', _DEFAULT_STOCK_UNITS)
+                clean_units = []
+                for u in raw_units:
+                    if isinstance(u, str):
+                        clean_units.append({"name": u})
+                    elif isinstance(u, dict) and u.get('name'):
+                        clean_units.append({"name": u['name']})
+                return cats, (clean_units or list(_DEFAULT_STOCK_UNITS))
         except Exception as e:
             logging.warning("Error al leer stock_taxonomies.json: %s", e)
     return list(_DEFAULT_STOCK_CATEGORIES), list(_DEFAULT_STOCK_UNITS)
@@ -1325,7 +1378,7 @@ def get_stock_taxonomies():
     unit_counts = {}
     for it in items:
         c = (it.get('category') or 'Otros').strip()
-        u = (it.get('unit') or 'Unidad').strip()
+        u = (it.get('unit') or 'Unidad (u)').strip()
         cat_counts[c] = cat_counts.get(c, 0) + 1
         unit_counts[u] = unit_counts.get(u, 0) + 1
 
@@ -1354,9 +1407,18 @@ def get_stock_taxonomies():
             persisted_cats.append(new_cat)
             _save_persisted_taxonomies(persisted_cats, persisted_units)
 
+    # Añadir conteo de uso a las unidades
+    units_with_counts = []
+    for u in persisted_units:
+        u_name = u['name']
+        units_with_counts.append({
+            "name": u_name,
+            "count": unit_counts.get(u_name, 0)
+        })
+
     return jsonify({
         "categories": categories,
-        "units": persisted_units
+        "units": units_with_counts
     })
 
 @app.route('/api/stock/taxonomies/category', methods=['POST'])
@@ -1409,7 +1471,6 @@ def delete_stock_category(cat_name):
 def add_stock_unit():
     data = request.json or {}
     name = _clean_str(data.get('name'), max_len=50)
-    category = _clean_str(data.get('category') or data.get('family'), max_len=50) or 'General'
 
     if not name:
         return jsonify({"error": "El nombre de la unidad es obligatorio"}), 400
@@ -1418,7 +1479,7 @@ def add_stock_unit():
     if any(u['name'].lower() == name.lower() for u in units):
         return jsonify({"error": f"La unidad '{name}' ya existe"}), 409
 
-    new_unit = {"name": name, "category": category}
+    new_unit = {"name": name}
     units.append(new_unit)
     _save_persisted_taxonomies(cats, units)
 
@@ -1444,7 +1505,6 @@ def update_stock_unit():
     data = request.json or {}
     old_name = _clean_str(data.get('old_name'))
     new_name = _clean_str(data.get('new_name'), max_len=50)
-    new_family = _clean_str(data.get('family') or data.get('category'), max_len=50)
 
     if not old_name or not new_name:
         return jsonify({"error": "El nombre actual y el nuevo nombre son obligatorios"}), 400
@@ -1454,8 +1514,6 @@ def update_stock_unit():
     for u in units:
         if u['name'].lower() == old_name.lower():
             u['name'] = new_name
-            if new_family:
-                u['category'] = new_family
             found = True
             break
 
@@ -1475,7 +1533,7 @@ def update_stock_unit():
             item['unit'] = new_name
 
     _save_persisted_taxonomies(cats, units)
-    return jsonify({"success": True, "message": f"Unidad '{old_name}' actualizada correctamente"})
+    return jsonify({"success": True, "message": f"Unidad '{old_name}' actualizada a '{new_name}' correctamente"})
 
 @app.route('/api/stock/categories/rename', methods=['PUT'])
 def rename_stock_category():
@@ -1507,6 +1565,381 @@ def rename_stock_category():
     _save_persisted_taxonomies(cats, units)
 
     return jsonify({"success": True, "updated_count": updated_count, "message": f"Categoría actualizada de '{old_name}' a '{new_name}'"})
+
+# --- MÓDULO DE VENTAS (POS CLÍNICO & COMPROBANTES) ---
+
+_SALES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "sales.json")
+
+def _load_persisted_sales():
+    if os.path.exists(_SALES_PATH):
+        try:
+            with open(_SALES_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer sales.json: %s", e)
+    return []
+
+def _save_persisted_sales(sales):
+    try:
+        os.makedirs(os.path.dirname(_SALES_PATH), exist_ok=True)
+        with open(_SALES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(sales, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar sales.json: %s", e)
+        return False
+
+_LOCAL_SALES = _load_persisted_sales()
+
+@app.route('/api/sales', methods=['GET'])
+def get_sales():
+    """Listado del historial de ventas con filtros opcionales."""
+    if supabase:
+        try:
+            query = supabase.table('sales').select('*, sale_items(*)').order('created_at', desc=True)
+            res = query.limit(100).execute()
+            if res.data is not None and len(res.data) > 0:
+                return jsonify(res.data)
+        except Exception as e:
+            logging.warning("Error al consultar ventas en Supabase: %s", e)
+
+    sales = _load_persisted_sales() or _LOCAL_SALES
+    return jsonify(sales)
+
+@app.route('/api/sales', methods=['POST'])
+def create_sale():
+    """
+    Registra una nueva venta de productos/insumos:
+    - Valida existencias en stock.
+    - Descuenta las cantidades del inventario atómicamente.
+    - Registra los movimientos de salida en Kardex (stock_movements).
+    - Genera el comprobante con número correlativo REC-2026-XXXX.
+    """
+    data = request.json or {}
+    items_req = data.get('items', [])
+    if not items_req or not isinstance(items_req, list) or len(items_req) == 0:
+        return jsonify({"error": "El carrito de venta no contiene productos"}), 400
+
+    patient_name = _clean_str(data.get('patient_name'), max_len=100) or "Cliente Ocasional"
+    patient_idp = _clean_str(data.get('patient_idp'), max_len=50) or ""
+    patient_phone = _clean_str(data.get('patient_phone'), max_len=30) or ""
+    payment_method = _clean_str(data.get('payment_method'), max_len=50) or "Efectivo"
+    notes = _clean_str(data.get('notes'), max_len=500) or ""
+    discount = max(0.0, _safe_stock_float(data.get('discount'), default=0.0))
+
+    # 1. Consolidar items por ID de producto (evita duplicados maliciosos o fallas de concurrencia)
+    aggregated_req = {}
+    for it in items_req:
+        stk_id = it.get('stock_item_id') or it.get('id')
+        if not stk_id:
+            continue
+        qty = _safe_stock_float(it.get('quantity'), default=1.0, min_val=0.01)
+        if stk_id not in aggregated_req:
+            aggregated_req[stk_id] = {**it, 'stock_item_id': stk_id, 'quantity': qty}
+        else:
+            aggregated_req[stk_id]['quantity'] = round(aggregated_req[stk_id]['quantity'] + qty, 2)
+
+    if not aggregated_req:
+        return jsonify({"error": "No se encontraron artículos válidos en la solicitud de venta"}), 400
+
+    processed_items = []
+    total_sale = 0.0
+    total_cost = 0.0
+
+    for stk_id, it in aggregated_req.items():
+        qty = it['quantity']
+
+        # Buscar producto en memoria o base de datos
+        stock_prod = None
+        for p in _LOCAL_STOCK_ITEMS:
+            if p.get('id') == stk_id:
+                stock_prod = p
+                break
+
+        if not stock_prod:
+            return jsonify({"error": f"Producto '{it.get('name', stk_id)}' no encontrado en el inventario"}), 404
+
+        current_avail = _safe_stock_float(stock_prod.get('stock_quantity'), 0.0)
+        if current_avail < qty:
+            return jsonify({
+                "error": f"Stock insuficiente para '{stock_prod.get('name')}'. Disponible: {current_avail} {stock_prod.get('unit', 'u')}, solicitado: {qty}"
+            }), 400
+
+        unit_price = _safe_stock_float(it.get('unit_price') if it.get('unit_price') is not None else stock_prod.get('sale_price', 0.0), min_val=0.0)
+        cost_price = _safe_stock_float(stock_prod.get('cost_price', 0.0), min_val=0.0)
+        item_subtotal = round(unit_price * qty, 2)
+        item_cost_subtotal = round(cost_price * qty, 2)
+
+        total_sale += item_subtotal
+        total_cost += item_cost_subtotal
+
+        processed_items.append({
+            "stock_item_id": stock_prod.get('id'),
+            "code": stock_prod.get('code'),
+            "name": stock_prod.get('name'),
+            "unit": stock_prod.get('unit', 'Unidad (u)'),
+            "quantity": qty,
+            "unit_price": unit_price,
+            "cost_price": cost_price,
+            "subtotal": item_subtotal,
+            "_stock_ref": stock_prod
+        })
+
+    subtotal = round(total_sale, 2)
+    final_total = max(0.0, round(subtotal - discount, 2))
+    profit = round(final_total - total_cost, 2)
+
+    amount_received = _safe_stock_float(data.get('amount_received'), default=final_total)
+    change_given = max(0.0, round(amount_received - final_total, 2)) if payment_method.lower() == 'efectivo' else 0.0
+
+    all_sales = _load_persisted_sales()
+    next_num = len(all_sales) + 1
+    receipt_number = f"REC-2026-{next_num:04d}"
+    sale_id = str(uuid.uuid4())
+    created_now = datetime.now(timezone.utc).isoformat()
+
+    # 2. Descontar stock y registrar Kardex de cada ítem
+    for pit in processed_items:
+        stk_ref = pit['_stock_ref']
+        old_q = _safe_stock_float(stk_ref.get('stock_quantity'), 0.0)
+        new_q = round(old_q - pit['quantity'], 2)
+        stk_ref['stock_quantity'] = new_q
+        stk_ref['status'] = _calc_item_status(new_q, stk_ref.get('min_stock'))
+
+        # Movimiento de Kardex
+        mov_record = {
+            "id": str(uuid.uuid4()),
+            "stock_item_id": stk_ref.get('id'),
+            "item_name": stk_ref.get('name'),
+            "type": "SALE",
+            "quantity": pit['quantity'],
+            "previous_quantity": old_q,
+            "new_quantity": new_q,
+            "reason": f"Venta {receipt_number} a {patient_name}",
+            "reference_id": sale_id,
+            "created_at": created_now
+        }
+        _LOCAL_STOCK_MOVEMENTS.insert(0, mov_record)
+
+        if supabase:
+            try:
+                supabase.table('stock_items').update({
+                    "stock_quantity": new_q,
+                    "updated_at": created_now
+                }).eq('id', stk_ref.get('id')).execute()
+                try:
+                    supabase.table('stock_movements').insert(mov_record).execute()
+                except Exception:
+                    pass
+            except Exception as e:
+                logging.warning("Error al descontar stock en Supabase: %s", e)
+
+    # 3. Guardar registro de la venta
+    clean_sale_items = []
+    for pit in processed_items:
+        clean_sale_items.append({
+            "stock_item_id": pit['stock_item_id'],
+            "code": pit['code'],
+            "name": pit['name'],
+            "unit": pit['unit'],
+            "quantity": pit['quantity'],
+            "unit_price": pit['unit_price'],
+            "cost_price": pit['cost_price'],
+            "subtotal": pit['subtotal']
+        })
+
+    sale_record = {
+        "id": sale_id,
+        "receipt_number": receipt_number,
+        "patient_name": patient_name,
+        "patient_idp": patient_idp,
+        "patient_phone": patient_phone,
+        "items": clean_sale_items,
+        "subtotal": subtotal,
+        "discount": discount,
+        "total": final_total,
+        "total_cost": round(total_cost, 2),
+        "profit": profit,
+        "payment_method": payment_method,
+        "amount_received": amount_received,
+        "change_given": change_given,
+        "status": "COMPLETED",
+        "notes": notes,
+        "created_at": created_now
+    }
+
+    all_sales.insert(0, sale_record)
+    _save_persisted_sales(all_sales)
+    global _LOCAL_SALES
+    _LOCAL_SALES = all_sales
+
+    if supabase:
+        try:
+            supabase.table('sales').insert({
+                "id": sale_id,
+                "receipt_number": receipt_number,
+                "patient_name": patient_name,
+                "patient_idp": patient_idp,
+                "patient_phone": patient_phone,
+                "subtotal": subtotal,
+                "discount": discount,
+                "total": final_total,
+                "total_cost": round(total_cost, 2),
+                "profit": profit,
+                "payment_method": payment_method,
+                "amount_received": amount_received,
+                "change_given": change_given,
+                "status": "COMPLETED",
+                "notes": notes,
+                "created_at": created_now
+            }).execute()
+        except Exception as e:
+            logging.warning("Error al guardar venta en Supabase: %s", e)
+
+    return jsonify({
+        "success": True,
+        "message": f"Venta {receipt_number} completada exitosamente",
+        "sale": sale_record
+    }), 201
+
+@app.route('/api/sales/<string:sale_id>', methods=['GET'])
+def get_sale_detail(sale_id):
+    """Obtiene el detalle de una venta por ID."""
+    all_sales = _load_persisted_sales() or _LOCAL_SALES
+    for s in all_sales:
+        if s.get('id') == sale_id or s.get('receipt_number') == sale_id:
+            return jsonify(s)
+    return jsonify({"error": "Venta no encontrada"}), 404
+
+@app.route('/api/sales/<string:sale_id>', methods=['DELETE'])
+def cancel_sale(sale_id):
+    """
+    Anula una venta y restituye automáticamente las cantidades al inventario.
+    Registra el movimiento en Kardex (SALE_CANCEL).
+    """
+    all_sales = _load_persisted_sales() or _LOCAL_SALES
+    target_sale = None
+    for s in all_sales:
+        if s.get('id') == sale_id or s.get('receipt_number') == sale_id:
+            target_sale = s
+            break
+
+    if not target_sale:
+        return jsonify({"error": "Venta no encontrada"}), 404
+
+    if target_sale.get('status') == 'CANCELLED':
+        return jsonify({"error": "Esta venta ya se encuentra anulada"}), 400
+
+    target_sale['status'] = 'CANCELLED'
+    target_sale['cancelled_at'] = datetime.now(timezone.utc).isoformat()
+
+    created_now = datetime.now(timezone.utc).isoformat()
+
+    # Reingresar ítems al inventario
+    for item in target_sale.get('items', []):
+        stk_id = item.get('stock_item_id')
+        qty = _safe_stock_float(item.get('quantity'), 0.0)
+        if not stk_id or qty <= 0:
+            continue
+
+        p = None
+        for local_p in _LOCAL_STOCK_ITEMS:
+            if local_p.get('id') == stk_id:
+                p = local_p
+                break
+
+        if not p and supabase:
+            try:
+                res_p = supabase.table('stock_items').select('*').eq('id', stk_id).execute()
+                if res_p.data:
+                    p = res_p.data[0]
+                    _LOCAL_STOCK_ITEMS.append(p)
+            except Exception:
+                pass
+
+        if p:
+            old_q = _safe_stock_float(p.get('stock_quantity'), 0.0)
+            new_q = round(old_q + qty, 2)
+            p['stock_quantity'] = new_q
+            p['status'] = _calc_item_status(new_q, p.get('min_stock'))
+
+            # Kardex cancel
+            mov = {
+                "id": str(uuid.uuid4()),
+                "stock_item_id": p.get('id'),
+                "item_name": p.get('name'),
+                "type": "SALE_CANCEL",
+                "quantity": qty,
+                "previous_quantity": old_q,
+                "new_quantity": new_q,
+                "reason": f"Anulación de Venta {target_sale.get('receipt_number')}",
+                "reference_id": target_sale.get('id'),
+                "created_at": created_now
+            }
+            _LOCAL_STOCK_MOVEMENTS.insert(0, mov)
+
+            if supabase:
+                try:
+                    supabase.table('stock_items').update({"stock_quantity": new_q}).eq('id', p.get('id')).execute()
+                    try:
+                        supabase.table('stock_movements').insert(mov).execute()
+                    except Exception:
+                        pass
+                except Exception as e:
+                    logging.warning("Error al restituir stock en Supabase: %s", e)
+                break
+
+    _save_persisted_sales(all_sales)
+    if supabase:
+        try:
+            supabase.table('sales').update({"status": "CANCELLED"}).eq('id', target_sale.get('id')).execute()
+        except Exception as e:
+            logging.warning("Error al anular venta en Supabase: %s", e)
+
+    return jsonify({
+        "success": True,
+        "message": f"Venta {target_sale.get('receipt_number')} anulada y stock restituido correctamente",
+        "sale": target_sale
+    })
+
+@app.route('/api/sales/stats', methods=['GET'])
+def get_sales_stats():
+    """Métricas y KPIs financieros de ventas para el nutricionista."""
+    sales = [s for s in (_load_persisted_sales() or _LOCAL_SALES) if s.get('status') != 'CANCELLED']
+    
+    total_sales_amount = round(sum(_safe_stock_float(s.get('total', 0)) for s in sales), 2)
+    total_profit = round(sum(_safe_stock_float(s.get('profit', 0)) for s in sales), 2)
+    sales_count = len(sales)
+    avg_ticket = round(total_sales_amount / sales_count, 2) if sales_count > 0 else 0.0
+
+    # Ventas de hoy
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_sales = [s for s in sales if (s.get('created_at') or '').startswith(today_str)]
+    today_sales_amount = round(sum(_safe_stock_float(s.get('total', 0)) for s in today_sales), 2)
+
+    # Top productos vendidos
+    prod_counts = {}
+    for s in sales:
+        for it in s.get('items', []):
+            pname = it.get('name', 'Producto')
+            qty = _safe_stock_float(it.get('quantity', 0))
+            subt = _safe_stock_float(it.get('subtotal', 0))
+            if pname not in prod_counts:
+                prod_counts[pname] = {"name": pname, "quantity": 0, "total_revenue": 0.0}
+            prod_counts[pname]["quantity"] += qty
+            prod_counts[pname]["total_revenue"] += subt
+
+    top_products = sorted(prod_counts.values(), key=lambda x: x["quantity"], reverse=True)[:5]
+
+    return jsonify({
+        "total_sales_amount": total_sales_amount,
+        "total_profit": total_profit,
+        "sales_count": sales_count,
+        "avg_ticket": avg_ticket,
+        "today_sales_amount": today_sales_amount,
+        "today_sales_count": len(today_sales),
+        "top_products": top_products
+    })
 
 # --- CHATBOT WEBHOOK (WhatsApp / Telegram Automation) ---
 

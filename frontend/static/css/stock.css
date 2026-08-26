@@ -1,12 +1,85 @@
 /* ==========================================================================
-   VITA METRIX - STOCK CONTROL & INVENTARIO CLÍNICO
+   VITA METRIX - STOCK CONTROL & INVENTARIO CLÍNICO Y VENTAS (POS)
    ========================================================================== */
 
 .stock-view-container {
     animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* KPI Bento Cards de Inventario */
+/* ==========================================================================
+   Sub-módulos Segmented Switch Tabs (Catálogo / POS / Ventas / Kardex)
+   ========================================================================== */
+.stock-main-tabs-wrapper {
+    display: flex;
+    align-items: center;
+}
+
+.stock-main-tabs {
+    display: flex;
+    background: rgba(241, 245, 249, 0.95);
+    padding: 5px;
+    border-radius: 9999px;
+    border: 1px solid #e2e8f0;
+    gap: 4px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.stock-main-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 7px 16px;
+    border-radius: 9999px;
+    border: none;
+    background: transparent;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+.stock-main-tab-btn:hover {
+    color: #0f172a;
+}
+
+.stock-main-tab-btn.active {
+    background: #ffffff;
+    color: #0284c7;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.stock-main-tab-btn i {
+    font-size: 0.95rem;
+    transition: transform 0.2s ease;
+}
+
+.stock-main-tab-btn.active i {
+    color: #0284c7;
+    transform: scale(1.08);
+}
+
+.stock-panel-content {
+    animation: fadeInPanel 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes fadeInPanel {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   KPI Bento Cards de Inventario y Ventas
+   ========================================================================== */
 .stock-kpi-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -16,25 +89,20 @@
 
 .stock-kpi-card {
     background: #ffffff;
-    border-radius: 1rem;
+    border-radius: 1.25rem;
     padding: 1.2rem;
     border: 1px solid rgba(226, 232, 240, 0.8);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 2px 8px rgba(26, 42, 74, 0.03);
     display: flex;
     align-items: center;
     gap: 1rem;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.stock-kpi-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.25s ease;
 }
 
 .stock-kpi-icon {
     width: 48px;
     height: 48px;
-    border-radius: 12px;
+    border-radius: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -53,12 +121,12 @@
 }
 
 .stock-kpi-label {
-    font-size: 0.76rem;
+    font-size: 0.74rem;
     font-weight: 700;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-bottom: 0.2rem;
+    margin-bottom: 0.15rem;
 }
 
 .stock-kpi-value {
@@ -74,7 +142,9 @@
     margin-top: 0.2rem;
 }
 
-/* Badges de Estado de Stock */
+/* ==========================================================================
+   Badges de Estado de Stock y Márgenes
+   ========================================================================== */
 .stock-status-badge {
     display: inline-flex;
     align-items: center;
@@ -97,7 +167,6 @@
     background: rgba(245, 158, 11, 0.12);
     color: #d97706;
     border: 1px solid rgba(245, 158, 11, 0.3);
-    animation: pulseWarning 2s infinite ease-in-out;
 }
 
 .stock-status-badge.out {
@@ -106,12 +175,21 @@
     border: 1px solid rgba(239, 68, 68, 0.25);
 }
 
-@keyframes pulseWarning {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.7; }
+.stock-margin-badge.positive {
+    background: #ecfdf5;
+    color: #059669;
+    border-color: #a7f3d0 !important;
 }
 
-/* Tabla de Inventario */
+.stock-margin-badge.negative {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca !important;
+}
+
+/* ==========================================================================
+   Tabla de Inventario
+   ========================================================================== */
 .stock-table th {
     font-size: 0.72rem;
     letter-spacing: 0.5px;
@@ -133,7 +211,6 @@
     background-color: rgba(248, 250, 252, 0.8);
 }
 
-/* Barra de nivel de existencias */
 .stock-bar-wrap {
     width: 90px;
     height: 6px;
@@ -153,254 +230,318 @@
 .stock-bar-fill.low     { background: #f59e0b; }
 .stock-bar-fill.out     { background: #ef4444; }
 
-/* Botones de acción rápida */
-.btn-stock-adjust {
-    background: #f1f5f9;
-    color: #334155;
-    border: 1px solid #cbd5e1;
-    border-radius: 8px;
-    padding: 0.3rem 0.65rem;
-    font-size: 0.75rem;
-    font-weight: 700;
-    transition: all 0.15s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
+/* ==========================================================================
+   TERMINAL DE VENTAS (POS) - GRID Y CARDS DE PRODUCTOS
+   ========================================================================== */
+.pos-products-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 0.85rem;
 }
 
-.btn-stock-adjust:hover {
-    background: #00b4d8;
-    color: #ffffff;
-    border-color: #00b4d8;
-    transform: translateY(-1px);
-}
-
-/* Modales de Stock */
-.stock-movement-card {
-    border-left: 3.5px solid #00b4d8;
+.pos-product-card {
     background: #ffffff;
-    border-radius: 8px;
-    padding: 0.75rem;
-    border-top: 1px solid #e2e8f0;
-    border-right: 1px solid #e2e8f0;
-    border-bottom: 1px solid #e2e8f0;
+    border: 1px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.pos-product-card:hover {
+    border-color: #38bdf8;
+    box-shadow: 0 4px 14px rgba(2, 132, 199, 0.08);
+}
+
+.pos-product-card.out-of-stock {
+    opacity: 0.6;
+    pointer-events: none;
+    filter: grayscale(0.8);
+}
+
+.pos-product-icon {
+    font-size: 1.5rem;
+    line-height: 1;
     margin-bottom: 0.5rem;
 }
 
-.stock-movement-card.in { border-left-color: #10b981; }
-.stock-movement-card.out { border-left-color: #ef4444; }
-.stock-movement-card.adjust { border-left-color: #6366f1; }
-
-/* Dark Mode Overrides */
-[data-bs-theme="dark"] .stock-kpi-card {
-    background: #1e293b;
-    border-color: rgba(51, 65, 85, 0.8);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+.pos-product-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.88rem;
+    line-height: 1.25;
+    margin-bottom: 0.25rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }
 
-[data-bs-theme="dark"] .stock-kpi-value {
-    color: #f8fafc;
+.pos-product-meta {
+    font-size: 0.72rem;
+    color: #64748b;
+    margin-bottom: 0.65rem;
 }
 
-[data-bs-theme="dark"] .stock-table th {
-    background-color: #1e293b;
+.pos-product-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px dashed #e2e8f0;
+    margin-top: auto;
+}
+
+.pos-product-price {
+    font-weight: 800;
+    color: #0284c7;
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+/* ==========================================================================
+   CARRITO DE VENTAS & PASARELA DE COBRO
+   ========================================================================== */
+.pos-checkout-panel {
+    background: #ffffff;
+    border-radius: 1.25rem;
+    border: 1px solid rgba(226, 232, 240, 0.9);
+}
+
+.pos-cart-item-row {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.85rem;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    animation: fadeIn 0.2s ease;
+}
+
+.pos-cart-item-info {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.pos-cart-item-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #1e293b;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.pos-cart-item-unit-price {
+    font-size: 0.72rem;
+    color: #64748b;
+    font-family: monospace;
+}
+
+.pos-cart-qty-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.pos-cart-qty-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    font-size: 0.85rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #334155;
+    padding: 0;
+    line-height: 1;
+}
+
+.pos-cart-qty-btn:hover {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+}
+
+.pos-cart-qty-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    min-width: 22px;
+    text-align: center;
+    font-family: monospace;
+}
+
+.pos-cart-subtotal {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #0f172a;
+    min-width: 65px;
+    text-align: right;
+    font-family: monospace;
+}
+
+.pos-cart-btn-del {
+    background: transparent;
+    border: none;
     color: #94a3b8;
-    border-color: #334155;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 4px;
 }
 
-[data-bs-theme="dark"] .stock-table td {
-    border-color: #334155;
-    color: #e2e8f0;
+.pos-cart-btn-del:hover {
+    color: #ef4444;
 }
 
-[data-bs-theme="dark"] .stock-table tr:hover td {
-    background-color: rgba(51, 65, 85, 0.4);
+/* Métodos de Pago en POS */
+.pos-payment-methods-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem;
 }
 
-[data-bs-theme="dark"] .stock-movement-card {
-    background: #1e293b;
-    border-color: #334155;
+.pos-pay-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    transition: all 0.15s ease;
 }
 
-[data-bs-theme="dark"] .btn-stock-adjust {
-    background: #334155;
-    color: #f1f5f9;
-    border-color: #475569;
+.pos-pay-btn:hover {
+    border-color: #cbd5e1;
+    color: #0f172a;
 }
 
-/* Mobile Responsive */
-@media (max-width: 768px) {
-    .stock-kpi-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 0.75rem;
-    }
-
-    .stock-kpi-card {
-        padding: 0.9rem;
-        gap: 0.75rem;
-    }
-
-    .stock-kpi-icon {
-        width: 40px;
-        height: 40px;
-        font-size: 1.15rem;
-    }
-
-    .stock-kpi-value {
-        font-size: 1.2rem;
-    }
-
-    #search-tax-cats {
-        font-size: 0.95rem !important;
-        height: 40px !important;
-    }
-
-    .tax-unit-pill {
-        padding: 0.35rem 0.65rem !important;
-        font-size: 0.82rem !important;
-    }
+.pos-pay-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+    font-weight: 700;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
 }
 
-/* Custom Autocomplete Dropdown & Stacking Context Fix */
-.stock-form-card {
-    position: relative !important;
-    z-index: 50 !important;
-    overflow: visible !important;
+.pos-pay-btn.active i {
+    color: #ffffff !important;
 }
 
+/* ==========================================================================
+   MODAL DE AJUSTE RÁPIDO DE STOCK
+   ========================================================================== */
+.stock-adjust-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+}
+
+.adjust-type-btn {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 8px 6px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    text-align: center;
+    transition: all 0.15s ease;
+}
+
+.adjust-type-btn i {
+    font-size: 1.15rem;
+}
+
+.adjust-type-btn.active {
+    background: #ffffff;
+    border-color: #0284c7;
+    color: #0284c7;
+    font-weight: 700;
+    box-shadow: 0 2px 8px rgba(2, 132, 199, 0.12);
+}
+
+/* ==========================================================================
+   AUTOCOMPLETE DROPDOWNS ESTILIZADOS (CATEGORÍAS Y U/M)
+   ========================================================================== */
 .stock-custom-dropdown-wrap {
-    position: relative !important;
-    z-index: 60 !important;
+    position: relative;
+    width: 100%;
 }
 
 .stock-custom-dropdown {
     position: absolute;
     top: calc(100% + 4px);
     left: 0;
-    right: 0;
-    background: #ffffff;
-    border: 1px solid #e2e8f0;
-    border-radius: 12px;
-    box-shadow: 0 18px 42px rgba(15, 23, 42, 0.18), 0 6px 16px rgba(0, 0, 0, 0.06);
-    z-index: 9999 !important;
-    max-height: 200px;
+    width: 100%;
+    max-height: 220px;
     overflow-y: auto;
-    padding: 0.35rem;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    z-index: 1050;
     display: none;
-    scrollbar-width: thin;
-    scrollbar-color: #94a3b8 rgba(0, 0, 0, 0.03);
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-}
-
-.stock-custom-dropdown::-webkit-scrollbar {
-    width: 6px;
-    display: block;
-}
-
-.stock-custom-dropdown::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.03);
-    border-radius: 9999px;
-}
-
-.stock-custom-dropdown::-webkit-scrollbar-thumb {
-    background-color: #94a3b8;
-    border-radius: 9999px;
-}
-
-.stock-custom-dropdown::-webkit-scrollbar-thumb:hover {
-    background-color: #64748b;
+    padding: 4px;
 }
 
 .stock-custom-dropdown.show {
     display: block;
-    animation: dropdownFade 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@keyframes dropdownFade {
-    from { opacity: 0; transform: translateY(-6px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .stock-dropdown-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0.75rem;
-    border-radius: 8px;
-    font-size: 0.84rem;
+    padding: 8px 12px;
+    font-size: 0.85rem;
     color: #334155;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.12s ease;
-    user-select: none;
+    transition: background 0.12s ease;
 }
 
 .stock-dropdown-item:hover,
 .stock-dropdown-item.active {
-    background: rgba(0, 180, 216, 0.08);
-    color: #0077b6;
+    background-color: #f1f5f9;
+    color: #0284c7;
     font-weight: 600;
 }
 
-.stock-dropdown-item .badge {
-    font-size: 0.68rem;
-    font-weight: 500;
-}
-
-[data-bs-theme="dark"] .stock-custom-dropdown {
-    background: #1e293b;
-    border-color: #334155;
-    box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4);
-}
-
-[data-bs-theme="dark"] .stock-dropdown-item {
-    color: #e2e8f0;
-}
-
-[data-bs-theme="dark"] .stock-dropdown-item:hover,
-[data-bs-theme="dark"] .stock-dropdown-item.active {
-    background: rgba(0, 180, 216, 0.18);
-    color: #38bdf8;
-}
-
-/* Scrollbar Ultra-Fluido y Ligero para Modales */
-.stock-custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-    scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-}
-
-.stock-custom-scrollbar::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
-}
-
-.stock-custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.stock-custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #cbd5e1;
-    border-radius: 9999px;
-    transition: background-color 0.2s ease;
-}
-
-.stock-custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
-}
-
-[data-bs-theme="dark"] .stock-custom-scrollbar {
-    scrollbar-color: #475569 transparent;
-}
-
-[data-bs-theme="dark"] .stock-custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #475569;
-}
-
-/* Botón 'X' dentro de los campos con autocomplete */
 .stock-input-clear-btn {
     position: absolute;
     right: 8px;
@@ -414,7 +555,6 @@
     cursor: pointer;
     padding: 0 4px;
     border-radius: 9999px;
-    transition: all 0.15s ease;
     z-index: 5;
     display: flex;
     align-items: center;
@@ -423,16 +563,6 @@
 
 .stock-input-clear-btn:hover {
     color: #ef4444;
-    background: rgba(239, 68, 68, 0.1);
-}
-
-[data-bs-theme="dark"] .stock-input-clear-btn {
-    color: #64748b;
-}
-
-[data-bs-theme="dark"] .stock-input-clear-btn:hover {
-    color: #f87171;
-    background: rgba(239, 68, 68, 0.2);
 }
 
 /* ==========================================================================
@@ -467,7 +597,7 @@
     background: transparent;
     border-radius: 9999px;
     cursor: pointer;
-    transition: color 0.25s ease, transform 0.15s ease;
+    transition: color 0.25s ease;
 }
 
 .stock-segmented-btn:hover {
@@ -479,17 +609,6 @@
     font-weight: 700;
 }
 
-.stock-segmented-btn i {
-    font-size: 1rem;
-    transition: transform 0.2s ease, color 0.25s ease;
-}
-
-.stock-segmented-btn.active i {
-    color: #0284c7 !important;
-    transform: scale(1.1);
-}
-
-/* Slider flotante animado */
 .stock-segmented-slider {
     position: absolute;
     top: 4px;
@@ -498,7 +617,6 @@
     width: calc(50% - 4px);
     background: #ffffff;
     border-radius: 9999px;
-    border: 1px solid #fed7aa;
     box-shadow: 0 3px 10px rgba(15, 23, 42, 0.09), 0 1px 3px rgba(0, 0, 0, 0.04);
     z-index: 1;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -507,15 +625,12 @@
 
 .stock-segmented-control[data-active="units"] .stock-segmented-slider {
     transform: translateX(100%);
-    border-color: #bfdbfe;
 }
 
 .stock-segmented-control[data-active="cats"] .stock-segmented-slider {
     transform: translateX(0%);
-    border-color: #fed7aa;
 }
 
-/* Transición suave entre paneles de contenido */
 .stock-tab-panel {
     animation: fadeInTaxTab 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -531,67 +646,49 @@
     }
 }
 
-/* Dark mode para segmented control */
-[data-bs-theme="dark"] .stock-segmented-control {
-    background: #1e293b;
-    border-color: #334155;
-}
-
-[data-bs-theme="dark"] .stock-segmented-btn {
-    color: #94a3b8;
-}
-
-[data-bs-theme="dark"] .stock-segmented-btn:hover {
-    color: #f8fafc;
-}
-
-[data-bs-theme="dark"] .stock-segmented-btn.active {
-    color: #38bdf8;
-}
-
-[data-bs-theme="dark"] .stock-segmented-btn.active i {
-    color: #38bdf8 !important;
-}
-
-[data-bs-theme="dark"] .stock-segmented-slider {
-    background: #0f172a;
-    border-color: #475569;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
-}
-
 /* ==========================================================================
-   Scrollbar Horizontal para Píldoras de Familias
+   ESTILOS DE IMPRESIÓN DEL RECIBO CLÍNICO (@media print)
    ========================================================================== */
-.stock-custom-h-scrollbar {
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
-    -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #modal-digital-receipt,
+    #modal-digital-receipt * {
+        visibility: visible;
+    }
+    #modal-digital-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        background: transparent !important;
+    }
+    .receipt-printable-body {
+        max-height: none !important;
+        overflow: visible !important;
+        padding: 0 !important;
+    }
+    #modal-digital-receipt .btn,
+    #modal-digital-receipt .btn-close,
+    #modal-digital-receipt .modal-card > div:first-child,
+    #modal-digital-receipt .modal-card > div:last-child {
+        display: none !important;
+    }
 }
 
-.stock-custom-h-scrollbar::-webkit-scrollbar {
-    height: 4px;
+/* Custom Scrollbars */
+.stock-custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
 }
 
-.stock-custom-h-scrollbar::-webkit-scrollbar-track {
+.stock-custom-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.stock-custom-h-scrollbar::-webkit-scrollbar-thumb {
+.stock-custom-scrollbar::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
     border-radius: 9999px;
-}
-
-.stock-custom-h-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: #94a3b8;
-}
-
-[data-bs-theme="dark"] .stock-custom-h-scrollbar {
-    scrollbar-color: #475569 transparent;
-}
-
-[data-bs-theme="dark"] .stock-custom-h-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #475569;
 }

@@ -1,0 +1,225 @@
+[
+  {
+    "id": "b1818936-12be-49e0-8e8f-3c8461b56af9",
+    "receipt_number": "REC-2026-0007",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "3cf05d64-d8ad-4809-827b-36b431faca2c",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T01:08:50.358537+00:00",
+    "cancelled_at": "2026-08-26T01:08:51.931350+00:00"
+  },
+  {
+    "id": "4a26de64-8a96-40d9-85e6-7aabbaa70ed7",
+    "receipt_number": "REC-2026-0006",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "bf394f6f-5c82-4673-a6e7-7bdc3a0bc7c1",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T01:08:30.999879+00:00",
+    "cancelled_at": "2026-08-26T01:08:32.492838+00:00"
+  },
+  {
+    "id": "dfb71440-fe57-45fb-a584-26faa3b86778",
+    "receipt_number": "REC-2026-0005",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "f9911dd7-fdf5-42be-bbc1-b788a74eb2e7",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T00:58:05.966571+00:00",
+    "cancelled_at": "2026-08-26T00:58:07.990052+00:00"
+  },
+  {
+    "id": "b178f316-5b7f-444e-99ef-bd7dbff1044b",
+    "receipt_number": "REC-2026-0004",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "a91879c4-c355-4feb-9846-87f84c7fb4d3",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-08-26T00:57:03.666972+00:00"
+  },
+  {
+    "id": "c9ad24e0-ac65-4418-9412-6854ea59fe90",
+    "receipt_number": "REC-2026-0003",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "f06798dd-60cb-41c3-a391-22302c70a4ba",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-08-26T00:56:27.272339+00:00"
+  },
+  {
+    "id": "2ef760ac-34df-4601-9fe9-ae484a9623eb",
+    "receipt_number": "REC-2026-0002",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "39381d0e-0eec-4969-a388-f4a338072544",
+        "code": "TEST-POS-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-08-26T00:56:12.551430+00:00"
+  },
+  {
+    "id": "sale-001",
+    "receipt_number": "REC-2026-0001",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+591 71234567",
+    "items": [
+      {
+        "stock_item_id": "stk-003",
+        "code": "SKU-SUP-001",
+        "name": "Proteína Whey Isolate 100% (Bote 900g Vainilla)",
+        "unit": "Frasco",
+        "quantity": 1,
+        "unit_price": 68.0,
+        "cost_price": 45.0,
+        "subtotal": 68.0
+      },
+      {
+        "stock_item_id": "stk-004",
+        "code": "SKU-SUP-002",
+        "name": "Creatina Monohidratada Creapure 300g",
+        "unit": "Frasco",
+        "quantity": 1,
+        "unit_price": 38.0,
+        "cost_price": 24.0,
+        "subtotal": 38.0
+      }
+    ],
+    "subtotal": 106.0,
+    "discount": 6.0,
+    "total": 100.0,
+    "total_cost": 69.0,
+    "profit": 31.0,
+    "payment_method": "Transferencia / QR",
+    "amount_received": 100.0,
+    "change_given": 0.0,
+    "status": "COMPLETED",
+    "notes": "Plan de hipertrofia y suplementación post-evaluación BIA",
+    "created_at": "2026-08-22T15:45:00Z"
+  }
+]

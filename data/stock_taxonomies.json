@@ -38,52 +38,46 @@
   ],
   "units": [
     {
-      "name": "Pack",
-      "category": "Conteo"
+      "name": "Unidad (u)"
     },
     {
-      "name": "Unidad (u)",
-      "category": "Conteo"
+      "name": "Frasco / Bote"
     },
     {
-      "name": "Frasco / Bote",
-      "category": "Conteo"
+      "name": "Caja"
     },
     {
-      "name": "Caja",
-      "category": "Conteo"
+      "name": "Pack"
     },
     {
-      "name": "Tabletas",
-      "category": "Posología"
+      "name": "Cápsulas"
     },
     {
-      "name": "Cápsulas",
-      "category": "Posología"
+      "name": "Tabletas"
     },
     {
-      "name": "Sobres",
-      "category": "Posología"
+      "name": "Sobres"
     },
     {
-      "name": "Ampollas",
-      "category": "Posología"
+      "name": "Ampollas"
     },
     {
-      "name": "Mililitros (ml)",
-      "category": "Volumen"
+      "name": "Tubo"
     },
     {
-      "name": "Litros (L)",
-      "category": "Volumen"
+      "name": "Gotero"
     },
     {
-      "name": "Gramos (g)",
-      "category": "Peso"
+      "name": "Mililitros (ml)"
     },
     {
-      "name": "Kilogramos (kg)",
-      "category": "Peso"
+      "name": "Litros (L)"
+    },
+    {
+      "name": "Gramos (g)"
+    },
+    {
+      "name": "Kilogramos (kg)"
     }
   ]
 }

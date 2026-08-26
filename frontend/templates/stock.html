@@ -1,225 +1,602 @@
-<!-- VISTA STOCK CONTROL & INVENTARIO CLÍNICO -->
+<!-- VISTA STOCK CONTROL & INVENTARIO CLÍNICO Y VENTAS (POS) -->
 <div id="stock-view" class="view hidden-view stock-view-container">
 
-    <!-- KPI BENTO CARDS DE INVENTARIO -->
-    <div class="stock-kpi-grid">
-        <div class="stock-kpi-card">
-            <div class="stock-kpi-icon primary">
-                <i class="bi bi-box-seam-fill"></i>
-            </div>
-            <div class="stock-kpi-data">
-                <span class="stock-kpi-label">Total Artículos</span>
-                <span class="stock-kpi-value" id="stock-kpi-total">0</span>
-                <span class="stock-kpi-sub">En catálogo clínico</span>
-            </div>
+    <!-- BARRA SUPERIOR DE SUB-MÓDULOS / SEGMENTED CONTROL -->
+    <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+        <div>
+            <h4 class="fw-bold text-navy mb-0 d-flex align-items-center gap-2">
+                <span>📦</span> Stock Control & Ventas
+            </h4>
+            <p class="text-muted small mb-0">Gestión de insumos, suplementos, catálogo de productos y facturación clínica.</p>
         </div>
 
-        <div class="stock-kpi-card">
-            <div class="stock-kpi-icon warning">
-                <i class="bi bi-exclamation-triangle-fill"></i>
-            </div>
-            <div class="stock-kpi-data">
-                <span class="stock-kpi-label">Stock Bajo / Crítico</span>
-                <span class="stock-kpi-value text-warning" id="stock-kpi-low">0</span>
-                <span class="stock-kpi-sub">Requieren reposición</span>
-            </div>
-        </div>
-
-        <div class="stock-kpi-card">
-            <div class="stock-kpi-icon success">
-                <i class="bi bi-cash-stack"></i>
-            </div>
-            <div class="stock-kpi-data">
-                <span class="stock-kpi-label">Valorización Estimada</span>
-                <span class="stock-kpi-value text-success" id="stock-kpi-val">Bs. 0.00</span>
-                <span class="stock-kpi-sub">Costo total inventariado</span>
-            </div>
-        </div>
-
-        <div class="stock-kpi-card">
-            <div class="stock-kpi-icon info">
-                <i class="bi bi-arrow-left-right"></i>
-            </div>
-            <div class="stock-kpi-data">
-                <span class="stock-kpi-label">Movimientos Registrados</span>
-                <span class="stock-kpi-value" id="stock-kpi-movs">0</span>
-                <span class="stock-kpi-sub">Entradas y salidas</span>
+        <!-- Segmented Tab Switcher -->
+        <div class="stock-main-tabs-wrapper">
+            <div class="stock-main-tabs">
+                <button type="button" class="stock-main-tab-btn active" id="tab-btn-stock-catalog" data-panel="stock-panel-catalog">
+                    <i class="bi bi-boxes"></i>
+                    <span>Catálogo & Stock</span>
+                </button>
+                <button type="button" class="stock-main-tab-btn" id="tab-btn-stock-pos" data-panel="stock-panel-pos">
+                    <i class="bi bi-cart-check-fill"></i>
+                    <span>Terminal de Ventas (POS)</span>
+                    <span class="badge bg-primary text-white ms-1 rounded-pill pos-cart-count-badge d-none" id="pos-badge-count">0</span>
+                </button>
+                <button type="button" class="stock-main-tab-btn" id="tab-btn-stock-sales" data-panel="stock-panel-sales">
+                    <i class="bi bi-receipt-cutoff"></i>
+                    <span>Historial de Ventas</span>
+                </button>
+                <button type="button" class="stock-main-tab-btn" id="tab-btn-stock-kardex" data-panel="stock-panel-kardex">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Kardex / Movimientos</span>
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- FORMULARIO: REGISTRAR / EDITAR INSUMO O PRODUCTO -->
-    <div id="stock-form-card" class="bento-card mb-4 p-4 stock-form-card" style="position: relative; z-index: 30; overflow: visible;">
-        <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-            <div class="d-flex align-items-center gap-2">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
-                    <i class="bi bi-plus-circle-fill fs-5" id="stock-form-icon"></i>
+    <!-- ========================================================================= -->
+    <!-- PANEL 1: CATÁLOGO & INVENTARIO CLÍNICO                                    -->
+    <!-- ========================================================================= -->
+    <div id="stock-panel-catalog" class="stock-panel-content">
+        
+        <!-- KPI BENTO CARDS DE INVENTARIO -->
+        <div class="stock-kpi-grid">
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon primary">
+                    <i class="bi bi-box-seam-fill"></i>
                 </div>
-                <div>
-                    <h5 class="fw-bold text-navy mb-0" id="stock-form-title">Registrar Nuevo Insumo / Producto</h5>
-                    <p class="text-muted small mb-0">Gestiona electrodos BIA, suplementos y material clínico.</p>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Total Artículos</span>
+                    <span class="stock-kpi-value" id="stock-kpi-total">0</span>
+                    <span class="stock-kpi-sub">En catálogo clínico</span>
                 </div>
             </div>
-            <button type="button" id="btn-cancel-stock" class="btn btn-sm btn-outline-secondary d-none">
-                <i class="bi bi-x-circle me-1"></i> Cancelar Edición
-            </button>
+
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon warning">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Stock Bajo / Crítico</span>
+                    <span class="stock-kpi-value text-warning" id="stock-kpi-low">0</span>
+                    <span class="stock-kpi-sub">Requieren reposición</span>
+                </div>
+            </div>
+
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon success">
+                    <i class="bi bi-cash-stack"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Valorización de Costo</span>
+                    <span class="stock-kpi-value text-success" id="stock-kpi-val">Bs. 0.00</span>
+                    <span class="stock-kpi-sub">Costo total inventariado</span>
+                </div>
+            </div>
+
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon info">
+                    <i class="bi bi-graph-up-arrow"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Valor en Venta Potencial</span>
+                    <span class="stock-kpi-value text-primary" id="stock-kpi-sale-val">Bs. 0.00</span>
+                    <span class="stock-kpi-sub">Estimado al precio de venta</span>
+                </div>
+            </div>
         </div>
 
-        <form id="stock-form" autocomplete="off">
-            <div class="row g-3">
-                <!-- 1. SKU / Código -->
-                <div class="col-12 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
-                    <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
+        <!-- FORMULARIO: REGISTRAR / EDITAR INSUMO O PRODUCTO -->
+        <div id="stock-form-card" class="bento-card mb-4 p-4 stock-form-card" style="position: relative; z-index: 30; overflow: visible;">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-plus-circle-fill fs-5" id="stock-form-icon"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-navy mb-0" id="stock-form-title">Registrar Nuevo Insumo / Producto</h5>
+                        <p class="text-muted small mb-0">Gestiona suplementos, insumos BIA, medicamentos y material clínico.</p>
+                    </div>
                 </div>
+                <button type="button" id="btn-cancel-stock" class="btn btn-sm btn-outline-secondary d-none">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                </button>
+            </div>
 
-                <!-- 2. Nombre del Producto -->
-                <div class="col-12 col-md-5 col-lg-4">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre del Insumo / Producto <span class="text-danger">*</span></label>
-                    <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Electrodos BIA Desechables (Pack x100)" required>
+            <form id="stock-form" autocomplete="off">
+                <div class="row g-3">
+                    <!-- 1. SKU / Código -->
+                    <div class="col-12 col-md-3 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
+                        <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
+                    </div>
+
+                    <!-- 2. Nombre del Producto -->
+                    <div class="col-12 col-md-5 col-lg-4">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre del Insumo / Producto <span class="text-danger">*</span></label>
+                        <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Proteína Whey Isolate 900g" required>
+                    </div>
+
+                    <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
+                        <div class="stock-custom-dropdown-wrap position-relative">
+                            <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
+                            <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                            <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                        </div>
+                    </div>
+
+                    <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas - Opción 1 sin familias) -->
+                    <div class="col-12 col-md-3 col-lg-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
+                        <div class="stock-custom-dropdown-wrap position-relative">
+                            <input type="text" id="stock-unit" class="form-control shadow-none small pe-4" placeholder="Ej: Frasco, Caja, Cápsulas..." autocomplete="off">
+                            <button type="button" id="btn-clear-unit" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                            <div id="stock-unit-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Cantidad Actual -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual <span class="text-danger">*</span></label>
+                        <input type="number" id="stock-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0" step="any" required>
+                    </div>
+
+                    <!-- 6. Stock Mínimo (Alerta) -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Mínimo</label>
+                        <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="any" value="5">
+                    </div>
+
+                    <!-- 7. Costo Unitario (Bs.) -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario (Bs.)</label>
+                        <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                    </div>
+
+                    <!-- 8. Precio Venta (Bs.) -->
+                    <div class="col-6 col-md-3 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta (Bs.)</label>
+                        <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                    </div>
+
+                    <!-- 8.1 Margen de Ganancia Dinámico -->
+                    <div class="col-12 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Margen Estimado</label>
+                        <div class="stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small" id="stock-calculated-margin">
+                            <span>0.0%</span>
+                        </div>
+                    </div>
+
+                    <!-- 9. Lote / Serie -->
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nro. Lote</label>
+                        <input type="text" id="stock-batch" class="form-control shadow-none small" placeholder="Ej: LOT-2026-A">
+                    </div>
+
+                    <!-- 10. Fecha de Vencimiento -->
+                    <div class="col-6 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Caducidad</label>
+                        <input type="date" id="stock-expiry" class="form-control shadow-none small">
+                    </div>
+
+                    <!-- 11. Ubicación en Consultorio -->
+                    <div class="col-12 col-md-4 col-lg-2">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Ubicación</label>
+                        <input type="text" id="stock-location" class="form-control shadow-none small" placeholder="Ej: Vitrina Recepción">
+                    </div>
+
+                    <!-- 12. Proveedor -->
+                    <div class="col-12 col-md-4 col-lg-3">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Proveedor</label>
+                        <input type="text" id="stock-supplier" class="form-control shadow-none small" placeholder="Ej: NutriFit Import S.R.L.">
+                    </div>
+
+                    <!-- 13. Notas / Indicación Clínica -->
+                    <div class="col-12 col-lg-5">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Notas Clínicas / Descripción</label>
+                        <input type="text" id="stock-notes" class="form-control shadow-none small" placeholder="Indicaciones de posología o almacenamiento...">
+                    </div>
+
+                    <!-- Botón Guardar -->
+                    <div class="col-12 d-flex align-items-end justify-content-end mt-3 pt-2 border-top">
+                        <button type="submit" id="btn-save-stock" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span id="btn-save-stock-text">Guardar en Catálogo</span>
+                        </button>
+                    </div>
                 </div>
+            </form>
+        </div>
 
-                <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
-                <div class="col-12 col-md-4 col-lg-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
-                    <div class="stock-custom-dropdown-wrap position-relative">
-                        <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
-                        <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
-                        <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+        <!-- DIRECTORIO DE INVENTARIO Y SUMINISTROS -->
+        <div class="bento-card p-4" style="position: relative; z-index: 10;">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold text-navy mb-0">Directorio de Inventario y Suministros</h5>
+                    <p class="text-muted small mb-0">Control de existencias, umbrales de alerta y movimientos.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-open-stock-taxonomies" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                        <i class="bi bi-tags-fill"></i> Gestionar Categorías & U/M
+                    </button>
+                    <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                        Total Registros: <span id="stock-total-count">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Barra de Filtros y Búsqueda -->
+            <div class="row g-2 mb-3 align-items-center">
+                <!-- Buscador -->
+                <div class="col-12 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="stock-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre, SKU, ubicación o proveedor...">
                     </div>
                 </div>
 
-                <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas) -->
-                <div class="col-12 col-md-3 col-lg-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
-                    <div class="stock-custom-dropdown-wrap position-relative">
-                        <input type="text" id="stock-unit" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
-                        <button type="button" id="btn-clear-unit" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
-                        <div id="stock-unit-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                <!-- Filtro Categoría -->
+                <div class="col-6 col-md-4">
+                    <select id="stock-filter-category" class="form-select shadow-none small">
+                        <option value="all">📁 Todas las Categorías</option>
+                    </select>
+                </div>
+
+                <!-- Filtro Estado -->
+                <div class="col-6 col-md-3">
+                    <select id="stock-filter-status" class="form-select shadow-none small">
+                        <option value="all">⚡ Todos los Estados</option>
+                        <option value="optimal">🟢 Óptimo</option>
+                        <option value="low">🟡 Stock Bajo (Alerta)</option>
+                        <option value="out">🔴 Agotado</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de Inventario -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle stock-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>CÓDIGO / SKU</th>
+                            <th>PRODUCTO / INSUMO</th>
+                            <th>CATEGORÍA</th>
+                            <th>EXISTENCIA & NIVEL</th>
+                            <th>PRECIOS & MARGEN</th>
+                            <th>LOTE / VENCIMIENTO</th>
+                            <th class="text-end">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stock-tbody">
+                        <tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PANEL 2: TERMINAL DE VENTAS (POS CLÍNICO PARA NUTRICIONISTAS)             -->
+    <!-- ========================================================================= -->
+    <div id="stock-panel-pos" class="stock-panel-content d-none">
+        
+        <div class="row g-4">
+            <!-- COLUMNA IZQUIERDA: CATÁLOGO Y SELECCIÓN DE PRODUCTOS -->
+            <div class="col-12 col-lg-7 col-xl-8">
+                <div class="bento-card p-4 h-100 d-flex flex-column">
+                    <!-- Cabecera de Búsqueda de Productos -->
+                    <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-3 pb-3 border-bottom">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary text-white rounded-3 p-2 d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                                <i class="bi bi-grid-fill"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold text-navy mb-0">Catálogo de Productos para Venta</h6>
+                                <small class="text-muted">Selecciona artículos para añadirlos a la orden</small>
+                            </div>
+                        </div>
+                        <div class="badge bg-light text-secondary border px-3 py-2 fw-semibold">
+                            Disponibles: <span id="pos-catalog-available-count">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Filtros Rápidos POS -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-12 col-sm-7">
+                            <div class="input-group">
+                                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                                <input type="text" id="pos-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre o código de barra/SKU...">
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-5">
+                            <select id="pos-filter-category" class="form-select shadow-none small">
+                                <option value="all">📁 Todas las Categorías</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Grid de Cards de Productos en Venta -->
+                    <div id="pos-product-grid" class="pos-products-grid stock-custom-scrollbar flex-grow-1" style="max-height: 540px; overflow-y: auto; padding-right: 4px;">
+                        <!-- Inyectado dinámicamente -->
                     </div>
                 </div>
+            </div>
 
-                <!-- 5. Cantidad Actual -->
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual <span class="text-danger">*</span></label>
-                    <input type="number" id="stock-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0" step="any" required>
-                </div>
+            <!-- COLUMNA DERECHA: CARRITO & PASARELA DE COBRO -->
+            <div class="col-12 col-lg-5 col-xl-4">
+                <div class="bento-card p-4 pos-checkout-panel d-flex flex-column h-100 shadow-sm">
+                    
+                    <!-- Selección de Paciente / Cliente -->
+                    <div class="mb-3 pb-3 border-bottom">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <label class="form-label text-muted small fw-bold text-uppercase mb-0">
+                                <i class="bi bi-person-fill text-primary me-1"></i> Paciente / Cliente
+                            </label>
+                            <button type="button" id="pos-btn-toggle-client-mode" class="btn btn-link btn-xs text-decoration-none p-0 text-primary small">
+                                Cliente Ocasional
+                            </button>
+                        </div>
 
-                <!-- 6. Stock Mínimo (Alerta) -->
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Mínimo</label>
-                    <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="any" value="5">
-                </div>
+                        <div class="position-relative" id="pos-patient-select-wrap">
+                            <input type="text" id="pos-patient-input" class="form-control shadow-none small" placeholder="Buscar paciente registrado..." autocomplete="off">
+                            <input type="hidden" id="pos-patient-idp-hidden">
+                            <input type="hidden" id="pos-patient-phone-hidden">
+                            <div id="pos-patient-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                        </div>
+                    </div>
 
-                <!-- 7. Costo Unitario (Bs.) -->
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario (Bs.)</label>
-                    <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
-                </div>
+                    <!-- Lista de Ítems en Carrito -->
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="text-muted small fw-bold text-uppercase">Carrito de Venta</span>
+                        <button type="button" id="pos-btn-clear-cart" class="btn btn-link btn-xs text-danger text-decoration-none p-0" title="Vaciar carrito">
+                            <i class="bi bi-trash3 me-1"></i> Vaciar
+                        </button>
+                    </div>
 
-                <!-- 8. Precio Venta (Bs.) -->
-                <div class="col-6 col-md-3 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta (Bs.)</label>
-                    <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
-                </div>
+                    <div id="pos-cart-items-container" class="pos-cart-items stock-custom-scrollbar flex-grow-1 mb-3" style="max-height: 230px; min-height: 140px; overflow-y: auto;">
+                        <div class="text-center py-4 text-muted small">
+                            <i class="bi bi-cart-x fs-2 d-block mb-1 text-secondary opacity-50"></i>
+                            El carrito está vacío.<br>Haz clic en un producto para agregarlo.
+                        </div>
+                    </div>
 
-                <!-- 9. Ubicación en Consultorio -->
-                <div class="col-12 col-md-4 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Ubicación</label>
-                    <input type="text" id="stock-location" class="form-control shadow-none small" placeholder="Ej: Gabinete 1 - Estante B">
-                </div>
+                    <!-- Desglose de Totales & Descuentos -->
+                    <div class="p-3 bg-light rounded-3 border mb-3">
+                        <div class="d-flex align-items-center justify-content-between text-muted small mb-1.5">
+                            <span>Subtotal:</span>
+                            <span class="fw-semibold font-monospace" id="pos-summary-subtotal">Bs. 0.00</span>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between text-muted small mb-2">
+                            <div class="d-flex align-items-center gap-1">
+                                <span>Descuento (Bs.):</span>
+                            </div>
+                            <input type="number" id="pos-input-discount" class="form-control form-control-sm text-end font-monospace py-0 px-2 shadow-none" style="width: 85px;" value="0.00" min="0" step="0.5">
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between pt-2 border-top">
+                            <span class="fw-bold text-navy fs-6">TOTAL A COBRAR:</span>
+                            <span class="fw-extrabold text-primary fs-5 font-monospace" id="pos-summary-total">Bs. 0.00</span>
+                        </div>
+                    </div>
 
-                <!-- 10. Proveedor -->
-                <div class="col-12 col-md-4 col-lg-2">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Proveedor</label>
-                    <input type="text" id="stock-supplier" class="form-control shadow-none small" placeholder="Ej: BIA Supplies S.R.L.">
-                </div>
+                    <!-- Métodos de Pago -->
+                    <div class="mb-3">
+                        <label class="form-label text-muted small fw-bold text-uppercase mb-1.5">Método de Pago</label>
+                        <div class="pos-payment-methods-grid">
+                            <button type="button" class="pos-pay-btn active" data-method="Efectivo">
+                                <i class="bi bi-cash"></i> Efectivo
+                            </button>
+                            <button type="button" class="pos-pay-btn" data-method="Transferencia / QR">
+                                <i class="bi bi-qr-code"></i> Transf. / QR
+                            </button>
+                            <button type="button" class="pos-pay-btn" data-method="Tarjeta Débito/Crédito">
+                                <i class="bi bi-credit-card-2-front"></i> Tarjeta
+                            </button>
+                            <button type="button" class="pos-pay-btn" data-method="Zelle / Pago Móvil">
+                                <i class="bi bi-phone"></i> Zelle / Móvil
+                            </button>
+                        </div>
 
-                <!-- 11. Notas / Descripción -->
-                <div class="col-12 col-lg-8">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Notas / Lote / Descripción</label>
-                    <input type="text" id="stock-notes" class="form-control shadow-none small" placeholder="Lote, fecha de caducidad o instrucciones de almacenamiento...">
-                </div>
+                        <!-- Campo Efectivo: Monto recibido y cambio -->
+                        <div id="pos-cash-change-panel" class="row g-2 mt-1">
+                            <div class="col-6">
+                                <label class="form-label text-muted small mb-0" style="font-size: 0.72rem;">Monto Recibido</label>
+                                <input type="number" id="pos-cash-received" class="form-control form-control-sm font-monospace shadow-none" placeholder="0.00" min="0" step="0.5">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label text-muted small mb-0" style="font-size: 0.72rem;">Cambio / Vuelto</label>
+                                <div class="form-control form-control-sm font-monospace bg-light fw-bold text-success" id="pos-cash-change">Bs. 0.00</div>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Botón Guardar -->
-                <div class="col-12 col-lg-4 d-flex align-items-end">
-                    <button type="submit" id="btn-save-stock" class="btn btn-primary w-100 py-2 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2">
-                        <i class="bi bi-check-circle-fill"></i>
-                        <span id="btn-save-stock-text">Guardar Ítem en Inventario</span>
+                    <!-- Botón Completar Venta -->
+                    <button type="button" id="pos-btn-checkout" class="btn btn-primary w-100 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 mt-auto" disabled>
+                        <i class="bi bi-check2-circle fs-5"></i>
+                        <span>Completar Venta & Recibo</span>
                     </button>
                 </div>
             </div>
-        </form>
-    </div>
-
-    <!-- DIRECTORIO DE INVENTARIO Y SUMINISTROS -->
-    <div class="bento-card p-4" style="position: relative; z-index: 10;">
-        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
-            <div>
-                <h5 class="fw-bold text-navy mb-0">Directorio de Inventario y Suministros</h5>
-                <p class="text-muted small mb-0">Control de existencias, umbrales de alerta y movimientos.</p>
-            </div>
-            <div class="d-flex align-items-center gap-2">
-                <button type="button" id="btn-open-stock-taxonomies" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
-                    <i class="bi bi-tags-fill"></i> Gestionar Categorías & U/M
-                </button>
-                <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
-                    Total Registros: <span id="stock-total-count">0</span>
-                </span>
-            </div>
         </div>
 
-        <!-- Barra de Filtros y Búsqueda -->
-        <div class="row g-2 mb-3 align-items-center">
-            <!-- Buscador -->
-            <div class="col-12 col-md-5">
-                <div class="input-group">
-                    <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
-                    <input type="text" id="stock-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre, SKU, ubicación o proveedor...">
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PANEL 3: HISTORIAL DE VENTAS & COMPROBANTES                                -->
+    <!-- ========================================================================= -->
+    <div id="stock-panel-sales" class="stock-panel-content d-none">
+        
+        <!-- KPI CARDS DE VENTAS -->
+        <div class="stock-kpi-grid mb-4">
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon success">
+                    <i class="bi bi-currency-dollar"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Recaudación Total</span>
+                    <span class="stock-kpi-value text-success" id="sales-kpi-total-amount">Bs. 0.00</span>
+                    <span class="stock-kpi-sub">Total de ventas realizadas</span>
                 </div>
             </div>
 
-            <!-- Filtro Categoría -->
-            <div class="col-6 col-md-4">
-                <select id="stock-filter-category" class="form-select shadow-none small">
-                    <option value="all">📁 Todas las Categorías</option>
-                    <option value="Insumos BIA">🩺 Insumos BIA</option>
-                    <option value="Suplementos Nutricionales">💊 Suplementos Nutricionales</option>
-                    <option value="Material Clínico e Higiene">🧼 Material Clínico e Higiene</option>
-                    <option value="Accesorios y Equipos">📦 Accesorios y Equipos</option>
-                    <option value="Otros">Otros</option>
-                </select>
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon primary">
+                    <i class="bi bi-graph-up"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Ganancia Neta Estimada</span>
+                    <span class="stock-kpi-value text-primary" id="sales-kpi-total-profit">Bs. 0.00</span>
+                    <span class="stock-kpi-sub">Margen bruto obtenido</span>
+                </div>
             </div>
 
-            <!-- Filtro Estado -->
-            <div class="col-6 col-md-3">
-                <select id="stock-filter-status" class="form-select shadow-none small">
-                    <option value="all">⚡ Todos los Estados</option>
-                    <option value="optimal">🟢 Óptimo</option>
-                    <option value="low">🟡 Stock Bajo (Alerta)</option>
-                    <option value="out">🔴 Agotado</option>
-                </select>
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon info">
+                    <i class="bi bi-calendar-check"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Ventas de Hoy</span>
+                    <span class="stock-kpi-value" id="sales-kpi-today-amount">Bs. 0.00</span>
+                    <span class="stock-kpi-sub"><span id="sales-kpi-today-count">0</span> transacciones hoy</span>
+                </div>
+            </div>
+
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon warning">
+                    <i class="bi bi-receipt"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Ticket Promedio</span>
+                    <span class="stock-kpi-value" id="sales-kpi-avg-ticket">Bs. 0.00</span>
+                    <span class="stock-kpi-sub">Promedio por recibo</span>
+                </div>
             </div>
         </div>
 
-        <!-- Tabla de Inventario -->
-        <div class="table-responsive">
-            <table class="table table-hover align-middle stock-table mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>CÓDIGO / SKU</th>
-                        <th>PRODUCTO / INSUMO</th>
-                        <th>CATEGORÍA</th>
-                        <th>EXISTENCIA & NIVEL</th>
-                        <th>PRECIOS (BS.)</th>
-                        <th>UBICACIÓN / PROVEEDOR</th>
-                        <th class="text-end">ACCIONES</th>
-                    </tr>
-                </thead>
-                <tbody id="stock-tbody">
-                    <tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
-                </tbody>
-            </table>
+        <!-- TABLA DE HISTORIAL DE VENTAS -->
+        <div class="bento-card p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+                <div>
+                    <h5 class="fw-bold text-navy mb-0">Registro Histórico de Ventas</h5>
+                    <p class="text-muted small mb-0">Comprobantes emitidos, métodos de pago y estados de anulación.</p>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-light text-dark border px-3 py-2 fw-semibold">
+                        Total Ventas: <span id="sales-total-count">0</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filtros de Ventas -->
+            <div class="row g-2 mb-3 align-items-center">
+                <div class="col-12 col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" id="sales-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por Nro. Comprobante (REC-...), Paciente o Ítem...">
+                    </div>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select id="sales-filter-payment" class="form-select shadow-none small">
+                        <option value="all">💳 Todos los Métodos</option>
+                        <option value="Efectivo">💵 Efectivo</option>
+                        <option value="Transferencia / QR">📲 Transferencia / QR</option>
+                        <option value="Tarjeta Débito/Crédito">💳 Tarjeta</option>
+                        <option value="Zelle / Pago Móvil">🌐 Zelle / Móvil</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-3">
+                    <select id="sales-filter-status" class="form-select shadow-none small">
+                        <option value="all">⚡ Todos los Estados</option>
+                        <option value="COMPLETED">✅ Completada</option>
+                        <option value="CANCELLED">🚫 Anulada</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de Ventas -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle stock-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>NRO. COMPROBANTE</th>
+                            <th>FECHA & HORA</th>
+                            <th>PACIENTE / CLIENTE</th>
+                            <th>ÍTEMS VENDIDOS</th>
+                            <th>MÉTODO DE PAGO</th>
+                            <th>TOTAL (BS.)</th>
+                            <th>ESTADO</th>
+                            <th class="text-end">ACCIONES</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-tbody">
+                        <tr><td colspan="8" class="text-center py-5 text-muted">Cargando ventas...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- PANEL 4: KARDEX & AUDITORÍA DE MOVIMIENTOS                                -->
+    <!-- ========================================================================= -->
+    <div id="stock-panel-kardex" class="stock-panel-content d-none">
+        <div class="bento-card p-4">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                        <i class="bi bi-arrow-left-right fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold text-navy mb-0">Kardex de Inventario & Auditoría</h5>
+                        <p class="text-muted small mb-0">Trazabilidad completa de entradas por compra, ventas y mermas.</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-refresh-kardex" class="btn btn-sm btn-light border fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs">
+                        <i class="bi bi-arrow-clockwise"></i> Actualizar Kardex
+                    </button>
+                </div>
+            </div>
+
+            <!-- Filtros de Kardex -->
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-6">
+                    <input type="text" id="kardex-search-input" class="form-control shadow-none small" placeholder="Buscar por producto, motivo o código...">
+                </div>
+                <div class="col-6 col-md-3">
+                    <select id="kardex-filter-type" class="form-select shadow-none small">
+                        <option value="all">🔄 Todos los Tipos</option>
+                        <option value="SALE">🛒 Salidas por Venta</option>
+                        <option value="IN">📥 Entradas de Stock</option>
+                        <option value="OUT">📤 Salidas Clínicas / Merma</option>
+                        <option value="ADJUST">⚡ Ajustes Manuales</option>
+                        <option value="SALE_CANCEL">↩️ Devolución por Anulación</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Tabla de Kardex -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle stock-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>FECHA & HORA</th>
+                            <th>PRODUCTO / INSUMO</th>
+                            <th>TIPO MOVIMIENTO</th>
+                            <th>CANTIDAD</th>
+                            <th>STOCK ANTERIOR</th>
+                            <th>NUEVO STOCK</th>
+                            <th>MOTIVO / REFERENCIA</th>
+                        </tr>
+                    </thead>
+                    <tbody id="kardex-tbody">
+                        <tr><td colspan="7" class="text-center py-5 text-muted">Cargando movimientos...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 

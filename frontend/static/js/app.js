@@ -166,6 +166,11 @@ function initNavigation() {
                         if (typeof initClinicMap === 'function') initClinicMap();
                     }, 150);
                 }
+
+                if (targetId === 'stock-view') {
+                    if (typeof fetchStockItems === 'function') fetchStockItems();
+                    if (typeof fetchStockTaxonomies === 'function') fetchStockTaxonomies();
+                }
             }
         });
     });
@@ -4064,21 +4069,122 @@ function importBackupJSON(e) {
     reader.readAsText(file);
 }
 
-// --- 7. STOCK CONTROL & INVENTARIO CLÍNICO ---
+// --- 7. STOCK CONTROL & INVENTARIO CLÍNICO Y VENTAS (POS) ---
 let allStockItems = [];
 let allStockMovements = [];
+let allSalesHistory = [];
+let posCart = [];
 let editingStockId = null;
-let currentStockMovementItem = null;
+let currentQuickAdjustItem = null;
 let currentMovementType = 'IN';
+let stockTaxonomiesData = { categories: [], units: [] };
+let posSelectedPatient = null;
+let posSelectedPaymentMethod = 'Efectivo';
+let currentViewedReceipt = null;
 
 function initStockModule() {
+    // 1. Inicializar Sub-pestañas Bento
+    initStockSubTabs();
+
+    // 2. Cálculo dinámico de Margen de Ganancia (%)
+    initStockMarginCalculator();
+
+    // 3. Formulario de Stock
+    initStockForm();
+
+    // 4. Módulo POS (Punto de Venta)
+    initPosModule();
+
+    // 5. Módulo de Historial de Ventas
+    initSalesModule();
+
+    // 6. Módulo de Kardex
+    initKardexModule();
+
+    // 7. Modales de Taxonomías (Opción 1 sin familias), Ajuste Rápido y Recibo
+    initStockTaxonomyModal();
+    initQuickStockAdjustModal();
+    initDigitalReceiptModal();
+    initStockFormCustomDropdowns();
+
+    // 8. Carga inicial de datos
+    fetchStockItems();
+    fetchStockTaxonomies();
+    fetchSalesHistory();
+    fetchKardexMovements();
+}
+
+// --- SUB-PESTAÑAS BENTO (Catálogo / POS / Ventas / Kardex) ---
+function initStockSubTabs() {
+    const tabBtns = document.querySelectorAll('.stock-main-tab-btn');
+    const panels = document.querySelectorAll('.stock-panel-content');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            tabBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const targetPanelId = btn.dataset.panel;
+            panels.forEach(p => {
+                if (p.id === targetPanelId) {
+                    p.classList.remove('d-none');
+                } else {
+                    p.classList.add('d-none');
+                }
+            });
+
+            // Acciones al cambiar de pestaña
+            if (targetPanelId === 'stock-panel-pos') {
+                renderPosProductGrid();
+                renderPosCart();
+            } else if (targetPanelId === 'stock-panel-sales') {
+                fetchSalesHistory();
+            } else if (targetPanelId === 'stock-panel-kardex') {
+                fetchKardexMovements();
+            }
+        });
+    });
+}
+
+function switchStockSubTab(panelId) {
+    const btn = document.querySelector(`.stock-main-tab-btn[data-panel="${panelId}"]`);
+    if (btn) btn.click();
+}
+
+// --- CÁLCULO DINÁMICO DE MARGEN DE GANANCIA ---
+function initStockMarginCalculator() {
+    const inputCost = document.getElementById('stock-cost');
+    const inputSale = document.getElementById('stock-sale');
+    const badgeMargin = document.getElementById('stock-calculated-margin');
+    if (!inputCost || !inputSale || !badgeMargin) return;
+
+    const calcMargin = () => {
+        const cost = parseFloat(inputCost.value) || 0;
+        const sale = parseFloat(inputSale.value) || 0;
+
+        if (sale > 0 && cost > 0) {
+            const diff = sale - cost;
+            const pct = (diff / sale) * 100;
+            badgeMargin.className = `stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border small ${pct >= 0 ? 'positive' : 'negative'}`;
+            badgeMargin.innerHTML = `<span>${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% (Bs. ${diff.toFixed(2)})</span>`;
+        } else if (sale > 0 && cost === 0) {
+            badgeMargin.className = 'stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border small positive';
+            badgeMargin.innerHTML = '<span>100% Margen</span>';
+        } else {
+            badgeMargin.className = 'stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small';
+            badgeMargin.innerHTML = '<span class="text-muted">0.0%</span>';
+        }
+    };
+
+    inputCost.addEventListener('input', calcMargin);
+    inputSale.addEventListener('input', calcMargin);
+}
+
+// --- FORMULARIO Y TABLA DE CATÁLOGO / STOCK ---
+function initStockForm() {
     const form = document.getElementById('stock-form');
     if (!form) return;
 
-    fetchStockItems();
-    fetchStockMovements();
-
-    // Form submit listener
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         const btnSave = document.getElementById('btn-save-stock');
@@ -4089,12 +4195,14 @@ function initStockModule() {
         const payload = {
             code: document.getElementById('stock-code').value.trim(),
             name: document.getElementById('stock-name').value.trim(),
-            category: document.getElementById('stock-category').value,
-            unit: document.getElementById('stock-unit').value,
+            category: document.getElementById('stock-category').value.trim() || 'Insumos BIA',
+            unit: document.getElementById('stock-unit').value.trim() || 'Unidad (u)',
             stock_quantity: parseFloat(document.getElementById('stock-quantity').value) || 0,
             min_stock: parseFloat(document.getElementById('stock-min').value) || 5,
             cost_price: parseFloat(document.getElementById('stock-cost').value) || 0,
             sale_price: parseFloat(document.getElementById('stock-sale').value) || 0,
+            batch_number: document.getElementById('stock-batch')?.value.trim() || '',
+            expiry_date: document.getElementById('stock-expiry')?.value || '',
             location: document.getElementById('stock-location').value.trim(),
             supplier: document.getElementById('stock-supplier').value.trim(),
             notes: document.getElementById('stock-notes').value.trim()
@@ -4112,28 +4220,25 @@ function initStockModule() {
             const result = await res.json();
 
             if (res.ok && (result.success || result.id)) {
-                showToast(editingStockId ? '✅ Insumo actualizado correctamente' : '✅ Insumo registrado en inventario', 'success');
+                showToast(editingStockId ? '✅ Producto actualizado correctamente' : '✅ Producto registrado en catálogo', 'success');
                 resetStockForm();
-                fetchStockItems();
+                await fetchStockItems();
+                await fetchStockTaxonomies();
             } else {
-                showToast(result.error || 'Error al guardar ítem', 'error');
+                showToast(result.error || 'Error al guardar producto', 'error');
             }
         } catch (err) {
             console.error(err);
-            showToast('Error de conexión al guardar inventario', 'error');
+            showToast('Error de conexión al guardar en inventario', 'error');
         } finally {
             btnSave.disabled = false;
             btnSave.innerHTML = originalText;
         }
     });
 
-    // Cancel edit button
     const btnCancel = document.getElementById('btn-cancel-stock');
-    if (btnCancel) {
-        btnCancel.addEventListener('click', resetStockForm);
-    }
+    if (btnCancel) btnCancel.addEventListener('click', resetStockForm);
 
-    // Live search & filters
     const searchInput = document.getElementById('stock-search-input');
     const catFilter = document.getElementById('stock-filter-category');
     const statusFilter = document.getElementById('stock-filter-status');
@@ -4141,20 +4246,12 @@ function initStockModule() {
     if (searchInput) searchInput.addEventListener('input', filterAndRenderStock);
     if (catFilter) catFilter.addEventListener('change', filterAndRenderStock);
     if (statusFilter) statusFilter.addEventListener('change', filterAndRenderStock);
-
-    // Init Custom Dropdowns & Modals
-    initStockFormCustomDropdowns();
-    initStockMovementModal();
-    initStockHistoryModal();
-    initStockTaxonomyModal();
 }
 
 async function fetchStockItems() {
     const tbody = document.getElementById('stock-tbody');
     const totalCountEl = document.getElementById('stock-total-count');
     if (!tbody) return;
-
-    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>';
 
     try {
         const res = await fetch('/api/stock');
@@ -4165,6 +4262,7 @@ async function fetchStockItems() {
         updateStockCategoryOptions(allStockItems);
         updateStockKPIs(allStockItems);
         filterAndRenderStock();
+        renderPosProductGrid();
     } catch (err) {
         console.error('Error al cargar inventario:', err);
         tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar inventario. Reintenta en unos instantes.</td></tr>';
@@ -4174,10 +4272,9 @@ async function fetchStockItems() {
 function updateStockCategoryOptions(items) {
     if (!Array.isArray(items)) return;
     const catFilter = document.getElementById('stock-filter-category');
-    const catDatalist = document.getElementById('stock-categories-datalist');
+    const posCatFilter = document.getElementById('pos-filter-category');
     if (!catFilter) return;
 
-    const currentVal = catFilter.value;
     const defaultCats = [
         "Insumos BIA",
         "Suplementos Nutricionales",
@@ -4189,51 +4286,34 @@ function updateStockCategoryOptions(items) {
     ];
 
     const uniqueCats = new Set(defaultCats);
+    if (stockTaxonomiesData?.categories) {
+        stockTaxonomiesData.categories.forEach(c => uniqueCats.add(c.name));
+    }
     items.forEach(i => {
-        if (i.category && i.category.trim()) {
-            uniqueCats.add(i.category.trim());
-        }
+        if (i.category && i.category.trim()) uniqueCats.add(i.category.trim());
     });
 
-    // Update Filter Select
-    catFilter.innerHTML = '<option value="all">📁 Todas las Categorías</option>';
-    uniqueCats.forEach(cat => {
-        const opt = document.createElement('option');
-        opt.value = cat;
-        let icon = '📦';
-        if (cat.includes('BIA')) icon = '🩺';
-        else if (cat.includes('Suplementos')) icon = '💊';
-        else if (cat.includes('Material') || cat.includes('Higiene')) icon = '🧼';
-        else if (cat.includes('Medicamentos')) icon = '💉';
-        opt.textContent = `${icon} ${cat}`;
-        catFilter.appendChild(opt);
-    });
-
-    if (uniqueCats.has(currentVal) || currentVal === 'all') {
-        catFilter.value = currentVal;
-    }
-
-    // Update Datalist
-    if (catDatalist) {
-        catDatalist.innerHTML = '';
+    const buildOptionsHtml = () => {
+        let html = '<option value="all">📁 Todas las Categorías</option>';
         uniqueCats.forEach(cat => {
-            const opt = document.createElement('option');
-            opt.value = cat;
-            catDatalist.appendChild(opt);
+            let icon = '📦';
+            if (cat.includes('BIA')) icon = '🩺';
+            else if (cat.includes('Suplementos')) icon = '💊';
+            else if (cat.includes('Material') || cat.includes('Higiene')) icon = '🧼';
+            else if (cat.includes('Medicamentos') || cat.includes('Fármacos')) icon = '💉';
+            html += `<option value="${escapeHtml(cat)}">${icon} ${escapeHtml(cat)}</option>`;
         });
-    }
-}
+        return html;
+    };
 
-async function fetchStockMovements() {
-    try {
-        const res = await fetch('/api/stock/movements');
-        if (res.ok) {
-            allStockMovements = await res.json();
-            const movsEl = document.getElementById('stock-kpi-movs');
-            if (movsEl) movsEl.textContent = Array.isArray(allStockMovements) ? allStockMovements.length : 0;
-        }
-    } catch (e) {
-        console.warn(e);
+    const currentVal = catFilter.value;
+    catFilter.innerHTML = buildOptionsHtml();
+    if (uniqueCats.has(currentVal) || currentVal === 'all') catFilter.value = currentVal;
+
+    if (posCatFilter) {
+        const currentPosVal = posCatFilter.value;
+        posCatFilter.innerHTML = buildOptionsHtml();
+        if (uniqueCats.has(currentPosVal) || currentPosVal === 'all') posCatFilter.value = currentPosVal;
     }
 }
 
@@ -4243,19 +4323,27 @@ function updateStockKPIs(items) {
     const totalEl = document.getElementById('stock-kpi-total');
     const lowEl = document.getElementById('stock-kpi-low');
     const valEl = document.getElementById('stock-kpi-val');
+    const saleValEl = document.getElementById('stock-kpi-sale-val');
 
     if (totalEl) totalEl.textContent = items.length;
 
     const lowCount = items.filter(i => (parseFloat(i.stock_quantity) || 0) <= (parseFloat(i.min_stock) || 5)).length;
     if (lowEl) lowEl.textContent = lowCount;
 
-    const totalVal = items.reduce((acc, curr) => {
+    const totalCost = items.reduce((acc, curr) => {
         const qty = parseFloat(curr.stock_quantity) || 0;
         const cost = parseFloat(curr.cost_price) || 0;
         return acc + (qty * cost);
     }, 0);
 
-    if (valEl) valEl.textContent = `Bs. ${totalVal.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const totalSale = items.reduce((acc, curr) => {
+        const qty = parseFloat(curr.stock_quantity) || 0;
+        const sale = parseFloat(curr.sale_price) || 0;
+        return acc + (qty * sale);
+    }, 0);
+
+    if (valEl) valEl.textContent = `Bs. ${totalCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    if (saleValEl) saleValEl.textContent = `Bs. ${totalSale.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 function filterAndRenderStock() {
@@ -4271,10 +4359,11 @@ function filterAndRenderStock() {
         const normCode = normalizeText(item.code);
         const normLoc = normalizeText(item.location);
         const normSupp = normalizeText(item.supplier);
+        const normBatch = normalizeText(item.batch_number);
 
-        const matchSearch = !search || normName.includes(search) || normCode.includes(search) || normLoc.includes(search) || normSupp.includes(search);
+        const matchSearch = !search || normName.includes(search) || normCode.includes(search) || normLoc.includes(search) || normSupp.includes(search) || normBatch.includes(search);
         const matchCat = cat === 'all' || item.category === cat;
-        
+
         let itemStatus = item.status;
         if (!itemStatus) {
             const qty = parseFloat(item.stock_quantity) || 0;
@@ -4329,9 +4418,9 @@ function renderStockTable(items) {
         const tdName = document.createElement('td');
         tdName.innerHTML = `
             <div class="fw-bold text-navy">${escapeHtml(item.name)}</div>
-            <div class="d-flex align-items-center gap-1.5 mt-0.5">
-                <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${escapeHtml(item.unit || 'Unidad')}</span>
-                ${item.notes ? `<span class="text-muted small text-truncate" style="max-width: 220px;" title="${escapeHtml(item.notes)}">• ${escapeHtml(item.notes)}</span>` : ''}
+            <div class="d-flex align-items-center gap-1.5 mt-0.5 flex-wrap">
+                <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${escapeHtml(item.unit || 'Unidad (u)')}</span>
+                ${item.location ? `<span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-geo-alt"></i> ${escapeHtml(item.location)}</span>` : ''}
             </div>
         `;
 
@@ -4339,9 +4428,10 @@ function renderStockTable(items) {
         const tdCat = document.createElement('td');
         let catIcon = '📦';
         if (item.category?.includes('BIA')) catIcon = '🩺';
-        if (item.category?.includes('Suplementos')) catIcon = '💊';
-        if (item.category?.includes('Material') || item.category?.includes('Higiene')) catIcon = '🧼';
-        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${escapeHtml(item.category || 'Insumos BIA')}</span>`;
+        else if (item.category?.includes('Suplementos')) catIcon = '💊';
+        else if (item.category?.includes('Material') || item.category?.includes('Higiene')) catIcon = '🧼';
+        else if (item.category?.includes('Medicamentos')) catIcon = '💉';
+        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${escapeHtml(item.category || 'Otros')}</span>`;
 
         // 4. Existencia & Nivel
         const tdStock = document.createElement('td');
@@ -4374,21 +4464,40 @@ function renderStockTable(items) {
             </div>
         `;
 
-        // 5. Precios (Costo / Venta Bs.)
+        // 5. Precios & Margen
         const tdPrices = document.createElement('td');
         const cost = parseFloat(item.cost_price) || 0;
         const sale = parseFloat(item.sale_price) || 0;
+        let marginText = '';
+        if (sale > 0 && cost > 0) {
+            const pct = ((sale - cost) / sale) * 100;
+            marginText = `<span class="badge ${pct >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} small ms-1" style="font-size: 0.65rem;">${pct >= 0 ? '+' : ''}${pct.toFixed(0)}%</span>`;
+        }
+
         tdPrices.innerHTML = `
-            <div class="small text-secondary">Costo: <strong class="font-monospace text-dark">Bs. ${cost.toFixed(2)}</strong></div>
-            ${sale > 0 ? `<div class="small text-success">Venta: <strong class="font-monospace">Bs. ${sale.toFixed(2)}</strong></div>` : '<div class="text-muted small" style="font-size: 0.72rem;">Uso interno</div>'}
+            <div class="small text-success fw-bold font-monospace">Venta: Bs. ${sale.toFixed(2)} ${marginText}</div>
+            <div class="small text-muted font-monospace" style="font-size: 0.72rem;">Costo: Bs. ${cost.toFixed(2)}</div>
         `;
 
-        // 6. Ubicación / Proveedor
-        const tdLoc = document.createElement('td');
-        tdLoc.innerHTML = `
-            <div class="small text-dark fw-semibold"><i class="bi bi-geo-alt-fill text-primary opacity-75"></i> ${escapeHtml(item.location || 'Consultorio BIA')}</div>
-            <div class="small text-muted mt-0.5"><i class="bi bi-truck text-secondary opacity-50"></i> ${escapeHtml(item.supplier || 'No especificado')}</div>
-        `;
+        // 6. Lote / Vencimiento
+        const tdExpiry = document.createElement('td');
+        let expiryHtml = '<span class="text-muted small">--</span>';
+        if (item.expiry_date) {
+            const expDate = new Date(item.expiry_date);
+            const today = new Date();
+            const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
+            let badgeExpClass = 'text-secondary';
+            if (daysLeft < 0) badgeExpClass = 'text-danger fw-bold';
+            else if (daysLeft <= 30) badgeExpClass = 'text-warning fw-bold';
+
+            expiryHtml = `
+                <div class="small ${badgeExpClass}"><i class="bi bi-calendar-event me-1"></i>${item.expiry_date}</div>
+                ${item.batch_number ? `<div class="text-muted small font-monospace" style="font-size: 0.7rem;">Lot: ${escapeHtml(item.batch_number)}</div>` : ''}
+            `;
+        } else if (item.batch_number) {
+            expiryHtml = `<span class="badge bg-light text-secondary border font-monospace small">Lot: ${escapeHtml(item.batch_number)}</span>`;
+        }
+        tdExpiry.innerHTML = expiryHtml;
 
         // 7. Acciones
         const tdActions = document.createElement('td');
@@ -4397,21 +4506,27 @@ function renderStockTable(items) {
         const actionsWrap = document.createElement('div');
         actionsWrap.className = 'd-inline-flex align-items-center justify-content-end gap-1.5 flex-wrap';
 
+        // Botón Vender Rápido (lleva a POS)
+        const btnSell = document.createElement('button');
+        btnSell.type = 'button';
+        btnSell.className = 'btn btn-sm btn-primary py-1 px-2 fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs';
+        btnSell.style.fontSize = '0.76rem';
+        btnSell.innerHTML = '<i class="bi bi-cart-plus-fill"></i> Vender';
+        btnSell.title = 'Vender este producto en Terminal POS';
+        btnSell.addEventListener('click', () => {
+            addToPosCart(item);
+            switchStockSubTab('stock-panel-pos');
+            showToast(`🛒 "${item.name}" añadido a la venta`, 'info');
+        });
+
         // Botón Ajustar Existencia
         const btnAdjust = document.createElement('button');
         btnAdjust.type = 'button';
-        btnAdjust.className = 'btn btn-sm btn-stock-adjust shadow-2xs';
-        btnAdjust.innerHTML = '<i class="bi bi-plus-slash-minus"></i> Ajustar';
-        btnAdjust.title = 'Registrar entrada o salida de inventario';
-        btnAdjust.addEventListener('click', () => openStockMovementModal(item));
-
-        // Botón Historial de Movimientos
-        const btnHist = document.createElement('button');
-        btnHist.type = 'button';
-        btnHist.className = 'btn btn-sm btn-light border px-2 py-1 text-secondary rounded-2 shadow-2xs';
-        btnHist.innerHTML = '<i class="bi bi-clock-history"></i>';
-        btnHist.title = 'Ver historial de movimientos';
-        btnHist.addEventListener('click', () => openStockHistoryModal(item));
+        btnAdjust.className = 'btn btn-sm btn-light border py-1 px-2 text-dark fw-semibold rounded-2 shadow-2xs';
+        btnAdjust.style.fontSize = '0.76rem';
+        btnAdjust.innerHTML = '<i class="bi bi-arrow-left-right text-primary"></i> Ajustar';
+        btnAdjust.title = 'Registrar entrada o salida en Kardex';
+        btnAdjust.addEventListener('click', () => openQuickStockAdjustModal(item));
 
         // Botón Editar
         const btnEdit = document.createElement('button');
@@ -4429,10 +4544,10 @@ function renderStockTable(items) {
         btnDel.title = 'Eliminar artículo';
         btnDel.addEventListener('click', () => deleteStockItem(item.id, item.name));
 
-        actionsWrap.append(btnAdjust, btnHist, btnEdit, btnDel);
+        actionsWrap.append(btnSell, btnAdjust, btnEdit, btnDel);
         tdActions.appendChild(actionsWrap);
 
-        tr.append(tdCode, tdName, tdCat, tdStock, tdPrices, tdLoc, tdActions);
+        tr.append(tdCode, tdName, tdCat, tdStock, tdPrices, tdExpiry, tdActions);
         tbody.appendChild(tr);
     });
 }
@@ -4446,11 +4561,16 @@ function resetStockForm() {
     const iconEl = document.getElementById('stock-form-icon');
     const saveTextEl = document.getElementById('btn-save-stock-text');
     const btnCancel = document.getElementById('btn-cancel-stock');
+    const badgeMargin = document.getElementById('stock-calculated-margin');
 
     if (titleEl) titleEl.textContent = 'Registrar Nuevo Insumo / Producto';
     if (iconEl) iconEl.className = 'bi bi-plus-circle-fill fs-5';
-    if (saveTextEl) saveTextEl.textContent = 'Guardar Ítem en Inventario';
+    if (saveTextEl) saveTextEl.textContent = 'Guardar en Catálogo';
     if (btnCancel) btnCancel.classList.add('d-none');
+    if (badgeMargin) {
+        badgeMargin.className = 'stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small';
+        badgeMargin.innerHTML = '<span class="text-muted">0.0%</span>';
+    }
 }
 
 function editStockItem(item) {
@@ -4458,14 +4578,19 @@ function editStockItem(item) {
     document.getElementById('stock-code').value = item.code || '';
     document.getElementById('stock-name').value = item.name || '';
     document.getElementById('stock-category').value = item.category || 'Insumos BIA';
-    document.getElementById('stock-unit').value = item.unit || 'Unidad';
+    document.getElementById('stock-unit').value = item.unit || 'Unidad (u)';
     document.getElementById('stock-quantity').value = item.stock_quantity ?? 0;
     document.getElementById('stock-min').value = item.min_stock ?? 5;
     document.getElementById('stock-cost').value = item.cost_price ?? 0;
     document.getElementById('stock-sale').value = item.sale_price ?? 0;
+    if (document.getElementById('stock-batch')) document.getElementById('stock-batch').value = item.batch_number || '';
+    if (document.getElementById('stock-expiry')) document.getElementById('stock-expiry').value = item.expiry_date || '';
     document.getElementById('stock-location').value = item.location || '';
     document.getElementById('stock-supplier').value = item.supplier || '';
     document.getElementById('stock-notes').value = item.notes || '';
+
+    // Disparar cálculo de margen
+    document.getElementById('stock-sale').dispatchEvent(new Event('input'));
 
     const titleEl = document.getElementById('stock-form-title');
     const iconEl = document.getElementById('stock-form-icon');
@@ -4474,21 +4599,21 @@ function editStockItem(item) {
 
     if (titleEl) titleEl.textContent = `Editar: ${item.name}`;
     if (iconEl) iconEl.className = 'bi bi-pencil-square fs-5';
-    if (saveTextEl) saveTextEl.textContent = 'Actualizar Cambios en Ítem';
+    if (saveTextEl) saveTextEl.textContent = 'Actualizar Cambios en Catálogo';
     if (btnCancel) btnCancel.classList.remove('d-none');
 
-    document.getElementById('stock-form')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    document.getElementById('stock-form-card')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 function deleteStockItem(id, name) {
     showConfirm(
         'Eliminar Insumo / Producto',
-        `¿Estás seguro de eliminar "${name || 'este artículo'}" del inventario?`,
+        `¿Estás seguro de eliminar "${name || 'este artículo'}" del catálogo e inventario?`,
         async () => {
             try {
                 const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
                 if (res.ok) {
-                    showToast('🗑️ Artículo eliminado del inventario', 'success');
+                    showToast('🗑️ Artículo eliminado del catálogo', 'success');
                     fetchStockItems();
                 } else {
                     showToast('Error al eliminar artículo', 'error');
@@ -4501,20 +4626,782 @@ function deleteStockItem(id, name) {
     );
 }
 
-// --- MODAL DE AJUSTE RÁPIDO DE STOCK ---
-function initStockMovementModal() {
-    const modal = document.getElementById('stock-movement-modal');
+// --- TERMINAL DE VENTAS (POS NUTRICIONAL) ---
+function initPosModule() {
+    const posSearch = document.getElementById('pos-search-input');
+    const posCat = document.getElementById('pos-filter-category');
+    const btnClearCart = document.getElementById('pos-btn-clear-cart');
+    const inputDiscount = document.getElementById('pos-input-discount');
+    const inputCashReceived = document.getElementById('pos-cash-received');
+    const btnCheckout = document.getElementById('pos-btn-checkout');
+
+    if (posSearch) posSearch.addEventListener('input', renderPosProductGrid);
+    if (posCat) posCat.addEventListener('change', renderPosProductGrid);
+    if (btnClearCart) btnClearCart.addEventListener('click', clearPosCart);
+
+    if (inputDiscount) {
+        inputDiscount.addEventListener('input', updatePosSummary);
+    }
+
+    if (inputCashReceived) {
+        inputCashReceived.addEventListener('input', updateCashChangeCalculation);
+    }
+
+    // Métodos de pago
+    document.querySelectorAll('.pos-pay-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.pos-pay-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            posSelectedPaymentMethod = btn.dataset.method || 'Efectivo';
+
+            const cashPanel = document.getElementById('pos-cash-change-panel');
+            if (cashPanel) {
+                if (posSelectedPaymentMethod.toLowerCase() === 'efectivo') {
+                    cashPanel.classList.remove('d-none');
+                } else {
+                    cashPanel.classList.add('d-none');
+                }
+            }
+        });
+    });
+
+    // Autocomplete de Pacientes en POS
+    initPosPatientAutocomplete();
+
+    // Botón Finalizar Venta
+    if (btnCheckout) {
+        btnCheckout.addEventListener('click', handlePosCheckout);
+    }
+}
+
+function initPosPatientAutocomplete() {
+    const patientInput = document.getElementById('pos-patient-input');
+    const dropdown = document.getElementById('pos-patient-dropdown');
+    const hiddenIdp = document.getElementById('pos-patient-idp-hidden');
+    const hiddenPhone = document.getElementById('pos-patient-phone-hidden');
+    const btnToggleMode = document.getElementById('pos-btn-toggle-client-mode');
+
+    if (!patientInput || !dropdown) return;
+
+    if (btnToggleMode) {
+        btnToggleMode.addEventListener('click', () => {
+            patientInput.value = 'Cliente Ocasional / Mostrador';
+            if (hiddenIdp) hiddenIdp.value = '';
+            if (hiddenPhone) hiddenPhone.value = '';
+            posSelectedPatient = { name: 'Cliente Ocasional / Mostrador', idp: '', phone: '' };
+            dropdown.classList.remove('show');
+            showToast('👤 Venta asignada a Cliente Ocasional', 'info');
+        });
+    }
+
+    const renderPatients = (filterText = '') => {
+        const norm = normalizeText(filterText);
+        dropdown.replaceChildren();
+
+        // Opción predeterminada: Cliente Ocasional
+        const optOccasional = document.createElement('div');
+        optOccasional.className = 'stock-dropdown-item fw-semibold';
+        optOccasional.innerHTML = '<span>👤 Cliente Ocasional / Mostrador</span>';
+        optOccasional.addEventListener('mousedown', (e) => {
+            e.preventDefault();
+            patientInput.value = 'Cliente Ocasional / Mostrador';
+            if (hiddenIdp) hiddenIdp.value = '';
+            if (hiddenPhone) hiddenPhone.value = '';
+            posSelectedPatient = { name: 'Cliente Ocasional / Mostrador', idp: '', phone: '' };
+            dropdown.classList.remove('show');
+        });
+        dropdown.appendChild(optOccasional);
+
+        const clientsList = Array.isArray(allClients) ? allClients : [];
+        const filtered = clientsList.filter(c => !norm || normalizeText(c.name).includes(norm) || normalizeText(c.idp || c.code).includes(norm));
+
+        filtered.slice(0, 8).forEach(c => {
+            const item = document.createElement('div');
+            item.className = 'stock-dropdown-item';
+            item.innerHTML = `
+                <div>
+                    <div class="fw-bold text-navy">${escapeHtml(c.name)}</div>
+                    <div class="text-muted small" style="font-size: 0.72rem;">IDP: ${escapeHtml(c.idp || c.code || '--')} ${c.phone ? '• ' + escapeHtml(c.phone) : ''}</div>
+                </div>
+            `;
+            item.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                patientInput.value = c.name;
+                if (hiddenIdp) hiddenIdp.value = c.idp || c.code || '';
+                if (hiddenPhone) hiddenPhone.value = c.phone || '';
+                posSelectedPatient = { name: c.name, idp: c.idp || c.code || '', phone: c.phone || '' };
+                dropdown.classList.remove('show');
+            });
+            dropdown.appendChild(item);
+        });
+    };
+
+    patientInput.addEventListener('focus', () => {
+        renderPatients(patientInput.value);
+        dropdown.classList.add('show');
+    });
+
+    patientInput.addEventListener('input', () => {
+        renderPatients(patientInput.value);
+        dropdown.classList.add('show');
+    });
+
+    patientInput.addEventListener('blur', () => {
+        setTimeout(() => dropdown.classList.remove('show'), 180);
+    });
+}
+
+function renderPosProductGrid() {
+    const grid = document.getElementById('pos-product-grid');
+    const availCountEl = document.getElementById('pos-catalog-available-count');
+    if (!grid || !Array.isArray(allStockItems)) return;
+
+    const search = normalizeText(document.getElementById('pos-search-input')?.value);
+    const cat = document.getElementById('pos-filter-category')?.value || 'all';
+
+    const filtered = allStockItems.filter(i => {
+        const normName = normalizeText(i.name);
+        const normCode = normalizeText(i.code);
+        const matchSearch = !search || normName.includes(search) || normCode.includes(search);
+        const matchCat = cat === 'all' || i.category === cat;
+        return matchSearch && matchCat;
+    });
+
+    if (availCountEl) availCountEl.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        grid.innerHTML = '<div class="p-4 text-center text-muted small bg-light rounded-3 col-12">No hay productos que coincidan con la búsqueda.</div>';
+        return;
+    }
+
+    grid.replaceChildren();
+    filtered.forEach(item => {
+        const card = document.createElement('div');
+        const qty = parseFloat(item.stock_quantity) || 0;
+        const salePrice = parseFloat(item.sale_price) || 0;
+        const isOutOfStock = qty <= 0;
+
+        card.className = `pos-product-card ${isOutOfStock ? 'out-of-stock' : ''}`;
+
+        let icon = '📦';
+        if (item.category?.includes('BIA')) icon = '🩺';
+        else if (item.category?.includes('Suplementos')) icon = '💊';
+        else if (item.category?.includes('Material') || item.category?.includes('Higiene')) icon = '🧼';
+        else if (item.category?.includes('Medicamentos')) icon = '💉';
+
+        card.innerHTML = `
+            <div>
+                <div class="d-flex align-items-center justify-content-between mb-1">
+                    <span class="pos-product-icon">${icon}</span>
+                    <span class="badge ${isOutOfStock ? 'bg-danger-subtle text-danger' : (qty <= (item.min_stock || 5) ? 'bg-warning-subtle text-warning' : 'bg-success-subtle text-success')} fw-bold small">
+                        ${isOutOfStock ? 'Agotado' : `${qty} ${escapeHtml(item.unit || 'u')}`}
+                    </span>
+                </div>
+                <div class="pos-product-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</div>
+                <div class="pos-product-meta font-monospace">${escapeHtml(item.code || 'SKU')}</div>
+            </div>
+            <div class="pos-product-footer">
+                <div class="pos-product-price">Bs. ${salePrice.toFixed(2)}</div>
+                <button type="button" class="btn btn-sm btn-primary rounded-3 px-2 py-1 shadow-2xs btn-add-to-pos" ${isOutOfStock ? 'disabled' : ''}>
+                    <i class="bi bi-plus-lg"></i>
+                </button>
+            </div>
+        `;
+
+        card.addEventListener('click', (e) => {
+            if (!isOutOfStock) addToPosCart(item);
+        });
+
+        grid.appendChild(card);
+    });
+}
+
+function addToPosCart(product) {
+    const existing = posCart.find(i => i.id === product.id);
+    const availStock = parseFloat(product.stock_quantity) || 0;
+
+    if (existing) {
+        if (existing.quantity + 1 > availStock) {
+            showToast(`⚠️ No hay más existencias disponibles (${availStock} ${product.unit || 'u'})`, 'error');
+            return;
+        }
+        existing.quantity += 1;
+    } else {
+        if (availStock < 1) {
+            showToast(`⚠️ Producto sin stock disponible`, 'error');
+            return;
+        }
+        posCart.push({
+            id: product.id,
+            code: product.code,
+            name: product.name,
+            unit: product.unit || 'Unidad (u)',
+            unit_price: parseFloat(product.sale_price) || 0,
+            cost_price: parseFloat(product.cost_price) || 0,
+            max_stock: availStock,
+            quantity: 1
+        });
+    }
+
+    renderPosCart();
+}
+
+function updatePosCartQty(productId, delta) {
+    const item = posCart.find(i => i.id === productId);
+    if (!item) return;
+
+    const newQty = item.quantity + delta;
+    if (newQty <= 0) {
+        removePosCartItem(productId);
+        return;
+    }
+    if (newQty > item.max_stock) {
+        showToast(`⚠️ Existencia máxima alcanzada (${item.max_stock} ${item.unit})`, 'error');
+        return;
+    }
+    item.quantity = newQty;
+    renderPosCart();
+}
+
+function removePosCartItem(productId) {
+    posCart = posCart.filter(i => i.id !== productId);
+    renderPosCart();
+}
+
+function clearPosCart() {
+    posCart = [];
+    renderPosCart();
+}
+
+function renderPosCart() {
+    const container = document.getElementById('pos-cart-items-container');
+    const badgeCount = document.getElementById('pos-badge-count');
+    const btnCheckout = document.getElementById('pos-btn-checkout');
+    if (!container) return;
+
+    const totalQty = posCart.reduce((sum, it) => sum + it.quantity, 0);
+
+    if (badgeCount) {
+        if (totalQty > 0) {
+            badgeCount.textContent = totalQty;
+            badgeCount.classList.remove('d-none');
+        } else {
+            badgeCount.classList.add('d-none');
+        }
+    }
+
+    if (btnCheckout) {
+        btnCheckout.disabled = posCart.length === 0;
+    }
+
+    if (posCart.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-muted small">
+                <i class="bi bi-cart-x fs-2 d-block mb-1 text-secondary opacity-50"></i>
+                El carrito está vacío.<br>Haz clic en un producto para agregarlo.
+            </div>
+        `;
+        updatePosSummary();
+        return;
+    }
+
+    container.replaceChildren();
+    posCart.forEach(it => {
+        const itemRow = document.createElement('div');
+        itemRow.className = 'pos-cart-item-row';
+
+        const subtotal = it.quantity * it.unit_price;
+
+        itemRow.innerHTML = `
+            <div class="pos-cart-item-info">
+                <div class="pos-cart-item-title" title="${escapeHtml(it.name)}">${escapeHtml(it.name)}</div>
+                <div class="pos-cart-item-unit-price">Bs. ${it.unit_price.toFixed(2)} / ${escapeHtml(it.unit)}</div>
+            </div>
+            <div class="pos-cart-qty-controls">
+                <button type="button" class="pos-cart-qty-btn btn-qty-minus">-</button>
+                <span class="pos-cart-qty-val">${it.quantity}</span>
+                <button type="button" class="pos-cart-qty-btn btn-qty-plus">+</button>
+            </div>
+            <div class="pos-cart-subtotal">Bs. ${subtotal.toFixed(2)}</div>
+            <button type="button" class="pos-cart-btn-del" title="Eliminar ítem">&times;</button>
+        `;
+
+        itemRow.querySelector('.btn-qty-minus').addEventListener('click', () => updatePosCartQty(it.id, -1));
+        itemRow.querySelector('.btn-qty-plus').addEventListener('click', () => updatePosCartQty(it.id, 1));
+        itemRow.querySelector('.pos-cart-btn-del').addEventListener('click', () => removePosCartItem(it.id));
+
+        container.appendChild(itemRow);
+    });
+
+    updatePosSummary();
+}
+
+function updatePosSummary() {
+    const subtotalEl = document.getElementById('pos-summary-subtotal');
+    const totalEl = document.getElementById('pos-summary-total');
+    const discountInput = document.getElementById('pos-input-discount');
+
+    const subtotal = posCart.reduce((sum, it) => sum + (it.quantity * it.unit_price), 0);
+    const discount = Math.max(0, parseFloat(discountInput?.value) || 0);
+    const total = Math.max(0, subtotal - discount);
+
+    if (subtotalEl) subtotalEl.textContent = `Bs. ${subtotal.toFixed(2)}`;
+    if (totalEl) totalEl.textContent = `Bs. ${total.toFixed(2)}`;
+
+    updateCashChangeCalculation();
+}
+
+function updateCashChangeCalculation() {
+    const totalEl = document.getElementById('pos-summary-total');
+    const cashInput = document.getElementById('pos-cash-received');
+    const changeEl = document.getElementById('pos-cash-change');
+    if (!totalEl || !cashInput || !changeEl) return;
+
+    const subtotal = posCart.reduce((sum, it) => sum + (it.quantity * it.unit_price), 0);
+    const discount = Math.max(0, parseFloat(document.getElementById('pos-input-discount')?.value) || 0);
+    const total = Math.max(0, subtotal - discount);
+
+    const received = parseFloat(cashInput.value) || 0;
+    const change = Math.max(0, received - total);
+
+    changeEl.textContent = `Bs. ${change.toFixed(2)}`;
+}
+
+async function handlePosCheckout() {
+    if (posCart.length === 0) {
+        showToast('El carrito de ventas está vacío', 'error');
+        return;
+    }
+
+    const patientName = document.getElementById('pos-patient-input')?.value.trim() || 'Cliente Ocasional / Mostrador';
+    const patientIdp = document.getElementById('pos-patient-idp-hidden')?.value || '';
+    const patientPhone = document.getElementById('pos-patient-phone-hidden')?.value || '';
+    const discount = Math.max(0, parseFloat(document.getElementById('pos-input-discount')?.value) || 0);
+    const amountReceived = parseFloat(document.getElementById('pos-cash-received')?.value) || 0;
+
+    const btnCheckout = document.getElementById('pos-btn-checkout');
+    const originalText = btnCheckout.innerHTML;
+    btnCheckout.disabled = true;
+    btnCheckout.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Procesando Venta...';
+
+    const payload = {
+        patient_name: patientName,
+        patient_idp: patientIdp,
+        patient_phone: patientPhone,
+        items: posCart.map(it => ({
+            stock_item_id: it.id,
+            quantity: it.quantity,
+            unit_price: it.unit_price
+        })),
+        discount: discount,
+        payment_method: posSelectedPaymentMethod,
+        amount_received: amountReceived > 0 ? amountReceived : undefined
+    };
+
+    try {
+        const res = await fetch('/api/sales', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await res.json();
+
+        if (res.ok && result.success && result.sale) {
+            showToast(`🎉 ${result.message}`, 'success');
+            clearPosCart();
+            document.getElementById('pos-patient-input').value = '';
+            document.getElementById('pos-input-discount').value = '0.00';
+            if (document.getElementById('pos-cash-received')) document.getElementById('pos-cash-received').value = '';
+
+            // Refrescar Stock y abrir recibo digital
+            await fetchStockItems();
+            await fetchSalesHistory();
+            openDigitalReceiptModal(result.sale);
+        } else {
+            showToast(result.error || 'Error al completar la venta', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Error de conexión al procesar la venta', 'error');
+    } finally {
+        btnCheckout.disabled = false;
+        btnCheckout.innerHTML = originalText;
+    }
+}
+
+// --- HISTORIAL DE VENTAS & COMPROBANTES ---
+function initSalesModule() {
+    const searchInput = document.getElementById('sales-search-input');
+    const paymentFilter = document.getElementById('sales-filter-payment');
+    const statusFilter = document.getElementById('sales-filter-status');
+
+    if (searchInput) searchInput.addEventListener('input', filterAndRenderSales);
+    if (paymentFilter) paymentFilter.addEventListener('change', filterAndRenderSales);
+    if (statusFilter) statusFilter.addEventListener('change', filterAndRenderSales);
+}
+
+async function fetchSalesHistory() {
+    const tbody = document.getElementById('sales-tbody');
+    const totalCountEl = document.getElementById('sales-total-count');
+    if (!tbody) return;
+
+    try {
+        const [salesRes, statsRes] = await Promise.all([
+            fetch('/api/sales'),
+            fetch('/api/sales/stats')
+        ]);
+
+        if (salesRes.ok) {
+            allSalesHistory = await salesRes.json();
+            if (totalCountEl) totalCountEl.textContent = Array.isArray(allSalesHistory) ? allSalesHistory.length : 0;
+            filterAndRenderSales();
+        }
+
+        if (statsRes.ok) {
+            const stats = await statsRes.json();
+            updateSalesKPIs(stats);
+        }
+    } catch (err) {
+        console.error('Error al cargar historial de ventas:', err);
+    }
+}
+
+function updateSalesKPIs(stats) {
+    if (!stats) return;
+    const totalAmountEl = document.getElementById('sales-kpi-total-amount');
+    const totalProfitEl = document.getElementById('sales-kpi-total-profit');
+    const todayAmountEl = document.getElementById('sales-kpi-today-amount');
+    const todayCountEl = document.getElementById('sales-kpi-today-count');
+    const avgTicketEl = document.getElementById('sales-kpi-avg-ticket');
+
+    if (totalAmountEl) totalAmountEl.textContent = `Bs. ${(stats.total_sales_amount || 0).toFixed(2)}`;
+    if (totalProfitEl) totalProfitEl.textContent = `Bs. ${(stats.total_profit || 0).toFixed(2)}`;
+    if (todayAmountEl) todayAmountEl.textContent = `Bs. ${(stats.today_sales_amount || 0).toFixed(2)}`;
+    if (todayCountEl) todayCountEl.textContent = stats.today_sales_count || 0;
+    if (avgTicketEl) avgTicketEl.textContent = `Bs. ${(stats.avg_ticket || 0).toFixed(2)}`;
+}
+
+function filterAndRenderSales() {
+    const tbody = document.getElementById('sales-tbody');
+    if (!tbody || !Array.isArray(allSalesHistory)) return;
+
+    const search = normalizeText(document.getElementById('sales-search-input')?.value);
+    const payment = document.getElementById('sales-filter-payment')?.value || 'all';
+    const status = document.getElementById('sales-filter-status')?.value || 'all';
+
+    const filtered = allSalesHistory.filter(s => {
+        const normNum = normalizeText(s.receipt_number);
+        const normPat = normalizeText(s.patient_name);
+        const normItems = normalizeText((s.items || []).map(i => i.name).join(' '));
+
+        const matchSearch = !search || normNum.includes(search) || normPat.includes(search) || normItems.includes(search);
+        const matchPayment = payment === 'all' || (s.payment_method || '').toLowerCase() === payment.toLowerCase();
+        const matchStatus = status === 'all' || s.status === status;
+
+        return matchSearch && matchPayment && matchStatus;
+    });
+
+    renderSalesTable(filtered);
+}
+
+function renderSalesTable(sales) {
+    const tbody = document.getElementById('sales-tbody');
+    if (!tbody) return;
+
+    if (!sales || sales.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center py-5 text-muted">No se encontraron ventas registradas.</td></tr>';
+        return;
+    }
+
+    tbody.replaceChildren();
+    sales.forEach(sale => {
+        const tr = document.createElement('tr');
+        const isCancelled = sale.status === 'CANCELLED';
+
+        const dateStr = sale.created_at ? new Date(sale.created_at).toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
+        const itemsSummary = (sale.items || []).map(i => `${i.quantity}x ${escapeHtml(i.name)}`).join(', ');
+
+        tr.innerHTML = `
+            <td>
+                <span class="badge bg-primary-subtle text-primary font-monospace fw-bold px-2 py-1">${escapeHtml(sale.receipt_number)}</span>
+            </td>
+            <td><span class="small text-secondary"><i class="bi bi-clock me-1"></i>${dateStr}</span></td>
+            <td>
+                <div class="fw-bold text-navy">${escapeHtml(sale.patient_name)}</div>
+                ${sale.patient_idp ? `<div class="text-muted small" style="font-size: 0.72rem;">IDP: ${escapeHtml(sale.patient_idp)}</div>` : ''}
+            </td>
+            <td>
+                <div class="small text-truncate" style="max-width: 200px;" title="${escapeHtml(itemsSummary)}">${itemsSummary || 'Sin ítems'}</div>
+            </td>
+            <td>
+                <span class="badge bg-light text-secondary border small">${escapeHtml(sale.payment_method || 'Efectivo')}</span>
+            </td>
+            <td>
+                <span class="fw-bold font-monospace ${isCancelled ? 'text-decoration-line-through text-muted' : 'text-success'}">Bs. ${(sale.total || 0).toFixed(2)}</span>
+            </td>
+            <td>
+                <span class="badge ${isCancelled ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'} fw-bold small">
+                    ${isCancelled ? '🚫 Anulada' : '✅ Completada'}
+                </span>
+            </td>
+            <td class="text-end">
+                <div class="d-inline-flex align-items-center gap-1.5">
+                    <button type="button" class="btn btn-sm btn-outline-primary py-1 px-2 fw-semibold btn-view-receipt shadow-2xs" style="font-size: 0.76rem;" title="Ver Comprobante">
+                        <i class="bi bi-receipt"></i> Recibo
+                    </button>
+                    ${!isCancelled ? `
+                        <button type="button" class="btn btn-sm btn-outline-danger py-1 px-2 btn-cancel-sale shadow-2xs" style="font-size: 0.76rem;" title="Anular Venta y Devolver Stock">
+                            <i class="bi bi-x-circle"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            </td>
+        `;
+
+        tr.querySelector('.btn-view-receipt').addEventListener('click', () => openDigitalReceiptModal(sale));
+        const btnCancel = tr.querySelector('.btn-cancel-sale');
+        if (btnCancel) {
+            btnCancel.addEventListener('click', () => handleCancelSale(sale));
+        }
+
+        tbody.appendChild(tr);
+    });
+}
+
+function handleCancelSale(sale) {
+    showConfirm(
+        'Anular Venta & Restituir Stock',
+        `¿Estás seguro de anular la venta <strong class="text-navy">${escapeHtml(sale.receipt_number)}</strong> por Bs. ${(sale.total || 0).toFixed(2)}? Las cantidades vendidas retornarán automáticamente al inventario.`,
+        async () => {
+            try {
+                const res = await fetch(`/api/sales/${sale.id}`, { method: 'DELETE' });
+                const result = await res.json();
+                if (res.ok && result.success) {
+                    showToast(`🚫 Venta ${sale.receipt_number} anulada y stock restituido`, 'success');
+                    await fetchStockItems();
+                    await fetchSalesHistory();
+                    await fetchKardexMovements();
+                } else {
+                    showToast(result.error || 'Error al anular venta', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Error de conexión', 'error');
+            }
+        },
+        { confirmText: 'Anular Venta', icon: 'bi bi-x-octagon-fill' }
+    );
+}
+
+// --- MODAL DE RECIBO DIGITAL CLÍNICO ---
+function initDigitalReceiptModal() {
+    const modal = document.getElementById('modal-digital-receipt');
     if (!modal) return;
 
-    const btnClose = document.getElementById('stock-mov-modal-close');
-    const btnCancel = document.getElementById('stock-mov-btn-cancel');
-    const form = document.getElementById('stock-movement-form');
+    const btnCloseHeader = document.getElementById('btn-close-receipt-modal');
+    const btnCloseFooter = document.getElementById('btn-footer-close-receipt');
+    const btnPrint = document.getElementById('btn-receipt-print');
+    const btnWhatsApp = document.getElementById('btn-receipt-whatsapp');
 
-    const closeModal = () => {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-        currentStockMovementItem = null;
-    };
+    const closeModal = () => modal.classList.add('d-none');
+
+    if (btnCloseHeader) btnCloseHeader.addEventListener('click', closeModal);
+    if (btnCloseFooter) btnCloseFooter.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    if (btnPrint) {
+        btnPrint.addEventListener('click', () => window.print());
+    }
+
+    if (btnWhatsApp) {
+        btnWhatsApp.addEventListener('click', () => {
+            if (!currentViewedReceipt) return;
+            const r = currentViewedReceipt;
+            let msg = `*COMPROBANTE DE PAGO - VITAMETRIX*\n`;
+            msg += `📄 *Recibo:* ${r.receipt_number}\n`;
+            msg += `👤 *Paciente:* ${r.patient_name}\n`;
+            msg += `📅 *Fecha:* ${new Date(r.created_at).toLocaleString('es-ES')}\n\n`;
+            msg += `*DETALLE DE PRODUCTOS:*\n`;
+            (r.items || []).forEach(it => {
+                msg += `• ${it.quantity}x ${it.name} - Bs. ${(it.subtotal || 0).toFixed(2)}\n`;
+            });
+            msg += `\n💵 *TOTAL CANCELADO: Bs. ${(r.total || 0).toFixed(2)}*\n`;
+            msg += `💳 *Método:* ${r.payment_method || 'Efectivo'}\n\n`;
+            msg += `_¡Gracias por su confianza en VitaMetrix!_`;
+
+            let phoneClean = (r.patient_phone || '').replace(/[^0-9]/g, '');
+            if (phoneClean && phoneClean.length === 8 && (phoneClean.startsWith('6') || phoneClean.startsWith('7'))) {
+                phoneClean = '591' + phoneClean;
+            }
+            const waUrl = phoneClean
+                ? `https://wa.me/${phoneClean}?text=${encodeURIComponent(msg)}`
+                : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+
+            window.open(waUrl, '_blank');
+        });
+    }
+}
+
+function openDigitalReceiptModal(sale) {
+    currentViewedReceipt = sale;
+    const modal = document.getElementById('modal-digital-receipt');
+    if (!modal) return;
+
+    document.getElementById('receipt-modal-number').textContent = sale.receipt_number;
+    document.getElementById('receipt-patient-name').textContent = sale.patient_name || 'Cliente Ocasional';
+    document.getElementById('receipt-patient-idp').textContent = sale.patient_idp ? `IDP: ${sale.patient_idp}` : '';
+    document.getElementById('receipt-datetime').textContent = sale.created_at ? new Date(sale.created_at).toLocaleString('es-ES') : new Date().toLocaleString('es-ES');
+    document.getElementById('receipt-payment-method-badge').textContent = `Método: ${sale.payment_method || 'Efectivo'}`;
+
+    const itemsTbody = document.getElementById('receipt-items-tbody');
+    itemsTbody.replaceChildren();
+
+    (sale.items || []).forEach(it => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="ps-0">
+                <div class="fw-semibold text-dark">${escapeHtml(it.name)}</div>
+                <div class="text-muted small" style="font-size: 0.7rem;">${escapeHtml(it.unit || 'u')}</div>
+            </td>
+            <td class="text-center font-monospace">${it.quantity}</td>
+            <td class="text-end font-monospace">Bs. ${(it.unit_price || 0).toFixed(2)}</td>
+            <td class="text-end pe-0 font-monospace fw-bold">Bs. ${(it.subtotal || 0).toFixed(2)}</td>
+        `;
+        itemsTbody.appendChild(tr);
+    });
+
+    document.getElementById('receipt-subtotal-val').textContent = `Bs. ${(sale.subtotal || 0).toFixed(2)}`;
+    const discountRow = document.getElementById('receipt-discount-row');
+    if (sale.discount && sale.discount > 0) {
+        discountRow.classList.remove('d-none');
+        document.getElementById('receipt-discount-val').textContent = `-Bs. ${(sale.discount).toFixed(2)}`;
+    } else {
+        discountRow.classList.add('d-none');
+    }
+    document.getElementById('receipt-total-val').textContent = `Bs. ${(sale.total || 0).toFixed(2)}`;
+
+    const cashBreakdown = document.getElementById('receipt-cash-breakdown');
+    if ((sale.payment_method || '').toLowerCase() === 'efectivo' && sale.amount_received) {
+        cashBreakdown.classList.remove('d-none');
+        document.getElementById('receipt-amount-received').textContent = `Bs. ${(sale.amount_received || 0).toFixed(2)}`;
+        document.getElementById('receipt-change-given').textContent = `Bs. ${(sale.change_given || 0).toFixed(2)}`;
+    } else {
+        cashBreakdown.classList.add('d-none');
+    }
+
+    if (sale.notes) {
+        document.getElementById('receipt-notes-val').textContent = sale.notes;
+    }
+
+    modal.classList.remove('d-none');
+}
+
+// --- KARDEX & AUDITORÍA DE MOVIMIENTOS ---
+function initKardexModule() {
+    const btnRefresh = document.getElementById('btn-refresh-kardex');
+    const searchInput = document.getElementById('kardex-search-input');
+    const typeFilter = document.getElementById('kardex-filter-type');
+
+    if (btnRefresh) btnRefresh.addEventListener('click', fetchKardexMovements);
+    if (searchInput) searchInput.addEventListener('input', filterAndRenderKardex);
+    if (typeFilter) typeFilter.addEventListener('change', filterAndRenderKardex);
+}
+
+async function fetchKardexMovements() {
+    const tbody = document.getElementById('kardex-tbody');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('/api/stock/movements');
+        if (res.ok) {
+            allStockMovements = await res.json();
+            filterAndRenderKardex();
+        }
+    } catch (err) {
+        console.error('Error al consultar Kardex:', err);
+    }
+}
+
+function filterAndRenderKardex() {
+    const tbody = document.getElementById('kardex-tbody');
+    if (!tbody || !Array.isArray(allStockMovements)) return;
+
+    const search = normalizeText(document.getElementById('kardex-search-input')?.value);
+    const type = document.getElementById('kardex-filter-type')?.value || 'all';
+
+    const filtered = allStockMovements.filter(m => {
+        const normName = normalizeText(m.item_name);
+        const normReason = normalizeText(m.reason);
+        const matchSearch = !search || normName.includes(search) || normReason.includes(search);
+        const matchType = type === 'all' || m.type === type;
+        return matchSearch && matchType;
+    });
+
+    renderKardexTable(filtered);
+}
+
+function renderKardexTable(movements) {
+    const tbody = document.getElementById('kardex-tbody');
+    if (!tbody) return;
+
+    if (!movements || movements.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">No hay movimientos registrados en el Kardex.</td></tr>';
+        return;
+    }
+
+    tbody.replaceChildren();
+    movements.forEach(m => {
+        const tr = document.createElement('tr');
+        const dateStr = m.created_at ? new Date(m.created_at).toLocaleString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
+
+        let badgeType = '<span class="badge bg-secondary-subtle text-secondary small">AJUSTE</span>';
+        let qtyColor = 'text-dark';
+        let prefix = '';
+
+        if (m.type === 'IN') {
+            badgeType = '<span class="badge bg-success-subtle text-success small">📥 ENTRADA</span>';
+            qtyColor = 'text-success';
+            prefix = '+';
+        } else if (m.type === 'OUT') {
+            badgeType = '<span class="badge bg-danger-subtle text-danger small">📤 SALIDA</span>';
+            qtyColor = 'text-danger';
+            prefix = '-';
+        } else if (m.type === 'SALE') {
+            badgeType = '<span class="badge bg-primary-subtle text-primary small">🛒 VENTA</span>';
+            qtyColor = 'text-primary';
+            prefix = '-';
+        } else if (m.type === 'SALE_CANCEL') {
+            badgeType = '<span class="badge bg-warning-subtle text-warning small">↩️ DEVOLUCIÓN</span>';
+            qtyColor = 'text-success';
+            prefix = '+';
+        }
+
+        tr.innerHTML = `
+            <td><span class="small text-secondary font-monospace">${dateStr}</span></td>
+            <td><strong class="text-navy">${escapeHtml(m.item_name)}</strong></td>
+            <td>${badgeType}</td>
+            <td><strong class="font-monospace ${qtyColor}">${prefix}${m.quantity}</strong></td>
+            <td><span class="font-monospace text-muted">${m.previous_quantity}</span></td>
+            <td><strong class="font-monospace text-dark">${m.new_quantity}</strong></td>
+            <td><span class="small text-secondary">${escapeHtml(m.reason || '--')}</span></td>
+        `;
+
+        tbody.appendChild(tr);
+    });
+}
+
+// --- MODAL DE AJUSTE RÁPIDO DE STOCK ---
+function initQuickStockAdjustModal() {
+    const modal = document.getElementById('modal-quick-stock-adjust');
+    if (!modal) return;
+
+    const btnClose = document.getElementById('btn-close-quick-adjust');
+    const btnCancel = document.getElementById('btn-cancel-quick-adjust');
+    const btnConfirm = document.getElementById('btn-confirm-quick-adjust');
+
+    const closeModal = () => modal.classList.add('d-none');
 
     if (btnClose) btnClose.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
@@ -4522,35 +5409,49 @@ function initStockMovementModal() {
         if (e.target === modal) closeModal();
     });
 
-    // Toggle tipo de movimiento
-    document.querySelectorAll('.stock-type-btn').forEach(btn => {
+    document.querySelectorAll('.adjust-type-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.querySelectorAll('.stock-type-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.adjust-type-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             currentMovementType = btn.dataset.type || 'IN';
+
+            const qtyLabel = document.getElementById('quick-adjust-qty-label');
+            if (qtyLabel) {
+                if (currentMovementType === 'IN') qtyLabel.textContent = 'Cantidad a Ingresar';
+                else if (currentMovementType === 'OUT') qtyLabel.textContent = 'Cantidad a Retirar';
+                else qtyLabel.textContent = 'Nuevo Stock Total';
+            }
         });
     });
 
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            if (!currentStockMovementItem) return;
+    if (btnConfirm) {
+        btnConfirm.addEventListener('click', async () => {
+            if (!currentQuickAdjustItem) return;
 
-            const qty = parseFloat(document.getElementById('stock-mov-qty').value);
-            const reason = document.getElementById('stock-mov-reason').value.trim();
+            const qty = parseFloat(document.getElementById('quick-adjust-quantity').value);
+            const reason = document.getElementById('quick-adjust-reason').value.trim();
 
-            if (!qty || qty <= 0 || isNaN(qty)) {
-                showToast('Ingresa una cantidad válida mayor a 0', 'error');
-                return;
+            if (currentMovementType === 'ADJUST') {
+                if (isNaN(qty) || qty < 0) {
+                    showToast('Ingresa un valor de stock válido (0 o mayor)', 'error');
+                    return;
+                }
+            } else {
+                if (!qty || qty <= 0 || isNaN(qty)) {
+                    showToast('Ingresa una cantidad válida mayor a 0', 'error');
+                    return;
+                }
+                if (currentMovementType === 'OUT' && qty > (parseFloat(currentQuickAdjustItem.stock_quantity) || 0)) {
+                    showToast(`⚠️ No puedes retirar más del stock disponible (${currentQuickAdjustItem.stock_quantity})`, 'error');
+                    return;
+                }
             }
 
-            const btnSave = document.getElementById('stock-mov-btn-save');
-            const originalText = btnSave.innerHTML;
-            btnSave.disabled = true;
-            btnSave.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando...';
+            btnConfirm.disabled = true;
+            btnConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Registrando...';
 
             try {
-                const res = await fetch(`/api/stock/${currentStockMovementItem.id}/movement`, {
+                const res = await fetch(`/api/stock/${currentQuickAdjustItem.id}/movement`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -4562,122 +5463,45 @@ function initStockMovementModal() {
                 const result = await res.json();
 
                 if (res.ok && result.success) {
-                    showToast(`✅ Movimiento de ${currentMovementType === 'IN' ? 'Entrada' : 'Salida'} registrado`, 'success');
+                    showToast('✅ Movimiento de Kardex registrado exitosamente', 'success');
                     closeModal();
-                    fetchStockItems();
-                    fetchStockMovements();
+                    await fetchStockItems();
+                    await fetchKardexMovements();
                 } else {
                     showToast(result.error || 'Error al registrar movimiento', 'error');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Error de conexión al registrar movimiento', 'error');
+                showToast('Error de conexión', 'error');
             } finally {
-                btnSave.disabled = false;
-                btnSave.innerHTML = originalText;
+                btnConfirm.disabled = false;
+                btnConfirm.innerHTML = '<i class="bi bi-check-lg"></i> Registrar Movimiento';
             }
         });
     }
 }
 
-function openStockMovementModal(item) {
-    currentStockMovementItem = item;
+function openQuickStockAdjustModal(item) {
+    currentQuickAdjustItem = item;
     currentMovementType = 'IN';
 
-    const modal = document.getElementById('stock-movement-modal');
+    const modal = document.getElementById('modal-quick-stock-adjust');
     if (!modal) return;
 
-    document.getElementById('stock-mov-modal-subtitle').textContent = `Producto: ${item.name} (${item.code || 'SKU'})`;
-    document.getElementById('stock-mov-current-qty').value = `${item.stock_quantity ?? 0} ${item.unit || 'u'}`;
-    document.getElementById('stock-mov-qty').value = '';
-    document.getElementById('stock-mov-reason').value = '';
+    document.getElementById('quick-adjust-item-name').textContent = `${item.name} (${item.code || 'SKU'})`;
+    document.getElementById('quick-adjust-current-stock').textContent = `${item.stock_quantity ?? 0} ${item.unit || 'u'}`;
+    document.getElementById('quick-adjust-quantity').value = '';
+    document.getElementById('quick-adjust-reason').value = '';
 
-    document.querySelectorAll('.stock-type-btn').forEach(b => {
+    document.querySelectorAll('.adjust-type-btn').forEach(b => {
         b.classList.toggle('active', b.dataset.type === 'IN');
     });
+    document.getElementById('quick-adjust-qty-label').textContent = 'Cantidad a Ingresar';
 
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
+    modal.classList.remove('d-none');
 }
 
-// --- MODAL DE HISTORIAL DE MOVIMIENTOS ---
-function initStockHistoryModal() {
-    const modal = document.getElementById('stock-history-modal');
-    if (!modal) return;
-
-    const btnClose = document.getElementById('stock-hist-modal-close');
-    const btnFooterClose = document.getElementById('stock-hist-btn-close');
-
-    const closeModal = () => {
-        modal.classList.add('hidden');
-        modal.style.display = 'none';
-    };
-
-    if (btnClose) btnClose.addEventListener('click', closeModal);
-    if (btnFooterClose) btnFooterClose.addEventListener('click', closeModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeModal();
-    });
-}
-
-async function openStockHistoryModal(item) {
-    const modal = document.getElementById('stock-history-modal');
-    const titleEl = document.getElementById('stock-hist-item-name');
-    const listEl = document.getElementById('stock-hist-list');
-    if (!modal || !listEl) return;
-
-    if (titleEl) titleEl.textContent = `Producto: ${item.name} (${item.code || 'SKU'})`;
-    listEl.innerHTML = '<div class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-1"></span> Cargando historial...</div>';
-
-    modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-
-    try {
-        const res = await fetch(`/api/stock/movements?item_id=${item.id}`);
-        const movements = await res.json();
-
-        if (!Array.isArray(movements) || movements.length === 0) {
-            listEl.innerHTML = `
-                <div class="text-center py-4 bg-light rounded-3 border">
-                    <i class="bi bi-clock-history text-muted fs-3 mb-1 d-block"></i>
-                    <div class="fw-semibold text-navy small">Sin movimientos registrados para este artículo</div>
-                    <div class="text-muted small mt-0.5">Usa el botón "Ajustar" para registrar entradas o salidas.</div>
-                </div>
-            `;
-            return;
-        }
-
-        listEl.innerHTML = '';
-        movements.forEach(m => {
-            const isIN = m.type === 'IN';
-            const dateStr = m.created_at ? new Date(m.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '--';
-
-            const card = document.createElement('div');
-            card.className = `stock-movement-card ${isIN ? 'in' : 'out'}`;
-            card.innerHTML = `
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="badge ${isIN ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} fw-bold">
-                            <i class="bi ${isIN ? 'bi-arrow-down-left' : 'bi-arrow-up-right'}"></i> ${isIN ? 'ENTRADA' : 'SALIDA'}
-                        </span>
-                        <strong class="font-monospace fs-6 ${isIN ? 'text-success' : 'text-danger'}">${isIN ? '+' : '-'}${m.quantity} ${escapeHtml(item.unit || 'u')}</strong>
-                    </div>
-                    <span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-calendar3 me-1"></i>${dateStr}</span>
-                </div>
-                <div class="small text-dark mt-1"><strong>Motivo:</strong> ${escapeHtml(m.reason || 'Ajuste de inventario')}</div>
-                <div class="text-muted small mt-0.5" style="font-size: 0.72rem;">Stock previo: ${m.previous_quantity} ➔ Nuevo stock: <strong>${m.new_quantity}</strong></div>
-            `;
-            listEl.appendChild(card);
-        });
-    } catch (err) {
-        console.error(err);
-        listEl.innerHTML = '<div class="text-center py-4 text-danger">Error al cargar historial de movimientos.</div>';
-    }
-}
-
-// --- MODAL DE GESTIÓN DE TAXONOMÍAS (CATEGORÍAS Y U/M) ---
-let stockTaxonomiesData = { categories: [], units: [] };
-
+// --- MODAL DE GESTIÓN DE TAXONOMÍAS (CATEGORÍAS Y U/M - OPCIÓN 1) ---
 function initStockTaxonomyModal() {
     const modal = document.getElementById('stock-taxonomy-modal');
     if (!modal) return;
@@ -4709,7 +5533,6 @@ function initStockTaxonomyModal() {
         if (e.target === modal) closeModal();
     });
 
-    // Switch Tabs con Segmented Control Deslizante
     const segmentedControl = document.getElementById('stock-tax-segmented-control');
     if (tabCatsBtn && tabUnitsBtn) {
         tabCatsBtn.addEventListener('click', () => {
@@ -4732,7 +5555,6 @@ function initStockTaxonomyModal() {
     // Agregar Nueva Categoría
     const btnAddCat = document.getElementById('btn-add-cat');
     const inputNewCat = document.getElementById('new-cat-name');
-
     if (btnAddCat && inputNewCat) {
         btnAddCat.addEventListener('click', async () => {
             const catName = inputNewCat.value.trim();
@@ -4740,7 +5562,6 @@ function initStockTaxonomyModal() {
                 showToast('Ingresa un nombre para la categoría', 'error');
                 return;
             }
-
             try {
                 const res = await fetch('/api/stock/taxonomies/category', {
                     method: 'POST',
@@ -4758,94 +5579,71 @@ function initStockTaxonomyModal() {
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Error de conexión con el servidor', 'error');
+                showToast('Error de conexión', 'error');
             }
         });
     }
 
-    // Agregar Nueva Unidad de Medida (U/M)
+    // Agregar Nueva Unidad de Medida (Opción 1: Solo Nombre)
     const btnAddUnit = document.getElementById('btn-add-unit');
     const inputNewUnit = document.getElementById('new-unit-name');
-    const selectNewUnitFamily = document.getElementById('new-unit-family');
-
     if (btnAddUnit && inputNewUnit) {
         btnAddUnit.addEventListener('click', async () => {
             const unitName = inputNewUnit.value.trim();
-            const fam = selectNewUnitFamily ? (selectNewUnitFamily.value.trim() || 'General') : 'General';
-
             if (!unitName) {
                 showToast('Ingresa un nombre para la Unidad de Medida', 'error');
                 return;
             }
-
             try {
                 const res = await fetch('/api/stock/taxonomies/unit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name: unitName, category: fam })
+                    body: JSON.stringify({ name: unitName })
                 });
                 const result = await res.json();
                 if (res.ok && result.success) {
                     inputNewUnit.value = '';
-                    if (selectNewUnitFamily) selectNewUnitFamily.value = '';
-                    showToast(`✅ Unidad de medida "${unitName}" (${fam}) guardada en el catálogo`, 'success');
+                    showToast(`✅ Unidad "${unitName}" guardada en el catálogo`, 'success');
                     await fetchStockTaxonomies();
                 } else {
                     showToast(result.error || 'No se pudo guardar la unidad', 'error');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Error de conexión con el servidor', 'error');
+                showToast('Error de conexión', 'error');
             }
         });
     }
 
-    // Buscador en tiempo real de Categorías en Modal
+    // Buscadores en tiempo real
     const searchTaxCats = document.getElementById('search-tax-cats');
     if (searchTaxCats) {
-        searchTaxCats.addEventListener('input', (e) => {
-            renderTaxonomyCategories(e.target.value);
-        });
+        searchTaxCats.addEventListener('input', (e) => renderTaxonomyCategories(e.target.value));
     }
 
-    // Filtros de Familias de Unidades en Modal
-    document.querySelectorAll('.tax-unit-pill').forEach(pill => {
-        pill.addEventListener('click', () => {
-            document.querySelectorAll('.tax-unit-pill').forEach(p => {
-                p.classList.remove('active', 'btn-primary');
-                p.classList.add('btn-light');
-            });
-            pill.classList.add('active', 'btn-primary');
-            pill.classList.remove('btn-light');
-            renderTaxonomyUnits(pill.dataset.family || 'all');
-        });
-    });
+    const searchTaxUnits = document.getElementById('search-tax-units');
+    if (searchTaxUnits) {
+        searchTaxUnits.addEventListener('input', (e) => renderTaxonomyUnits(e.target.value));
+    }
 
-    // Controles del Modal de Renombrar Categoría
+    // Modales de Renombrar y Editar
     const btnCloseRename = document.getElementById('btn-close-rename-modal');
     const btnCancelRename = document.getElementById('btn-cancel-rename-modal');
     const btnConfirmRename = document.getElementById('btn-confirm-rename-modal');
-    const inputRename = document.getElementById('rename-modal-input');
-
     if (btnCloseRename) btnCloseRename.addEventListener('click', closeRenameCategoryModal);
     if (btnCancelRename) btnCancelRename.addEventListener('click', closeRenameCategoryModal);
     if (btnConfirmRename) btnConfirmRename.addEventListener('click', handleConfirmRenameCategory);
-    if (inputRename) {
-        inputRename.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                handleConfirmRenameCategory();
-            } else if (e.key === 'Escape') {
-                closeRenameCategoryModal();
-            }
-        });
-    }
 
-    // Controles del Modal de Confirmación de Eliminación
+    const btnCloseEditUnit = document.getElementById('btn-close-edit-unit-modal');
+    const btnCancelEditUnit = document.getElementById('btn-cancel-edit-unit-modal');
+    const btnConfirmEditUnit = document.getElementById('btn-confirm-edit-unit-modal');
+    if (btnCloseEditUnit) btnCloseEditUnit.addEventListener('click', closeEditUnitModal);
+    if (btnCancelEditUnit) btnCancelEditUnit.addEventListener('click', closeEditUnitModal);
+    if (btnConfirmEditUnit) btnConfirmEditUnit.addEventListener('click', handleConfirmEditUnit);
+
     const btnCloseDelete = document.getElementById('btn-close-delete-tax-modal');
     const btnCancelDelete = document.getElementById('btn-cancel-delete-tax-modal');
     const btnConfirmDelete = document.getElementById('btn-confirm-delete-tax-modal');
-
     if (btnCloseDelete) btnCloseDelete.addEventListener('click', closeConfirmDeleteTaxonomyModal);
     if (btnCancelDelete) btnCancelDelete.addEventListener('click', closeConfirmDeleteTaxonomyModal);
     if (btnConfirmDelete) {
@@ -4859,30 +5657,6 @@ function initStockTaxonomyModal() {
             }
         });
     }
-
-    // Controles del Modal de Edición de Unidad de Medida (U/M)
-    const btnCloseEditUnit = document.getElementById('btn-close-edit-unit-modal');
-    const btnCancelEditUnit = document.getElementById('btn-cancel-edit-unit-modal');
-    const btnConfirmEditUnit = document.getElementById('btn-confirm-edit-unit-modal');
-    const inputEditUnitName = document.getElementById('edit-unit-modal-name-input');
-    const inputEditUnitFam = document.getElementById('edit-unit-modal-family-input');
-
-    if (btnCloseEditUnit) btnCloseEditUnit.addEventListener('click', closeEditUnitModal);
-    if (btnCancelEditUnit) btnCancelEditUnit.addEventListener('click', closeEditUnitModal);
-    if (btnConfirmEditUnit) btnConfirmEditUnit.addEventListener('click', handleConfirmEditUnit);
-
-    [inputEditUnitName, inputEditUnitFam].forEach(inp => {
-        if (inp) {
-            inp.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    handleConfirmEditUnit();
-                } else if (e.key === 'Escape') {
-                    closeEditUnitModal();
-                }
-            });
-        }
-    });
 }
 
 async function fetchStockTaxonomies() {
@@ -4903,7 +5677,6 @@ function renderTaxonomyCategories(filterText = '') {
     if (!listEl || !stockTaxonomiesData?.categories) return;
 
     listEl.replaceChildren();
-
     const norm = normalizeText(filterText);
     const filtered = stockTaxonomiesData.categories.filter(c => !norm || normalizeText(c.name).includes(norm));
 
@@ -4916,75 +5689,46 @@ function renderTaxonomyCategories(filterText = '') {
         const itemDiv = document.createElement('div');
         itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
 
-        const leftDiv = document.createElement('div');
-        leftDiv.className = 'd-flex align-items-center gap-2 text-truncate flex-grow-1';
-        leftDiv.innerHTML = `
-            <span class="fs-5">${cat.icon || '📦'}</span>
-            <div class="text-truncate">
-                <div class="fw-bold text-navy text-truncate cat-name-label">${escapeHtml(cat.name)}</div>
-                <div class="text-muted small" style="font-size: 0.72rem;">${cat.count} ${cat.count === 1 ? 'producto' : 'productos'} vinculados</div>
+        itemDiv.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-truncate flex-grow-1">
+                <span class="fs-5">${cat.icon || '📦'}</span>
+                <div class="text-truncate">
+                    <div class="fw-bold text-navy text-truncate cat-name-label">${escapeHtml(cat.name)}</div>
+                    <div class="text-muted small" style="font-size: 0.72rem;">${cat.count} ${cat.count === 1 ? 'producto' : 'productos'} vinculados</div>
+                </div>
+            </div>
+            <div class="d-inline-flex align-items-center gap-1.5">
+                <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs text-dark btn-rename-cat" style="width: 30px; height: 30px;" title="Renombrar categoría">
+                    <i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs btn-delete-cat" style="width: 30px; height: 30px;" title="Eliminar categoría">
+                    <i class="bi bi-trash3" style="font-size: 0.85rem;"></i>
+                </button>
             </div>
         `;
 
-        const rightDiv = document.createElement('div');
-        rightDiv.className = 'd-inline-flex align-items-center gap-1.5';
-
-        // Botón Renombrar (Solo Icono)
-        const btnRename = document.createElement('button');
-        btnRename.type = 'button';
-        btnRename.className = 'btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs text-dark';
-        btnRename.style.width = '30px';
-        btnRename.style.height = '30px';
-        btnRename.innerHTML = '<i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>';
-        btnRename.title = 'Renombrar categoría';
-        btnRename.setAttribute('aria-label', 'Renombrar categoría');
-
-        btnRename.addEventListener('click', () => {
-            openRenameCategoryModal(cat.name);
-        });
-
-        // Botón Eliminar Categoría (Solo Icono)
-        const btnDelete = document.createElement('button');
-        btnDelete.type = 'button';
-        btnDelete.className = 'btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs';
-        btnDelete.style.width = '30px';
-        btnDelete.style.height = '30px';
-        btnDelete.innerHTML = '<i class="bi bi-trash3" style="font-size: 0.85rem;"></i>';
-        btnDelete.title = 'Eliminar categoría';
-        btnDelete.setAttribute('aria-label', 'Eliminar categoría');
-
-        btnDelete.addEventListener('click', () => {
-            const warningText = cat.count > 0 
-                ? `Esta categoría tiene ${cat.count} ${cat.count === 1 ? 'producto vinculado' : 'productos vinculados'}. Al eliminarla, serán reasignados automáticamente a la categoría "Otros".`
-                : null;
-
+        itemDiv.querySelector('.btn-rename-cat').addEventListener('click', () => openRenameCategoryModal(cat.name));
+        itemDiv.querySelector('.btn-delete-cat').addEventListener('click', () => {
+            const warningText = cat.count > 0 ? `Esta categoría tiene ${cat.count} productos vinculados. Al eliminarla, serán reasignados a "Otros".` : null;
             showConfirmDeleteTaxonomyModal({
                 title: 'Eliminar Categoría',
-                message: `¿Estás seguro de que deseas eliminar la categoría <strong class="text-navy">"${escapeHtml(cat.name)}"</strong> del catálogo?`,
+                message: `¿Estás seguro de eliminar la categoría <strong class="text-navy">"${escapeHtml(cat.name)}"</strong>?`,
                 warningText: warningText,
                 onConfirm: async () => {
                     try {
-                        const res = await fetch(`/api/stock/taxonomies/category/${encodeURIComponent(cat.name)}`, {
-                            method: 'DELETE'
-                        });
-                        const result = await res.json();
-                        if (res.ok && result.success) {
+                        const res = await fetch(`/api/stock/taxonomies/category/${encodeURIComponent(cat.name)}`, { method: 'DELETE' });
+                        if (res.ok) {
                             showToast(`🗑️ Categoría "${cat.name}" eliminada`, 'success');
                             await fetchStockTaxonomies();
                             await fetchStockItems();
-                        } else {
-                            showToast(result.error || 'Error al eliminar categoría', 'error');
                         }
                     } catch (err) {
                         console.error(err);
-                        showToast('Error de conexión', 'error');
                     }
                 }
             });
         });
 
-        rightDiv.append(btnRename, btnDelete);
-        itemDiv.append(leftDiv, rightDiv);
         listEl.appendChild(itemDiv);
     });
 }
@@ -5022,20 +5766,14 @@ async function handleConfirmRenameCategory() {
 
     if (!newName) {
         showToast('El nombre de la categoría no puede estar vacío', 'error');
-        inputNew.focus();
         return;
     }
-
     if (newName.toLowerCase() === oldName.toLowerCase()) {
         closeRenameCategoryModal();
         return;
     }
 
     closeRenameCategoryModal();
-    await renameCategoryCascade(oldName, newName);
-}
-
-async function renameCategoryCascade(oldName, newName) {
     try {
         const res = await fetch('/api/stock/categories/rename', {
             method: 'PUT',
@@ -5043,11 +5781,10 @@ async function renameCategoryCascade(oldName, newName) {
             body: JSON.stringify({ old_name: oldName, new_name: newName })
         });
         const result = await res.json();
-
         if (res.ok && result.success) {
-            showToast(`✅ Categoría actualizada a "${newName}" (${result.updated_count} productos actualizados)`, 'success');
+            showToast(`✅ Categoría actualizada a "${newName}"`, 'success');
             await fetchStockTaxonomies();
-            await fetchStockItems(); // Recargar tabla y filtros
+            await fetchStockItems();
         } else {
             showToast(result.error || 'Error al renombrar categoría', 'error');
         }
@@ -5057,8 +5794,125 @@ async function renameCategoryCascade(oldName, newName) {
     }
 }
 
-let pendingDeleteTaxonomyCallback = null;
+// --- RENDERIZADO DE UNIDADES DE MEDIDA (OPCIÓN 1 PLANA) ---
+function renderTaxonomyUnits(filterText = '') {
+    const listEl = document.getElementById('stock-tax-unit-list');
+    if (!listEl || !stockTaxonomiesData?.units) return;
 
+    listEl.replaceChildren();
+    const norm = normalizeText(filterText);
+    const filtered = stockTaxonomiesData.units.filter(u => !norm || normalizeText(u.name).includes(norm));
+
+    if (filtered.length === 0) {
+        listEl.innerHTML = '<div class="p-3 text-muted small text-center bg-light rounded-3">No se encontraron unidades registradas.</div>';
+        return;
+    }
+
+    filtered.forEach(unit => {
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
+
+        const count = unit.count || 0;
+
+        itemDiv.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-truncate flex-grow-1">
+                <span class="fs-5">📏</span>
+                <div class="text-truncate">
+                    <div class="fw-bold text-navy text-truncate">${escapeHtml(unit.name)}</div>
+                    <div class="text-muted small" style="font-size: 0.72rem;">${count} ${count === 1 ? 'producto vinculado' : 'productos vinculados'}</div>
+                </div>
+            </div>
+            <div class="d-inline-flex align-items-center gap-1.5">
+                <button type="button" class="btn btn-sm btn-outline-secondary d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs text-dark btn-edit-unit-direct" style="width: 30px; height: 30px;" title="Editar nombre de unidad">
+                    <i class="bi bi-pencil-square" style="font-size: 0.85rem;"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center p-0 rounded-circle shadow-2xs btn-delete-unit-direct" style="width: 30px; height: 30px;" title="Eliminar unidad">
+                    <i class="bi bi-trash3" style="font-size: 0.85rem;"></i>
+                </button>
+            </div>
+        `;
+
+        itemDiv.querySelector('.btn-edit-unit-direct').addEventListener('click', () => openEditUnitModal(unit.name));
+        itemDiv.querySelector('.btn-delete-unit-direct').addEventListener('click', () => {
+            showConfirmDeleteTaxonomyModal({
+                title: 'Eliminar Unidad de Medida',
+                message: `¿Estás seguro de eliminar la unidad <strong class="text-navy">"${escapeHtml(unit.name)}"</strong> del catálogo?`,
+                warningText: null,
+                onConfirm: async () => {
+                    try {
+                        const res = await fetch(`/api/stock/taxonomies/unit/${encodeURIComponent(unit.name)}`, { method: 'DELETE' });
+                        if (res.ok) {
+                            showToast(`🗑️ Unidad "${unit.name}" eliminada`, 'success');
+                            await fetchStockTaxonomies();
+                            await fetchStockItems();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            });
+        });
+
+        listEl.appendChild(itemDiv);
+    });
+}
+
+function openEditUnitModal(unitName) {
+    const modal = document.getElementById('modal-edit-unit');
+    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
+    const inputName = document.getElementById('edit-unit-modal-name-input');
+    if (!modal || !inputName) return;
+
+    if (hiddenOld) hiddenOld.value = unitName;
+    inputName.value = unitName;
+
+    modal.classList.remove('d-none');
+    setTimeout(() => {
+        inputName.focus();
+        inputName.select();
+    }, 60);
+}
+
+function closeEditUnitModal() {
+    const modal = document.getElementById('modal-edit-unit');
+    if (modal) modal.classList.add('d-none');
+}
+
+async function handleConfirmEditUnit() {
+    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
+    const inputName = document.getElementById('edit-unit-modal-name-input');
+    if (!hiddenOld || !inputName) return;
+
+    const oldName = hiddenOld.value.trim();
+    const newName = inputName.value.trim();
+
+    if (!newName) {
+        showToast('El nombre de la unidad no puede estar vacío', 'error');
+        return;
+    }
+
+    closeEditUnitModal();
+    try {
+        const res = await fetch('/api/stock/taxonomies/unit', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ old_name: oldName, new_name: newName })
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+            showToast(`✅ Unidad "${newName}" actualizada`, 'success');
+            await fetchStockTaxonomies();
+            await fetchStockItems();
+        } else {
+            showToast(result.error || 'Error al actualizar unidad', 'error');
+        }
+    } catch (err) {
+        console.error(err);
+        showToast('Error de conexión', 'error');
+    }
+}
+
+let pendingDeleteTaxonomyCallback = null;
 function showConfirmDeleteTaxonomyModal({ title, message, warningText, onConfirm }) {
     const modal = document.getElementById('modal-confirm-delete-taxonomy');
     const titleEl = document.getElementById('delete-tax-modal-title');
@@ -5087,195 +5941,7 @@ function closeConfirmDeleteTaxonomyModal() {
     pendingDeleteTaxonomyCallback = null;
 }
 
-function openEditUnitModal(unitName, currentFamily) {
-    const modal = document.getElementById('modal-edit-unit');
-    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
-    const inputName = document.getElementById('edit-unit-modal-name-input');
-    const inputFam = document.getElementById('edit-unit-modal-family-input');
-    if (!modal || !inputName) return;
-
-    if (hiddenOld) hiddenOld.value = unitName;
-    inputName.value = unitName;
-    if (inputFam) inputFam.value = currentFamily || 'Conteo';
-
-    modal.classList.remove('d-none');
-    setTimeout(() => {
-        inputName.focus();
-        inputName.select();
-    }, 60);
-}
-
-function closeEditUnitModal() {
-    const modal = document.getElementById('modal-edit-unit');
-    if (modal) modal.classList.add('d-none');
-}
-
-async function handleConfirmEditUnit() {
-    const hiddenOld = document.getElementById('edit-unit-modal-old-name-hidden');
-    const inputName = document.getElementById('edit-unit-modal-name-input');
-    const inputFam = document.getElementById('edit-unit-modal-family-input');
-    if (!hiddenOld || !inputName) return;
-
-    const oldName = hiddenOld.value.trim();
-    const newName = inputName.value.trim();
-    const newFamily = inputFam ? (inputFam.value.trim() || 'General') : 'General';
-
-    if (!newName) {
-        showToast('El nombre de la unidad no puede estar vacío', 'error');
-        inputName.focus();
-        return;
-    }
-
-    closeEditUnitModal();
-
-    try {
-        const res = await fetch('/api/stock/taxonomies/unit', {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ old_name: oldName, new_name: newName, family: newFamily })
-        });
-        const result = await res.json();
-        if (res.ok && result.success) {
-            showToast(`✅ Unidad "${newName}" (${newFamily}) actualizada`, 'success');
-            await fetchStockTaxonomies();
-            await fetchStockItems();
-        } else {
-            showToast(result.error || 'Error al actualizar unidad', 'error');
-        }
-    } catch (err) {
-        console.error(err);
-        showToast('Error de conexión', 'error');
-    }
-}
-
-function renderTaxonomyUnits(selectedFamily = 'all') {
-    const listEl = document.getElementById('stock-tax-unit-list');
-    const pillsContainer = document.getElementById('stock-tax-family-pills');
-    if (!listEl || !stockTaxonomiesData?.units) return;
-
-    listEl.replaceChildren();
-
-    // Extraer familias dinámicas únicas
-    const allUniqueFamilies = Array.from(new Set(stockTaxonomiesData.units.map(u => u.category || 'General'))).filter(Boolean);
-
-    // Renderizar píldoras de filtro por familia
-    if (pillsContainer) {
-        pillsContainer.replaceChildren();
-        
-        // Píldora "Todos"
-        const allPill = document.createElement('button');
-        allPill.type = 'button';
-        allPill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill flex-shrink-0 text-nowrap ${selectedFamily === 'all' ? 'btn-primary active' : 'btn-light'}`;
-        allPill.style.fontSize = '0.8rem';
-        allPill.textContent = 'Todos';
-        allPill.dataset.family = 'all';
-        allPill.addEventListener('click', () => renderTaxonomyUnits('all'));
-        pillsContainer.appendChild(allPill);
-
-        // Píldoras para cada familia existente
-        allUniqueFamilies.forEach(fam => {
-            const pill = document.createElement('button');
-            pill.type = 'button';
-            const isActive = selectedFamily.toLowerCase() === fam.toLowerCase();
-            pill.className = `btn btn-xs border py-1 px-2.5 tax-unit-pill flex-shrink-0 text-nowrap ${isActive ? 'btn-primary active' : 'btn-light'}`;
-            pill.style.fontSize = '0.8rem';
-            pill.textContent = fam;
-            pill.dataset.family = fam;
-            pill.addEventListener('click', () => renderTaxonomyUnits(fam));
-            pillsContainer.appendChild(pill);
-        });
-    }
-
-    // Agrupar por familia
-    const families = {};
-    stockTaxonomiesData.units.forEach(u => {
-        const fam = u.category || 'General';
-        if (selectedFamily === 'all' || fam.toLowerCase() === selectedFamily.toLowerCase()) {
-            if (!families[fam]) families[fam] = [];
-            families[fam].push(u.name);
-        }
-    });
-
-    if (Object.keys(families).length === 0) {
-        listEl.innerHTML = '<div class="p-3 text-muted small text-center bg-light rounded-3">No hay unidades en esta familia.</div>';
-        return;
-    }
-
-    Object.entries(families).forEach(([famName, unitList]) => {
-        const famCard = document.createElement('div');
-        famCard.className = 'p-2.5 bg-white rounded-3 border mb-1.5 shadow-2xs';
-
-        let famIcon = '📦';
-        if (famName.toLowerCase().includes('conteo')) famIcon = '🔢';
-        else if (famName.toLowerCase().includes('posolog')) famIcon = '💊';
-        else if (famName.toLowerCase().includes('volumen')) famIcon = '🧪';
-        else if (famName.toLowerCase().includes('peso')) famIcon = '⚖️';
-        else if (famName.toLowerCase().includes('inyect')) famIcon = '💉';
-        else if (famName.toLowerCase().includes('tópic') || famName.toLowerCase().includes('topic')) famIcon = '🧴';
-
-        famCard.innerHTML = `
-            <div class="fw-bold text-navy small mb-2">${famIcon} Familia: ${escapeHtml(famName)}</div>
-            <div class="d-flex flex-wrap gap-1.5"></div>
-        `;
-        listEl.appendChild(famCard);
-
-        const unitsContainer = famCard.querySelector('div:last-child');
-        unitList.forEach(u => {
-            const badgeSpan = document.createElement('span');
-            badgeSpan.className = 'badge bg-light text-secondary border fw-semibold px-2.5 py-1.5 d-inline-flex align-items-center gap-1.5 shadow-2xs';
-            badgeSpan.style.fontSize = '0.8rem';
-            badgeSpan.innerHTML = `
-                <span class="text-dark">${escapeHtml(u)}</span>
-                <div class="d-inline-flex align-items-center gap-1 ms-1">
-                    <button type="button" class="btn btn-link p-0 text-secondary hover:text-primary btn-edit-unit" title="Editar ${escapeHtml(u)}" style="font-size: 0.72rem; text-decoration: none; line-height: 1;">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button type="button" class="btn-close shadow-none btn-delete-unit" style="font-size: 0.52rem; filter: grayscale(1); opacity: 0.65;" title="Eliminar ${escapeHtml(u)}" aria-label="Eliminar"></button>
-                </div>
-            `;
-
-            // Editar U/M
-            const btnEdit = badgeSpan.querySelector('.btn-edit-unit');
-            btnEdit.addEventListener('click', (e) => {
-                e.stopPropagation();
-                openEditUnitModal(u, famName);
-            });
-
-            // Eliminar U/M
-            const btnClose = badgeSpan.querySelector('.btn-delete-unit');
-            btnClose.addEventListener('click', (e) => {
-                e.stopPropagation();
-
-                showConfirmDeleteTaxonomyModal({
-                    title: 'Eliminar Unidad de Medida',
-                    message: `¿Estás seguro de que deseas eliminar la unidad <strong class="text-navy">"${escapeHtml(u)}"</strong> del catálogo?`,
-                    warningText: null,
-                    onConfirm: async () => {
-                        try {
-                            const res = await fetch(`/api/stock/taxonomies/unit/${encodeURIComponent(u)}`, {
-                                method: 'DELETE'
-                            });
-                            const result = await res.json();
-                            if (res.ok && result.success) {
-                                showToast(`🗑️ Unidad "${u}" eliminada`, 'success');
-                                await fetchStockTaxonomies();
-                            } else {
-                                showToast(result.error || 'Error al eliminar unidad', 'error');
-                            }
-                        } catch (err) {
-                            console.error(err);
-                            showToast('Error de conexión', 'error');
-                        }
-                    }
-                });
-            });
-
-            unitsContainer.appendChild(badgeSpan);
-        });
-    });
-}
-
-// --- AUTOCOMPLETE ESTILIZADO DE CATEGORÍAS Y U/M ---
+// --- AUTOCOMPLETE ESTILIZADO DE CATEGORÍAS Y U/M (SIN FAMILIAS) ---
 function initStockFormCustomDropdowns() {
     const inputCat = document.getElementById('stock-category');
     const dropCat = document.getElementById('stock-category-dropdown');
@@ -5330,17 +5996,15 @@ function initStockFormCustomDropdowns() {
 
             filtered.forEach(it => {
                 const name = typeof it === 'string' ? it : it.name;
-                const icon = it.icon || '';
-                const tag = it.tag || '';
+                const icon = it.icon || '📦';
 
                 const div = document.createElement('div');
                 div.className = 'stock-dropdown-item';
                 div.innerHTML = `
                     <div class="d-flex align-items-center gap-2 text-truncate">
-                        ${icon ? `<span>${icon}</span>` : ''}
+                        <span>${icon}</span>
                         <span class="text-truncate">${escapeHtml(name)}</span>
                     </div>
-                    ${tag ? `<span class="badge bg-light text-secondary border">${escapeHtml(tag)}</span>` : ''}
                 `;
 
                 div.addEventListener('mousedown', (e) => {
@@ -5348,6 +6012,8 @@ function initStockFormCustomDropdowns() {
                     input.value = name;
                     updateClearBtnVisibility();
                     dropdown.classList.remove('show');
+                    // Disparar input event para calcular margen si aplica
+                    input.dispatchEvent(new Event('input'));
                 });
 
                 dropdown.appendChild(div);
@@ -5383,6 +6049,11 @@ function initStockFormCustomDropdowns() {
         ];
         const knownCats = new Map(defaultCats.map(c => [c.name.toLowerCase(), c]));
 
+        if (stockTaxonomiesData?.categories) {
+            stockTaxonomiesData.categories.forEach(c => {
+                knownCats.set(c.name.toLowerCase(), { name: c.name, icon: c.icon || "📦" });
+            });
+        }
         if (Array.isArray(allStockItems)) {
             allStockItems.forEach(i => {
                 if (i.category && !knownCats.has(i.category.toLowerCase())) {
@@ -5395,35 +6066,38 @@ function initStockFormCustomDropdowns() {
 
     setupDropdown(inputUnit, dropUnit, btnClearUnit, () => {
         const defaultUnits = [
-            { name: "Pack", tag: "Conteo" },
-            { name: "Unidad (u)", tag: "Conteo" },
-            { name: "Frasco / Bote", tag: "Conteo" },
-            { name: "Caja", tag: "Conteo" },
-            { name: "Tabletas", tag: "Posología" },
-            { name: "Cápsulas", tag: "Posología" },
-            { name: "Sobres", tag: "Posología" },
-            { name: "Ampollas", tag: "Posología" },
-            { name: "Mililitros (ml)", tag: "Volumen" },
-            { name: "Litros (L)", tag: "Volumen" },
-            { name: "Gramos (gr)", tag: "Peso" },
-            { name: "Kilogramos (kg)", tag: "Peso" }
+            { name: "Unidad (u)", icon: "📏" },
+            { name: "Frasco / Bote", icon: "🧴" },
+            { name: "Caja", icon: "📦" },
+            { name: "Pack", icon: "🛍️" },
+            { name: "Cápsulas", icon: "💊" },
+            { name: "Tabletas", icon: "💊" },
+            { name: "Sobres", icon: "✉️" },
+            { name: "Ampollas", icon: "💉" },
+            { name: "Tubo", icon: "🧪" },
+            { name: "Gotero", icon: "💧" },
+            { name: "Mililitros (ml)", icon: "🧪" },
+            { name: "Litros (L)", icon: "🧃" },
+            { name: "Gramos (g)", icon: "⚖️" },
+            { name: "Kilogramos (kg)", icon: "⚖️" }
         ];
         const knownUnits = new Map(defaultUnits.map(u => [u.name.toLowerCase(), u]));
 
         if (stockTaxonomiesData?.units) {
             stockTaxonomiesData.units.forEach(u => {
                 if (u.name && !knownUnits.has(u.name.toLowerCase())) {
-                    knownUnits.set(u.name.toLowerCase(), { name: u.name, tag: u.category || 'Otras' });
+                    knownUnits.set(u.name.toLowerCase(), { name: u.name, icon: "📏" });
                 }
             });
         }
         if (Array.isArray(allStockItems)) {
             allStockItems.forEach(i => {
                 if (i.unit && !knownUnits.has(i.unit.toLowerCase())) {
-                    knownUnits.set(i.unit.toLowerCase(), { name: i.unit, tag: 'Personalizado' });
+                    knownUnits.set(i.unit.toLowerCase(), { name: i.unit, icon: "📏" });
                 }
             });
         }
         return Array.from(knownUnits.values());
     });
 }
+

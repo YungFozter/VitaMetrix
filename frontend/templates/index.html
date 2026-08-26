@@ -898,7 +898,7 @@
         </div>
     </div>
 
-    <!-- MODAL: GESTIÓN DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) -->
+    <!-- MODAL: GESTIÓN DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M - OPCIÓN 1) -->
     <div id="stock-taxonomy-modal" class="modal-overlay hidden" style="display: none; z-index: 1060;">
         <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 620px; width: 92%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
@@ -908,6 +908,7 @@
                     </div>
                     <div>
                         <h4 class="display-font text-navy fw-bold fs-5 m-0">Catálogo de Categorías y Unidades</h4>
+                        <small class="text-muted" style="font-size: 0.76rem;">Configura las clasificaciones y presentaciones de tus productos</small>
                     </div>
                 </div>
                 <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close" aria-label="Cerrar"></button>
@@ -952,55 +953,32 @@
                 </div>
             </div>
 
-            <!-- Contenido Tab 2: Unidades de Medida -->
+            <!-- Contenido Tab 2: Unidades de Medida (Opción 1 Limpia y Directa) -->
             <div id="tab-tax-units-content" class="stock-tab-panel d-none">
-                <!-- Formulario Agregar Unidad de Medida -->
+                <!-- Formulario Agregar Unidad de Medida (Solo Nombre) -->
                 <div class="p-3 bg-light rounded-3 border mb-3">
-                    <div class="row g-2 mb-2">
-                        <div class="col-12 col-sm-6">
-                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">
-                                Nombre de la U/M <span class="text-danger">*</span>
-                            </label>
-                            <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Vial, Tubo 50g, Gotero...">
-                        </div>
-                        <div class="col-12 col-sm-6">
-                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">
-                                Familia / Clasificación
-                            </label>
-                            <div class="input-group">
-                                <input type="text" id="new-unit-family" class="form-control shadow-none small" list="suggested-families-list" placeholder="Ej: Conteo, Inyectable...">
-                                <datalist id="suggested-families-list">
-                                    <option value="Conteo">
-                                    <option value="Posología">
-                                    <option value="Volumen">
-                                    <option value="Peso">
-                                    <option value="Inyectables">
-                                    <option value="Tópicos / Geles">
-                                    <option value="Descartables">
-                                    <option value="General">
-                                </datalist>
-                                <button type="button" id="btn-add-unit" class="btn btn-primary btn-sm px-3 fw-semibold">
-                                    <i class="bi bi-plus-lg me-1"></i> Agregar
-                                </button>
-                            </div>
-                        </div>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">
+                        Nombre de la Unidad / Presentación <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Frasco, Caja, Cápsulas, Tubo, Gotero, ml, Unidad...">
+                        <button type="button" id="btn-add-unit" class="btn btn-primary btn-sm px-3 fw-semibold">
+                            <i class="bi bi-plus-lg me-1"></i> Agregar Unidad
+                        </button>
                     </div>
-                    <!-- Banner Aclarativo -->
-                    <div class="d-flex align-items-start gap-1.5 p-2 bg-white rounded-2 border text-muted small" style="font-size: 0.74rem;">
-                        <i class="bi bi-info-circle-fill text-primary mt-0.5"></i>
-                        <div>
-                            El campo <strong>Familia / Clasificación</strong> (ej: <em>Conteo, Posología, Inyectable</em>) es la etiqueta informativa que aparece a la derecha de cada opción en el selector del formulario para orientar al profesional de salud.
+                </div>
+
+                <!-- Buscador de Unidades en tiempo real -->
+                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
+                    <div class="text-muted small fw-bold text-uppercase">Unidades Registradas</div>
+                    <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
+                        <div class="input-group input-group-sm rounded-3 shadow-2xs">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
+                            <input type="text" id="search-tax-units" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Buscar unidad...">
                         </div>
                     </div>
                 </div>
 
-                <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
-                    <div class="text-muted small fw-bold text-uppercase text-nowrap flex-shrink-0">Filtrar por Familia</div>
-                    <div id="stock-tax-family-pills" class="d-flex align-items-center gap-1.5 flex-nowrap overflow-x-auto pb-1 stock-custom-h-scrollbar" style="max-width: 100%; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
-                        <!-- Píldoras de familias inyectadas dinámicamente -->
-                        <button type="button" class="btn btn-xs btn-primary border py-1 px-2.5 active tax-unit-pill flex-shrink-0 text-nowrap" data-family="all" style="font-size: 0.8rem;">Todos</button>
-                    </div>
-                </div>
                 <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto; padding-right: 6px;">
                     <!-- Inyectado dinámicamente -->
                 </div>
@@ -1014,7 +992,7 @@
         </div>
     </div>
 
-    <!-- Modal Personalizado Editar / Renombrar Unidad de Medida -->
+    <!-- Modal Personalizado Editar / Renombrar Unidad de Medida (Opción 1 Directa) -->
     <div id="modal-edit-unit" class="modal-overlay d-none" style="z-index: 1065;">
         <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
@@ -1024,22 +1002,16 @@
                     </div>
                     <div>
                         <h6 class="fw-bold text-navy mb-0">Editar Unidad de Medida</h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Actualiza el nombre o su familia clínica</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Actualiza el nombre de la unidad</small>
                     </div>
                 </div>
                 <button type="button" id="btn-close-edit-unit-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
             </div>
 
             <div class="mb-3">
-                <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span class="text-danger">*</span></label>
-                    <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Vial, Cápsula, Ampolla...">
-                    <input type="hidden" id="edit-unit-modal-old-name-hidden">
-                </div>
-                <div>
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Familia / Clasificación (Etiqueta Derecha)</label>
-                    <input type="text" id="edit-unit-modal-family-input" class="form-control rounded-3 py-2 px-3 shadow-none" list="suggested-families-list" placeholder="Ej: Conteo, Posología, Inyectables...">
-                </div>
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span class="text-danger">*</span></label>
+                <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Vial, Cápsula, Ampolla, Frasco...">
+                <input type="hidden" id="edit-unit-modal-old-name-hidden">
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
@@ -1125,6 +1097,174 @@
         </div>
     </div>
 
+    <!-- MODAL: AJUSTE RÁPIDO DE STOCK (KARDEX RÁPIDO) -->
+    <div id="modal-quick-stock-adjust" class="modal-overlay d-none" style="z-index: 1065;">
+        <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 480px; width: 92%;">
+            <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+                <div class="d-flex align-items-center gap-2.5">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                        <i class="bi bi-arrow-left-right"></i>
+                    </div>
+                    <div>
+                        <h6 class="fw-bold text-navy mb-0">Ajuste Rápido de Stock</h6>
+                        <small class="text-muted" id="quick-adjust-item-name">Cargando...</small>
+                    </div>
+                </div>
+                <button type="button" id="btn-close-quick-adjust" class="btn-close shadow-none" aria-label="Cerrar"></button>
+            </div>
+
+            <input type="hidden" id="quick-adjust-item-id">
+
+            <div class="mb-3">
+                <!-- Tipo de Movimiento -->
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1.5">Tipo de Movimiento</label>
+                <div class="stock-adjust-type-grid mb-3">
+                    <button type="button" class="adjust-type-btn active" data-type="IN">
+                        <i class="bi bi-box-arrow-in-down text-success"></i> Entrada (Compra/Lote)
+                    </button>
+                    <button type="button" class="adjust-type-btn" data-type="OUT">
+                        <i class="bi bi-box-arrow-up text-danger"></i> Salida (Uso/Merma)
+                    </button>
+                    <button type="button" class="adjust-type-btn" data-type="ADJUST">
+                        <i class="bi bi-sliders text-primary"></i> Ajuste Total
+                    </button>
+                </div>
+
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual</label>
+                        <div class="form-control bg-light font-monospace fw-bold" id="quick-adjust-current-stock">0</div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1" id="quick-adjust-qty-label">Cantidad a Ingresar</label>
+                        <input type="number" id="quick-adjust-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0.01" step="any">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Justificación</label>
+                    <input type="text" id="quick-adjust-reason" class="form-control shadow-none small" placeholder="Ej: Compra de lote mensual, consumo en consulta...">
+                </div>
+            </div>
+
+            <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+                <button type="button" id="btn-cancel-quick-adjust" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-confirm-quick-adjust" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                    <i class="bi bi-check-lg"></i> Registrar Movimiento
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: COMPROBANTE / RECIBO DIGITAL CLÍNICO (PRINTABLE & WHATSAPP) -->
+    <div id="modal-digital-receipt" class="modal-overlay d-none" style="z-index: 1080;">
+        <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 540px; width: 94%;">
+            
+            <!-- Barra Superior de Acciones de Recibo -->
+            <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-2.5 py-1">
+                        <i class="bi bi-check-circle-fill me-1"></i> Comprobante Oficial
+                    </span>
+                    <span class="text-muted small font-monospace fw-bold" id="receipt-modal-number">REC-2026-0000</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <button type="button" id="btn-receipt-whatsapp" class="btn btn-sm btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Enviar por WhatsApp">
+                        <i class="bi bi-whatsapp"></i> <span class="d-none d-sm-inline">WhatsApp</span>
+                    </button>
+                    <button type="button" id="btn-receipt-print" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Imprimir Recibo">
+                        <i class="bi bi-printer"></i> <span class="d-none d-sm-inline">Imprimir</span>
+                    </button>
+                    <button type="button" id="btn-close-receipt-modal" class="btn-close shadow-none ms-1" aria-label="Cerrar"></button>
+                </div>
+            </div>
+
+            <!-- Cuerpo del Recibo Imprimible -->
+            <div class="p-4 receipt-printable-body stock-custom-scrollbar" id="receipt-printable-content" style="max-height: 70vh; overflow-y: auto;">
+                
+                <!-- Membrete Clínico -->
+                <div class="text-center pb-3 border-bottom mb-3">
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                        <div class="brand-icon" style="width: 28px; height: 28px; font-size: 1rem; border-radius: 8px;">⚡</div>
+                        <h4 class="fw-extrabold text-navy mb-0 display-font" style="letter-spacing: -0.5px;">VitaMetrix</h4>
+                    </div>
+                    <div class="text-muted small fw-semibold" style="font-size: 0.78rem;">CLÍNICA DE NUTRICIÓN & BIOIMPEDANCIA BIVA</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Santa Cruz de la Sierra, Bolivia • Especialista: Dra. Audrey</div>
+                </div>
+
+                <!-- Datos de la Transacción -->
+                <div class="row g-2 mb-3 text-secondary small" style="font-size: 0.8rem;">
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Paciente / Cliente:</div>
+                        <div class="fw-bold text-navy text-truncate" id="receipt-patient-name">Carlos Rodríguez</div>
+                        <div class="text-muted" id="receipt-patient-idp" style="font-size: 0.72rem;">IDP: IDP-1002</div>
+                    </div>
+                    <div class="col-6 text-end">
+                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Fecha & Hora:</div>
+                        <div class="fw-bold text-navy" id="receipt-datetime">25/08/2026 20:50</div>
+                        <div class="text-muted" id="receipt-payment-method-badge" style="font-size: 0.72rem;">Método: Transferencia / QR</div>
+                    </div>
+                </div>
+
+                <!-- Tabla de Productos del Recibo -->
+                <table class="table table-sm table-borderless align-middle mb-3 receipt-items-table" style="font-size: 0.82rem;">
+                    <thead style="border-bottom: 2px solid #e2e8f0;">
+                        <tr class="text-muted small fw-bold text-uppercase">
+                            <th class="ps-0">ÍTEM / CONCEPTO</th>
+                            <th class="text-center">CANT.</th>
+                            <th class="text-end">P. UNIT</th>
+                            <th class="text-end pe-0">SUBTOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receipt-items-tbody">
+                        <!-- Inyectado dinámicamente -->
+                    </tbody>
+                </table>
+
+                <!-- Totales y Resumen Financiero -->
+                <div class="pt-2 border-top mb-3">
+                    <div class="d-flex justify-content-between text-muted small mb-1">
+                        <span>Subtotal:</span>
+                        <span class="font-monospace" id="receipt-subtotal-val">Bs. 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mb-1.5" id="receipt-discount-row">
+                        <span>Descuento Aplicado:</span>
+                        <span class="font-monospace text-danger" id="receipt-discount-val">-Bs. 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                        <span class="fw-extrabold text-navy fs-6">TOTAL CANCELADO:</span>
+                        <span class="fw-extrabold text-primary fs-5 font-monospace" id="receipt-total-val">Bs. 0.00</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted small mt-1" id="receipt-cash-breakdown">
+                        <span style="font-size: 0.75rem;">Efectivo recibido: <strong class="font-monospace text-dark" id="receipt-amount-received">Bs. 0.00</strong></span>
+                        <span style="font-size: 0.75rem;">Cambio entregado: <strong class="font-monospace text-success" id="receipt-change-given">Bs. 0.00</strong></span>
+                    </div>
+                </div>
+
+                <!-- Notas y Pie de Página -->
+                <div class="p-2.5 bg-light rounded-3 border text-muted mb-3" style="font-size: 0.72rem;">
+                    <div class="fw-bold text-navy mb-0.5">Indicaciones Clínicas / Observaciones:</div>
+                    <div id="receipt-notes-val">Gracias por su confianza. Siga las instrucciones nutricionales indicadas.</div>
+                </div>
+
+                <div class="text-center text-muted" style="font-size: 0.68rem;">
+                    *** Comprobante digital generado por VitaMetrix BIA System ***
+                </div>
+
+            </div>
+
+            <!-- Footer con Botón Cerrar -->
+            <div class="p-3 bg-light border-top d-flex justify-content-end">
+                <button type="button" id="btn-footer-close-receipt" class="btn btn-secondary px-4 py-2 rounded-3 fw-semibold">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Leaflet JS (mapa interactivo GPS consultorio) -->
@@ -1132,6 +1272,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=109"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=110"></script>
 </body>
 </html>
