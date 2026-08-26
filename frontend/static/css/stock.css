@@ -142,6 +142,40 @@
     margin-top: 0.2rem;
 }
 
+.stock-kpi-top-card {
+    align-items: flex-start !important;
+}
+
+.stock-kpi-top-items {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+}
+
+.stock-top-item-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.73rem;
+    font-weight: 600;
+    color: #1e293b;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 0.18rem 0.45rem;
+    line-height: 1.2;
+}
+
+.stock-top-item-badge .rank {
+    font-weight: 700;
+    margin-right: 0.35rem;
+}
+
+.stock-top-item-badge.rank-1 .rank { color: #f59e0b; }
+.stock-top-item-badge.rank-2 .rank { color: #64748b; }
+.stock-top-item-badge.rank-3 .rank { color: #b45309; }
+
 /* ==========================================================================
    Badges de Estado de Stock y Márgenes
    ========================================================================== */

@@ -39,49 +39,54 @@
     <!-- ========================================================================= -->
     <div id="stock-panel-catalog" class="stock-panel-content">
         
-        <!-- KPI BENTO CARDS DE INVENTARIO -->
+        <!-- KPI BENTO CARDS DE INVENTARIO (TOTAL, ÓPTIMO, BAJO, TOP 3 VENDIDOS) -->
         <div class="stock-kpi-grid">
+            <!-- 1. Total Catálogo -->
             <div class="stock-kpi-card">
                 <div class="stock-kpi-icon primary">
                     <i class="bi bi-box-seam-fill"></i>
                 </div>
                 <div class="stock-kpi-data">
-                    <span class="stock-kpi-label">Total Artículos</span>
-                    <span class="stock-kpi-value" id="stock-kpi-total">0</span>
-                    <span class="stock-kpi-sub">En catálogo clínico</span>
+                    <span class="stock-kpi-label">Total Catálogo</span>
+                    <span class="stock-kpi-value text-navy" id="stock-kpi-total">0</span>
+                    <span class="stock-kpi-sub">Artículos registrados</span>
                 </div>
             </div>
 
+            <!-- 2. Stock Óptimo -->
+            <div class="stock-kpi-card">
+                <div class="stock-kpi-icon success">
+                    <i class="bi bi-check-circle-fill"></i>
+                </div>
+                <div class="stock-kpi-data">
+                    <span class="stock-kpi-label">Stock Óptimo</span>
+                    <span class="stock-kpi-value text-success" id="stock-kpi-optimal">0</span>
+                    <span class="stock-kpi-sub">Existencias seguras</span>
+                </div>
+            </div>
+
+            <!-- 3. Stock Bajo -->
             <div class="stock-kpi-card">
                 <div class="stock-kpi-icon warning">
                     <i class="bi bi-exclamation-triangle-fill"></i>
                 </div>
                 <div class="stock-kpi-data">
-                    <span class="stock-kpi-label">Stock Bajo / Crítico</span>
+                    <span class="stock-kpi-label">Stock Bajo</span>
                     <span class="stock-kpi-value text-warning" id="stock-kpi-low">0</span>
                     <span class="stock-kpi-sub">Requieren reposición</span>
                 </div>
             </div>
 
-            <div class="stock-kpi-card">
-                <div class="stock-kpi-icon success">
-                    <i class="bi bi-cash-stack"></i>
-                </div>
-                <div class="stock-kpi-data">
-                    <span class="stock-kpi-label">Valorización de Costo</span>
-                    <span class="stock-kpi-value text-success" id="stock-kpi-val">Bs. 0.00</span>
-                    <span class="stock-kpi-sub">Costo total inventariado</span>
-                </div>
-            </div>
-
-            <div class="stock-kpi-card">
+            <!-- 4. Top 3 Más Vendidos -->
+            <div class="stock-kpi-card stock-kpi-top-card">
                 <div class="stock-kpi-icon info">
-                    <i class="bi bi-graph-up-arrow"></i>
+                    <i class="bi bi-trophy-fill"></i>
                 </div>
-                <div class="stock-kpi-data">
-                    <span class="stock-kpi-label">Valor en Venta Potencial</span>
-                    <span class="stock-kpi-value text-primary" id="stock-kpi-sale-val">Bs. 0.00</span>
-                    <span class="stock-kpi-sub">Estimado al precio de venta</span>
+                <div class="stock-kpi-data w-100">
+                    <span class="stock-kpi-label">Top 3 Más Vendidos</span>
+                    <div id="stock-kpi-top-list" class="stock-kpi-top-items mt-1">
+                        <span class="text-muted small" style="font-size: 0.75rem;">Sin rotación registrada</span>
+                    </div>
                 </div>
             </div>
         </div>

@@ -4596,33 +4596,75 @@ function updateStockCategoryOptions(items) {
     renderDropdownList(posList, 'pos-filter-category', posLabel, () => renderPosProductGrid());
 }
 
-function updateStockKPIs(items) {
+async function updateStockKPIs(items) {
     if (!Array.isArray(items)) return;
 
     const totalEl = document.getElementById('stock-kpi-total');
+    const optimalEl = document.getElementById('stock-kpi-optimal');
     const lowEl = document.getElementById('stock-kpi-low');
-    const valEl = document.getElementById('stock-kpi-val');
-    const saleValEl = document.getElementById('stock-kpi-sale-val');
+    const topListEl = document.getElementById('stock-kpi-top-list');
 
-    if (totalEl) totalEl.textContent = items.length;
+    const totalCount = items.length;
+    let optimalCount = 0;
+    let lowCount = 0;
 
-    const lowCount = items.filter(i => (parseFloat(i.stock_quantity) || 0) <= (parseFloat(i.min_stock) || 5)).length;
+    items.forEach(i => {
+        const qty = parseFloat(i.stock_quantity) || 0;
+        const min = parseFloat(i.min_stock) || 5;
+        if (qty > min) {
+            optimalCount++;
+        } else {
+            lowCount++;
+        }
+    });
+
+    if (totalEl) totalEl.textContent = totalCount;
+    if (optimalEl) optimalEl.textContent = optimalCount;
     if (lowEl) lowEl.textContent = lowCount;
 
-    const totalCost = items.reduce((acc, curr) => {
-        const qty = parseFloat(curr.stock_quantity) || 0;
-        const cost = parseFloat(curr.cost_price) || 0;
-        return acc + (qty * cost);
-    }, 0);
+    // 4. Calcular Top 3 Más Vendidos
+    if (topListEl) {
+        try {
+            const res = await fetch('/api/sales');
+            if (res.ok) {
+                const sales = await res.json();
+                const productSalesMap = {};
 
-    const totalSale = items.reduce((acc, curr) => {
-        const qty = parseFloat(curr.stock_quantity) || 0;
-        const sale = parseFloat(curr.sale_price) || 0;
-        return acc + (qty * sale);
-    }, 0);
+                if (Array.isArray(sales)) {
+                    sales.forEach(sale => {
+                        if (sale.status === 'CANCELLED') return;
+                        const sItems = sale.items || sale.sale_items || [];
+                        sItems.forEach(it => {
+                            const name = it.name || it.item_name || 'Producto';
+                            const qty = parseFloat(it.quantity) || 1;
+                            const unit = it.unit || 'u';
+                            if (!productSalesMap[name]) {
+                                productSalesMap[name] = { name, quantity: 0, unit };
+                            }
+                            productSalesMap[name].quantity += qty;
+                        });
+                    });
+                }
 
-    if (valEl) valEl.textContent = `Bs. ${totalCost.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    if (saleValEl) saleValEl.textContent = `Bs. ${totalSale.toLocaleString('es-ES', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+                const sortedTop = Object.values(productSalesMap).sort((a, b) => b.quantity - a.quantity).slice(0, 3);
+
+                if (sortedTop.length === 0) {
+                    topListEl.innerHTML = '<span class="text-muted small" style="font-size: 0.75rem;">Sin ventas registradas aún</span>';
+                } else {
+                    const medals = ['🥇', '🥈', '🥉'];
+                    topListEl.innerHTML = sortedTop.map((top, idx) => `
+                        <div class="stock-top-item-badge rank-${idx + 1}" title="${escapeHtml(top.name)}: ${top.quantity} unidades vendidas">
+                            <span class="text-truncate me-1"><span class="rank">${medals[idx]}</span>${escapeHtml(top.name)}</span>
+                            <span class="badge bg-white text-dark border px-1" style="font-size: 0.68rem;">${top.quantity} ${escapeHtml(top.unit || 'u')}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        } catch (e) {
+            console.warn('No se pudo cargar rotación de ventas:', e);
+            topListEl.innerHTML = '<span class="text-muted small" style="font-size: 0.75rem;">Sin rotación registrada</span>';
+        }
+    }
 }
 
 function filterAndRenderStock() {
