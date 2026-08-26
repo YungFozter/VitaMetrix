@@ -31,9 +31,19 @@
       "description": "Fichas, papel de impresión y suministros administrativos"
     },
     {
+      "name": "Sin Categoría",
+      "icon": "🏷️",
+      "description": "Artículos registrados sin categoría específica"
+    },
+    {
       "name": "Otros",
       "icon": "🏷️",
       "description": "Artículos varios no clasificados"
+    },
+    {
+      "name": "Suplementos Botánicos E2E",
+      "icon": "🌿",
+      "description": "Fitoterapia y extractos botánicos clínicos"
     }
   ],
   "units": [
@@ -78,6 +88,9 @@
     },
     {
       "name": "Kilogramos (kg)"
+    },
+    {
+      "name": "Kit Terapéutico (kit)"
     }
   ]
 }

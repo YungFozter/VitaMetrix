@@ -6069,6 +6069,9 @@ async function fetchStockTaxonomies() {
             stockTaxonomiesData = await res.json();
             renderTaxonomyCategories();
             renderTaxonomyUnits();
+            if (typeof updateStockCategoryOptions === 'function') {
+                updateStockCategoryOptions(allStockItems || []);
+            }
         }
     } catch (err) {
         console.error('Error al cargar taxonomías de stock:', err);

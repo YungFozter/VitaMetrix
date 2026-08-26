@@ -795,15 +795,36 @@ def delete_client(client_id):
         logging.error("Error al eliminar cliente: %s", e, exc_info=True)
         return jsonify({"error": "Error al eliminar cliente"}), 500
 
-# --- RUTAS DE CITAS Y AGENDA CLÍNICA ---
+# --- RUTAS DE CITAS Y AGENDA CLÍNICA (CON PERSISTENCIA LOCAL) ---
 
-_LOCAL_APPOINTMENTS = []
+_APPOINTMENTS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "appointments.json")
+
+def _load_persisted_appointments():
+    if os.path.exists(_APPOINTMENTS_PATH):
+        try:
+            with open(_APPOINTMENTS_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer appointments.json: %s", e)
+    return []
+
+def _save_persisted_appointments(appts):
+    try:
+        os.makedirs(os.path.dirname(_APPOINTMENTS_PATH), exist_ok=True)
+        with open(_APPOINTMENTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(appts, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar appointments.json: %s", e)
+        return False
+
+_LOCAL_APPOINTMENTS = _load_persisted_appointments()
 
 @app.route('/api/appointments', methods=['GET'])
 def get_appointments():
     date_filter = request.args.get('date')
     if not supabase:
-        results = _LOCAL_APPOINTMENTS
+        results = _load_persisted_appointments() or _LOCAL_APPOINTMENTS
         if date_filter:
             results = [a for a in results if a.get('date') == date_filter]
         return jsonify(results), 200
@@ -816,7 +837,7 @@ def get_appointments():
         return jsonify(res.data or []), 200
     except Exception as e:
         logging.warning("Tabla appointments no disponible en Supabase, usando almacenamiento local: %s", e)
-        results = _LOCAL_APPOINTMENTS
+        results = _load_persisted_appointments() or _LOCAL_APPOINTMENTS
         if date_filter:
             results = [a for a in results if a.get('date') == date_filter]
         return jsonify(results), 200
@@ -846,7 +867,7 @@ def create_appointment():
         "type": appt_type,
         "status": appt_status,
         "notes": notes,
-        "created_at": datetime.now().isoformat() if 'datetime' in globals() else "2026-08-22T00:00:00"
+        "created_at": datetime.now(timezone.utc).isoformat()
     }
 
     if supabase:
@@ -867,6 +888,7 @@ def create_appointment():
             logging.warning("No se pudo insertar en Supabase appointments, usando fallback local: %s", e)
 
     _LOCAL_APPOINTMENTS.append(new_appt)
+    _save_persisted_appointments(_LOCAL_APPOINTMENTS)
     return jsonify({"success": True, "data": new_appt}), 201
 
 @app.route('/api/appointments/<string:appt_id>', methods=['PUT'])
@@ -896,6 +918,7 @@ def update_appointment(appt_id):
     for item in _LOCAL_APPOINTMENTS:
         if item.get('id') == appt_id:
             item.update(updated)
+            _save_persisted_appointments(_LOCAL_APPOINTMENTS)
             return jsonify({"success": True, "data": item})
 
     return jsonify({"success": True, "message": "Actualizado"})
@@ -911,11 +934,15 @@ def delete_appointment(appt_id):
 
     global _LOCAL_APPOINTMENTS
     _LOCAL_APPOINTMENTS = [a for a in _LOCAL_APPOINTMENTS if a.get('id') != appt_id]
+    _save_persisted_appointments(_LOCAL_APPOINTMENTS)
     return jsonify({"success": True})
 
-# --- STOCK CONTROL & INVENTARIO CLÍNICO ---
+# --- STOCK CONTROL & INVENTARIO CLÍNICO (PERSISTENCIA TOTAL EN DISCO) ---
 
-_LOCAL_STOCK_ITEMS = [
+_STOCK_ITEMS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_items.json")
+_STOCK_MOVEMENTS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_movements.json")
+
+_DEFAULT_INITIAL_STOCK_ITEMS = [
     {
         "id": "stk-001",
         "code": "SKU-BIA-001",
@@ -1008,7 +1035,7 @@ _LOCAL_STOCK_ITEMS = [
     }
 ]
 
-_LOCAL_STOCK_MOVEMENTS = [
+_DEFAULT_INITIAL_STOCK_MOVEMENTS = [
     {
         "id": "mov-001",
         "stock_item_id": "stk-001",
@@ -1032,6 +1059,51 @@ _LOCAL_STOCK_MOVEMENTS = [
         "created_at": "2026-08-20T17:30:00Z"
     }
 ]
+
+def _load_persisted_stock_items():
+    if os.path.exists(_STOCK_ITEMS_PATH):
+        try:
+            with open(_STOCK_ITEMS_PATH, 'r', encoding='utf-8') as f:
+                items = json.load(f)
+                if isinstance(items, list) and len(items) > 0:
+                    return items
+        except Exception as e:
+            logging.warning("Error al leer stock_items.json: %s", e)
+    _save_persisted_stock_items(_DEFAULT_INITIAL_STOCK_ITEMS)
+    return list(_DEFAULT_INITIAL_STOCK_ITEMS)
+
+def _save_persisted_stock_items(items):
+    try:
+        os.makedirs(os.path.dirname(_STOCK_ITEMS_PATH), exist_ok=True)
+        with open(_STOCK_ITEMS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(items, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar stock_items.json: %s", e)
+        return False
+
+def _load_persisted_stock_movements():
+    if os.path.exists(_STOCK_MOVEMENTS_PATH):
+        try:
+            with open(_STOCK_MOVEMENTS_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer stock_movements.json: %s", e)
+    _save_persisted_stock_movements(_DEFAULT_INITIAL_STOCK_MOVEMENTS)
+    return list(_DEFAULT_INITIAL_STOCK_MOVEMENTS)
+
+def _save_persisted_stock_movements(movements):
+    try:
+        os.makedirs(os.path.dirname(_STOCK_MOVEMENTS_PATH), exist_ok=True)
+        with open(_STOCK_MOVEMENTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(movements, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar stock_movements.json: %s", e)
+        return False
+
+_LOCAL_STOCK_ITEMS = _load_persisted_stock_items()
+_LOCAL_STOCK_MOVEMENTS = _load_persisted_stock_movements()
 
 def _safe_stock_float(val, default=0.0, min_val=None):
     try:
@@ -1064,11 +1136,12 @@ def get_stock_items():
         except Exception as e:
             logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
 
-    # Combinar registros locales y remotos
+    # Combinar registros locales y remotos asegurando persistencia
+    local_items = _load_persisted_stock_items()
     seen_ids = set()
     combined_items = []
 
-    for it in _LOCAL_STOCK_ITEMS:
+    for it in local_items:
         it_copy = dict(it)
         it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
         if it_copy.get('id'):
@@ -1082,40 +1155,29 @@ def get_stock_items():
             if it_copy.get('id'):
                 seen_ids.add(it_copy.get('id'))
             combined_items.append(it_copy)
+            local_items.append(it_copy)
+            _save_persisted_stock_items(local_items)
 
     return jsonify(combined_items)
 
 def _generate_next_sku(raw_code=None):
     """
     Genera o calcula el código SKU correlativo con relleno de huecos (gap filling / reciclaje).
-    Reglas:
-    - Si el usuario ingresa un prefijo (2-5 caracteres alfanuméricos, ej: 'WHEY', 'PRO', 'BIA', 'SUP'):
-      Se extrae el prefijo en mayúsculas (2-5 letras/números).
-    - Si no ingresa nada o está vacío, el prefijo por defecto es 'SKU'.
-    - Busca todos los códigos existentes con PREFIX-XXX y encuentra el menor número disponible (1, 2, 3...).
-    - Devuelve PREFIX-001, PREFIX-002, etc.
     """
     prefix = "SKU"
     desired_num = None
 
-    if raw_code:
-        cleaned = re.sub(r'[^A-Za-z0-9\-]', '', str(raw_code).strip()).upper()
-        if '-' in cleaned:
-            parts = cleaned.split('-', 1)
-            p_candidate = re.sub(r'[^A-Za-z0-9]', '', parts[0])
-            if 2 <= len(p_candidate) <= 5:
-                prefix = p_candidate
-            elif len(p_candidate) > 5:
-                prefix = p_candidate[:5]
-            
-            num_part = re.sub(r'\D', '', parts[1])
-            if num_part:
-                try:
-                    desired_num = int(num_part)
-                except ValueError:
-                    desired_num = None
+    if raw_code and isinstance(raw_code, str):
+        c_clean = raw_code.strip().upper()
+        m_full = re.match(r'^([A-Z0-9]{1,8})-(\d+)$', c_clean)
+        if m_full:
+            prefix = m_full.group(1)
+            try:
+                desired_num = int(m_full.group(2))
+            except ValueError:
+                pass
         else:
-            p_candidate = re.sub(r'[^A-Za-z0-9]', '', cleaned)
+            p_candidate = re.sub(r'[^A-Z0-9]', '', c_clean)
             if 2 <= len(p_candidate) <= 5:
                 prefix = p_candidate
             elif len(p_candidate) > 5:
@@ -1125,7 +1187,7 @@ def _generate_next_sku(raw_code=None):
 
     # Recopilar todos los códigos existentes (locales y remotos)
     existing_codes = set()
-    for it in _LOCAL_STOCK_ITEMS:
+    for it in _load_persisted_stock_items():
         c = it.get('code')
         if c:
             existing_codes.add(str(c).upper().strip())
@@ -1161,6 +1223,35 @@ def _generate_next_sku(raw_code=None):
 
     return f"{prefix}-{next_num:03d}"
 
+def _ensure_category_and_unit_persisted(category_name, unit_name=None):
+    """
+    Garantiza que cualquier categoría o unidad creada al registrar/editar un producto
+    quede registrada y persistida automáticamente en data/stock_taxonomies.json.
+    """
+    if not category_name and not unit_name:
+        return
+    try:
+        cats, units = _load_persisted_taxonomies()
+        changed = False
+        if category_name and category_name.strip():
+            c_clean = category_name.strip()
+            if not any(c['name'].lower() == c_clean.lower() for c in cats):
+                cats.append({
+                    "name": c_clean,
+                    "icon": "🏷️" if c_clean == "Sin Categoría" else "📦",
+                    "description": "Categoría personalizada"
+                })
+                changed = True
+        if unit_name and unit_name.strip():
+            u_clean = unit_name.strip()
+            if not any(u['name'].lower() == u_clean.lower() for u in units):
+                units.append({"name": u_clean})
+                changed = True
+        if changed:
+            _save_persisted_taxonomies(cats, units)
+    except Exception as e:
+        logging.warning("Error auto-registrando taxonomía: %s", e)
+
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
     data = request.json or {}
@@ -1176,6 +1267,7 @@ def create_stock_item():
     if not category or category.strip().lower() in ("", "all", "todas las categorías", "todas"):
         category = "Sin Categoría"
 
+    unit = _clean_str(data.get('unit'), max_len=30) or "Unidad (u)"
     qty = _safe_stock_float(data.get('stock_quantity'), default=0.0, min_val=0.0)
     min_qty = _safe_stock_float(data.get('min_stock'), default=5.0, min_val=0.0)
     cost = _safe_stock_float(data.get('cost_price'), default=0.0, min_val=0.0)
@@ -1186,7 +1278,7 @@ def create_stock_item():
         "code": code,
         "name": name,
         "category": category,
-        "unit": _clean_str(data.get('unit'), max_len=30) or "Unidad (u)",
+        "unit": unit,
         "stock_quantity": qty,
         "min_stock": min_qty,
         "cost_price": cost,
@@ -1199,6 +1291,9 @@ def create_stock_item():
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
+    # Auto-registrar categoría y unidad en taxonomías persistidas
+    _ensure_category_and_unit_persisted(category, unit)
+
     if supabase:
         try:
             res = supabase.table('stock_items').insert(new_item).execute()
@@ -1206,6 +1301,7 @@ def create_stock_item():
                 item_res = res.data[0]
                 item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
                 _LOCAL_STOCK_ITEMS.insert(0, item_res)
+                _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
                 return jsonify({"success": True, "data": item_res}), 201
         except Exception:
             try:
@@ -1218,12 +1314,14 @@ def create_stock_item():
                     item_res['expiry_date'] = new_item.get('expiry_date')
                     item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
                     _LOCAL_STOCK_ITEMS.insert(0, item_res)
+                    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
                     return jsonify({"success": True, "data": item_res}), 201
             except Exception as e:
                 logging.warning("Error al insertar en Supabase stock_items: %s", e)
 
     _LOCAL_STOCK_ITEMS.insert(0, new_item)
     new_item['status'] = _calc_item_status(qty, min_qty)
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
     return jsonify({"success": True, "data": new_item}), 201
 
 @app.route('/api/stock/<string:item_id>', methods=['PUT'])
@@ -1265,6 +1363,9 @@ def update_stock_item(item_id):
 
     updated['updated_at'] = datetime.now(timezone.utc).isoformat()
 
+    # Auto-registrar categoría y unidad en taxonomías
+    _ensure_category_and_unit_persisted(updated.get('category'), updated.get('unit'))
+
     if supabase:
         try:
             res = supabase.table('stock_items').update(updated).eq('id', item_id).execute()
@@ -1275,6 +1376,7 @@ def update_stock_item(item_id):
                     if local_it.get('id') == item_id:
                         local_it.update(item_res)
                         break
+                _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
                 return jsonify({"success": True, "data": item_res})
         except Exception as e:
             logging.warning("Error al actualizar en Supabase stock_items: %s", e)
@@ -1283,6 +1385,7 @@ def update_stock_item(item_id):
         if item.get('id') == item_id:
             item.update(updated)
             item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
+            _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
             return jsonify({"success": True, "data": item})
 
     return jsonify({"error": "Artículo no encontrado"}), 404
@@ -1297,6 +1400,7 @@ def delete_stock_item(item_id):
 
     global _LOCAL_STOCK_ITEMS
     _LOCAL_STOCK_ITEMS = [item for item in _LOCAL_STOCK_ITEMS if item.get('id') != item_id]
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
     return jsonify({"success": True})
 
 @app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
@@ -1364,10 +1468,22 @@ def record_stock_movement(item_id):
         except Exception as e:
             logging.warning("Error al actualizar movimiento en Supabase: %s", e)
 
-    # Actualizar local
-    target_item['stock_quantity'] = new_qty
-    target_item['status'] = _calc_item_status(new_qty, target_item.get('min_stock'))
+    # Actualizar local asegurando sincronización con _LOCAL_STOCK_ITEMS
+    found_local = False
+    for local_it in _LOCAL_STOCK_ITEMS:
+        if local_it.get('id') == item_id:
+            local_it['stock_quantity'] = new_qty
+            local_it['status'] = _calc_item_status(new_qty, local_it.get('min_stock'))
+            found_local = True
+            break
+    if not found_local:
+        target_item['stock_quantity'] = new_qty
+        target_item['status'] = _calc_item_status(new_qty, target_item.get('min_stock'))
+        _LOCAL_STOCK_ITEMS.insert(0, target_item)
+
     _LOCAL_STOCK_MOVEMENTS.insert(0, mov_record)
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
 
     return jsonify({
         "success": True,
@@ -1394,7 +1510,7 @@ def get_stock_movements():
     combined_movs = []
 
     # 1. Movimientos locales (incluyen ventas recientes y cancelaciones)
-    local_source = [m for m in _LOCAL_STOCK_MOVEMENTS if not item_id or m.get('stock_item_id') == item_id or m.get('item_id') == item_id]
+    local_source = [m for m in _load_persisted_stock_movements() if not item_id or m.get('stock_item_id') == item_id or m.get('item_id') == item_id]
     for m in local_source:
         m_id = m.get('id')
         if m_id:
@@ -1646,6 +1762,7 @@ def update_stock_unit():
     _save_persisted_taxonomies(cats, units)
     return jsonify({"success": True, "message": f"Unidad '{old_name}' actualizada a '{new_name}' correctamente"})
 
+@app.route('/api/stock/taxonomies/category', methods=['PUT'])
 @app.route('/api/stock/categories/rename', methods=['PUT'])
 def rename_stock_category():
     data = request.json or {}
@@ -1845,6 +1962,10 @@ def create_sale():
             except Exception as e:
                 logging.warning("Error al descontar stock en Supabase: %s", e)
 
+    # Persistir localmente inventario y kardex actualizados
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
+
     # 3. Guardar registro de la venta
     clean_sale_items = []
     for pit in processed_items:
@@ -2001,6 +2122,9 @@ def cancel_sale(sale_id):
                 break
 
     _save_persisted_sales(all_sales)
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
+
     if supabase:
         try:
             supabase.table('sales').update({"status": "CANCELLED"}).eq('id', target_sale.get('id')).execute()

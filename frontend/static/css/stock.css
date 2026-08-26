@@ -71,6 +71,7 @@
         opacity: 0;
         transform: translateY(6px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -124,10 +125,25 @@
     flex-shrink: 0;
 }
 
-.stock-kpi-icon.primary { background: rgba(0, 180, 216, 0.12); color: #00b4d8; }
-.stock-kpi-icon.warning { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
-.stock-kpi-icon.success { background: rgba(16, 185, 129, 0.12); color: #10b981; }
-.stock-kpi-icon.info    { background: rgba(99, 102, 241, 0.12); color: #6366f1; }
+.stock-kpi-icon.primary {
+    background: rgba(0, 180, 216, 0.12);
+    color: #00b4d8;
+}
+
+.stock-kpi-icon.warning {
+    background: rgba(245, 158, 11, 0.12);
+    color: #f59e0b;
+}
+
+.stock-kpi-icon.success {
+    background: rgba(16, 185, 129, 0.12);
+    color: #10b981;
+}
+
+.stock-kpi-icon.info {
+    background: rgba(99, 102, 241, 0.12);
+    color: #6366f1;
+}
 
 .stock-kpi-data {
     display: flex;
@@ -212,9 +228,17 @@
     line-height: 1;
 }
 
-.stock-top-item-badge.rank-1 .rank { color: #f59e0b; }
-.stock-top-item-badge.rank-2 .rank { color: #64748b; }
-.stock-top-item-badge.rank-3 .rank { color: #b45309; }
+.stock-top-item-badge.rank-1 .rank {
+    color: #f59e0b;
+}
+
+.stock-top-item-badge.rank-2 .rank {
+    color: #64748b;
+}
+
+.stock-top-item-badge.rank-3 .rank {
+    color: #b45309;
+}
 
 .stock-kpi-card.cursor-pointer {
     cursor: pointer;
@@ -291,7 +315,8 @@
     position: relative;
     overflow-x: auto;
     overflow-y: visible;
-    overflow-anchor: none; /* Previene saltos bruscos de scroll del navegador */
+    overflow-anchor: none;
+    /* Previene saltos bruscos de scroll del navegador */
 }
 
 .stock-table {
@@ -390,9 +415,17 @@
     transition: width 0.3s ease;
 }
 
-.stock-bar-fill.optimal { background: #10b981; }
-.stock-bar-fill.low     { background: #f59e0b; }
-.stock-bar-fill.out     { background: #ef4444; }
+.stock-bar-fill.optimal {
+    background: #10b981;
+}
+
+.stock-bar-fill.low {
+    background: #f59e0b;
+}
+
+.stock-bar-fill.out {
+    background: #ef4444;
+}
 
 /* ==========================================================================
    TERMINAL DE VENTAS (POS) - GRID Y CARDS DE PRODUCTOS
@@ -681,6 +714,7 @@
         opacity: 0;
         transform: translateY(-4px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -804,6 +838,7 @@
         opacity: 0;
         transform: translateY(5px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -831,7 +866,8 @@
     overflow-x: hidden !important;
     overscroll-behavior-y: contain;
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: auto !important; /* Desactiva interpolación lenta de rueda para respuesta instantánea */
+    scroll-behavior: auto !important;
+    /* Desactiva interpolación lenta de rueda para respuesta instantánea */
     contain: layout paint;
     will-change: scroll-position;
     padding-right: 4px;
@@ -861,10 +897,12 @@
     body * {
         visibility: hidden;
     }
+
     #modal-digital-receipt,
     #modal-digital-receipt * {
         visibility: visible;
     }
+
     #modal-digital-receipt {
         position: absolute;
         left: 0;
@@ -874,15 +912,17 @@
         padding: 0;
         background: transparent !important;
     }
+
     .receipt-printable-body {
         max-height: none !important;
         overflow: visible !important;
         padding: 0 !important;
     }
+
     #modal-digital-receipt .btn,
     #modal-digital-receipt .btn-close,
-    #modal-digital-receipt .modal-card > div:first-child,
-    #modal-digital-receipt .modal-card > div:last-child {
+    #modal-digital-receipt .modal-card>div:first-child,
+    #modal-digital-receipt .modal-card>div:last-child {
         display: none !important;
     }
 }
@@ -959,6 +999,7 @@
         opacity: 0;
         transform: translateY(-6px) scale(0.98);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
