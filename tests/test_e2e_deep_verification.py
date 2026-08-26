@@ -286,5 +286,47 @@ class TestE2EDeepVerification(unittest.TestCase):
         # 5. Eliminar cita de prueba
         self.app.delete(f'/api/appointments/{appt_id}')
 
+    def test_5_bulk_delete_stock_items(self):
+        """Prueba la eliminación masiva de múltiples productos en una sola llamada atómica."""
+        import time
+        t_id = int(time.time() * 1000)
+        
+        # Crear 3 productos temporales
+        item_ids = []
+        for i in range(1, 4):
+            payload = {
+                "code": f"BLK-{i}-{t_id % 10000}",
+                "name": f"Insumo Bulk Test {i}",
+                "category": "Insumos BIA",
+                "unit": "Unidad (u)",
+                "stock_quantity": 10,
+                "min_stock": 2,
+                "cost_price": 50,
+                "sale_price": 80
+            }
+            res = self.app.post('/api/stock', data=json.dumps(payload), content_type='application/json')
+            self.assertIn(res.status_code, [200, 201])
+            item_id = json.loads(res.data).get('data', {}).get('id')
+            if item_id:
+                item_ids.append(item_id)
+
+        self.assertEqual(len(item_ids), 3)
+
+        # Ejecutar eliminación masiva (POST /api/stock/bulk-delete)
+        res_bulk = self.app.post('/api/stock/bulk-delete',
+                                 data=json.dumps({"ids": item_ids}),
+                                 content_type='application/json')
+        self.assertEqual(res_bulk.status_code, 200)
+        res_json = json.loads(res_bulk.data)
+        self.assertTrue(res_json.get('success'))
+        self.assertEqual(res_json.get('deleted_count'), 3)
+
+        # Verificar que ya no existen en GET /api/stock
+        res_get = self.app.get('/api/stock')
+        self.assertEqual(res_get.status_code, 200)
+        current_items = json.loads(res_get.data)
+        for i_id in item_ids:
+            self.assertFalse(any(it.get('id') == i_id for it in current_items))
+
 if __name__ == '__main__':
     unittest.main()

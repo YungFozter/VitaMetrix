@@ -304,10 +304,91 @@
 /* ==========================================================================
    Tabla de Inventario & Estabilidad de Scroll
    ========================================================================== */
-.stock-card-stable {
+#stock-inventory-section,
+#stock-inventory-section:hover,
+.stock-card-stable,
+.stock-card-stable:hover {
     min-height: 480px;
     display: flex;
     flex-direction: column;
+    transform: none !important;
+    box-shadow: 0 4px 20px rgba(0, 20, 40, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Barra de Acciones Masivas */
+.stock-bulk-actions-bar {
+    border-left: 4px solid #0284c7 !important;
+    background: #f0f9ff !important;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: fadeInDown 0.25s ease-out;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.stock-table tr.row-selected td {
+    background-color: #f0f9ff !important;
+}
+
+.bulk-delete-item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0.75rem;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 0.35rem;
+    transition: background 0.15s ease;
+}
+
+.bulk-delete-item-row:last-child {
+    margin-bottom: 0;
+}
+
+.bulk-delete-item-row:hover {
+    background: #f8fafc;
+}
+
+/* Paginación Elegante */
+#stock-pagination-controls .page-link {
+    border-radius: 8px !important;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    box-shadow: none;
+    transition: all 0.18s ease;
+}
+
+#stock-pagination-controls .page-link:hover {
+    background: #f1f5f9;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+#stock-pagination-controls .page-item.active .page-link {
+    background: #0284c7 !important;
+    border-color: #0284c7 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);
+}
+
+#stock-pagination-controls .page-item.disabled .page-link {
+    background: #f8fafc;
+    color: #94a3b8;
+    border-color: #e2e8f0;
+    cursor: not-allowed;
 }
 
 .stock-table-responsive {

@@ -291,11 +291,30 @@
                 </div>
             </div>
 
+            <!-- Barra de Acciones Masivas Flotante/Integrada -->
+            <div id="stock-bulk-bar" class="stock-bulk-actions-bar d-none align-items-center justify-content-between p-2.5 px-3 bg-white rounded-3 border border-primary-subtle shadow-xs mb-3">
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-primary px-3 py-1.5 fs-7 fw-bold rounded-pill" id="stock-selected-count-badge">0 seleccionados</span>
+                    <span class="text-secondary small fw-medium">Productos marcados para acciones masivas</span>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-clear-selection" class="btn btn-sm btn-light border text-secondary fw-semibold">
+                        <i class="bi bi-x-circle me-1"></i> Desmarcar
+                    </button>
+                    <button type="button" id="btn-bulk-delete-stock" class="btn btn-sm btn-danger fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                        <i class="bi bi-trash3-fill"></i> Eliminar Marcados (<span id="stock-bulk-count">0</span>)
+                    </button>
+                </div>
+            </div>
+
             <!-- Tabla de Inventario con Altura Estable -->
             <div class="table-responsive stock-table-responsive stock-custom-scrollbar">
                 <table class="table table-hover align-middle stock-table mb-0">
                     <thead class="table-light sticky-top">
                         <tr>
+                            <th style="width: 38px; text-align: center;">
+                                <input type="checkbox" id="stock-select-all" class="form-check-input shadow-none cursor-pointer" title="Seleccionar todos los productos de esta página">
+                            </th>
                             <th>CÓDIGO / SKU</th>
                             <th>PRODUCTO / INSUMO</th>
                             <th>CATEGORÍA</th>
@@ -306,9 +325,31 @@
                         </tr>
                     </thead>
                     <tbody id="stock-tbody">
-                        <tr><td colspan="7" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
+                        <tr><td colspan="8" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
                     </tbody>
                 </table>
+            </div>
+
+            <!-- Paginación y Selector de Tamaño de Página -->
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top mt-2" id="stock-pagination-wrapper">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small fw-medium">Mostrar:</span>
+                        <select id="stock-page-size-select" class="form-select form-select-sm shadow-none" style="width: 76px; font-size: 0.82rem; font-weight: 600;">
+                            <option value="15" selected>15</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="text-muted small">por página</span>
+                    </div>
+                    <span class="text-muted small" id="stock-pagination-info">Mostrando 0–0 de 0 productos</span>
+                </div>
+
+                <nav aria-label="Paginación de inventario">
+                    <ul class="pagination pagination-sm mb-0 gap-1" id="stock-pagination-controls">
+                        <!-- Inyectado dinámicamente -->
+                    </ul>
+                </nav>
             </div>
         </div>
 

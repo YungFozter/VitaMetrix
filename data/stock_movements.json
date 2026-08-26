@@ -1,5 +1,64 @@
 [
   {
+    "id": "01b34d6d-7592-41b9-b51f-9121203f04c0",
+    "stock_item_id": "4dfcc874-ef99-4979-909f-b8e85663874a",
+    "item_name": "Suplemento Omega 3 Test",
+    "type": "SALE_CANCEL",
+    "quantity": 3.0,
+    "previous_quantity": 17.0,
+    "new_quantity": 20.0,
+    "reason": "Anulación de Venta REC-2026-0029",
+    "reference_id": "8c191c38-f797-4d39-ba4a-30cfe6d3c418",
+    "created_at": "2026-08-26T21:46:42.470325+00:00"
+  },
+  {
+    "id": "2338e56d-d412-4650-b925-1dcf7cc148ff",
+    "stock_item_id": "4dfcc874-ef99-4979-909f-b8e85663874a",
+    "item_name": "Suplemento Omega 3 Test",
+    "type": "SALE",
+    "quantity": 3.0,
+    "previous_quantity": 20.0,
+    "new_quantity": 17.0,
+    "reason": "Venta REC-2026-0029 a Carlos Rodríguez",
+    "reference_id": "8c191c38-f797-4d39-ba4a-30cfe6d3c418",
+    "created_at": "2026-08-26T21:46:40.818230+00:00"
+  },
+  {
+    "id": "8be9d17d-1de3-4f3a-9435-6132eea59727",
+    "stock_item_id": "a4e192f4-a9a9-4592-ba41-9a79bd62cc30",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE_CANCEL",
+    "quantity": 2.0,
+    "previous_quantity": 23.0,
+    "new_quantity": 25.0,
+    "reason": "Anulación de Venta REC-2026-0028",
+    "reference_id": "d02510da-75d3-4f25-9535-53721b530d22",
+    "created_at": "2026-08-26T21:46:27.673296+00:00"
+  },
+  {
+    "id": "2e690cf9-ff55-48a9-af9e-128568022b11",
+    "stock_item_id": "a4e192f4-a9a9-4592-ba41-9a79bd62cc30",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE",
+    "quantity": 2.0,
+    "previous_quantity": 25.0,
+    "new_quantity": 23.0,
+    "reason": "Venta REC-2026-0028 a Paciente E2E Prueba",
+    "reference_id": "d02510da-75d3-4f25-9535-53721b530d22",
+    "created_at": "2026-08-26T21:46:25.402330+00:00"
+  },
+  {
+    "id": "ed2a7d7b-9c81-4e5a-9cc4-1f1bfb5e6ce7",
+    "stock_item_id": "3278a805-b907-46ee-98c2-9337d63b0853",
+    "item_name": "Kit Electrodos Térmicos y Gel BIA E2E - Actualizado",
+    "type": "OUT",
+    "quantity": 5.0,
+    "previous_quantity": 40.0,
+    "new_quantity": 35.0,
+    "reason": "Uso en demostración clínica BIVA",
+    "created_at": "2026-08-26T21:46:23.156546+00:00"
+  },
+  {
     "id": "1a381436-54a5-4893-bf30-353b5fef9a10",
     "stock_item_id": "ad650ffa-cee1-43a7-be6a-db19643539c6",
     "item_name": "Suplemento Omega 3 Test",

@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=112">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=113">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -390,6 +390,45 @@
                 </button>
                 <button type="button" id="modal-btn-confirm" class="btn-confirm-danger">
                     <i class="bi bi-trash3-fill"></i> <span id="modal-btn-confirm-text">Eliminar</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL CONFIRMACIÓN ELIMINACIÓN MASIVA DE PRODUCTOS (MULTI-SELECT) -->
+    <div id="modal-bulk-delete-stock" class="modal-overlay hidden" style="z-index: 10000;">
+        <div class="confirm-modal-box" style="max-width: 520px; width: 94%; text-align: left; padding: 1.8rem 1.8rem 1.6rem;">
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="modal-icon-badge danger m-0 flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.35rem;">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+                <div>
+                    <h5 class="confirm-modal-title mb-0" style="font-size: 1.18rem;">Eliminar Productos Marcados</h5>
+                    <p class="text-muted small mb-0">Esta acción removerá los ítems marcados del catálogo e inventario.</p>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex align-items-center justify-content-between mb-1.5">
+                    <span class="fw-bold text-navy small">Productos a eliminar:</span>
+                    <span class="badge bg-danger-subtle text-danger font-monospace fw-bold" id="bulk-delete-modal-badge">0 seleccionados</span>
+                </div>
+                <!-- Lista de Productos con Scroll a partir de 10 ítems -->
+                <div id="bulk-delete-items-list" class="bulk-delete-items-list stock-custom-scrollbar border rounded-3 p-2 bg-light bg-opacity-50" style="max-height: 260px; overflow-y: auto;">
+                    <!-- Inyectado dinámicamente -->
+                </div>
+                <div class="alert alert-warning py-2 px-3 small rounded-3 mt-2 mb-0 d-flex align-items-center gap-2" style="font-size: 0.78rem;">
+                    <i class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0"></i>
+                    <span>Esta operación no se puede deshacer. Las existencias y registros se eliminarán permanentemente.</span>
+                </div>
+            </div>
+
+            <div class="confirm-modal-actions pt-2 border-top">
+                <button type="button" id="btn-cancel-bulk-delete-modal" class="btn-confirm-cancel">
+                    <i class="bi bi-x-lg"></i> Cancelar
+                </button>
+                <button type="button" id="btn-confirm-bulk-delete-modal" class="btn-confirm-danger">
+                    <i class="bi bi-trash3-fill"></i> <span id="btn-confirm-bulk-delete-text">Eliminar Productos</span>
                 </button>
             </div>
         </div>
@@ -1276,6 +1315,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=122"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=123"></script>
 </body>
 </html>

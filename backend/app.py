@@ -1403,6 +1403,25 @@ def delete_stock_item(item_id):
     _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
     return jsonify({"success": True})
 
+@app.route('/api/stock/bulk-delete', methods=['POST'])
+def bulk_delete_stock_items():
+    data = request.json or {}
+    ids = data.get('ids', [])
+    if not ids or not isinstance(ids, list):
+        return jsonify({"error": "Lista de IDs no válida o vacía"}), 400
+
+    id_set = set(str(i) for i in ids)
+    if supabase:
+        try:
+            supabase.table('stock_items').delete().in_('id', list(id_set)).execute()
+        except Exception as e:
+            logging.warning("Error al eliminar masivamente en Supabase stock_items: %s", e)
+
+    global _LOCAL_STOCK_ITEMS
+    _LOCAL_STOCK_ITEMS = [item for item in _LOCAL_STOCK_ITEMS if str(item.get('id')) not in id_set]
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    return jsonify({"success": True, "deleted_count": len(id_set)})
+
 @app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
 def record_stock_movement(item_id):
     data = request.json or {}

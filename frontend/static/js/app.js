@@ -4291,7 +4291,13 @@ function switchStockSubTab(panelId) {
     if (btn) btn.click();
 }
 
-// Variable global del modo de cálculo: 'cost' (Markup sobre Costo - ej 50%) vs 'sale' (Margen sobre Venta - ej 33.3%)
+// Variables globales de Catálogo, Paginación y Selección Masiva
+let allStockItems = [];
+let editingStockId = null;
+let stockCurrentPage = 1;
+let stockPageSize = 15;
+let stockSelectedIds = new Set();
+let stockFilteredItems = [];
 let stockMarginCalculationMode = 'cost';
 
 // --- CÁLCULO DINÁMICO DE MARGEN DE GANANCIA / RENTABILIDAD ---
@@ -4463,9 +4469,52 @@ function initStockForm() {
     const catFilter = document.getElementById('stock-filter-category');
     const statusFilter = document.getElementById('stock-filter-status');
 
-    if (searchInput) searchInput.addEventListener('input', filterAndRenderStock);
-    if (catFilter) catFilter.addEventListener('change', filterAndRenderStock);
-    if (statusFilter) statusFilter.addEventListener('change', filterAndRenderStock);
+    if (searchInput) searchInput.addEventListener('input', () => filterAndRenderStock(true));
+    if (catFilter) catFilter.addEventListener('change', () => filterAndRenderStock(true));
+    if (statusFilter) statusFilter.addEventListener('change', () => filterAndRenderStock(true));
+
+    // Listeners para Selección Múltiple y Paginación
+    const selectAllChk = document.getElementById('stock-select-all');
+    if (selectAllChk) {
+        selectAllChk.addEventListener('change', () => {
+            const total = stockFilteredItems.length;
+            const startIdx = (stockCurrentPage - 1) * stockPageSize;
+            const endIdx = Math.min(startIdx + stockPageSize, total);
+            const pageItems = stockFilteredItems.slice(startIdx, endIdx);
+
+            pageItems.forEach(item => {
+                if (selectAllChk.checked) {
+                    stockSelectedIds.add(item.id);
+                } else {
+                    stockSelectedIds.delete(item.id);
+                }
+            });
+            renderStockTable();
+        });
+    }
+
+    const pageSizeSelect = document.getElementById('stock-page-size-select');
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', (e) => {
+            stockPageSize = parseInt(e.target.value, 10) || 15;
+            stockCurrentPage = 1;
+            renderStockTable();
+        });
+    }
+
+    const btnClearSelection = document.getElementById('btn-clear-selection');
+    if (btnClearSelection) {
+        btnClearSelection.addEventListener('click', () => {
+            stockSelectedIds.clear();
+            renderStockTable();
+            showToast('Selección desmarcada', 'info');
+        });
+    }
+
+    const btnBulkDelete = document.getElementById('btn-bulk-delete-stock');
+    if (btnBulkDelete) {
+        btnBulkDelete.addEventListener('click', openBulkDeleteModal);
+    }
 
     // Interacciones Click-to-Filter en Tarjetas KPI
     const cardTotal = document.getElementById('kpi-card-total');
@@ -4755,7 +4804,7 @@ async function updateStockKPIs(items) {
     }
 }
 
-function filterAndRenderStock() {
+function filterAndRenderStock(resetPage = true) {
     const tbody = document.getElementById('stock-tbody');
     if (!tbody || !Array.isArray(allStockItems)) return;
 
@@ -4763,7 +4812,7 @@ function filterAndRenderStock() {
     const cat = document.getElementById('stock-filter-category')?.value || 'all';
     const status = document.getElementById('stock-filter-status')?.value || 'all';
 
-    const filtered = allStockItems.filter(item => {
+    stockFilteredItems = allStockItems.filter(item => {
         const normName = normalizeText(item.name);
         const normCode = normalizeText(item.code);
         const normLoc = normalizeText(item.location);
@@ -4784,17 +4833,25 @@ function filterAndRenderStock() {
         return matchSearch && matchCat && matchStatus;
     });
 
-    renderStockTable(filtered);
+    if (resetPage) {
+        stockCurrentPage = 1;
+    }
+
+    renderStockTable();
 }
 
-function renderStockTable(items) {
+function renderStockTable() {
     const tbody = document.getElementById('stock-tbody');
     if (!tbody) return;
 
-    if (!items || items.length === 0) {
+    const total = stockFilteredItems.length;
+    const totalPages = Math.max(1, Math.ceil(total / stockPageSize));
+    stockCurrentPage = Math.max(1, Math.min(stockCurrentPage, totalPages));
+
+    if (total === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="stock-empty-state-cell">
+                <td colspan="8" class="stock-empty-state-cell">
                     <div class="d-flex flex-column align-items-center justify-content-center py-4 text-center">
                         <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-2 d-inline-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
                             <i class="bi bi-box-seam fs-3"></i>
@@ -4805,13 +4862,22 @@ function renderStockTable(items) {
                 </td>
             </tr>
         `;
+        updateStockPagination(0, 1, 0, 0);
+        updateStockBulkBar();
+        updateSelectAllCheckbox([]);
         return;
     }
 
+    const startIdx = (stockCurrentPage - 1) * stockPageSize;
+    const endIdx = Math.min(startIdx + stockPageSize, total);
+    const pageItems = stockFilteredItems.slice(startIdx, endIdx);
+
     const frag = document.createDocumentFragment();
 
-    items.forEach(item => {
+    pageItems.forEach(item => {
         const tr = document.createElement('tr');
+        const isSelected = stockSelectedIds.has(item.id);
+        if (isSelected) tr.classList.add('row-selected');
 
         const qty = parseFloat(item.stock_quantity) || 0;
         const minQty = parseFloat(item.min_stock) || 5;
@@ -4819,6 +4885,28 @@ function renderStockTable(items) {
         if (!status) {
             status = qty <= 0 ? 'out' : (qty <= minQty ? 'low' : 'optimal');
         }
+
+        // 0. Checkbox de Selección Masiva
+        const tdCheck = document.createElement('td');
+        tdCheck.style.textAlign = 'center';
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.className = 'form-check-input stock-item-checkbox shadow-none cursor-pointer';
+        checkbox.checked = isSelected;
+        checkbox.dataset.id = item.id;
+        checkbox.addEventListener('change', (e) => {
+            e.stopPropagation();
+            if (checkbox.checked) {
+                stockSelectedIds.add(item.id);
+                tr.classList.add('row-selected');
+            } else {
+                stockSelectedIds.delete(item.id);
+                tr.classList.remove('row-selected');
+            }
+            updateStockBulkBar();
+            updateSelectAllCheckbox(pageItems);
+        });
+        tdCheck.appendChild(checkbox);
 
         // 1. SKU / Código
         const tdCode = document.createElement('td');
@@ -4953,11 +5041,218 @@ function renderStockTable(items) {
         actionsWrap.append(btnSell, btnAdjust, btnEdit, btnDel);
         tdActions.appendChild(actionsWrap);
 
-        tr.append(tdCode, tdName, tdCat, tdStock, tdPrices, tdExpiry, tdActions);
+        tr.append(tdCheck, tdCode, tdName, tdCat, tdStock, tdPrices, tdExpiry, tdActions);
         frag.appendChild(tr);
     });
 
     tbody.replaceChildren(frag);
+    updateStockPagination(total, totalPages, startIdx, endIdx);
+    updateStockBulkBar();
+    updateSelectAllCheckbox(pageItems);
+}
+
+function updateStockPagination(total, totalPages, startIdx, endIdx) {
+    const infoEl = document.getElementById('stock-pagination-info');
+    const controlsEl = document.getElementById('stock-pagination-controls');
+    if (!infoEl || !controlsEl) return;
+
+    if (total === 0) {
+        infoEl.textContent = 'Mostrando 0–0 de 0 productos';
+        controlsEl.innerHTML = '';
+        return;
+    }
+
+    infoEl.textContent = `Mostrando ${startIdx + 1}–${endIdx} de ${total} productos`;
+    controlsEl.replaceChildren();
+
+    // Botón Anterior
+    const prevLi = document.createElement('li');
+    prevLi.className = `page-item ${stockCurrentPage === 1 ? 'disabled' : ''}`;
+    prevLi.innerHTML = `<button class="page-link shadow-none" type="button" aria-label="Anterior"><i class="bi bi-chevron-left"></i></button>`;
+    if (stockCurrentPage > 1) {
+        prevLi.addEventListener('click', (e) => {
+            e.preventDefault();
+            stockCurrentPage--;
+            renderStockTable();
+        });
+    }
+    controlsEl.appendChild(prevLi);
+
+    // Páginas numéricas
+    for (let p = 1; p <= totalPages; p++) {
+        if (totalPages > 7) {
+            if (p !== 1 && p !== totalPages && Math.abs(p - stockCurrentPage) > 1) {
+                if (p === 2 || p === totalPages - 1) {
+                    const dotsLi = document.createElement('li');
+                    dotsLi.className = 'page-item disabled';
+                    dotsLi.innerHTML = `<span class="page-link border-0 bg-transparent text-muted">...</span>`;
+                    controlsEl.appendChild(dotsLi);
+                }
+                continue;
+            }
+        }
+
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${p === stockCurrentPage ? 'active' : ''}`;
+        pageLi.innerHTML = `<button class="page-link shadow-none" type="button">${p}</button>`;
+        const targetPage = p;
+        pageLi.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (stockCurrentPage !== targetPage) {
+                stockCurrentPage = targetPage;
+                renderStockTable();
+            }
+        });
+        controlsEl.appendChild(pageLi);
+    }
+
+    // Botón Siguiente
+    const nextLi = document.createElement('li');
+    nextLi.className = `page-item ${stockCurrentPage === totalPages ? 'disabled' : ''}`;
+    nextLi.innerHTML = `<button class="page-link shadow-none" type="button" aria-label="Siguiente"><i class="bi bi-chevron-right"></i></button>`;
+    if (stockCurrentPage < totalPages) {
+        nextLi.addEventListener('click', (e) => {
+            e.preventDefault();
+            stockCurrentPage++;
+            renderStockTable();
+        });
+    }
+    controlsEl.appendChild(nextLi);
+}
+
+function updateSelectAllCheckbox(pageItems) {
+    const selectAll = document.getElementById('stock-select-all');
+    if (!selectAll) return;
+
+    if (!pageItems || pageItems.length === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+        return;
+    }
+
+    const selectedOnPage = pageItems.filter(item => stockSelectedIds.has(item.id)).length;
+    if (selectedOnPage === 0) {
+        selectAll.checked = false;
+        selectAll.indeterminate = false;
+    } else if (selectedOnPage === pageItems.length) {
+        selectAll.checked = true;
+        selectAll.indeterminate = false;
+    } else {
+        selectAll.checked = false;
+        selectAll.indeterminate = true;
+    }
+}
+
+function updateStockBulkBar() {
+    const bar = document.getElementById('stock-bulk-bar');
+    const badge = document.getElementById('stock-selected-count-badge');
+    const countSpan = document.getElementById('stock-bulk-count');
+    if (!bar) return;
+
+    const count = stockSelectedIds.size;
+    if (count > 0) {
+        bar.classList.remove('d-none');
+        bar.classList.add('d-flex');
+        if (badge) badge.textContent = `${count} seleccionado${count > 1 ? 's' : ''}`;
+        if (countSpan) countSpan.textContent = count;
+    } else {
+        bar.classList.add('d-none');
+        bar.classList.remove('d-flex');
+    }
+}
+
+function openBulkDeleteModal() {
+    if (stockSelectedIds.size === 0) {
+        showToast('Selecciona al menos un producto para eliminar', 'warning');
+        return;
+    }
+
+    const modal = document.getElementById('modal-bulk-delete-stock');
+    const listEl = document.getElementById('bulk-delete-items-list');
+    const badgeEl = document.getElementById('bulk-delete-modal-badge');
+    const btnConfirmText = document.getElementById('btn-confirm-bulk-delete-text');
+    const btnCancel = document.getElementById('btn-cancel-bulk-delete-modal');
+    const btnConfirm = document.getElementById('btn-confirm-bulk-delete-modal');
+
+    if (!modal || !listEl) return;
+
+    const selectedItems = allStockItems.filter(i => stockSelectedIds.has(i.id));
+    const count = selectedItems.length;
+
+    if (badgeEl) badgeEl.textContent = `${count} producto${count > 1 ? 's' : ''}`;
+    if (btnConfirmText) btnConfirmText.textContent = `Eliminar ${count} Producto${count > 1 ? 's' : ''}`;
+
+    listEl.replaceChildren();
+    selectedItems.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'bulk-delete-item-row';
+        row.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                <span class="badge bg-light text-secondary border font-monospace small px-1.5 py-0.5">${escapeHtml(item.code || 'SKU')}</span>
+                <span class="fw-semibold text-navy text-truncate" style="font-size: 0.85rem;">${escapeHtml(item.name)}</span>
+            </div>
+            <div class="d-flex align-items-center gap-2 flex-shrink-0">
+                <span class="badge bg-light text-dark border small" style="font-size: 0.72rem;">${escapeHtml(item.category || 'General')}</span>
+                <span class="badge bg-secondary-subtle text-secondary font-monospace small" style="font-size: 0.72rem;">Stock: ${item.stock_quantity || 0}</span>
+            </div>
+        `;
+        listEl.appendChild(row);
+    });
+
+    let isClosing = false;
+    const closeModal = () => {
+        if (isClosing) return;
+        isClosing = true;
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('closing');
+            isClosing = false;
+        }, 200);
+    };
+
+    const newCancel = btnCancel.cloneNode(true);
+    const newConfirm = btnConfirm.cloneNode(true);
+    btnCancel.parentNode.replaceChild(newCancel, btnCancel);
+    btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
+
+    newCancel.addEventListener('click', closeModal);
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+
+    newConfirm.addEventListener('click', async () => {
+        newConfirm.disabled = true;
+        newConfirm.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Eliminando...';
+
+        try {
+            const res = await fetch('/api/stock/bulk-delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids: Array.from(stockSelectedIds) })
+            });
+            const result = await res.json();
+
+            if (res.ok && result.success) {
+                showToast(`🗑️ ${result.deleted_count || count} productos eliminados del catálogo`, 'success');
+                stockSelectedIds.clear();
+                closeModal();
+                await fetchStockItems();
+                await fetchStockTaxonomies();
+            } else {
+                showToast(result.error || 'Error al eliminar productos seleccionados', 'error');
+            }
+        } catch (err) {
+            console.error('Error en eliminación masiva:', err);
+            showToast('Error de conexión al eliminar productos', 'error');
+        } finally {
+            newConfirm.disabled = false;
+            newConfirm.innerHTML = `<i class="bi bi-trash3-fill"></i> <span id="btn-confirm-bulk-delete-text">Eliminar ${count} Productos</span>`;
+        }
+    });
+
+    modal.classList.remove('closing');
+    modal.classList.remove('hidden');
 }
 
 function resetStockForm() {
