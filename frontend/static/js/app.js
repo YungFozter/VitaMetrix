@@ -19,15 +19,14 @@ document.addEventListener('DOMContentLoaded', () => {
     initAppointmentsCalendar();
     initConfiguracionView();
     initStockModule();
-    
-    // Carga prioritaria e instantánea del Dashboard
-    fetchDashboardStats();
 
     // Carga diferida en segundo plano para módulos secundarios (evita bloqueo del hilo principal)
     const scheduleIdleTasks = () => {
-        if (!clientsDataLoaded) fetchClients();
-        if (!evalsDataLoaded) fetchEvaluaciones();
-        if (!stockDataLoaded) {
+        const activeView = localStorage.getItem('vita_active_view') || 'dashboard-view';
+        if (activeView !== 'dashboard-view') fetchDashboardStats();
+        if (!clientsDataLoaded && activeView !== 'clientes-view') fetchClients();
+        if (!evalsDataLoaded && activeView !== 'evaluaciones-view') fetchEvaluaciones();
+        if (!stockDataLoaded && activeView !== 'stock-view') {
             fetchStockItems();
             fetchStockTaxonomies();
         }
@@ -174,59 +173,104 @@ function initProfileDropdown() {
     }
 }
 
-// --- 2. NAVIGATION (SPA) ---
-function initNavigation() {
+// --- 2. NAVIGATION (SPA) & PERSISTENCIA DE PESTAÑA ACTIVA ---
+function navigateToView(targetId, updateHistory = true) {
+    if (!targetId) return;
+
+    const cleanId = targetId.replace(/^#/, '').trim();
+    const targetView = document.getElementById(cleanId);
+    if (!targetView || !targetView.classList.contains('view')) return;
+
     const navItems = document.querySelectorAll('.nav-item');
     const views = document.querySelectorAll('.view');
     const pageTitle = document.getElementById('page-title');
 
+    // 1. Desactivar todos los items del menú y ocultar todas las vistas
+    navItems.forEach(nav => nav.classList.remove('active'));
+    views.forEach(view => {
+        view.classList.remove('active-view');
+        view.classList.add('hidden-view');
+    });
+
+    // 2. Activar la vista solicitada
+    targetView.classList.remove('hidden-view');
+    targetView.classList.add('active-view');
+
+    // 3. Activar el ítem del menú correspondiente y actualizar título
+    const activeNav = document.querySelector(`.nav-item[data-target="${cleanId}"]`) ||
+                      document.querySelector(`.nav-item[href="#${cleanId}"]`);
+    if (activeNav) {
+        activeNav.classList.add('active');
+        if (pageTitle) {
+            pageTitle.textContent = activeNav.getAttribute('data-title') || 'Dashboard';
+        }
+    }
+
+    // 4. Persistir estado en URL hash y storage para recuperación al recargar
+    try {
+        localStorage.setItem('vita_active_view', cleanId);
+        sessionStorage.setItem('vita_active_view', cleanId);
+        if (updateHistory) {
+            if (window.location.hash !== `#${cleanId}`) {
+                window.history.replaceState({ view: cleanId }, '', `#${cleanId}`);
+            }
+        }
+    } catch (e) {
+        console.warn('Error guardando estado de navegación:', e);
+    }
+
+    // 5. Carga optimizada bajo demanda según la pestaña seleccionada
+    if (cleanId === 'dashboard-view') {
+        fetchDashboardStats();
+    } else if (cleanId === 'clientes-view') {
+        if (!clientsDataLoaded || allClientsData.length === 0) fetchClients();
+    } else if (cleanId === 'evaluaciones-view') {
+        if (!evalsDataLoaded || allEvaluationsData.length === 0) fetchEvaluaciones();
+    } else if (cleanId === 'stock-view') {
+        if (!stockDataLoaded || allStockItems.length === 0) {
+            fetchStockItems();
+            fetchStockTaxonomies();
+        }
+    } else if (cleanId === 'configuracion-view') {
+        setTimeout(() => {
+            if (typeof initClinicMap === 'function') initClinicMap();
+        }, 120);
+    }
+}
+
+function initNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+
     navItems.forEach(item => {
         item.addEventListener('click', (e) => {
             e.preventDefault();
-
-            // Remove active from all nav items
-            navItems.forEach(nav => nav.classList.remove('active'));
-            // Add active to clicked nav item
-            item.classList.add('active');
-
-            // Get target view ID
-            const targetId = item.getAttribute('data-target');
+            const targetId = item.getAttribute('data-target') || (item.getAttribute('href') || '').replace(/^#/, '');
             if (targetId) {
-                // Hide all views
-                views.forEach(view => {
-                    view.classList.remove('active-view');
-                    view.classList.add('hidden-view');
-                });
-                // Show target view
-                const targetView = document.getElementById(targetId);
-                if (targetView) {
-                    targetView.classList.remove('hidden-view');
-                    targetView.classList.add('active-view');
-                }
-
-                // Update title
-                pageTitle.textContent = item.getAttribute('data-title') || 'Dashboard';
-
-                // Carga optimizada bajo demanda según la pestaña seleccionada
-                if (targetId === 'dashboard-view') {
-                    fetchDashboardStats();
-                } else if (targetId === 'clientes-view') {
-                    if (!clientsDataLoaded || allClientsData.length === 0) fetchClients();
-                } else if (targetId === 'evaluaciones-view') {
-                    if (!evalsDataLoaded || allEvaluationsData.length === 0) fetchEvaluaciones();
-                } else if (targetId === 'stock-view') {
-                    if (!stockDataLoaded || allStockItems.length === 0) {
-                        fetchStockItems();
-                        fetchStockTaxonomies();
-                    }
-                } else if (targetId === 'configuracion-view') {
-                    setTimeout(() => {
-                        if (typeof initClinicMap === 'function') initClinicMap();
-                    }, 120);
-                }
+                navigateToView(targetId, true);
             }
         });
     });
+
+    // Escuchar eventos de navegación del navegador (atrás/adelante)
+    window.addEventListener('popstate', () => {
+        const hashId = (window.location.hash || '').replace(/^#/, '').trim();
+        if (hashId && document.getElementById(hashId) && document.getElementById(hashId).classList.contains('view')) {
+            navigateToView(hashId, false);
+        }
+    });
+
+    // Determinar la vista inicial al cargar o recargar la pestaña
+    const urlHash = (window.location.hash || '').replace(/^#/, '').trim();
+    const storedView = localStorage.getItem('vita_active_view') || sessionStorage.getItem('vita_active_view');
+
+    let initialView = 'dashboard-view';
+    if (urlHash && document.getElementById(urlHash) && document.getElementById(urlHash).classList.contains('view')) {
+        initialView = urlHash;
+    } else if (storedView && document.getElementById(storedView) && document.getElementById(storedView).classList.contains('view')) {
+        initialView = storedView;
+    }
+
+    navigateToView(initialView, true);
 }
 
 // --- 3. FORM & API ---
@@ -4278,6 +4322,10 @@ function initStockSubTabs() {
                 }
             });
 
+            try {
+                localStorage.setItem('vita_active_stock_tab', targetPanelId);
+            } catch (e) {}
+
             // Acciones al cambiar de pestaña
             if (targetPanelId === 'stock-panel-pos') {
                 renderPosProductGrid();
@@ -4289,6 +4337,12 @@ function initStockSubTabs() {
             }
         });
     });
+
+    // Restaurar sub-pestaña de stock activa previa
+    const savedStockTab = localStorage.getItem('vita_active_stock_tab');
+    if (savedStockTab && document.getElementById(savedStockTab)) {
+        switchStockSubTab(savedStockTab);
+    }
 }
 
 function switchStockSubTab(panelId) {

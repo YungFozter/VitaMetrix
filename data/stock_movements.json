@@ -1,5 +1,97 @@
 [
   {
+    "id": "21234f65-2cd3-45e0-858f-401e62df17e2",
+    "stock_item_id": "fcdfe592-a51d-4a4e-8cc6-c7f29058749e",
+    "item_name": "Suplemento Omega 3 Test",
+    "type": "SALE_CANCEL",
+    "quantity": 3.0,
+    "previous_quantity": 17.0,
+    "new_quantity": 20.0,
+    "reason": "Anulación de Venta REC-2026-0041",
+    "reference_id": "2366dce8-3ed5-4d17-aa48-1a3bedf99711",
+    "created_at": "2026-08-26T23:30:25.856067+00:00"
+  },
+  {
+    "id": "8f56d6a7-e27d-438f-a30f-7b713850b0d3",
+    "stock_item_id": "fcdfe592-a51d-4a4e-8cc6-c7f29058749e",
+    "item_name": "Suplemento Omega 3 Test",
+    "type": "SALE",
+    "quantity": 3.0,
+    "previous_quantity": 20.0,
+    "new_quantity": 17.0,
+    "reason": "Venta REC-2026-0041 a Carlos Rodríguez",
+    "reference_id": "2366dce8-3ed5-4d17-aa48-1a3bedf99711",
+    "created_at": "2026-08-26T23:30:24.272795+00:00"
+  },
+  {
+    "id": "5be08c01-4eba-4e39-a501-808efc7338ea",
+    "stock_item_id": "8114de36-dafb-4809-aa9b-3b2253bcc47b",
+    "item_name": "Insumo Kardex Test 1787787018192",
+    "type": "ADJUST",
+    "quantity": 8.0,
+    "previous_quantity": 25.0,
+    "new_quantity": 8.0,
+    "reason": "Auditoría física de inventario",
+    "created_at": "2026-08-26T23:30:21.774356+00:00"
+  },
+  {
+    "id": "07bea102-a652-4199-ade2-44a2afb8e0fa",
+    "stock_item_id": "8114de36-dafb-4809-aa9b-3b2253bcc47b",
+    "item_name": "Insumo Kardex Test 1787787018192",
+    "type": "OUT",
+    "quantity": 10.0,
+    "previous_quantity": 35.0,
+    "new_quantity": 25.0,
+    "reason": "Consumo en gabinete BIA",
+    "created_at": "2026-08-26T23:30:20.328182+00:00"
+  },
+  {
+    "id": "9388a8bb-b212-44b5-a69b-e41acbb4b3a6",
+    "stock_item_id": "8114de36-dafb-4809-aa9b-3b2253bcc47b",
+    "item_name": "Insumo Kardex Test 1787787018192",
+    "type": "IN",
+    "quantity": 15.0,
+    "previous_quantity": 20.0,
+    "new_quantity": 35.0,
+    "reason": "Llegada de lote proveedor",
+    "created_at": "2026-08-26T23:30:19.409510+00:00"
+  },
+  {
+    "id": "2b9474a9-6473-48a9-8632-63f5604575df",
+    "stock_item_id": "ef3e2837-5668-4f7d-a5c9-369444fed31e",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE_CANCEL",
+    "quantity": 2.0,
+    "previous_quantity": 23.0,
+    "new_quantity": 25.0,
+    "reason": "Anulación de Venta REC-2026-0040",
+    "reference_id": "0c440d0e-4be7-4b86-80a6-c006703643c7",
+    "created_at": "2026-08-26T23:30:08.843077+00:00"
+  },
+  {
+    "id": "274a07d8-23b1-4697-9631-d6e997d7c02f",
+    "stock_item_id": "ef3e2837-5668-4f7d-a5c9-369444fed31e",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE",
+    "quantity": 2.0,
+    "previous_quantity": 25.0,
+    "new_quantity": 23.0,
+    "reason": "Venta REC-2026-0040 a Paciente E2E Prueba",
+    "reference_id": "0c440d0e-4be7-4b86-80a6-c006703643c7",
+    "created_at": "2026-08-26T23:30:07.129722+00:00"
+  },
+  {
+    "id": "dcd62057-7edd-495b-a0fb-1e62579e0002",
+    "stock_item_id": "a8fddcb0-f892-4ce6-a21a-e160763bb27f",
+    "item_name": "Kit Electrodos Térmicos y Gel BIA E2E - Actualizado",
+    "type": "OUT",
+    "quantity": 5.0,
+    "previous_quantity": 40.0,
+    "new_quantity": 35.0,
+    "reason": "Uso en demostración clínica BIVA",
+    "created_at": "2026-08-26T23:30:03.305238+00:00"
+  },
+  {
     "id": "f0d113bb-7bf9-459d-b6f0-93058aa208c8",
     "stock_item_id": "7fdfa3fa-713c-456e-babc-204953d57d44",
     "item_name": "Suplemento Omega 3 Test",
