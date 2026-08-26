@@ -4267,12 +4267,31 @@ function switchStockSubTab(panelId) {
     if (btn) btn.click();
 }
 
-// --- CÁLCULO DINÁMICO DE MARGEN DE GANANCIA ---
+// Variable global del modo de cálculo: 'cost' (Markup sobre Costo - ej 50%) vs 'sale' (Margen sobre Venta - ej 33.3%)
+let stockMarginCalculationMode = 'cost';
+
+// --- CÁLCULO DINÁMICO DE MARGEN DE GANANCIA / RENTABILIDAD ---
 function initStockMarginCalculator() {
     const inputCost = document.getElementById('stock-cost');
     const inputSale = document.getElementById('stock-sale');
     const badgeMargin = document.getElementById('stock-calculated-margin');
+    const btnToggle = document.getElementById('btn-toggle-margin-mode');
+    const indicatorEl = document.getElementById('margin-mode-indicator');
+    const labelEl = document.getElementById('stock-margin-label');
+
     if (!inputCost || !inputSale || !badgeMargin) return;
+
+    const updateModeUI = () => {
+        if (stockMarginCalculationMode === 'cost') {
+            if (indicatorEl) indicatorEl.textContent = 's/ Costo';
+            if (labelEl) labelEl.textContent = 'Rentab. s/ Costo';
+            if (badgeMargin) badgeMargin.title = 'Modo: Rentabilidad sobre Costo (Markup). Haz clic para cambiar a Margen sobre Venta.';
+        } else {
+            if (indicatorEl) indicatorEl.textContent = 's/ Venta';
+            if (labelEl) labelEl.textContent = 'Margen s/ Venta';
+            if (badgeMargin) badgeMargin.title = 'Modo: Margen sobre Venta (Profit Margin). Haz clic para cambiar a Rentabilidad sobre Costo.';
+        }
+    };
 
     const calcMargin = () => {
         const cost = parseFloat(inputCost.value) || 0;
@@ -4280,20 +4299,38 @@ function initStockMarginCalculator() {
 
         if (sale > 0 && cost > 0) {
             const diff = sale - cost;
-            const pct = (diff / sale) * 100;
+            let pct = 0;
+            if (stockMarginCalculationMode === 'cost') {
+                pct = (diff / cost) * 100; // Rentabilidad sobre Costo -> ej: +50.0%
+            } else {
+                pct = (diff / sale) * 100; // Margen sobre Venta -> ej: +33.3%
+            }
+
+            const modeTag = stockMarginCalculationMode === 'cost' ? 'Rentab.' : 'Margen';
             badgeMargin.className = `stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border small ${pct >= 0 ? 'positive' : 'negative'}`;
-            badgeMargin.innerHTML = `<span>${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% (Bs. ${diff.toFixed(2)})</span>`;
+            badgeMargin.innerHTML = `<span>${pct >= 0 ? '+' : ''}${pct.toFixed(1)}% <small class="fw-normal opacity-75">(${modeTag}: Bs. ${diff.toFixed(2)})</small></span>`;
         } else if (sale > 0 && cost === 0) {
             badgeMargin.className = 'stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border small positive';
-            badgeMargin.innerHTML = '<span>100% Margen</span>';
+            badgeMargin.innerHTML = '<span>+100% (Ganancia total)</span>';
         } else {
             badgeMargin.className = 'stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small';
             badgeMargin.innerHTML = '<span class="text-muted">0.0%</span>';
         }
     };
 
+    const toggleMode = () => {
+        stockMarginCalculationMode = stockMarginCalculationMode === 'cost' ? 'sale' : 'cost';
+        updateModeUI();
+        calcMargin();
+        showToast(`📊 Modo cambiado a: ${stockMarginCalculationMode === 'cost' ? 'Rentabilidad sobre Costo (Markup)' : 'Margen sobre Venta (Profit Margin)'}`, 'info');
+    };
+
     inputCost.addEventListener('input', calcMargin);
     inputSale.addEventListener('input', calcMargin);
+    if (btnToggle) btnToggle.addEventListener('click', toggleMode);
+    badgeMargin.addEventListener('click', toggleMode);
+
+    updateModeUI();
 }
 
 // --- FORMULARIO Y TABLA DE CATÁLOGO / STOCK ---
@@ -4708,8 +4745,9 @@ function renderStockTable(items) {
         const sale = parseFloat(item.sale_price) || 0;
         let marginText = '';
         if (sale > 0 && cost > 0) {
-            const pct = ((sale - cost) / sale) * 100;
-            marginText = `<span class="badge ${pct >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} small ms-1" style="font-size: 0.65rem;">${pct >= 0 ? '+' : ''}${pct.toFixed(0)}%</span>`;
+            const diff = sale - cost;
+            const markup = (diff / cost) * 100;
+            marginText = `<span class="badge ${markup >= 0 ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'} small ms-1" style="font-size: 0.65rem;" title="Ganancia neta: Bs. ${diff.toFixed(2)} (+${markup.toFixed(0)}% sobre costo)">${markup >= 0 ? '+' : ''}${markup.toFixed(0)}%</span>`;
         }
 
         tdPrices.innerHTML = `

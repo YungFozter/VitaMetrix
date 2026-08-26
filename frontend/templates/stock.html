@@ -168,10 +168,15 @@
                             <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
                         </div>
 
-                        <!-- 8.1 Margen de Ganancia Dinámico -->
+                        <!-- 8.1 Margen de Ganancia / Rentabilidad Dinámico con Selector Interactivo -->
                         <div class="col-12 col-md-4 col-lg-2">
-                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Margen Estimado</label>
-                            <div class="stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small" id="stock-calculated-margin">
+                            <div class="d-flex align-items-center justify-content-between mb-1">
+                                <label class="form-label text-muted small fw-semibold text-uppercase mb-0" id="stock-margin-label" style="font-size: 0.72rem;">Rentab. s/ Costo</label>
+                                <button type="button" id="btn-toggle-margin-mode" class="btn btn-sm btn-light border py-0 px-1.5 rounded-2 text-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Clic para alternar entre Rentabilidad sobre Costo (% Markup) y Margen sobre Venta (%)" style="font-size: 0.65rem; height: 19px;">
+                                    <i class="bi bi-arrow-repeat"></i> <span id="margin-mode-indicator">Modo</span>
+                                </button>
+                            </div>
+                            <div class="stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small cursor-pointer" id="stock-calculated-margin" title="Clic para alternar entre Rentabilidad (Costo) y Margen (Venta)">
                                 <span>0.0%</span>
                             </div>
                         </div>

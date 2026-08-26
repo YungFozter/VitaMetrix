@@ -260,6 +260,31 @@
     pointer-events: none;
 }
 
+.stock-margin-badge {
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.15s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.15s ease;
+    min-height: 38px;
+    font-size: 0.82rem;
+}
+
+.stock-margin-badge:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.stock-margin-badge.positive {
+    background-color: #ecfdf5 !important;
+    border-color: #a7f3d0 !important;
+    color: #059669 !important;
+}
+
+.stock-margin-badge.negative {
+    background-color: #fef2f2 !important;
+    border-color: #fecaca !important;
+    color: #dc2626 !important;
+}
+
 .stock-bar-wrap {
     width: 90px;
     height: 6px;
