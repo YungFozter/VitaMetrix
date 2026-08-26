@@ -4140,6 +4140,11 @@ let stockTaxonomiesData = { categories: [], units: [] };
 let posSelectedPatient = null;
 let posSelectedPaymentMethod = 'Efectivo';
 let currentViewedReceipt = null;
+let stockCurrentPage = 1;
+let stockPageSize = 15;
+let stockSelectedIds = new Set();
+let stockFilteredItems = [];
+let stockMarginCalculationMode = 'cost';
 
 function initStockModule() {
     // 1. Inicializar Sub-pestañas Bento
@@ -4290,15 +4295,6 @@ function switchStockSubTab(panelId) {
     const btn = document.querySelector(`.stock-main-tab-btn[data-panel="${panelId}"]`);
     if (btn) btn.click();
 }
-
-// Variables globales de Catálogo, Paginación y Selección Masiva
-let allStockItems = [];
-let editingStockId = null;
-let stockCurrentPage = 1;
-let stockPageSize = 15;
-let stockSelectedIds = new Set();
-let stockFilteredItems = [];
-let stockMarginCalculationMode = 'cost';
 
 // --- CÁLCULO DINÁMICO DE MARGEN DE GANANCIA / RENTABILIDAD ---
 function initStockMarginCalculator() {
