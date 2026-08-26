@@ -83,12 +83,9 @@
                     <span class="stock-kpi-value text-primary" id="stock-kpi-sale-val">Bs. 0.00</span>
                     <span class="stock-kpi-sub">Estimado al precio de venta</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- FORMULARIO: REGISTRAR / EDITAR INSUMO O PRODUCTO -->
+            </div        <!-- FORMULARIO: REGISTRAR / EDITAR INSUMO O PRODUCTO (COLAPSABLE) -->
         <div id="stock-form-card" class="bento-card mb-4 p-4 stock-form-card" style="position: relative; z-index: 30; overflow: visible;">
-            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom flex-wrap gap-2">
                 <div class="d-flex align-items-center gap-2">
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
                         <i class="bi bi-plus-circle-fill fs-5" id="stock-form-icon"></i>
@@ -98,120 +95,128 @@
                         <p class="text-muted small mb-0">Gestiona suplementos, insumos BIA, medicamentos y material clínico.</p>
                     </div>
                 </div>
-                <button type="button" id="btn-cancel-stock" class="btn btn-sm btn-outline-secondary d-none">
-                    <i class="bi bi-x-circle me-1"></i> Cancelar Edición
-                </button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" id="btn-toggle-stock-form" class="btn btn-sm btn-light border px-3 py-1.5 fw-semibold rounded-3 text-navy d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                        <i class="bi bi-chevron-up" id="stock-form-toggle-icon"></i>
+                        <span id="stock-form-toggle-text">Ocultar Formulario</span>
+                    </button>
+                    <button type="button" id="btn-cancel-stock" class="btn btn-sm btn-outline-secondary d-none">
+                        <i class="bi bi-x-circle me-1"></i> Cancelar Edición
+                    </button>
+                </div>
             </div>
 
-            <form id="stock-form" autocomplete="off">
-                <div class="row g-3">
-                    <!-- 1. SKU / Código -->
-                    <div class="col-12 col-md-3 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
-                        <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
-                    </div>
+            <div id="stock-form-collapse-body" class="stock-form-body-transition">
+                <form id="stock-form" autocomplete="off">
+                    <div class="row g-3">
+                        <!-- 1. SKU / Código -->
+                        <div class="col-12 col-md-3 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Código / SKU</label>
+                            <input type="text" id="stock-code" class="form-control shadow-none font-monospace small bg-light" placeholder="Auto / SKU-001">
+                        </div>
 
-                    <!-- 2. Nombre del Producto -->
-                    <div class="col-12 col-md-5 col-lg-4">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre del Insumo / Producto <span class="text-danger">*</span></label>
-                        <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Proteína Whey Isolate 900g" required>
-                    </div>
+                        <!-- 2. Nombre del Producto -->
+                        <div class="col-12 col-md-5 col-lg-4">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre del Insumo / Producto <span class="text-danger">*</span></label>
+                            <input type="text" id="stock-name" class="form-control shadow-none fw-semibold" placeholder="Ej: Proteína Whey Isolate 900g" required>
+                        </div>
 
-                    <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
-                    <div class="col-12 col-md-4 col-lg-3">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
-                        <div class="stock-custom-dropdown-wrap position-relative">
-                            <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
-                            <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
-                            <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                        <!-- 3. Categoría (Manual con Sugerencias Estilizadas) -->
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Categoría</label>
+                            <div class="stock-custom-dropdown-wrap position-relative">
+                                <input type="text" id="stock-category" class="form-control shadow-none small pe-4" placeholder="Escribe o selecciona..." autocomplete="off">
+                                <button type="button" id="btn-clear-category" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                                <div id="stock-category-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                            </div>
+                        </div>
+
+                        <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas - Opción 1 sin familias) -->
+                        <div class="col-12 col-md-3 col-lg-3">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
+                            <div class="stock-custom-dropdown-wrap position-relative">
+                                <input type="text" id="stock-unit" class="form-control shadow-none small pe-4" placeholder="Ej: Frasco, Caja, Cápsulas..." autocomplete="off">
+                                <button type="button" id="btn-clear-unit" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
+                                <div id="stock-unit-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                            </div>
+                        </div>
+
+                        <!-- 5. Cantidad Actual -->
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual <span class="text-danger">*</span></label>
+                            <input type="number" id="stock-qty" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0" step="1" required>
+                        </div>
+
+                        <!-- 6. Stock Mínimo (Alerta) -->
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Mínimo</label>
+                            <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="1" value="5">
+                        </div>
+
+                        <!-- 7. Costo Unitario (Bs.) -->
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario (Bs.)</label>
+                            <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                        </div>
+
+                        <!-- 8. Precio Venta (Bs.) -->
+                        <div class="col-6 col-md-3 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta (Bs.)</label>
+                            <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
+                        </div>
+
+                        <!-- 8.1 Margen de Ganancia Dinámico -->
+                        <div class="col-12 col-md-4 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Margen Estimado</label>
+                            <div class="stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small" id="stock-calculated-margin">
+                                <span>0.0%</span>
+                            </div>
+                        </div>
+
+                        <!-- 9. Lote / Serie -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nro. Lote</label>
+                            <input type="text" id="stock-batch" class="form-control shadow-none small" placeholder="Ej: LOT-2026-A">
+                        </div>
+
+                        <!-- 10. Fecha de Vencimiento -->
+                        <div class="col-6 col-md-4 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Caducidad</label>
+                            <input type="date" id="stock-expiry" class="form-control shadow-none small">
+                        </div>
+
+                        <!-- 11. Ubicación en Consultorio -->
+                        <div class="col-12 col-md-4 col-lg-2">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Ubicación</label>
+                            <input type="text" id="stock-location" class="form-control shadow-none small" placeholder="Ej: Vitrina Recepción">
+                        </div>
+
+                        <!-- 12. Proveedor -->
+                        <div class="col-12 col-md-4 col-lg-3">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Proveedor</label>
+                            <input type="text" id="stock-supplier" class="form-control shadow-none small" placeholder="Ej: NutriFit Import S.R.L.">
+                        </div>
+
+                        <!-- 13. Notas / Indicación Clínica -->
+                        <div class="col-12 col-lg-5">
+                            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Notas Clínicas / Descripción</label>
+                            <input type="text" id="stock-notes" class="form-control shadow-none small" placeholder="Indicaciones de posología o almacenamiento...">
+                        </div>
+
+                        <!-- Botón Guardar -->
+                        <div class="col-12 d-flex align-items-end justify-content-end mt-3 pt-2 border-top">
+                            <button type="submit" id="btn-save-stock" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span id="btn-save-stock-text">Guardar en Catálogo</span>
+                            </button>
                         </div>
                     </div>
-
-                    <!-- 4. Unidad de Medida (Manual con Sugerencias Estilizadas - Opción 1 sin familias) -->
-                    <div class="col-12 col-md-3 col-lg-3">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Unidad de Medida (U/M)</label>
-                        <div class="stock-custom-dropdown-wrap position-relative">
-                            <input type="text" id="stock-unit" class="form-control shadow-none small pe-4" placeholder="Ej: Frasco, Caja, Cápsulas..." autocomplete="off">
-                            <button type="button" id="btn-clear-unit" class="stock-input-clear-btn d-none" aria-label="Limpiar campo">&times;</button>
-                            <div id="stock-unit-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
-                        </div>
-                    </div>
-
-                    <!-- 5. Cantidad Actual -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual <span class="text-danger">*</span></label>
-                        <input type="number" id="stock-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0" step="any" required>
-                    </div>
-
-                    <!-- 6. Stock Mínimo (Alerta) -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Mínimo</label>
-                        <input type="number" id="stock-min" class="form-control shadow-none font-monospace" placeholder="5" min="0" step="any" value="5">
-                    </div>
-
-                    <!-- 7. Costo Unitario (Bs.) -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Costo Unitario (Bs.)</label>
-                        <input type="number" id="stock-cost" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
-                    </div>
-
-                    <!-- 8. Precio Venta (Bs.) -->
-                    <div class="col-6 col-md-3 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Precio Venta (Bs.)</label>
-                        <input type="number" id="stock-sale" class="form-control shadow-none font-monospace" placeholder="0.00" min="0" step="0.01">
-                    </div>
-
-                    <!-- 8.1 Margen de Ganancia Dinámico -->
-                    <div class="col-12 col-md-4 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Margen Estimado</label>
-                        <div class="stock-margin-badge d-flex align-items-center justify-content-center fw-bold py-2 px-2 rounded-3 border bg-light small" id="stock-calculated-margin">
-                            <span>0.0%</span>
-                        </div>
-                    </div>
-
-                    <!-- 9. Lote / Serie -->
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nro. Lote</label>
-                        <input type="text" id="stock-batch" class="form-control shadow-none small" placeholder="Ej: LOT-2026-A">
-                    </div>
-
-                    <!-- 10. Fecha de Vencimiento -->
-                    <div class="col-6 col-md-4 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Caducidad</label>
-                        <input type="date" id="stock-expiry" class="form-control shadow-none small">
-                    </div>
-
-                    <!-- 11. Ubicación en Consultorio -->
-                    <div class="col-12 col-md-4 col-lg-2">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Ubicación</label>
-                        <input type="text" id="stock-location" class="form-control shadow-none small" placeholder="Ej: Vitrina Recepción">
-                    </div>
-
-                    <!-- 12. Proveedor -->
-                    <div class="col-12 col-md-4 col-lg-3">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Proveedor</label>
-                        <input type="text" id="stock-supplier" class="form-control shadow-none small" placeholder="Ej: NutriFit Import S.R.L.">
-                    </div>
-
-                    <!-- 13. Notas / Indicación Clínica -->
-                    <div class="col-12 col-lg-5">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Notas Clínicas / Descripción</label>
-                        <input type="text" id="stock-notes" class="form-control shadow-none small" placeholder="Indicaciones de posología o almacenamiento...">
-                    </div>
-
-                    <!-- Botón Guardar -->
-                    <div class="col-12 d-flex align-items-end justify-content-end mt-3 pt-2 border-top">
-                        <button type="submit" id="btn-save-stock" class="btn btn-primary px-4 py-2 fw-semibold shadow-sm d-flex align-items-center gap-2">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span id="btn-save-stock-text">Guardar en Catálogo</span>
-                        </button>
-                    </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
 
-        <!-- DIRECTORIO DE INVENTARIO Y SUMINISTROS -->
-        <div class="bento-card p-4" style="position: relative; z-index: 10;">
+        <!-- DIRECTORIO DE INVENTARIO Y SUMINISTROS (CONTENEDOR ESTABLE) -->
+        <div class="bento-card p-4 stock-card-stable" style="position: relative; z-index: 10;">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
                 <div>
                     <h5 class="fw-bold text-navy mb-0">Directorio de Inventario y Suministros</h5>
@@ -273,10 +278,10 @@
                 </div>
             </div>
 
-            <!-- Tabla de Inventario -->
-            <div class="table-responsive">
+            <!-- Tabla de Inventario con Altura Estable -->
+            <div class="table-responsive stock-table-responsive stock-custom-scrollbar">
                 <table class="table table-hover align-middle stock-table mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light sticky-top">
                         <tr>
                             <th>CÓDIGO / SKU</th>
                             <th>PRODUCTO / INSUMO</th>
@@ -551,10 +556,10 @@
                 </div>
             </div>
 
-            <!-- Tabla de Ventas -->
-            <div class="table-responsive">
+            <!-- Tabla de Ventas con Altura Estable -->
+            <div class="table-responsive stock-table-responsive stock-custom-scrollbar">
                 <table class="table table-hover align-middle stock-table mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light sticky-top">
                         <tr>
                             <th>NRO. COMPROBANTE</th>
                             <th>FECHA & HORA</th>
@@ -579,7 +584,7 @@
     <!-- PANEL 4: KARDEX & AUDITORÍA DE MOVIMIENTOS                                -->
     <!-- ========================================================================= -->
     <div id="stock-panel-kardex" class="stock-panel-content d-none">
-        <div class="bento-card p-4">
+        <div class="bento-card p-4 stock-card-stable">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3 pb-2 border-bottom">
                 <div class="d-flex align-items-center gap-2">
                     <div class="bg-primary bg-opacity-10 text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
@@ -614,10 +619,10 @@
                 </div>
             </div>
 
-            <!-- Tabla de Kardex -->
-            <div class="table-responsive">
+            <!-- Tabla de Kardex con Altura Estable -->
+            <div class="table-responsive stock-table-responsive stock-custom-scrollbar">
                 <table class="table table-hover align-middle stock-table mb-0">
-                    <thead class="table-light">
+                    <thead class="table-light sticky-top">
                         <tr>
                             <th>FECHA & HORA</th>
                             <th>PRODUCTO / INSUMO</th>

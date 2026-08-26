@@ -188,8 +188,26 @@
 }
 
 /* ==========================================================================
-   Tabla de Inventario
+   Tabla de Inventario & Estabilidad de Scroll
    ========================================================================== */
+.stock-card-stable {
+    min-height: 480px;
+    display: flex;
+    flex-direction: column;
+}
+
+.stock-table-responsive {
+    min-height: 420px;
+    position: relative;
+    overflow-x: auto;
+    overflow-y: visible;
+    overflow-anchor: none; /* Previene saltos bruscos de scroll del navegador */
+}
+
+.stock-table {
+    width: 100%;
+}
+
 .stock-table th {
     font-size: 0.72rem;
     letter-spacing: 0.5px;
@@ -198,6 +216,15 @@
     padding: 0.85rem 1rem;
     text-transform: uppercase;
     background-color: #f8fafc;
+    white-space: nowrap;
+}
+
+.stock-table thead.sticky-top {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background-color: #f8fafc;
+    box-shadow: 0 1px 0 #e2e8f0;
 }
 
 .stock-table td {
@@ -209,6 +236,28 @@
 
 .stock-table tr:hover td {
     background-color: rgba(248, 250, 252, 0.8);
+}
+
+.stock-empty-state-cell {
+    height: 320px !important;
+    vertical-align: middle !important;
+    text-align: center;
+}
+
+.stock-form-body-transition {
+    transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.25s ease, margin 0.3s ease;
+    max-height: 1200px;
+    opacity: 1;
+    overflow: visible;
+}
+
+.stock-form-body-transition.collapsed {
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    pointer-events: none;
 }
 
 .stock-bar-wrap {

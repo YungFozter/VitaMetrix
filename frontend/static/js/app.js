@@ -4313,7 +4313,7 @@ function initStockForm() {
             name: document.getElementById('stock-name').value.trim(),
             category: document.getElementById('stock-category').value.trim() || 'Insumos BIA',
             unit: document.getElementById('stock-unit').value.trim() || 'Unidad (u)',
-            stock_quantity: parseFloat(document.getElementById('stock-quantity').value) || 0,
+            stock_quantity: parseFloat(document.getElementById('stock-qty')?.value ?? document.getElementById('stock-quantity')?.value) || 0,
             min_stock: parseFloat(document.getElementById('stock-min').value) || 5,
             cost_price: parseFloat(document.getElementById('stock-cost').value) || 0,
             sale_price: parseFloat(document.getElementById('stock-sale').value) || 0,
@@ -4354,6 +4354,25 @@ function initStockForm() {
 
     const btnCancel = document.getElementById('btn-cancel-stock');
     if (btnCancel) btnCancel.addEventListener('click', resetStockForm);
+
+    // Toggle para colapsar / expandir formulario de stock
+    const toggleBtn = document.getElementById('btn-toggle-stock-form');
+    const collapseBody = document.getElementById('stock-form-collapse-body');
+    const toggleIcon = document.getElementById('stock-form-toggle-icon');
+    const toggleText = document.getElementById('stock-form-toggle-text');
+
+    if (toggleBtn && collapseBody) {
+        toggleBtn.addEventListener('click', () => {
+            const isCollapsed = collapseBody.classList.toggle('collapsed');
+            if (isCollapsed) {
+                if (toggleIcon) toggleIcon.className = 'bi bi-plus-lg';
+                if (toggleText) toggleText.textContent = 'Registrar Insumo';
+            } else {
+                if (toggleIcon) toggleIcon.className = 'bi bi-chevron-up';
+                if (toggleText) toggleText.textContent = 'Ocultar Formulario';
+            }
+        });
+    }
 
     const searchInput = document.getElementById('stock-search-input');
     const catFilter = document.getElementById('stock-filter-category');
@@ -4593,13 +4612,13 @@ function renderStockTable(items) {
     if (!items || items.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="text-center py-5">
-                    <div class="d-flex flex-column align-items-center justify-content-center py-3">
-                        <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-2 d-inline-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
-                            <i class="bi bi-box-seam fs-4"></i>
+                <td colspan="7" class="stock-empty-state-cell">
+                    <div class="d-flex flex-column align-items-center justify-content-center py-4 text-center">
+                        <div class="bg-primary-subtle text-primary rounded-circle p-3 mb-2 d-inline-flex align-items-center justify-content-center" style="width: 52px; height: 52px;">
+                            <i class="bi bi-box-seam fs-3"></i>
                         </div>
                         <h6 class="fw-bold text-navy mb-1">No se encontraron artículos</h6>
-                        <p class="text-muted small mb-0">Registra un nuevo insumo o modifica los filtros de búsqueda.</p>
+                        <p class="text-muted small mb-0">Modifica los términos de búsqueda o registra un nuevo producto.</p>
                     </div>
                 </td>
             </tr>
@@ -4607,7 +4626,8 @@ function renderStockTable(items) {
         return;
     }
 
-    tbody.replaceChildren();
+    const frag = document.createDocumentFragment();
+
     items.forEach(item => {
         const tr = document.createElement('tr');
 
@@ -4628,24 +4648,19 @@ function renderStockTable(items) {
             <div class="fw-bold text-navy">${escapeHtml(item.name)}</div>
             <div class="d-flex align-items-center gap-1.5 mt-0.5 flex-wrap">
                 <span class="badge bg-secondary-subtle text-secondary small" style="font-size: 0.68rem;">${escapeHtml(item.unit || 'Unidad (u)')}</span>
-                ${item.location ? `<span class="text-muted small" style="font-size: 0.72rem;"><i class="bi bi-geo-alt"></i> ${escapeHtml(item.location)}</span>` : ''}
+                ${item.location ? `<span class="text-muted" style="font-size: 0.72rem;"><i class="bi bi-geo-alt me-0.5"></i>${escapeHtml(item.location)}</span>` : ''}
             </div>
         `;
 
         // 3. Categoría
         const tdCat = document.createElement('td');
-        let catIcon = '📦';
-        if (item.category?.includes('BIA')) catIcon = '🩺';
-        else if (item.category?.includes('Suplementos')) catIcon = '💊';
-        else if (item.category?.includes('Material') || item.category?.includes('Higiene')) catIcon = '🧼';
-        else if (item.category?.includes('Medicamentos')) catIcon = '💉';
-        tdCat.innerHTML = `<span class="small fw-semibold text-secondary">${catIcon} ${escapeHtml(item.category || 'Otros')}</span>`;
+        tdCat.innerHTML = `<span class="badge bg-light text-dark border fw-normal" style="font-size: 0.78rem;">${escapeHtml(item.category || 'Insumos BIA')}</span>`;
 
         // 4. Existencia & Nivel
         const tdStock = document.createElement('td');
         let statusBadge = '';
         let barClass = 'optimal';
-        let barPercent = Math.min(100, Math.round((qty / (minQty * 3 || 15)) * 100));
+        let barPercent = Math.min(100, Math.round((qty / (minQty * 2 || 10)) * 100));
 
         if (status === 'out') {
             statusBadge = '<span class="stock-status-badge out"><i class="bi bi-x-circle-fill"></i> Agotado</span>';
@@ -4756,8 +4771,10 @@ function renderStockTable(items) {
         tdActions.appendChild(actionsWrap);
 
         tr.append(tdCode, tdName, tdCat, tdStock, tdPrices, tdExpiry, tdActions);
-        tbody.appendChild(tr);
+        frag.appendChild(tr);
     });
+
+    tbody.replaceChildren(frag);
 }
 
 function resetStockForm() {
@@ -4783,11 +4800,22 @@ function resetStockForm() {
 
 function editStockItem(item) {
     editingStockId = item.id;
+
+    // Asegurar que el formulario esté expandido si estaba colapsado
+    const collapseBody = document.getElementById('stock-form-collapse-body');
+    const toggleIcon = document.getElementById('stock-form-toggle-icon');
+    const toggleText = document.getElementById('stock-form-toggle-text');
+    if (collapseBody && collapseBody.classList.contains('collapsed')) {
+        collapseBody.classList.remove('collapsed');
+        if (toggleIcon) toggleIcon.className = 'bi bi-chevron-up';
+        if (toggleText) toggleText.textContent = 'Ocultar Formulario';
+    }
+
     document.getElementById('stock-code').value = item.code || '';
     document.getElementById('stock-name').value = item.name || '';
     document.getElementById('stock-category').value = item.category || 'Insumos BIA';
     document.getElementById('stock-unit').value = item.unit || 'Unidad (u)';
-    document.getElementById('stock-quantity').value = item.stock_quantity ?? 0;
+    document.getElementById('stock-qty').value = item.stock_quantity ?? 0;
     document.getElementById('stock-min').value = item.min_stock ?? 5;
     document.getElementById('stock-cost').value = item.cost_price ?? 0;
     document.getElementById('stock-sale').value = item.sale_price ?? 0;
