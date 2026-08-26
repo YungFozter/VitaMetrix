@@ -20,7 +20,7 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=111">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=112">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -377,16 +377,20 @@
     </div>
 
     <!-- MODAL DE CONFIRMACIÓN ELEGANTE -->
-    <div id="custom-modal" class="modal-overlay hidden">
-        <div class="modal-box confirm-modal-box">
+    <div id="custom-modal" class="modal-overlay hidden" style="z-index: 10000;">
+        <div class="confirm-modal-box">
             <div class="modal-icon-badge danger" id="modal-icon-container">
                 <i class="bi bi-trash3-fill"></i>
             </div>
-            <h3 id="modal-title" class="confirm-modal-title">Eliminar Evaluación</h3>
-            <p id="modal-message" class="confirm-modal-message">¿Estás seguro de que deseas eliminar este registro del historial clínico?</p>
+            <h3 id="modal-title" class="confirm-modal-title">Eliminar Insumo / Producto</h3>
+            <p id="modal-message" class="confirm-modal-message">¿Estás seguro de que deseas eliminar este registro del catálogo e inventario?</p>
             <div class="confirm-modal-actions">
-                <button type="button" id="modal-btn-cancel" class="btn-confirm-cancel">Cancelar</button>
-                <button type="button" id="modal-btn-confirm" class="btn-confirm-danger">Eliminar</button>
+                <button type="button" id="modal-btn-cancel" class="btn-confirm-cancel">
+                    <i class="bi bi-x-lg"></i> <span>Cancelar</span>
+                </button>
+                <button type="button" id="modal-btn-confirm" class="btn-confirm-danger">
+                    <i class="bi bi-trash3-fill"></i> <span id="modal-btn-confirm-text">Eliminar</span>
+                </button>
             </div>
         </div>
     </div>
@@ -1272,6 +1276,6 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=121"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=122"></script>
 </body>
 </html>

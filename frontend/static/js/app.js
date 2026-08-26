@@ -81,18 +81,31 @@ function showConfirm(title, message, onConfirm, options = {}) {
     const modal = document.getElementById('custom-modal');
     if (!modal) return;
 
-    document.getElementById('modal-title').textContent = title || 'Confirmación';
-    document.getElementById('modal-message').textContent = message || '¿Estás seguro?';
-
+    const titleEl = document.getElementById('modal-title');
+    const msgEl = document.getElementById('modal-message');
     const btnCancel = document.getElementById('modal-btn-cancel');
     const btnConfirm = document.getElementById('modal-btn-confirm');
+    const btnConfirmText = document.getElementById('modal-btn-confirm-text');
     const iconContainer = document.getElementById('modal-icon-container');
 
-    if (btnConfirm) {
+    if (titleEl) titleEl.textContent = title || 'Confirmación';
+    if (msgEl) {
+        if (typeof message === 'string' && (message.includes('<') || message.includes('"'))) {
+            msgEl.innerHTML = message;
+        } else {
+            msgEl.textContent = message || '¿Estás seguro?';
+        }
+    }
+
+    if (btnConfirmText) {
+        btnConfirmText.textContent = options.confirmText || 'Eliminar';
+    } else if (btnConfirm) {
         btnConfirm.textContent = options.confirmText || 'Eliminar';
     }
 
     if (iconContainer) {
+        const type = options.type || 'danger';
+        iconContainer.className = `modal-icon-badge ${type}`;
         iconContainer.innerHTML = `<i class="${options.icon || 'bi bi-trash3-fill'}"></i>`;
     }
 
@@ -102,7 +115,17 @@ function showConfirm(title, message, onConfirm, options = {}) {
     btnCancel.parentNode.replaceChild(newCancel, btnCancel);
     btnConfirm.parentNode.replaceChild(newConfirm, btnConfirm);
 
-    const closeModal = () => modal.classList.add('hidden');
+    let isClosing = false;
+    const closeModal = () => {
+        if (isClosing) return;
+        isClosing = true;
+        modal.classList.add('closing');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('closing');
+            isClosing = false;
+        }, 200);
+    };
 
     newCancel.addEventListener('click', closeModal);
     newConfirm.addEventListener('click', () => {
@@ -115,6 +138,7 @@ function showConfirm(title, message, onConfirm, options = {}) {
         if (e.target === modal) closeModal();
     };
 
+    modal.classList.remove('closing');
     modal.classList.remove('hidden');
 }
 
@@ -5001,9 +5025,10 @@ function editStockItem(item) {
 }
 
 function deleteStockItem(id, name) {
+    const safeName = escapeHtml(name || 'este artículo');
     showConfirm(
         'Eliminar Insumo / Producto',
-        `¿Estás seguro de eliminar "${name || 'este artículo'}" del catálogo e inventario?`,
+        `¿Estás seguro de eliminar <strong>"${safeName}"</strong> del catálogo e inventario?<br><small class="text-muted d-block mt-1">Esta acción removerá el ítem de las existencias y ventas activas.</small>`,
         async () => {
             try {
                 const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
@@ -5017,6 +5042,11 @@ function deleteStockItem(id, name) {
                 console.error(err);
                 showToast('Error de conexión', 'error');
             }
+        },
+        {
+            icon: 'bi bi-trash3-fill',
+            confirmText: 'Sí, Eliminar',
+            type: 'danger'
         }
     );
 }
