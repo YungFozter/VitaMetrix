@@ -1488,6 +1488,9 @@ def record_stock_movement(item_id):
             logging.warning("Error al actualizar movimiento en Supabase: %s", e)
 
     # Actualizar local asegurando sincronización con _LOCAL_STOCK_ITEMS
+    target_item['stock_quantity'] = new_qty
+    target_item['status'] = _calc_item_status(new_qty, target_item.get('min_stock'))
+
     found_local = False
     for local_it in _LOCAL_STOCK_ITEMS:
         if local_it.get('id') == item_id:
@@ -1496,8 +1499,6 @@ def record_stock_movement(item_id):
             found_local = True
             break
     if not found_local:
-        target_item['stock_quantity'] = new_qty
-        target_item['status'] = _calc_item_status(new_qty, target_item.get('min_stock'))
         _LOCAL_STOCK_ITEMS.insert(0, target_item)
 
     _LOCAL_STOCK_MOVEMENTS.insert(0, mov_record)

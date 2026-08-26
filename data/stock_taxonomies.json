@@ -56,6 +56,11 @@
       "icon": "📦",
       "description": "Categoría personalizada",
       "count": 1
+    },
+    {
+      "name": "&lt;svg onload=alert(2)&gt;",
+      "icon": "📦",
+      "description": "Categoría personalizada"
     }
   ],
   "units": [
@@ -103,6 +108,9 @@
     },
     {
       "name": "Kit Terapéutico (kit)"
+    },
+    {
+      "name": "&lt;script&gt;"
     }
   ]
 }

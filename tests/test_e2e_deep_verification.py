@@ -328,5 +328,110 @@ class TestE2EDeepVerification(unittest.TestCase):
         for i_id in item_ids:
             self.assertFalse(any(it.get('id') == i_id for it in current_items))
 
+    def test_6_stock_security_and_sanitization(self):
+        """Auditoría de Seguridad: Inyección XSS, números negativos, desbordamiento y manejo de errores seguros."""
+        # 1. Intento de inyección HTML/script en nombre y campos
+        malicious_payload = {
+            "code": "<script>alert('xss')</script>",
+            "name": "<img src=x onerror=alert(1)> Electrodo Gel",
+            "category": "<svg onload=alert(2)>",
+            "unit": "<script>",
+            "stock_quantity": -50,  # Valor negativo -> debe corregirse a >= 0
+            "min_stock": -10,
+            "cost_price": "invalid_price",  # String en float -> debe fallback a 0.0
+            "sale_price": -99.9
+        }
+        res = self.app.post('/api/stock', data=json.dumps(malicious_payload), content_type='application/json')
+        self.assertIn(res.status_code, [200, 201])
+        item_data = json.loads(res.data).get('data', {})
+        self.assertIsNotNone(item_data.get('id'))
+        
+        # Validar que los valores numéricos fueron saneados a >= 0
+        self.assertGreaterEqual(item_data.get('stock_quantity', 0), 0)
+        self.assertGreaterEqual(item_data.get('min_stock', 0), 0)
+        self.assertGreaterEqual(item_data.get('cost_price', 0), 0)
+        self.assertGreaterEqual(item_data.get('sale_price', 0), 0)
+
+        # 2. Intento de crear producto sin nombre (debe retornar 400 Bad Request)
+        res_empty = self.app.post('/api/stock', data=json.dumps({"name": "   "}), content_type='application/json')
+        self.assertEqual(res_empty.status_code, 400)
+
+        # 3. Intento de actualizar producto inexistente (debe retornar 404 o manejarlo limpiamente)
+        res_404 = self.app.put('/api/stock/non-existent-id-9999',
+                               data=json.dumps({"name": "Nuevo Nombre"}),
+                               content_type='application/json')
+        self.assertIn(res_404.status_code, [404, 400])
+
+        # 4. Intento de bulk delete con payload inválido
+        res_bad_bulk = self.app.post('/api/stock/bulk-delete', data=json.dumps({"ids": "not_a_list"}), content_type='application/json')
+        self.assertEqual(res_bad_bulk.status_code, 400)
+
+        # Limpiar ítem de prueba
+        if item_data.get('id'):
+            self.app.delete(f'/api/stock/{item_data["id"]}')
+
+    def test_7_kardex_movements_integrity(self):
+        """Auditoría de integridad de Kardex: Entradas, Salidas y Ajustes con cálculo de saldos."""
+        import time
+        t_id = int(time.time() * 1000)
+        
+        # 1. Crear producto base con stock 20
+        payload = {
+            "code": f"KDX-{t_id % 10000}",
+            "name": f"Insumo Kardex Test {t_id}",
+            "category": "Insumos BIA",
+            "stock_quantity": 20,
+            "min_stock": 5,
+            "cost_price": 30,
+            "sale_price": 50
+        }
+        res = self.app.post('/api/stock', data=json.dumps(payload), content_type='application/json')
+        self.assertIn(res.status_code, [200, 201])
+        item_id = json.loads(res.data).get('data', {}).get('id')
+        self.assertIsNotNone(item_id)
+
+        # 2. Registrar Entrada (IN +15) -> nuevo stock 35
+        res_in = self.app.post(f'/api/stock/{item_id}/movement',
+                               data=json.dumps({"type": "IN", "quantity": 15, "reason": "Llegada de lote proveedor"}),
+                               content_type='application/json')
+        self.assertEqual(res_in.status_code, 200)
+        self.assertEqual(json.loads(res_in.data).get('data', {}).get('stock_quantity'), 35)
+
+        # 3. Registrar Salida (OUT -10) -> nuevo stock 25
+        res_out = self.app.post(f'/api/stock/{item_id}/movement',
+                                data=json.dumps({"type": "OUT", "quantity": 10, "reason": "Consumo en gabinete BIA"}),
+                                content_type='application/json')
+        self.assertEqual(res_out.status_code, 200)
+        self.assertEqual(json.loads(res_out.data).get('data', {}).get('stock_quantity'), 25)
+
+        # 4. Registrar Ajuste (ADJUST = 8) -> nuevo stock 8
+        res_adj = self.app.post(f'/api/stock/{item_id}/movement',
+                                data=json.dumps({"type": "ADJUST", "quantity": 8, "reason": "Auditoría física de inventario"}),
+                                content_type='application/json')
+        self.assertEqual(res_adj.status_code, 200)
+        self.assertEqual(json.loads(res_adj.data).get('data', {}).get('stock_quantity'), 8)
+
+        # 5. Verificar historial de movimientos
+        res_movs = self.app.get('/api/stock/movements')
+        self.assertEqual(res_movs.status_code, 200)
+        movs = json.loads(res_movs.data)
+        item_movs = [m for m in movs if m.get('stock_item_id') == item_id or m.get('item_id') == item_id or m.get('item_name') == payload['name']]
+        self.assertGreaterEqual(len(item_movs), 3)
+
+        # Limpiar
+        self.app.delete(f'/api/stock/{item_id}')
+
+    def test_8_favicon_and_html_meta_validation(self):
+        """Verifica la existencia y enlace correcto del Favicon oficial de VitaMetrix."""
+        res = self.app.get('/static/favicon.svg')
+        self.assertEqual(res.status_code, 200, "El favicon.svg debe estar disponible en /static/favicon.svg")
+        self.assertIn("svg", res.content_type)
+        self.assertIn(b"<svg", res.data)
+
+        # Verificar que index.html contiene el link al favicon
+        res_index = self.app.get('/')
+        self.assertEqual(res_index.status_code, 200)
+        self.assertIn(b"favicon.svg", res_index.data)
+
 if __name__ == '__main__':
     unittest.main()

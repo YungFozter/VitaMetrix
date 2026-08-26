@@ -1,5 +1,191 @@
 [
   {
+    "id": "94d841a9-3713-4f86-9aa3-e52c42234437",
+    "receipt_number": "REC-2026-0035",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "44c183a7-5b6f-4285-a706-1b2b101afcef",
+        "code": "TESTP-001",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:54:19.131467+00:00",
+    "cancelled_at": "2026-08-26T21:54:20.776063+00:00"
+  },
+  {
+    "id": "3cd22954-7894-4265-864b-a4e115b0fc88",
+    "receipt_number": "REC-2026-0034",
+    "patient_name": "Paciente E2E Prueba",
+    "patient_idp": "IDP-9999",
+    "patient_phone": "+59177889900",
+    "items": [
+      {
+        "stock_item_id": "76a8e568-6cf6-416a-bac5-15b6d94c2860",
+        "code": "PROTP-001",
+        "name": "Proteína Whey E2E Test 1kg",
+        "unit": "Frasco / Bote",
+        "quantity": 2.0,
+        "unit_price": 90.0,
+        "cost_price": 50.0,
+        "subtotal": 180.0
+      }
+    ],
+    "subtotal": 180.0,
+    "discount": 5.0,
+    "total": 175.0,
+    "total_cost": 100.0,
+    "profit": 75.0,
+    "payment_method": "Efectivo",
+    "amount_received": 200.0,
+    "change_given": 25.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:54:03.534257+00:00",
+    "cancelled_at": "2026-08-26T21:54:04.556096+00:00"
+  },
+  {
+    "id": "0d56bbe9-e19d-40ce-8299-dc7dfe48561a",
+    "receipt_number": "REC-2026-0033",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "d616bbde-d6c5-44bd-bdcc-8493059fd231",
+        "code": "TESTP-001",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:53:29.205566+00:00",
+    "cancelled_at": "2026-08-26T21:53:30.651106+00:00"
+  },
+  {
+    "id": "de87eacc-1358-4bcc-ae44-ceb59e83e168",
+    "receipt_number": "REC-2026-0032",
+    "patient_name": "Paciente E2E Prueba",
+    "patient_idp": "IDP-9999",
+    "patient_phone": "+59177889900",
+    "items": [
+      {
+        "stock_item_id": "6cc785e7-108d-4d44-80df-df5f394b5e78",
+        "code": "PROTP-001",
+        "name": "Proteína Whey E2E Test 1kg",
+        "unit": "Frasco / Bote",
+        "quantity": 2.0,
+        "unit_price": 90.0,
+        "cost_price": 50.0,
+        "subtotal": 180.0
+      }
+    ],
+    "subtotal": 180.0,
+    "discount": 5.0,
+    "total": 175.0,
+    "total_cost": 100.0,
+    "profit": 75.0,
+    "payment_method": "Efectivo",
+    "amount_received": 200.0,
+    "change_given": 25.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:53:16.296244+00:00",
+    "cancelled_at": "2026-08-26T21:53:17.176644+00:00"
+  },
+  {
+    "id": "ee89e451-bed1-4c6f-a037-ecb33702ec2f",
+    "receipt_number": "REC-2026-0031",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "81bf3285-be76-47de-8dbe-fad0a24450be",
+        "code": "TESTP-001",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:52:35.902986+00:00",
+    "cancelled_at": "2026-08-26T21:52:37.568125+00:00"
+  },
+  {
+    "id": "e73ceab0-f51f-45bf-a83a-662cee8f9d88",
+    "receipt_number": "REC-2026-0030",
+    "patient_name": "Paciente E2E Prueba",
+    "patient_idp": "IDP-9999",
+    "patient_phone": "+59177889900",
+    "items": [
+      {
+        "stock_item_id": "a622388c-9f01-46e2-92a5-3487aea2a48d",
+        "code": "PROTP-001",
+        "name": "Proteína Whey E2E Test 1kg",
+        "unit": "Frasco / Bote",
+        "quantity": 2.0,
+        "unit_price": 90.0,
+        "cost_price": 50.0,
+        "subtotal": 180.0
+      }
+    ],
+    "subtotal": 180.0,
+    "discount": 5.0,
+    "total": 175.0,
+    "total_cost": 100.0,
+    "profit": 75.0,
+    "payment_method": "Efectivo",
+    "amount_received": 200.0,
+    "change_given": 25.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T21:52:23.223400+00:00",
+    "cancelled_at": "2026-08-26T21:52:24.238038+00:00"
+  },
+  {
     "id": "8c191c38-f797-4d39-ba4a-30cfe6d3c418",
     "receipt_number": "REC-2026-0029",
     "patient_name": "Carlos Rodríguez",

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="vmGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00c0f0"/>
+      <stop offset="50%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0f2547"/>
+    </linearGradient>
+    <linearGradient id="pulseGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="100%" stop-color="#38bdf8"/>
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#00b4d8" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- Fondo Redondeado con Gradiente VitaMetrix -->
+  <rect width="64" height="64" rx="16" fill="url(#vmGrad)"/>
+  
+  <!-- Borde Superior de Reflejo Cristal -->
+  <rect x="1" y="1" width="62" height="62" rx="15" fill="none" stroke="rgba(255,255,255,0.25)" stroke-width="1.5"/>
+  
+  <!-- Letra V Dinámica / Onda de Bioimpedancia Médica -->
+  <path d="M14 20 L24 46 L32 26 L38 38 L43 28 L50 28" 
+        fill="none" 
+        stroke="url(#pulseGrad)" 
+        stroke-width="4.5" 
+        stroke-linecap="round" 
+        stroke-linejoin="round"
+        filter="url(#glow)"/>
+        
+  <!-- Punto de Pulso Vital -->
+  <circle cx="50" cy="28" r="3.5" fill="#38bdf8" filter="url(#glow)"/>
+</svg>
