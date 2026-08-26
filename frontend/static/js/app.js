@@ -1,3 +1,7 @@
+let clientsDataLoaded = false;
+let evalsDataLoaded = false;
+let stockDataLoaded = false;
+
 document.addEventListener('DOMContentLoaded', () => {
     initDemoDataInjector();
     initFieldInfoPopups();
@@ -15,7 +19,25 @@ document.addEventListener('DOMContentLoaded', () => {
     initAppointmentsCalendar();
     initConfiguracionView();
     initStockModule();
+    
+    // Carga prioritaria e instantánea del Dashboard
     fetchDashboardStats();
+
+    // Carga diferida en segundo plano para módulos secundarios (evita bloqueo del hilo principal)
+    const scheduleIdleTasks = () => {
+        if (!clientsDataLoaded) fetchClients();
+        if (!evalsDataLoaded) fetchEvaluaciones();
+        if (!stockDataLoaded) {
+            fetchStockItems();
+            fetchStockTaxonomies();
+        }
+    };
+
+    if ('requestIdleCallback' in window) {
+        requestIdleCallback(scheduleIdleTasks, { timeout: 1600 });
+    } else {
+        setTimeout(scheduleIdleTasks, 1000);
+    }
 });
 
 // --- 0. UTILS & ESCAPING ---
@@ -161,15 +183,22 @@ function initNavigation() {
                 // Update title
                 pageTitle.textContent = item.getAttribute('data-title') || 'Dashboard';
 
-                if (targetId === 'configuracion-view') {
+                // Carga optimizada bajo demanda según la pestaña seleccionada
+                if (targetId === 'dashboard-view') {
+                    fetchDashboardStats();
+                } else if (targetId === 'clientes-view') {
+                    if (!clientsDataLoaded || allClientsData.length === 0) fetchClients();
+                } else if (targetId === 'evaluaciones-view') {
+                    if (!evalsDataLoaded || allEvaluationsData.length === 0) fetchEvaluaciones();
+                } else if (targetId === 'stock-view') {
+                    if (!stockDataLoaded || allStockItems.length === 0) {
+                        fetchStockItems();
+                        fetchStockTaxonomies();
+                    }
+                } else if (targetId === 'configuracion-view') {
                     setTimeout(() => {
                         if (typeof initClinicMap === 'function') initClinicMap();
-                    }, 150);
-                }
-
-                if (targetId === 'stock-view') {
-                    if (typeof fetchStockItems === 'function') fetchStockItems();
-                    if (typeof fetchStockTaxonomies === 'function') fetchStockTaxonomies();
+                    }, 120);
                 }
             }
         });
@@ -336,59 +365,57 @@ async function fetchDashboardStats() {
         if (response.ok) {
             const data = await response.json();
 
-            // 1. Update Top Cards
-            document.getElementById('dash-total-clients').textContent = data.total_clients ?? 0;
-            document.getElementById('dash-total-evals').textContent = data.total_evaluations ?? 0;
-            document.getElementById('dash-avg-score').textContent = data.avg_score ?? 0;
+            // 1. Actualización fluida con animación de números de las tarjetas KPI
+            const clientsEl = document.getElementById('dash-total-clients');
+            const evalsEl = document.getElementById('dash-total-evals');
+            const scoreEl = document.getElementById('dash-avg-score');
 
-            // 2. Update Recent Table
+            if (window.vmAnimate && typeof window.vmAnimate.number === 'function') {
+                if (clientsEl) window.vmAnimate.number(clientsEl, data.total_clients ?? 0, '', 500);
+                if (evalsEl) window.vmAnimate.number(evalsEl, data.total_evaluations ?? 0, '', 500);
+                if (scoreEl) window.vmAnimate.number(scoreEl, data.avg_score ?? 0, '', 500);
+            } else {
+                if (clientsEl) clientsEl.textContent = data.total_clients ?? 0;
+                if (evalsEl) evalsEl.textContent = data.total_evaluations ?? 0;
+                if (scoreEl) scoreEl.textContent = data.avg_score ?? 0;
+            }
+
+            // 2. Renderizado de alto rendimiento de la tabla de evaluaciones recientes (DocumentFragment)
             const tbody = document.getElementById('dash-recent-tbody');
             if (tbody) {
-                tbody.replaceChildren();
                 const recent = Array.isArray(data.recent) ? data.recent : [];
                 if (recent.length === 0) {
-                    const tr = document.createElement('tr');
-                    const td = document.createElement('td');
-                    td.colSpan = 6;
-                    td.style.textAlign = 'center';
-                    td.style.padding = '3rem';
-                    td.style.color = '#7a8aa0';
-                    td.textContent = 'No hay evaluaciones recientes registradas.';
-                    tr.appendChild(td);
-                    tbody.appendChild(tr);
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center justify-content-center py-3 text-muted">
+                                    <i class="bi bi-activity fs-3 mb-1 text-secondary opacity-50"></i>
+                                    <span class="small fw-semibold">No hay evaluaciones recientes registradas</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
                 } else {
+                    const frag = document.createDocumentFragment();
+                    const colors = ['#00b4d8', '#2d7a4a', '#cd7f32', '#1A2A4A', '#7209b7'];
+                    const todayStr = new Date().toISOString().split('T')[0];
+
                     recent.forEach((e, idx) => {
                         const tr = document.createElement('tr');
                         tr.className = 'dash-table-row';
 
-                        // 1. Cell Paciente (Avatar + Name + ID)
-                        const tdName = document.createElement('td');
+                        // 1. Paciente (Avatar + Nombre + IDP)
                         const rawName = e.name || 'Paciente Sin Nombre';
-                        // Clean initials
                         const parts = rawName.replace(/^(Dr\.|Dra\.|Lic\.)\s*/i, '').trim().split(/[\s,]+/);
                         const initials = parts.length >= 2 
                             ? (parts[0][0] + parts[1][0]).toUpperCase() 
                             : (rawName.slice(0, 2).toUpperCase());
-                        
-                        const colors = ['#00b4d8', '#2d7a4a', '#cd7f32', '#1A2A4A', '#7209b7'];
                         const bgCol = colors[idx % colors.length];
 
-                        tdName.innerHTML = `
-                            <div class="patient-cell">
-                                <div class="patient-avatar" style="background: ${bgCol};">${initials}</div>
-                                <div class="patient-info">
-                                    <div class="patient-name">${rawName}</div>
-                                    <div class="patient-idp">IDP: ${e.idp || ('2026-' + (100 + idx * 17))}</div>
-                                </div>
-                            </div>
-                        `;
-
-                        // 2. Cell Fecha (Human format)
-                        const tdDate = document.createElement('td');
+                        // 2. Fecha
                         const rawDate = e.date || '';
                         let formattedDate = rawDate;
                         if (rawDate) {
-                            const todayStr = new Date().toISOString().split('T')[0];
                             if (rawDate === todayStr) {
                                 formattedDate = '<span class="date-tag tag-today">Hoy</span>';
                             } else {
@@ -396,41 +423,46 @@ async function fetchDashboardStats() {
                                 if (dParts.length === 3) formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
                             }
                         }
-                        tdDate.innerHTML = `<div class="date-cell">${formattedDate}</div>`;
 
-                        // 3. Cell Score TRU (Dynamic Badge)
-                        const tdScore = document.createElement('td');
+                        // 3. TRU Score Badge
                         const scoreVal = Number(e.score) || 0;
                         let scoreClass = 'score-badge-good';
                         if (scoreVal < 50) scoreClass = 'score-badge-alert';
                         else if (scoreVal < 70) scoreClass = 'score-badge-mid';
 
-                        tdScore.innerHTML = `<span class="score-pill ${scoreClass}">${scoreVal} pts</span>`;
-
-                        // 4. Cell Ángulo de Fase
-                        const tdPhase = document.createElement('td');
+                        // 4. Ángulo de Fase
                         const phaVal = Number(e.phase_angle) || 0;
-                        tdPhase.innerHTML = `<div class="pha-cell">${phaVal ? phaVal.toFixed(1) + '°' : '--'}</div>`;
 
-                        // 5. Cell Estado (PhA Bucket)
-                        const tdStatus = document.createElement('td');
+                        // 5. Estado PhA
                         let statusHtml = '<span class="status-pill status-normal">🟢 Normal</span>';
                         if (phaVal > 0 && phaVal < 5.0) {
                             statusHtml = '<span class="status-pill status-alert">🔴 Riesgo</span>';
                         } else if (phaVal >= 5.0 && phaVal < 6.0) {
                             statusHtml = '<span class="status-pill status-warning">🟡 Moderado</span>';
                         }
-                        tdStatus.innerHTML = statusHtml;
 
-                        // 6. Cell Acción
-                        const tdAction = document.createElement('td');
-                        tdAction.style.textAlign = 'right';
-                        tdAction.innerHTML = `
-                            <button type="button" class="btn-table-view" title="Ver detalles de la evaluación">
-                                👁️ Ver
-                            </button>
+                        tr.innerHTML = `
+                            <td>
+                                <div class="patient-cell">
+                                    <div class="patient-avatar" style="background: ${bgCol};">${initials}</div>
+                                    <div class="patient-info">
+                                        <div class="patient-name">${escapeHtml(rawName)}</div>
+                                        <div class="patient-idp">IDP: ${escapeHtml(e.idp || ('2026-' + (100 + idx * 17)))}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><div class="date-cell">${formattedDate}</div></td>
+                            <td><span class="score-pill ${scoreClass}">${scoreVal} pts</span></td>
+                            <td><div class="pha-cell">${phaVal ? phaVal.toFixed(1) + '°' : '--'}</div></td>
+                            <td>${statusHtml}</td>
+                            <td style="text-align: right;">
+                                <button type="button" class="btn-table-view" title="Ver detalles de la evaluación">
+                                    👁️ Ver
+                                </button>
+                            </td>
                         `;
-                        const viewBtn = tdAction.querySelector('.btn-table-view');
+
+                        const viewBtn = tr.querySelector('.btn-table-view');
                         if (viewBtn) {
                             viewBtn.addEventListener('click', (evt) => {
                                 evt.stopPropagation();
@@ -439,15 +471,16 @@ async function fetchDashboardStats() {
                             });
                         }
 
-                        tr.append(tdName, tdDate, tdScore, tdPhase, tdStatus, tdAction);
-                        tbody.appendChild(tr);
+                        frag.appendChild(tr);
                     });
+
+                    tbody.replaceChildren(frag);
                 }
             }
 
-            // 3. Render Chart.js
+            // 3. Render Chart.js (optimizado)
             const ctx = document.getElementById('dash-population-chart');
-            if (ctx && window.Chart) {
+            if (ctx && window.Chart && data.population) {
                 if (populationChart) populationChart.destroy();
 
                 populationChart = new Chart(ctx, {
@@ -460,11 +493,7 @@ async function fetchDashboardStats() {
                                 data.population['Límite'] || 0,
                                 data.population['Bajo'] || 0
                             ],
-                            backgroundColor: [
-                                '#2d7a4a', // Verde
-                                '#cd7f32', // Bronce
-                                '#b94a4a'  // Rojo
-                            ],
+                            backgroundColor: ['#2d7a4a', '#cd7f32', '#b94a4a'],
                             borderWidth: 0,
                             hoverOffset: 4
                         }]
@@ -472,6 +501,7 @@ async function fetchDashboardStats() {
                     options: {
                         responsive: true,
                         maintainAspectRatio: false,
+                        animation: { duration: 400 },
                         cutout: '70%',
                         plugins: {
                             legend: { position: 'bottom', labels: { font: { family: 'Inter', size: 12 }, color: '#5a6f8c' } }
@@ -3297,7 +3327,6 @@ function renderClinicCalendar() {
     const month = calCurrentDate.getMonth();
 
     monthLabel.textContent = `${MONTH_NAMES_ES[month]} ${year}`;
-    grid.replaceChildren();
 
     // First day of month (0 = Sunday, 1 = Monday...)
     const firstDay = new Date(year, month, 1);
@@ -3307,11 +3336,13 @@ function renderClinicCalendar() {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     const todayStr = new Date().toISOString().split('T')[0];
 
+    const frag = document.createDocumentFragment();
+
     // Empty previous month padding cells
     for (let i = 0; i < startDayIndex; i++) {
         const emptyCell = document.createElement('div');
         emptyCell.className = 'cal-day-cell empty-day';
-        grid.appendChild(emptyCell);
+        frag.appendChild(emptyCell);
     }
 
     // Days of current month
@@ -3344,8 +3375,10 @@ function renderClinicCalendar() {
             renderSelectedDayAppointments();
         });
 
-        grid.appendChild(dayCell);
+        frag.appendChild(dayCell);
     }
+
+    grid.replaceChildren(frag);
 }
 
 function renderSelectedDayAppointments() {
@@ -3371,8 +3404,6 @@ function renderSelectedDayAppointments() {
         countEl.textContent = `${dayAppts.length} cita${dayAppts.length === 1 ? '' : 's'}`;
     }
 
-    listContainer.replaceChildren();
-
     if (dayAppts.length === 0) {
         const empty = document.createElement('div');
         empty.className = 'appt-empty-state';
@@ -3382,9 +3413,11 @@ function renderSelectedDayAppointments() {
                 + Agendar para este día
             </button>
         `;
-        listContainer.appendChild(empty);
+        listContainer.replaceChildren(empty);
         return;
     }
+
+    const frag = document.createDocumentFragment();
 
     dayAppts.forEach(appt => {
         const card = document.createElement('div');
@@ -3401,8 +3434,8 @@ function renderSelectedDayAppointments() {
                 ${statusBadgeHtml}
             </div>
             <div>
-                <h4 class="appt-patient-name">${appt.patient_name || 'Paciente'}</h4>
-                <div class="appt-type-tag">${appt.type || 'Evaluación BIA'} ${appt.notes ? '• <em style="color:#64748b;">' + appt.notes + '</em>' : ''}</div>
+                <h4 class="appt-patient-name">${escapeHtml(appt.patient_name || 'Paciente')}</h4>
+                <div class="appt-type-tag">${escapeHtml(appt.type || 'Evaluación BIA')} ${appt.notes ? '• <em style="color:#64748b;">' + escapeHtml(appt.notes) + '</em>' : ''}</div>
             </div>
             <div class="appt-actions-row">
                 <button type="button" class="btn-start-bia-appt" title="Cargar paciente en el analizador de bioimpedancia">
@@ -3434,8 +3467,10 @@ function renderSelectedDayAppointments() {
             });
         }
 
-        listContainer.appendChild(card);
+        frag.appendChild(card);
     });
+
+    listContainer.replaceChildren(frag);
 }
 
 function startEvaluationFromAppointment(appt) {

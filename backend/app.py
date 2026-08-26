@@ -114,21 +114,35 @@ def _normalize_gender(value):
 def index():
     return render_template('index.html')
 
+_DASHBOARD_CACHE = {
+    "data": None,
+    "expires_at": 0
+}
+
+def _invalidate_dashboard_cache():
+    global _DASHBOARD_CACHE
+    _DASHBOARD_CACHE["data"] = None
+    _DASHBOARD_CACHE["expires_at"] = 0
+
 @app.route('/api/dashboard-stats', methods=['GET'])
 def dashboard_stats():
+    now_ts = time.time()
+    if _DASHBOARD_CACHE["data"] and now_ts < _DASHBOARD_CACHE["expires_at"]:
+        return jsonify(_DASHBOARD_CACHE["data"])
+
     if not supabase:
         return jsonify(_EMPTY_DASHBOARD)
         
     try:
         # Contar clientes
         clients_res = supabase.table('clients').select('id', count='exact').execute()
-        total_clients = clients_res.count if clients_res.count is not None else 0
+        total_clients = clients_res.count if clients_res.count is not None else len(clients_res.data or [])
         
-        # Obtener evaluaciones recientes
-        evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).limit(100).execute()
+        # Obtener evaluaciones recientes (optimizando columnas para menor payload de red)
+        evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance', count='exact').order('created_at', desc=True).limit(100).execute()
         evaluations = evals_res.data or []
         
-        total_evaluations = len(evaluations)
+        total_evaluations = evals_res.count if evals_res.count is not None else len(evaluations)
         
         # Calcular promedio de TRU Score
         valid_scores = [float(e['global_score']) for e in evaluations if e.get('global_score') is not None]
@@ -147,21 +161,30 @@ def dashboard_stats():
             
             if len(recent) < 5:
                 recent.append({
+                    "id": e.get('id'),
                     "name": e.get('patient_name', 'Unknown'),
                     "date": (e.get('created_at') or '').split('T')[0],
                     "score": e.get('global_score', 0),
                     "phase_angle": biva_info.get('phase_angle', 0)
                 })
         
-        return jsonify({
+        result_payload = {
             "total_clients": total_clients,
             "total_evaluations": total_evaluations,
             "avg_score": avg_score,
             "recent": recent,
             "population": cell_status_counts
-        })
+        }
+
+        # Almacenar en caché en memoria por 30s
+        _DASHBOARD_CACHE["data"] = result_payload
+        _DASHBOARD_CACHE["expires_at"] = now_ts + 30
+
+        return jsonify(result_payload)
     except Exception as e:
         logging.error("Error al obtener estadísticas del dashboard: %s", e, exc_info=True)
+        if _DASHBOARD_CACHE["data"]:
+            return jsonify(_DASHBOARD_CACHE["data"])
         return jsonify(_EMPTY_DASHBOARD), 500
 
 def _run_analysis(data):
@@ -426,6 +449,7 @@ def _run_analysis(data):
                 logging.error("Error en auto-registro silencioso de paciente: %s", e_cl)
 
             saved = True
+            _invalidate_dashboard_cache()
         except Exception as e:
             logging.error("Error al guardar evaluación en Supabase: %s", e)
 
@@ -543,6 +567,7 @@ def delete_evaluation(eval_id):
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         supabase.table('evaluations').delete().eq('id', eval_id).execute()
+        _invalidate_dashboard_cache()
         return jsonify({"success": True})
     except Exception as e:
         logging.error("Error al eliminar evaluación: %s", e, exc_info=True)
@@ -560,6 +585,7 @@ def batch_delete_evaluations():
 
         # Eliminar registros en lote en Supabase
         supabase.table('evaluations').delete().in_('id', eval_ids).execute()
+        _invalidate_dashboard_cache()
         return jsonify({"success": True, "deleted_count": len(eval_ids)})
     except Exception as e:
         logging.error("Error en batch delete de evaluaciones: %s", e, exc_info=True)
@@ -700,6 +726,7 @@ def add_client():
             fallback_client = {"code": new_code, "name": name, "phone": phone, "email": email}
             res_insert = supabase.table('clients').insert(fallback_client).execute()
         
+        _invalidate_dashboard_cache()
         return jsonify({"success": True, "data": res_insert.data[0] if res_insert.data else {}})
     except Exception as e:
         logging.error("Error al registrar cliente: %s", e, exc_info=True)
@@ -749,6 +776,7 @@ def update_client(client_id):
             fallback_updated = {"name": name, "phone": phone, "email": email}
             res = supabase.table('clients').update(fallback_updated).eq('id', client_id).execute()
             
+        _invalidate_dashboard_cache()
         return jsonify({"success": True, "data": res.data[0] if res.data else {}})
     except Exception as e:
         logging.error("Error al actualizar cliente: %s", e, exc_info=True)
@@ -760,6 +788,7 @@ def delete_client(client_id):
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         supabase.table('clients').delete().eq('id', client_id).execute()
+        _invalidate_dashboard_cache()
         return jsonify({"success": True})
     except Exception as e:
         logging.error("Error al eliminar cliente: %s", e, exc_info=True)
