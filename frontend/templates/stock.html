@@ -237,11 +237,29 @@
                     </div>
                 </div>
 
-                <!-- Filtro Categoría -->
-                <div class="col-6 col-md-4">
-                    <select id="stock-filter-category" class="form-select shadow-none small">
-                        <option value="all">📁 Todas las Categorías</option>
-                    </select>
+                <!-- Filtro Categoría con Menú Personalizado Scrolleable -->
+                <div class="col-6 col-md-4 position-relative" id="stock-cat-filter-container">
+                    <input type="hidden" id="stock-filter-category" value="all">
+                    <button type="button" id="stock-cat-filter-btn" class="stock-custom-select-trigger d-flex align-items-center justify-content-between w-100 bg-white rounded-3 px-3 py-2 border text-start shadow-2xs">
+                        <span class="d-flex align-items-center gap-2 text-truncate me-2" id="stock-cat-filter-current-label">
+                            <span class="fs-6">📁</span>
+                            <span class="fw-semibold text-navy text-truncate" style="font-size: 0.85rem;">Todas las Categorías</span>
+                        </span>
+                        <i class="bi bi-chevron-down text-muted small transition-transform" id="stock-cat-filter-chevron"></i>
+                    </button>
+
+                    <!-- Menú Desplegable Flotante Scrolleable -->
+                    <div id="stock-cat-filter-menu" class="stock-custom-select-menu shadow-lg">
+                        <div class="p-2 border-bottom bg-light bg-opacity-50">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-white border-end-0 text-muted ps-2.5 pe-1.5"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
+                                <input type="text" id="stock-cat-filter-search" class="form-control border-start-0 shadow-none ps-1 py-1" style="font-size: 0.82rem;" placeholder="Filtrar categorías..." autocomplete="off">
+                            </div>
+                        </div>
+                        <div id="stock-cat-filter-list" class="stock-custom-select-list stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
+                            <!-- Inyectado dinámicamente -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Filtro Estado -->
@@ -311,10 +329,28 @@
                                 <input type="text" id="pos-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre o código de barra/SKU...">
                             </div>
                         </div>
-                        <div class="col-12 col-sm-5">
-                            <select id="pos-filter-category" class="form-select shadow-none small">
-                                <option value="all">📁 Todas las Categorías</option>
-                            </select>
+                        <div class="col-12 col-sm-5 position-relative" id="pos-cat-filter-container">
+                            <input type="hidden" id="pos-filter-category" value="all">
+                            <button type="button" id="pos-cat-filter-btn" class="stock-custom-select-trigger d-flex align-items-center justify-content-between w-100 bg-white rounded-3 px-3 py-2 border text-start shadow-2xs">
+                                <span class="d-flex align-items-center gap-2 text-truncate me-2" id="pos-cat-filter-current-label">
+                                    <span class="fs-6">📁</span>
+                                    <span class="fw-semibold text-navy text-truncate" style="font-size: 0.85rem;">Todas las Categorías</span>
+                                </span>
+                                <i class="bi bi-chevron-down text-muted small transition-transform" id="pos-cat-filter-chevron"></i>
+                            </button>
+
+                            <!-- Menú Desplegable Flotante Scrolleable -->
+                            <div id="pos-cat-filter-menu" class="stock-custom-select-menu shadow-lg">
+                                <div class="p-2 border-bottom bg-light bg-opacity-50">
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-end-0 text-muted ps-2.5 pe-1.5"><i class="bi bi-search" style="font-size: 0.75rem;"></i></span>
+                                        <input type="text" id="pos-cat-filter-search" class="form-control border-start-0 shadow-none ps-1 py-1" style="font-size: 0.82rem;" placeholder="Filtrar categorías..." autocomplete="off">
+                                    </div>
+                                </div>
+                                <div id="pos-cat-filter-list" class="stock-custom-select-list stock-custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
+                                    <!-- Inyectado dinámicamente -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 

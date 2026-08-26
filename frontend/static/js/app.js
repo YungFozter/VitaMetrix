@@ -4106,12 +4106,93 @@ function initStockModule() {
     initQuickStockAdjustModal();
     initDigitalReceiptModal();
     initStockFormCustomDropdowns();
+    initCustomCategoryFilters();
 
     // 8. Carga inicial de datos
     fetchStockItems();
     fetchStockTaxonomies();
     fetchSalesHistory();
     fetchKardexMovements();
+}
+
+function initCustomCategoryFilters() {
+    // 1. Filtro Catálogo
+    setupCustomCategoryFilterDropdown({
+        containerId: 'stock-cat-filter-container',
+        btnId: 'stock-cat-filter-btn',
+        menuId: 'stock-cat-filter-menu',
+        searchId: 'stock-cat-filter-search',
+        listId: 'stock-cat-filter-list',
+        hiddenInputId: 'stock-filter-category',
+        labelId: 'stock-cat-filter-current-label',
+        onSelect: () => filterAndRenderStock()
+    });
+
+    // 2. Filtro POS
+    setupCustomCategoryFilterDropdown({
+        containerId: 'pos-cat-filter-container',
+        btnId: 'pos-cat-filter-btn',
+        menuId: 'pos-cat-filter-menu',
+        searchId: 'pos-cat-filter-search',
+        listId: 'pos-cat-filter-list',
+        hiddenInputId: 'pos-filter-category',
+        labelId: 'pos-cat-filter-current-label',
+        onSelect: () => renderPosProductGrid()
+    });
+}
+
+function setupCustomCategoryFilterDropdown(cfg) {
+    const btn = document.getElementById(cfg.btnId);
+    const menu = document.getElementById(cfg.menuId);
+    const searchInput = document.getElementById(cfg.searchId);
+    const list = document.getElementById(cfg.listId);
+    if (!btn || !menu) return;
+
+    btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = menu.classList.contains('show');
+        document.querySelectorAll('.stock-custom-select-menu').forEach(m => m.classList.remove('show'));
+        document.querySelectorAll('.stock-custom-select-trigger').forEach(t => t.classList.remove('active'));
+
+        if (!isOpen) {
+            menu.classList.add('show');
+            btn.classList.add('active');
+            if (searchInput) {
+                searchInput.value = '';
+                list?.querySelectorAll('.stock-custom-select-item').forEach(it => it.classList.remove('d-none'));
+                setTimeout(() => searchInput.focus(), 60);
+            }
+        }
+    });
+
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            const query = normalizeText(searchInput.value);
+            list?.querySelectorAll('.stock-custom-select-item').forEach(it => {
+                const catVal = normalizeText(it.dataset.value || '');
+                if (!query || catVal.includes(query) || it.dataset.value === 'all') {
+                    it.classList.remove('d-none');
+                } else {
+                    it.classList.add('d-none');
+                }
+            });
+        });
+        searchInput.addEventListener('click', (e) => e.stopPropagation());
+    }
+
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest(`#${cfg.containerId}`)) {
+            menu.classList.remove('show');
+            btn.classList.remove('active');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && menu.classList.contains('show')) {
+            menu.classList.remove('show');
+            btn.classList.remove('active');
+        }
+    });
 }
 
 // --- SUB-PESTAÑAS BENTO (Catálogo / POS / Ventas / Kardex) ---
@@ -4271,9 +4352,6 @@ async function fetchStockItems() {
 
 function updateStockCategoryOptions(items) {
     if (!Array.isArray(items)) return;
-    const catFilter = document.getElementById('stock-filter-category');
-    const posCatFilter = document.getElementById('pos-filter-category');
-    if (!catFilter) return;
 
     const defaultCats = [
         "Insumos BIA",
@@ -4293,28 +4371,123 @@ function updateStockCategoryOptions(items) {
         if (i.category && i.category.trim()) uniqueCats.add(i.category.trim());
     });
 
-    const buildOptionsHtml = () => {
-        let html = '<option value="all">📁 Todas las Categorías</option>';
-        uniqueCats.forEach(cat => {
-            let icon = '📦';
-            if (cat.includes('BIA')) icon = '🩺';
-            else if (cat.includes('Suplementos')) icon = '💊';
-            else if (cat.includes('Material') || cat.includes('Higiene')) icon = '🧼';
-            else if (cat.includes('Medicamentos') || cat.includes('Fármacos')) icon = '💉';
-            html += `<option value="${escapeHtml(cat)}">${icon} ${escapeHtml(cat)}</option>`;
-        });
-        return html;
+    const counts = { all: items.length };
+    uniqueCats.forEach(cat => {
+        counts[cat] = items.filter(i => (i.category || '').trim() === cat).length;
+    });
+
+    const getIcon = (cat) => {
+        if (cat === 'all') return '📁';
+        if (cat.includes('BIA')) return '🩺';
+        if (cat.includes('Suplementos')) return '💊';
+        if (cat.includes('Material') || cat.includes('Higiene')) return '🧼';
+        if (cat.includes('Medicamentos') || cat.includes('Fármacos')) return '💉';
+        if (cat.includes('Accesorios') || cat.includes('Equipos')) return '📦';
+        if (cat.includes('Oficina') || cat.includes('Papel')) return '📝';
+        return '🏷️';
     };
 
-    const currentVal = catFilter.value;
-    catFilter.innerHTML = buildOptionsHtml();
-    if (uniqueCats.has(currentVal) || currentVal === 'all') catFilter.value = currentVal;
+    const renderDropdownList = (listEl, hiddenInputId, labelEl, onSelect) => {
+        if (!listEl) return;
+        const currentVal = document.getElementById(hiddenInputId)?.value || 'all';
 
-    if (posCatFilter) {
-        const currentPosVal = posCatFilter.value;
-        posCatFilter.innerHTML = buildOptionsHtml();
-        if (uniqueCats.has(currentPosVal) || currentPosVal === 'all') posCatFilter.value = currentPosVal;
-    }
+        listEl.replaceChildren();
+
+        // 1. Opción "Todas las Categorías"
+        const allItem = document.createElement('div');
+        allItem.className = `stock-custom-select-item ${currentVal === 'all' ? 'selected' : ''}`;
+        allItem.dataset.value = 'all';
+        allItem.innerHTML = `
+            <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                <span class="fs-6">📁</span>
+                <span class="text-truncate">Todas las Categorías</span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5">
+                <span class="cat-count-badge">${counts['all'] || 0}</span>
+                ${currentVal === 'all' ? '<i class="bi bi-check2 text-primary fw-bold"></i>' : ''}
+            </div>
+        `;
+        allItem.addEventListener('click', () => {
+            selectCategory('all', '📁', 'Todas las Categorías', hiddenInputId, labelEl, listEl, onSelect);
+        });
+        listEl.appendChild(allItem);
+
+        // 2. Opciones de Categorías Únicas
+        uniqueCats.forEach(cat => {
+            const icon = getIcon(cat);
+            const isSelected = currentVal === cat;
+            const itemEl = document.createElement('div');
+            itemEl.className = `stock-custom-select-item ${isSelected ? 'selected' : ''}`;
+            itemEl.dataset.value = cat;
+            itemEl.innerHTML = `
+                <div class="d-flex align-items-center gap-2 text-truncate me-2">
+                    <span class="fs-6">${icon}</span>
+                    <span class="text-truncate">${escapeHtml(cat)}</span>
+                </div>
+                <div class="d-flex align-items-center gap-1.5">
+                    <span class="cat-count-badge">${counts[cat] || 0}</span>
+                    ${isSelected ? '<i class="bi bi-check2 text-primary fw-bold"></i>' : ''}
+                </div>
+            `;
+            itemEl.addEventListener('click', () => {
+                selectCategory(cat, icon, cat, hiddenInputId, labelEl, listEl, onSelect);
+            });
+            listEl.appendChild(itemEl);
+        });
+
+        // Actualizar etiqueta activa del botón trigger
+        if (labelEl) {
+            const activeIcon = getIcon(currentVal);
+            const activeName = currentVal === 'all' ? 'Todas las Categorías' : currentVal;
+            labelEl.innerHTML = `
+                <span class="fs-6">${activeIcon}</span>
+                <span class="fw-semibold text-navy text-truncate" style="font-size: 0.85rem;">${escapeHtml(activeName)}</span>
+            `;
+        }
+    };
+
+    const selectCategory = (val, icon, name, hiddenInputId, labelEl, listEl, onSelect) => {
+        const hiddenInput = document.getElementById(hiddenInputId);
+        if (hiddenInput) hiddenInput.value = val;
+
+        if (labelEl) {
+            labelEl.innerHTML = `
+                <span class="fs-6">${icon}</span>
+                <span class="fw-semibold text-navy text-truncate" style="font-size: 0.85rem;">${escapeHtml(name)}</span>
+            `;
+        }
+
+        const container = listEl.closest('.position-relative');
+        if (container) {
+            container.querySelector('.stock-custom-select-menu')?.classList.remove('show');
+            container.querySelector('.stock-custom-select-trigger')?.classList.remove('active');
+        }
+
+        listEl.querySelectorAll('.stock-custom-select-item').forEach(it => {
+            if (it.dataset.value === val) {
+                it.classList.add('selected');
+                if (!it.querySelector('.bi-check2')) {
+                    const badgeWrap = it.querySelector('.d-flex.align-items-center.gap-1.5');
+                    if (badgeWrap) badgeWrap.insertAdjacentHTML('beforeend', '<i class="bi bi-check2 text-primary fw-bold"></i>');
+                }
+            } else {
+                it.classList.remove('selected');
+                it.querySelector('.bi-check2')?.remove();
+            }
+        });
+
+        if (typeof onSelect === 'function') onSelect();
+    };
+
+    // Renderizar para Catálogo
+    const catalogList = document.getElementById('stock-cat-filter-list');
+    const catalogLabel = document.getElementById('stock-cat-filter-current-label');
+    renderDropdownList(catalogList, 'stock-filter-category', catalogLabel, () => filterAndRenderStock());
+
+    // Renderizar para POS
+    const posList = document.getElementById('pos-cat-filter-list');
+    const posLabel = document.getElementById('pos-cat-filter-current-label');
+    renderDropdownList(posList, 'pos-filter-category', posLabel, () => renderPosProductGrid());
 }
 
 function updateStockKPIs(items) {
