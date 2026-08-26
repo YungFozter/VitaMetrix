@@ -5904,15 +5904,23 @@ function initStockTaxonomyModal() {
         });
     }
 
-    // Buscadores en tiempo real
+    // Buscadores en tiempo real optimizados con debounce
+    let taxCatsDebounceTimer = null;
     const searchTaxCats = document.getElementById('search-tax-cats');
     if (searchTaxCats) {
-        searchTaxCats.addEventListener('input', (e) => renderTaxonomyCategories(e.target.value));
+        searchTaxCats.addEventListener('input', (e) => {
+            clearTimeout(taxCatsDebounceTimer);
+            taxCatsDebounceTimer = setTimeout(() => renderTaxonomyCategories(e.target.value), 60);
+        });
     }
 
+    let taxUnitsDebounceTimer = null;
     const searchTaxUnits = document.getElementById('search-tax-units');
     if (searchTaxUnits) {
-        searchTaxUnits.addEventListener('input', (e) => renderTaxonomyUnits(e.target.value));
+        searchTaxUnits.addEventListener('input', (e) => {
+            clearTimeout(taxUnitsDebounceTimer);
+            taxUnitsDebounceTimer = setTimeout(() => renderTaxonomyUnits(e.target.value), 60);
+        });
     }
 
     // Modales de Renombrar y Editar
@@ -5965,7 +5973,6 @@ function renderTaxonomyCategories(filterText = '') {
     const listEl = document.getElementById('stock-tax-cat-list');
     if (!listEl || !stockTaxonomiesData?.categories) return;
 
-    listEl.replaceChildren();
     const norm = normalizeText(filterText);
     const filtered = stockTaxonomiesData.categories.filter(c => !norm || normalizeText(c.name).includes(norm));
 
@@ -5974,9 +5981,11 @@ function renderTaxonomyCategories(filterText = '') {
         return;
     }
 
+    const frag = document.createDocumentFragment();
+
     filtered.forEach(cat => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
+        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2 stock-tax-list-item';
 
         itemDiv.innerHTML = `
             <div class="d-flex align-items-center gap-2 text-truncate flex-grow-1">
@@ -6018,8 +6027,10 @@ function renderTaxonomyCategories(filterText = '') {
             });
         });
 
-        listEl.appendChild(itemDiv);
+        frag.appendChild(itemDiv);
     });
+
+    listEl.replaceChildren(frag);
 }
 
 function openRenameCategoryModal(oldName) {
@@ -6083,12 +6094,11 @@ async function handleConfirmRenameCategory() {
     }
 }
 
-// --- RENDERIZADO DE UNIDADES DE MEDIDA (OPCIÓN 1 PLANA) ---
+// --- RENDERIZADO DE UNIDADES DE MEDIDA (OPCIÓN 1 PLANA OPTIMIZADA) ---
 function renderTaxonomyUnits(filterText = '') {
     const listEl = document.getElementById('stock-tax-unit-list');
     if (!listEl || !stockTaxonomiesData?.units) return;
 
-    listEl.replaceChildren();
     const norm = normalizeText(filterText);
     const filtered = stockTaxonomiesData.units.filter(u => !norm || normalizeText(u.name).includes(norm));
 
@@ -6097,9 +6107,11 @@ function renderTaxonomyUnits(filterText = '') {
         return;
     }
 
+    const frag = document.createDocumentFragment();
+
     filtered.forEach(unit => {
         const itemDiv = document.createElement('div');
-        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2';
+        itemDiv.className = 'd-flex align-items-center justify-content-between p-2.5 bg-white rounded-3 border shadow-2xs gap-2 stock-tax-list-item';
 
         const count = unit.count || 0;
 
@@ -6142,8 +6154,10 @@ function renderTaxonomyUnits(filterText = '') {
             });
         });
 
-        listEl.appendChild(itemDiv);
+        frag.appendChild(itemDiv);
     });
+
+    listEl.replaceChildren(frag);
 }
 
 function openEditUnitModal(unitName) {

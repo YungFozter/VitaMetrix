@@ -721,6 +721,31 @@
 }
 
 /* ==========================================================================
+   Listados de Categorías y U/M con Scroll Ultra Fluido a 60 FPS
+   ========================================================================== */
+#stock-tax-cat-list,
+#stock-tax-unit-list {
+    max-height: 330px !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    contain: content;
+    will-change: scroll-position;
+    padding-right: 4px;
+}
+
+.stock-tax-list-item {
+    contain: layout style;
+    transform: translateZ(0);
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.stock-tax-list-item:hover {
+    background-color: #f8fafc !important;
+}
+
+/* ==========================================================================
    ESTILOS DE IMPRESIÓN DEL RECIBO CLÍNICO (@media print)
    ========================================================================== */
 @media print {

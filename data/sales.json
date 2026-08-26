@@ -1,5 +1,36 @@
 [
   {
+    "id": "2bdad114-9bf7-4571-90c3-d71a7ae3cfd8",
+    "receipt_number": "REC-2026-0014",
+    "patient_name": "Carlos Rodríguez",
+    "patient_idp": "IDP-1002",
+    "patient_phone": "+59170012345",
+    "items": [
+      {
+        "stock_item_id": "87410b37-458e-4423-a72b-5c8d78982973",
+        "code": "TEST-999",
+        "name": "Suplemento Omega 3 Test",
+        "unit": "Vial Test (v)",
+        "quantity": 3.0,
+        "unit_price": 100.0,
+        "cost_price": 50.0,
+        "subtotal": 300.0
+      }
+    ],
+    "subtotal": 300.0,
+    "discount": 10.0,
+    "total": 290.0,
+    "total_cost": 150.0,
+    "profit": 140.0,
+    "payment_method": "Efectivo",
+    "amount_received": 300.0,
+    "change_given": 10.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-26T15:15:04.323590+00:00",
+    "cancelled_at": "2026-08-26T15:15:06.957038+00:00"
+  },
+  {
     "id": "7067d784-8a2e-426e-b66d-c3edf39e926a",
     "receipt_number": "REC-2026-0013",
     "patient_name": "Carlos Rodríguez",
