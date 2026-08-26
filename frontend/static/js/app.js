@@ -4431,6 +4431,36 @@ function initStockForm() {
     if (searchInput) searchInput.addEventListener('input', filterAndRenderStock);
     if (catFilter) catFilter.addEventListener('change', filterAndRenderStock);
     if (statusFilter) statusFilter.addEventListener('change', filterAndRenderStock);
+
+    // Interacciones Click-to-Filter en Tarjetas KPI
+    const cardTotal = document.getElementById('kpi-card-total');
+    const cardOptimal = document.getElementById('kpi-card-optimal');
+    const cardLow = document.getElementById('kpi-card-low');
+
+    if (cardTotal) {
+        cardTotal.addEventListener('click', () => {
+            if (statusFilter) statusFilter.value = 'all';
+            if (searchInput) searchInput.value = '';
+            filterAndRenderStock();
+            showToast('📋 Mostrando todos los artículos del catálogo', 'info');
+        });
+    }
+
+    if (cardOptimal) {
+        cardOptimal.addEventListener('click', () => {
+            if (statusFilter) statusFilter.value = 'optimal';
+            filterAndRenderStock();
+            showToast('🟢 Filtrando por artículos con Stock Óptimo', 'info');
+        });
+    }
+
+    if (cardLow) {
+        cardLow.addEventListener('click', () => {
+            if (statusFilter) statusFilter.value = 'low';
+            filterAndRenderStock();
+            showToast('🟡 Filtrando por artículos con Stock Bajo / Reposición', 'warning');
+        });
+    }
 }
 
 async function fetchStockItems() {
@@ -4652,12 +4682,26 @@ async function updateStockKPIs(items) {
                     topListEl.innerHTML = '<span class="text-muted small" style="font-size: 0.75rem;">Sin ventas registradas aún</span>';
                 } else {
                     const medals = ['🥇', '🥈', '🥉'];
-                    topListEl.innerHTML = sortedTop.map((top, idx) => `
-                        <div class="stock-top-item-badge rank-${idx + 1}" title="${escapeHtml(top.name)}: ${top.quantity} unidades vendidas">
+                    topListEl.replaceChildren();
+                    sortedTop.forEach((top, idx) => {
+                        const badge = document.createElement('div');
+                        badge.className = `stock-top-item-badge rank-${idx + 1}`;
+                        badge.title = `Clic para buscar "${top.name}" en la tabla (${top.quantity} unidades vendidas)`;
+                        badge.innerHTML = `
                             <span class="text-truncate me-1"><span class="rank">${medals[idx]}</span>${escapeHtml(top.name)}</span>
                             <span class="badge bg-white text-dark border px-1" style="font-size: 0.68rem;">${top.quantity} ${escapeHtml(top.unit || 'u')}</span>
-                        </div>
-                    `).join('');
+                        `;
+                        badge.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            const searchInput = document.getElementById('stock-search-input');
+                            if (searchInput) {
+                                searchInput.value = top.name;
+                                filterAndRenderStock();
+                                showToast(`🔍 Buscando "${top.name}" en inventario`, 'info');
+                            }
+                        });
+                        topListEl.appendChild(badge);
+                    });
                 }
             }
         } catch (e) {
