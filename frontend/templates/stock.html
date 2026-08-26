@@ -248,7 +248,7 @@
             <!-- Barra de Filtros y Búsqueda -->
             <div class="row g-2 mb-3 align-items-center">
                 <!-- Buscador -->
-                <div class="col-12 col-md-5">
+                <div class="col-12 col-lg-5 col-md-12">
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
                         <input type="text" id="stock-search-input" class="form-control border-start-0 shadow-none ps-0" placeholder="Buscar por nombre, SKU, ubicación o proveedor...">
@@ -256,7 +256,7 @@
                 </div>
 
                 <!-- Filtro Categoría con Menú Personalizado Scrolleable -->
-                <div class="col-6 col-md-4 position-relative" id="stock-cat-filter-container">
+                <div class="col-12 col-sm-6 col-lg-4 col-md-6 position-relative" id="stock-cat-filter-container">
                     <input type="hidden" id="stock-filter-category" value="all">
                     <button type="button" id="stock-cat-filter-btn" class="stock-custom-select-trigger d-flex align-items-center justify-content-between w-100 bg-white rounded-3 px-3 py-2 border text-start shadow-2xs">
                         <span class="d-flex align-items-center gap-2 text-truncate me-2" id="stock-cat-filter-current-label">
@@ -281,8 +281,8 @@
                 </div>
 
                 <!-- Filtro Estado -->
-                <div class="col-6 col-md-3">
-                    <select id="stock-filter-status" class="form-select shadow-none small">
+                <div class="col-12 col-sm-6 col-lg-3 col-md-6">
+                    <select id="stock-filter-status" class="form-select shadow-none small py-2">
                         <option value="all">⚡ Todos los Estados</option>
                         <option value="optimal">🟢 Óptimo</option>
                         <option value="low">🟡 Stock Bajo (Alerta)</option>
@@ -307,6 +307,29 @@
                 </div>
             </div>
 
+            <!-- Barra Superior de Paginación, Cantidad por Página y Resumen -->
+            <div class="stock-pagination-top-bar d-flex flex-wrap align-items-center justify-content-between gap-2.5 p-2.5 px-3 bg-white rounded-3 border mb-3 shadow-2xs" id="stock-pagination-wrapper">
+                <div class="d-flex flex-wrap align-items-center gap-2.5">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="text-muted small fw-medium text-nowrap">Mostrar:</span>
+                        <select id="stock-page-size-select" class="form-select form-select-sm shadow-none bg-light border fw-bold text-navy" style="width: 76px; font-size: 0.83rem; cursor: pointer;">
+                            <option value="15" selected>15</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                        </select>
+                        <span class="text-muted small text-nowrap">por página</span>
+                    </div>
+                    <div class="vr d-none d-sm-block my-1 text-muted opacity-25" style="height: 18px;"></div>
+                    <span class="text-muted small fw-semibold text-nowrap" id="stock-pagination-info">Mostrando 0–0 de 0 productos</span>
+                </div>
+
+                <nav aria-label="Paginación de inventario" class="ms-auto ms-sm-0">
+                    <ul class="pagination pagination-sm mb-0 gap-1" id="stock-pagination-controls">
+                        <!-- Inyectado dinámicamente -->
+                    </ul>
+                </nav>
+            </div>
+
             <!-- Tabla de Inventario con Altura Estable -->
             <div class="table-responsive stock-table-responsive stock-custom-scrollbar">
                 <table class="table table-hover align-middle stock-table mb-0">
@@ -328,28 +351,6 @@
                         <tr><td colspan="8" class="text-center py-5 text-muted">Cargando inventario...</td></tr>
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Paginación y Selector de Tamaño de Página -->
-            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 pt-3 border-top mt-2" id="stock-pagination-wrapper">
-                <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center gap-2">
-                        <span class="text-muted small fw-medium">Mostrar:</span>
-                        <select id="stock-page-size-select" class="form-select form-select-sm shadow-none" style="width: 76px; font-size: 0.82rem; font-weight: 600;">
-                            <option value="15" selected>15</option>
-                            <option value="30">30</option>
-                            <option value="50">50</option>
-                        </select>
-                        <span class="text-muted small">por página</span>
-                    </div>
-                    <span class="text-muted small" id="stock-pagination-info">Mostrando 0–0 de 0 productos</span>
-                </div>
-
-                <nav aria-label="Paginación de inventario">
-                    <ul class="pagination pagination-sm mb-0 gap-1" id="stock-pagination-controls">
-                        <!-- Inyectado dinámicamente -->
-                    </ul>
-                </nav>
             </div>
         </div>
 
