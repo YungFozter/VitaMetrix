@@ -2,13 +2,15 @@ import unittest
 import json
 import os
 import time
+from werkzeug.security import check_password_hash
 from backend.app import (
     app, 
     _TAXONOMIES_PATH, 
     _STOCK_ITEMS_PATH, 
     _STOCK_MOVEMENTS_PATH, 
     _APPOINTMENTS_PATH, 
-    _SALES_PATH
+    _SALES_PATH,
+    _USERS_PATH
 )
 
 class TestE2EDeepVerification(unittest.TestCase):
@@ -603,6 +605,119 @@ class TestE2EDeepVerification(unittest.TestCase):
         if cl_id:
             self.app.delete(f'/api/clients/{cl_id}')
         self.app.delete(f'/api/stock/{item_a_id}', headers={"Authorization": f"Bearer {token_a}"})
+
+    def test_12_user_registration_login_and_db_persistence(self):
+        """
+        Test E2E Exhaustivo:
+        1. Registro de nuevo usuario médico
+        2. Verificación de token HMAC y payload seguro
+        3. Verificación de permanencia física en Base de Datos / Disco (data/users.json)
+        4. Verificación de Hash criptográfico scrypt del password
+        5. Flujo de Login con credenciales válidas e inválidas
+        6. Validación de sesión con /api/auth/me
+        7. Prevención estricta de cuentas duplicadas con mismo email
+        """
+        t_id = int(time.time() * 1000)
+        raw_password = f"DoctorSeguro{t_id}!@"
+        user_email = f"dra.elena.{t_id}@clinicavita.com"
+        full_name = "Dra. Elena Ramos Nutricionista"
+        title = "Especialista en Composición Corporal BIA"
+        clinic = "Centro Nutricional VitaSalud"
+
+        # 1. REGISTRO DE CUENTA
+        reg_payload = {
+            "email": user_email,
+            "password": raw_password,
+            "full_name": full_name,
+            "professional_title": title,
+            "clinic_name": clinic
+        }
+
+        reg_res = self.app.post('/api/auth/register',
+                                data=json.dumps(reg_payload),
+                                content_type='application/json')
+        self.assertIn(reg_res.status_code, [200, 201])
+        reg_data = json.loads(reg_res.data)
+        self.assertTrue(reg_data.get('success'))
+        self.assertIn('token', reg_data)
+        token = reg_data['token']
+        self.assertTrue(len(token) > 20 and '.' in token, "El token HMAC debe ser válido")
+
+        user_info = reg_data.get('user', {})
+        user_id = user_info.get('id')
+        self.assertIsNotNone(user_id, "El usuario debe tener un UUID asignado")
+        self.assertEqual(user_info.get('email'), user_email)
+        self.assertEqual(user_info.get('full_name'), full_name)
+        self.assertEqual(user_info.get('professional_title'), title)
+        self.assertEqual(user_info.get('clinic_name'), clinic)
+        self.assertEqual(user_info.get('role'), 'user')
+        self.assertEqual(user_info.get('subscription', {}).get('status'), 'trial')
+        self.assertEqual(user_info.get('subscription', {}).get('days_left'), 7)
+        self.assertNotIn('password_hash', user_info, "La API jamás debe exponer el hash del password")
+
+        # 2. VERIFICACIÓN DE PERMANENCIA FÍSICA EN BASE DE DATOS (users.json)
+        self.assertTrue(os.path.exists(_USERS_PATH), f"El archivo {_USERS_PATH} debe existir físicamente")
+        with open(_USERS_PATH, 'r', encoding='utf-8') as f:
+            all_users = json.load(f)
+
+        db_user = next((u for u in all_users if u.get('id') == user_id), None)
+        self.assertIsNotNone(db_user, f"El usuario {user_id} ({user_email}) debe estar físicamente persistido en users.json")
+        self.assertEqual(db_user.get('email'), user_email)
+        self.assertEqual(db_user.get('full_name'), full_name)
+        self.assertEqual(db_user.get('role'), 'user')
+        self.assertEqual(db_user.get('subscription_status'), 'trial')
+        self.assertIn('trial_started_at', db_user)
+        self.assertIn('subscription_expires_at', db_user)
+
+        # 3. VERIFICACIÓN DEL HASH CRIPTOGRÁFICO
+        stored_hash = db_user.get('password_hash', '')
+        self.assertTrue(stored_hash.startswith('scrypt:'), "El password_hash debe usar el algoritmo scrypt")
+        self.assertTrue(check_password_hash(stored_hash, raw_password), "El hash debe verificar la contraseña original")
+        self.assertFalse(check_password_hash(stored_hash, "PasswordIncorrecta999!"), "El hash debe rechazar contraseñas erróneas")
+
+        # 4. PRUEBA DE LOGIN CON CREDENCIALES CORRECTAS
+        login_res = self.app.post('/api/auth/login',
+                                  data=json.dumps({"email": user_email, "password": raw_password}),
+                                  content_type='application/json')
+        self.assertEqual(login_res.status_code, 200)
+        login_data = json.loads(login_res.data)
+        self.assertTrue(login_data.get('success'))
+        self.assertEqual(login_data.get('user', {}).get('id'), user_id)
+        login_token = login_data.get('token')
+
+        # 5. PRUEBA DE LOGIN CON CONTRASEÑA INCORRECTA (Debe fallar con 401)
+        bad_pass_res = self.app.post('/api/auth/login',
+                                     data=json.dumps({"email": user_email, "password": "ClaveEquivocada123!"}),
+                                     content_type='application/json')
+        self.assertEqual(bad_pass_res.status_code, 401)
+        self.assertIn('error', json.loads(bad_pass_res.data))
+
+        # 6. PRUEBA DE LOGIN CON CORREO NO REGISTRADO (Debe fallar con 401)
+        bad_email_res = self.app.post('/api/auth/login',
+                                      data=json.dumps({"email": f"noexiste.{t_id}@vitametrix.com", "password": raw_password}),
+                                      content_type='application/json')
+        self.assertEqual(bad_email_res.status_code, 401)
+
+        # 7. VERIFICACIÓN DE SESIÓN CON /api/auth/me
+        me_res = self.app.get('/api/auth/me', headers={"Authorization": f"Bearer {login_token}"})
+        self.assertEqual(me_res.status_code, 200)
+        me_data = json.loads(me_res.data)
+        self.assertTrue(me_data.get('authenticated'))
+        self.assertEqual(me_data.get('user', {}).get('id'), user_id)
+        self.assertEqual(me_data.get('user', {}).get('email'), user_email)
+
+        # 8. VERIFICACIÓN DE ACCESO SIN TOKEN (Debe fallar con 401)
+        unauth_res = self.app.get('/api/auth/me')
+        self.assertEqual(unauth_res.status_code, 401)
+
+        # 9. PREVENCIÓN DE REGISTRO DUPLICADO CON EL MISMO EMAIL (Debe responder con error 400/409)
+        dup_res = self.app.post('/api/auth/register',
+                                data=json.dumps(reg_payload),
+                                content_type='application/json')
+        self.assertIn(dup_res.status_code, [400, 409])
+        dup_data = json.loads(dup_res.data)
+        self.assertFalse(dup_data.get('success', False))
+        self.assertIn('registrad', dup_data.get('error', '').lower())
 
 if __name__ == '__main__':
     unittest.main()
