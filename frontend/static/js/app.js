@@ -156,6 +156,42 @@ function initAuthSystem() {
     if (linkSwitchRegister) linkSwitchRegister.addEventListener('click', showRegisterTab);
     if (linkSwitchLogin) linkSwitchLogin.addEventListener('click', showLoginTab);
 
+    // Toggle visibilidad de contraseña en Login
+    const toggleLoginPass = document.getElementById('login-toggle-password');
+    if (toggleLoginPass) {
+        toggleLoginPass.addEventListener('click', () => {
+            const passInput = document.getElementById('login-password');
+            const icon = toggleLoginPass.querySelector('i');
+            if (passInput) {
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    if (icon) icon.className = 'bi bi-eye-slash';
+                } else {
+                    passInput.type = 'password';
+                    if (icon) icon.className = 'bi bi-eye';
+                }
+            }
+        });
+    }
+
+    // Toggle visibilidad de contraseña en Registro
+    const toggleRegPass = document.getElementById('reg-toggle-password');
+    if (toggleRegPass) {
+        toggleRegPass.addEventListener('click', () => {
+            const passInput = document.getElementById('reg-password');
+            const icon = toggleRegPass.querySelector('i');
+            if (passInput) {
+                if (passInput.type === 'password') {
+                    passInput.type = 'text';
+                    if (icon) icon.className = 'bi bi-eye-slash';
+                } else {
+                    passInput.type = 'password';
+                    if (icon) icon.className = 'bi bi-eye';
+                }
+            }
+        });
+    }
+
     if (btnClose && modal) {
         btnClose.addEventListener('click', () => {
             modal.classList.add('hidden');
