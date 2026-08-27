@@ -226,6 +226,8 @@ function initAuthSystem() {
                 }
 
                 localStorage.setItem('vm_auth_token', data.token);
+                document.documentElement.classList.add('has-auth-token');
+                document.documentElement.classList.remove('no-auth-token');
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
                 if (btnClose) btnClose.style.display = '';
@@ -288,6 +290,8 @@ function initAuthSystem() {
                 }
 
                 localStorage.setItem('vm_auth_token', data.token);
+                document.documentElement.classList.add('has-auth-token');
+                document.documentElement.classList.remove('no-auth-token');
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
                 if (btnClose) btnClose.style.display = '';
@@ -334,6 +338,8 @@ function initAuthSystem() {
                     } catch (e) {}
                     localStorage.removeItem('vm_auth_token');
                     sessionStorage.removeItem('vm_auth_token');
+                    document.documentElement.classList.remove('has-auth-token');
+                    document.documentElement.classList.add('no-auth-token');
                     showToast('Sesión cerrada. Inicia sesión con tu cuenta.', 'info');
                     if (modal) {
                         showLoginTab();
@@ -356,7 +362,9 @@ async function fetchAuthMe() {
     const token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
 
     if (!token) {
-        // No hay sesión activa: mostrar pantalla de Login obligatoria
+        // No hay sesión activa: pantalla de Login obligatoria desde el inicio
+        document.documentElement.classList.remove('has-auth-token');
+        document.documentElement.classList.add('no-auth-token');
         if (modal) {
             modal.classList.remove('hidden');
             if (btnClose) btnClose.style.display = 'none';
@@ -369,6 +377,8 @@ async function fetchAuthMe() {
         if (res.ok) {
             const data = await res.json();
             if (data.success && data.user) {
+                document.documentElement.classList.add('has-auth-token');
+                document.documentElement.classList.remove('no-auth-token');
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
                 if (btnClose) btnClose.style.display = '';
@@ -379,12 +389,16 @@ async function fetchAuthMe() {
         // Token inválido o expirado
         localStorage.removeItem('vm_auth_token');
         sessionStorage.removeItem('vm_auth_token');
+        document.documentElement.classList.remove('has-auth-token');
+        document.documentElement.classList.add('no-auth-token');
         if (modal) {
             modal.classList.remove('hidden');
             if (btnClose) btnClose.style.display = 'none';
         }
     } catch (e) {
         console.warn('Sesión no autenticada o local:', e);
+        document.documentElement.classList.remove('has-auth-token');
+        document.documentElement.classList.add('no-auth-token');
         if (modal) {
             modal.classList.remove('hidden');
             if (btnClose) btnClose.style.display = 'none';

@@ -49,6 +49,27 @@
         }
       }
     </script>
+
+    <!-- Verificación Instantánea de Sesión (Eliminación de FOUC / Login Primario) -->
+    <script>
+        (function() {
+            var token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
+            if (token) {
+                document.documentElement.classList.add('has-auth-token');
+            } else {
+                document.documentElement.classList.add('no-auth-token');
+            }
+        })();
+    </script>
+    <style>
+        /* Si no hay token de sesión, bloquear estrictamente el contenido y asegurar pantalla de Login visible */
+        html.no-auth-token #modal-auth,
+        html:not(.has-auth-token) #modal-auth {
+            display: flex !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+    </style>
 </head>
 <body>
 
@@ -1318,7 +1339,7 @@
     <!-- ========================================================================= -->
     <!-- MODAL DE AUTENTICACIÓN SAAS (DISEÑO STITCH CLINICAL PRECISION)            -->
     <!-- ========================================================================= -->
-    <div id="modal-auth" class="modal-overlay auth-screen-overlay hidden">
+    <div id="modal-auth" class="modal-overlay auth-screen-overlay">
         <!-- Grilla y Orbes de Resplandor Clínico Ambiental -->
         <div class="auth-pattern-grid"></div>
         <div class="auth-ambient-orb-1"></div>
@@ -1339,7 +1360,7 @@
 
             <!-- Contenedor Glass Card Principal Stitch -->
             <div class="glass-card-auth w-100 overflow-hidden position-relative">
-                <button type="button" class="btn-close position-absolute top-0 end-0 m-3.5 z-3 shadow-none p-2 rounded-circle" id="btn-close-auth-modal" aria-label="Cerrar" style="background-color: rgba(255, 255, 255, 0.6); font-size: 0.75rem;"></button>
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3.5 z-3 shadow-none p-2 rounded-circle" id="btn-close-auth-modal" aria-label="Cerrar" style="background-color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; display: none;"></button>
 
                 <!-- Tabs de Navegación Stitch -->
                 <div class="d-flex border-bottom bg-white bg-opacity-40 pt-1.5 px-2">
