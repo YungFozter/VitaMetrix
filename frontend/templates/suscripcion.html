@@ -63,38 +63,74 @@
 
             <!-- 2. TARJETA DE CONTACTO DIRECTO POR WHATSAPP (+591 72125280) -->
             <div class="col-12 col-lg-5">
-                <div class="bento-card h-100 p-4 d-flex flex-column justify-content-between text-white position-relative overflow-hidden" 
-                     style="background: linear-gradient(135deg, #0d9488 0%, #065f46 50%, #0f2e24 100%); box-shadow: 0 10px 30px rgba(13, 148, 136, 0.25);">
+                <div class="bento-card h-100 p-4 p-xl-4.5 d-flex flex-column justify-content-between text-white position-relative overflow-hidden" 
+                     style="background: linear-gradient(145deg, #064e3b 0%, #065f46 45%, #042f2e 100%); border: 1px solid rgba(52, 211, 153, 0.25); box-shadow: 0 20px 40px -15px rgba(5, 150, 105, 0.35); border-radius: 20px;">
+                    
+                    <!-- Resplandor ambiental de fondo -->
+                    <div class="position-absolute top-0 end-0 pointer-events-none" style="width: 220px; height: 220px; background: radial-gradient(circle, rgba(52, 211, 153, 0.2) 0%, rgba(6, 95, 70, 0) 70%); filter: blur(25px); transform: translate(30%, -30%);"></div>
+
                     <div>
-                        <div class="d-flex align-items-center gap-2 mb-2">
-                            <span class="badge bg-white text-dark fw-bold px-2.5 py-1 rounded-pill" style="font-size: 0.72rem;">SOPORTE Y RENOVACIÓN</span>
+                        <!-- Badge con pulso de estado -->
+                        <div class="d-inline-flex align-items-center gap-2 px-3 py-1.5 rounded-pill mb-3" 
+                             style="background: rgba(255, 255, 255, 0.12); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); font-size: 0.72rem; letter-spacing: 0.6px;">
+                            <span class="d-inline-block rounded-circle bg-emerald-400" style="width: 7px; height: 7px; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite;"></span>
+                            <span class="fw-bold text-white text-uppercase">Soporte & Activación Oficial</span>
                         </div>
-                        <h4 class="fw-bold mb-2 display-font text-white">¿Deseas Renovar o Adquirir tu Plan?</h4>
-                        <p class="text-white text-opacity-90 small mb-3">
+
+                        <h4 class="fw-extrabold mb-2 display-font text-white" style="letter-spacing: -0.3px; font-size: 1.35rem;">
+                            ¿Deseas Renovar o Adquirir tu Plan?
+                        </h4>
+                        <p class="text-white text-opacity-85 small mb-3.5" style="line-height: 1.55;">
                             Contáctanos directamente por <strong>WhatsApp</strong> para activar tu suscripción mensual o anual. Recibe tu clave de activación inmediata tras confirmar tu pago.
                         </p>
 
-                        <div class="bg-black bg-opacity-20 rounded-3 p-2.5 mb-3 border border-white border-opacity-15">
-                            <div class="d-flex align-items-center gap-2 text-white small">
-                                <i class="bi bi-whatsapp text-emerald-300 fs-5"></i>
+                        <!-- Contenedor Glassmorphism de Línea Oficial -->
+                        <div class="rounded-4 p-3 mb-4 d-flex align-items-center justify-content-between gap-3 position-relative" 
+                             style="background: rgba(255, 255, 255, 0.09); backdrop-filter: blur(14px); border: 1px solid rgba(255, 255, 255, 0.18); box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);">
+                            
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" 
+                                     style="width: 44px; height: 44px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); box-shadow: 0 4px 12px rgba(37, 211, 102, 0.35);">
+                                    <i class="bi bi-whatsapp text-white fs-5"></i>
+                                </div>
                                 <div>
-                                    <div class="fw-bold">Línea Oficial de Activación:</div>
-                                    <div class="font-monospace text-emerald-200 fs-6 fw-bold">+591 72125280</div>
+                                    <span class="d-block text-uppercase fw-semibold" style="font-size: 0.68rem; letter-spacing: 0.5px; color: #a7f3d0;">Línea Oficial de Activación</span>
+                                    <strong class="d-block font-monospace text-white fs-6 fw-bold" id="wa-display-number">+591 72125280</strong>
                                 </div>
                             </div>
+
+                            <button type="button" 
+                                    class="btn btn-sm btn-outline-light d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-3 fw-semibold border-opacity-25 shadow-none" 
+                                    style="font-size: 0.72rem; background: rgba(255, 255, 255, 0.08);"
+                                    onclick="navigator.clipboard.writeText('+59172125280'); showToast('¡Número +591 72125280 copiado!', 'success');"
+                                    title="Copiar número al portapapeles">
+                                <i class="bi bi-clipboard"></i> Copiar
+                            </button>
                         </div>
                     </div>
 
                     <div>
+                        <!-- Botón principal de WhatsApp -->
                         <a href="https://wa.me/59172125280?text=Hola%20VitaMetrix%2C%20deseo%20renovar%20mi%20suscripci%C3%B3n" 
                            id="btn-whatsapp-sub-contact"
                            target="_blank" 
                            rel="noopener noreferrer" 
-                           class="btn btn-light w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-2 py-2.5 shadow-sm text-emerald-900 rounded-3">
-                            <i class="bi bi-whatsapp text-success fs-5"></i> Contactar por WhatsApp para Renovar
+                           class="btn w-100 fw-bold d-inline-flex align-items-center justify-content-center gap-2 py-3 shadow-lg rounded-3 text-emerald-950 transition-all"
+                           style="background: #ffffff; font-size: 0.92rem; letter-spacing: -0.2px; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25);">
+                            <i class="bi bi-whatsapp fs-5 text-success"></i> Contactar por WhatsApp para Renovar
                         </a>
-                        <div class="text-center text-white text-opacity-75 mt-2" style="font-size: 0.72rem;">
-                            Pagos por QR Simple, Transferencia Bancaria y Tigo Money
+
+                        <!-- Métodos de pago disponibles en elegantes pills -->
+                        <div class="d-flex flex-wrap items-center justify-content-center gap-1.5 mt-3">
+                            <span class="badge px-2.5 py-1 rounded-pill" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.68rem; color: #d1fae5;">
+                                <i class="bi bi-qr-code-scan me-1"></i> QR Simple
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.68rem; color: #d1fae5;">
+                                <i class="bi bi-bank me-1"></i> Transferencia
+                            </span>
+                            <span class="badge px-2.5 py-1 rounded-pill" style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); font-size: 0.68rem; color: #d1fae5;">
+                                <i class="bi bi-phone me-1"></i> Tigo Money
+                            </span>
                         </div>
                     </div>
                 </div>

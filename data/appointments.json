@@ -1,1 +1,15 @@
-[]
+[
+  {
+    "id": "apt_1_1787852561",
+    "user_id": "e8d70da0-e5a6-4350-a1f2-03a10f58cbc6",
+    "patient_name": "Paciente Cita Dr A 1787852556",
+    "patient_phone": "",
+    "patient_idp": "",
+    "date": "2026-10-15",
+    "time": "10:30",
+    "type": "Evaluación BIA",
+    "status": "confirmed",
+    "notes": "",
+    "created_at": "2026-08-27T17:42:41.503364+00:00"
+  }
+]

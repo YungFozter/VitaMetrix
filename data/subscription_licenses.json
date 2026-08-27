@@ -50,5 +50,27 @@
     "used_at": "2026-08-27T00:18:14.033626+00:00",
     "created_at": "2026-08-27T00:18:14.022242+00:00",
     "used_by_email": "dr.lic.1787789892@vitametrix.com"
+  },
+  {
+    "id": "88d5fa12-cfaf-4ed2-a74a-4df27e8a47a1",
+    "license_key": "VM-1M-0B8F-00BE",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "aa70398d-3ca1-45aa-adbc-05c7695cf29e",
+    "used_at": "2026-08-27T17:41:33.856616+00:00",
+    "created_at": "2026-08-27T17:41:33.831788+00:00",
+    "used_by_email": "dr.lic.1787852491@vitametrix.com"
+  },
+  {
+    "id": "dd10b0ab-1886-4293-a7f3-1eac2d363cc1",
+    "license_key": "VM-1M-D0C9-6919",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "efe11abe-510a-41a6-a053-7645b948c67b",
+    "used_at": "2026-08-27T17:42:36.747786+00:00",
+    "created_at": "2026-08-27T17:42:36.738717+00:00",
+    "used_by_email": "dr.lic.1787852555@vitametrix.com"
   }
 ]

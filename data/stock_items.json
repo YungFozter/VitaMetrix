@@ -1,5 +1,24 @@
 [
   {
+    "id": "7f7daadf-2f56-4fda-a78a-4d69ff56e003",
+    "code": "SKU-001",
+    "name": "Insumo Exclusivo de Usuario A 1787852493",
+    "category": "Insumos BIA",
+    "unit": "Unidad (u)",
+    "stock_quantity": 50.0,
+    "min_stock": 10.0,
+    "cost_price": 20.0,
+    "sale_price": 35.0,
+    "supplier": "",
+    "location": "",
+    "notes": "",
+    "created_at": "2026-08-27T17:41:36.746319+00:00",
+    "updated_at": "2026-08-27T17:41:37.572929+00:00",
+    "batch_number": "",
+    "expiry_date": "",
+    "status": "optimal"
+  },
+  {
     "id": "d1d0f8cc-3dbf-4c89-a441-75d52e005dcf",
     "code": "KDX-4400",
     "name": "Insumo Kardex Test 1787781204400",

@@ -534,23 +534,25 @@ class TestE2EDeepVerification(unittest.TestCase):
         self.assertEqual(duplicate_res.status_code, 409)
 
     def test_11_multi_tenant_isolation(self):
-        """Verifica el aislamiento estricto de datos entre dos usuarios distintos."""
+        """Verifica el aislamiento estricto de datos entre dos usuarios distintos en Stock, Clientes, Citas y Ventas."""
         t_id = int(time.time())
         user_a_res = self.app.post('/api/auth/register', data=json.dumps({
             "email": f"dr.a.{t_id}@vitametrix.com",
             "password": "PasswordUserA123!",
-            "full_name": "Dr. Usuario A"
+            "full_name": "Dr. Usuario A",
+            "clinic_name": "Clínica Dr A"
         }), content_type='application/json')
         token_a = json.loads(user_a_res.data)['token']
 
         user_b_res = self.app.post('/api/auth/register', data=json.dumps({
             "email": f"dr.b.{t_id}@vitametrix.com",
             "password": "PasswordUserB123!",
-            "full_name": "Dr. Usuario B"
+            "full_name": "Dr. Usuario B",
+            "clinic_name": "Clínica Dr B"
         }), content_type='application/json')
         token_b = json.loads(user_b_res.data)['token']
 
-        # Usuario A crea un producto en inventario
+        # 1. AISLAMIENTO DE STOCK
         item_res = self.app.post('/api/stock', data=json.dumps({
             "name": f"Insumo Exclusivo de Usuario A {t_id}",
             "category": "Insumos BIA",
@@ -562,12 +564,44 @@ class TestE2EDeepVerification(unittest.TestCase):
         self.assertIn(item_res.status_code, [200, 201])
         item_a_id = json.loads(item_res.data).get('data', {}).get('id')
 
-        # Usuario A lista su inventario (debe ver su producto)
+        # Usuario A ve su producto
         list_a = self.app.get('/api/stock', headers={"Authorization": f"Bearer {token_a}"})
         items_a = json.loads(list_a.data)
         self.assertTrue(any(it.get('id') == item_a_id for it in items_a))
 
-        # Limpiar
+        # 2. AISLAMIENTO DE CLIENTES / PACIENTES
+        cl_res = self.app.post('/api/clients', data=json.dumps({
+            "name": f"Paciente Exclusivo Dr A {t_id}",
+            "phone": "+59170000001",
+            "email": "paciente.a@correo.com",
+            "gender": "Masculino",
+            "age": 30,
+            "height": 175
+        }), headers={"Authorization": f"Bearer {token_a}"}, content_type='application/json')
+        self.assertEqual(cl_res.status_code, 200)
+
+        # Usuario A ve su paciente
+        clients_a = json.loads(self.app.get('/api/clients', headers={"Authorization": f"Bearer {token_a}"}).data)
+        self.assertTrue(any(f"Paciente Exclusivo Dr A {t_id}" in c.get('name', '') for c in clients_a))
+
+        # 3. AISLAMIENTO DE CITAS
+        apt_res = self.app.post('/api/appointments', data=json.dumps({
+            "patient_name": f"Paciente Cita Dr A {t_id}",
+            "date": "2026-10-15",
+            "time": "10:30",
+            "type": "Evaluación BIA"
+        }), headers={"Authorization": f"Bearer {token_a}"}, content_type='application/json')
+        self.assertEqual(apt_res.status_code, 201)
+
+        # Usuario A ve su cita
+        appts_a = json.loads(self.app.get('/api/appointments', headers={"Authorization": f"Bearer {token_a}"}).data)
+        self.assertTrue(any(f"Paciente Cita Dr A {t_id}" in ap.get('patient_name', '') for ap in appts_a))
+
+        cl_id = json.loads(cl_res.data).get('data', {}).get('id')
+
+        # Limpiar recursos de prueba
+        if cl_id:
+            self.app.delete(f'/api/clients/{cl_id}')
         self.app.delete(f'/api/stock/{item_a_id}', headers={"Authorization": f"Bearer {token_a}"})
 
 if __name__ == '__main__':
