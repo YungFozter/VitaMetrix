@@ -289,23 +289,22 @@ function initAuthSystem() {
                     return;
                 }
 
-                localStorage.setItem('vm_auth_token', data.token);
-                document.documentElement.classList.add('has-auth-token');
-                document.documentElement.classList.remove('no-auth-token');
-                updateUIWithUserData(data.user);
-                if (modal) modal.classList.add('hidden');
-                if (btnClose) btnClose.style.display = '';
-                showToast('🎉 ¡Cuenta creada con éxito! Tienes 7 días de prueba activa.', 'success');
+                // Redirigir a la sección de LOGIN
+                formRegister.reset();
+                showLoginTab();
 
-                // Refrescar vistas para nuevo tenant
-                clientsDataLoaded = false;
-                evalsDataLoaded = false;
-                stockDataLoaded = false;
-                fetchClients();
-                fetchEvaluaciones();
-                fetchStockItems();
-                fetchDashboardStats();
-                fetchSubscriptionStatus();
+                // Autocompletar el email recién registrado y enfocar campo de contraseña
+                const loginEmailInput = document.getElementById('login-email');
+                if (loginEmailInput) {
+                    loginEmailInput.value = email;
+                }
+                const loginPassInput = document.getElementById('login-password');
+                if (loginPassInput) {
+                    loginPassInput.value = '';
+                    loginPassInput.focus();
+                }
+
+                showToast('🎉 ¡Cuenta creada con éxito! Ingresa tu contraseña para iniciar sesión.', 'success');
             } catch (err) {
                 if (regError) {
                     regError.textContent = 'Error de conexión al registrar.';
