@@ -577,35 +577,7 @@
         </div>
     </div>
 
-    <!-- MODAL RÁPIDO PARA CAMBIAR DE ESPECIALISTA / TURNO -->
-    <div id="switch-user-modal" class="modal-overlay hidden" style="z-index: 9999;">
-        <div class="modal-box bg-white rounded-4 shadow-lg border-0 p-4" style="max-width: 440px; width: 92%; text-align: left;">
-            <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
-                <div class="d-flex align-items-center gap-2">
-                    <span class="fs-4 text-warning"><i class="bi bi-person-gear"></i></span>
-                    <div>
-                        <h3 class="modal-title display-font fw-bold text-navy fs-5 m-0">Cambiar de Especialista</h3>
-                        <span class="text-muted small">Selecciona o ingresa el profesional de turno</span>
-                    </div>
-                </div>
-                <button type="button" class="info-modal-close" id="switch-user-modal-close" aria-label="Cerrar ventana">✕</button>
-            </div>
-            <form id="switch-user-form" class="d-flex flex-column gap-3">
-                <div>
-                    <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Profesional *</label>
-                    <input type="text" id="switch-user-name" class="form-control shadow-none rounded-3" placeholder="Ej: Dr. Fernando Suárez" required>
-                </div>
-                <div>
-                    <label class="form-label text-muted small fw-semibold text-uppercase">Especialidad / Cargo *</label>
-                    <input type="text" id="switch-user-title" class="form-control shadow-none rounded-3" placeholder="Ej: Médico Deportólogo / BIA" required>
-                </div>
-                <div class="d-flex justify-content-end gap-2 mt-2 pt-3 border-top">
-                    <button type="button" id="switch-user-btn-cancel" class="btn btn-secondary btn-sm px-3 rounded-3">Cancelar</button>
-                    <button type="submit" class="btn btn-primary btn-sm px-4 fw-semibold rounded-3">✔️ Activar Turno</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN MASIVA DE EVALUACIONES -->
     <div id="batch-delete-evals-modal" class="modal-overlay hidden" style="z-index: 9999;">

@@ -3651,12 +3651,6 @@ function initSystemMenuListeners() {
     };
 
     if (profileModalBtnSwitch) profileModalBtnSwitch.addEventListener('click', openSwitchModal);
-    if (dropLogoutBtn) {
-        dropLogoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            openSwitchModal();
-        });
-    }
 
     if (switchModalClose) switchModalClose.addEventListener('click', closeSwitchModal);
     if (switchModalBtnCancel) switchModalBtnCancel.addEventListener('click', closeSwitchModal);
