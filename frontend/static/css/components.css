@@ -555,12 +555,72 @@
 /* ============================================================
    STITCH LOGIN & REGISTRATION DESIGN SYSTEM
    ============================================================ */
+.auth-screen-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1080;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 1.5rem 1rem;
+    background-color: #0b1528;
+    background-image: 
+        radial-gradient(circle at 15% 15%, rgba(0, 192, 240, 0.35) 0%, transparent 45%),
+        radial-gradient(circle at 85% 85%, rgba(0, 91, 191, 0.45) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.72) 0%, rgba(8, 17, 32, 0.95) 100%),
+        url('https://images.unsplash.com/photo-1579684385127-1ef15d508118?auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+}
+
+.auth-pattern-grid {
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+                      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+}
+
+.auth-ambient-orb-1 {
+    position: absolute;
+    top: 10%;
+    left: 15%;
+    width: 340px;
+    height: 340px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(0, 192, 240, 0.28) 0%, rgba(0, 91, 191, 0) 70%);
+    filter: blur(50px);
+    pointer-events: none;
+    animation: floatOrb 9s ease-in-out infinite alternate;
+}
+
+.auth-ambient-orb-2 {
+    position: absolute;
+    bottom: 10%;
+    right: 15%;
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(0, 91, 191, 0) 70%);
+    filter: blur(55px);
+    pointer-events: none;
+    animation: floatOrb 11s ease-in-out infinite alternate-reverse;
+}
+
+@keyframes floatOrb {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(30px, -25px) scale(1.12); }
+}
+
 .glass-card-auth {
-    background: rgba(255, 255, 255, 0.88);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border: 1px solid rgba(255, 255, 255, 0.9);
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 30px rgba(0, 91, 191, 0.18);
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.95);
+    box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.35), 0 0 35px rgba(0, 91, 191, 0.22);
     border-radius: 1.5rem;
 }
 

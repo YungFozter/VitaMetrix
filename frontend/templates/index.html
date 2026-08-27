@@ -1318,17 +1318,22 @@
     <!-- ========================================================================= -->
     <!-- MODAL DE AUTENTICACIÓN SAAS (DISEÑO STITCH CLINICAL PRECISION)            -->
     <!-- ========================================================================= -->
-    <div id="modal-auth" class="modal-overlay hidden" style="backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); background: rgba(15, 23, 42, 0.72); z-index: 1080;">
-        <div class="d-flex flex-column align-items-center gap-3 w-100" style="max-width: 440px; width: 94%;">
+    <div id="modal-auth" class="modal-overlay auth-screen-overlay hidden">
+        <!-- Grilla y Orbes de Resplandor Clínico Ambiental -->
+        <div class="auth-pattern-grid"></div>
+        <div class="auth-ambient-orb-1"></div>
+        <div class="auth-ambient-orb-2"></div>
+
+        <div class="d-flex flex-column align-items-center gap-3 w-100 position-relative z-2 my-auto" style="max-width: 440px; width: 94%;">
             
             <!-- Branding Superior Stitch -->
             <div class="text-center">
-                <div class="bg-white rounded-4 shadow-sm border p-2 d-inline-flex align-items-center justify-content-center mb-2" style="width: 72px; height: 72px; border-color: rgba(226, 232, 240, 0.8) !important;">
+                <div class="bg-white rounded-4 shadow-md border p-2 d-inline-flex align-items-center justify-content-center mb-2" style="width: 72px; height: 72px; border-color: rgba(226, 232, 240, 0.9) !important;">
                     <img src="{{ url_for('static', filename='favicon-64x64.png') }}?v=15" alt="VitaMetrix Logo" style="width: 52px; height: 52px; border-radius: 12px;" class="object-fit-cover shadow-2xs">
                 </div>
-                <h2 class="display-font fw-extrabold mb-1 tracking-tight" style="color: #005bbf; font-size: 1.85rem; letter-spacing: -0.5px;">VitaMetrix</h2>
-                <div class="d-inline-block bg-white bg-opacity-70 px-3 py-1 rounded-pill shadow-xs border border-white border-opacity-80" style="backdrop-filter: blur(8px);">
-                    <span class="text-uppercase text-secondary fw-bold" style="font-size: 0.68rem; letter-spacing: 0.8px;">Medical Body Analyzer & Clinical SaaS</span>
+                <h2 class="display-font fw-extrabold mb-1 tracking-tight" style="color: #ffffff; text-shadow: 0 2px 12px rgba(0, 91, 191, 0.4); font-size: 1.95rem; letter-spacing: -0.5px;">VitaMetrix</h2>
+                <div class="d-inline-block bg-white bg-opacity-20 px-3.5 py-1 rounded-pill shadow-xs border border-white border-opacity-30" style="backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);">
+                    <span class="text-uppercase text-white fw-bold" style="font-size: 0.68rem; letter-spacing: 0.8px;">Medical Body Analyzer & Clinical SaaS</span>
                 </div>
             </div>
 
