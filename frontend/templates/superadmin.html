@@ -116,25 +116,50 @@
             </div>
         </div>
 
+        <!-- Barra de Acciones Masivas (Aparece al seleccionar usuarios) -->
+        <div id="admin-bulk-actions-bar" class="d-none alert alert-danger border-danger border-opacity-30 shadow-sm p-3 mb-3 d-flex flex-wrap align-items-center justify-content-between gap-3 rounded-4">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-danger text-white rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                    <i class="bi bi-check2-all fs-6"></i>
+                </div>
+                <div>
+                    <strong class="text-danger" id="admin-selected-count-text">0 usuarios seleccionados</strong>
+                    <span class="text-muted text-xs d-block">Selecciona las cuentas que deseas eliminar de la base de datos</span>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-1.5 rounded-3 fw-semibold bg-white" id="btn-admin-clear-selection">
+                    Cancelar Selección
+                </button>
+                <button type="button" class="btn btn-danger btn-sm px-3.5 py-1.5 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-xs" id="btn-admin-delete-selected">
+                    <i class="bi bi-trash-fill"></i>
+                    <span>Eliminar Seleccionados</span>
+                </button>
+            </div>
+        </div>
+
         <!-- Contenedor Principal: Tabla de Usuarios -->
         <div class="bento-card p-0 overflow-hidden shadow-sm">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0" id="table-admin-users">
                     <thead class="bg-light border-bottom text-secondary text-xs text-uppercase fw-bold">
                         <tr>
-                            <th class="ps-3 py-3" style="min-width: 230px;">Profesional / Usuario</th>
-                            <th style="min-width: 180px;">Cargo & Consultorio</th>
+                            <th class="ps-3 py-3 text-center" style="width: 44px;">
+                                <input type="checkbox" class="form-check-input" id="admin-select-all-users" title="Seleccionar / Deseleccionar todos">
+                            </th>
+                            <th style="min-width: 210px;">Profesional / Usuario</th>
+                            <th style="min-width: 170px;">Cargo & Consultorio</th>
                             <th style="min-width: 130px;">Teléfono / WhatsApp</th>
-                            <th style="min-width: 140px;">Rol</th>
-                            <th style="min-width: 160px;">Plan & Estado</th>
-                            <th style="min-width: 180px;">Vigencia / Días</th>
+                            <th style="min-width: 130px;">Rol</th>
+                            <th style="min-width: 150px;">Plan & Estado</th>
+                            <th style="min-width: 160px;">Vigencia / Días</th>
                             <th style="min-width: 140px;">Registro / Vencimiento</th>
-                            <th class="text-end pe-3" style="min-width: 150px;">Acciones</th>
+                            <th class="text-end pe-3" style="min-width: 130px;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="tbody-admin-users">
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">
+                            <td colspan="9" class="text-center py-5 text-muted">
                                 <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                                 Cargando usuarios registrados...
                             </td>

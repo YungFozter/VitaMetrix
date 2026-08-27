@@ -552,6 +552,7 @@ function initSubscriptionView() {
 
 // --- 0.09 GESTIÓN CENTRAL SUPERADMIN (LISTADO GLOBAL DE USUARIOS Y LICENCIAS) ---
 let allAdminUsersData = [];
+let selectedAdminUserIds = new Set();
 
 function initSuperAdminView() {
     const refreshBtn = document.getElementById('btn-admin-refresh-users');
@@ -573,6 +574,11 @@ function initSuperAdminView() {
     const formManage = document.getElementById('form-admin-manage-user');
     const manageError = document.getElementById('admin-manage-error');
 
+    // Elementos de Acciones Masivas
+    const selectAllCheckbox = document.getElementById('admin-select-all-users');
+    const clearSelectionBtn = document.getElementById('btn-admin-clear-selection');
+    const deleteSelectedBtn = document.getElementById('btn-admin-delete-selected');
+
     // Eventos de Filtrado y Búsqueda
     if (refreshBtn) {
         refreshBtn.addEventListener('click', () => fetchAdminUsers(true));
@@ -585,6 +591,79 @@ function initSuperAdminView() {
     }
     if (sortSelect) {
         sortSelect.addEventListener('change', () => renderAdminUsers());
+    }
+
+    // Seleccionar / Deseleccionar todos
+    if (selectAllCheckbox) {
+        selectAllCheckbox.addEventListener('change', () => {
+            const isChecked = selectAllCheckbox.checked;
+            const checkboxes = document.querySelectorAll('.admin-user-checkbox:not(:disabled)');
+            checkboxes.forEach(cb => {
+                cb.checked = isChecked;
+                const row = cb.closest('tr');
+                if (isChecked) {
+                    selectedAdminUserIds.add(cb.value);
+                    if (row) row.classList.add('table-active');
+                } else {
+                    selectedAdminUserIds.delete(cb.value);
+                    if (row) row.classList.remove('table-active');
+                }
+            });
+            updateAdminBulkActionBar();
+        });
+    }
+
+    // Limpiar Selección Masiva
+    if (clearSelectionBtn) {
+        clearSelectionBtn.addEventListener('click', () => {
+            selectedAdminUserIds.clear();
+            const selectAll = document.getElementById('admin-select-all-users');
+            if (selectAll) {
+                selectAll.checked = false;
+                selectAll.indeterminate = false;
+            }
+            document.querySelectorAll('.admin-user-checkbox').forEach(cb => {
+                cb.checked = false;
+                const row = cb.closest('tr');
+                if (row) row.classList.remove('table-active');
+            });
+            updateAdminBulkActionBar();
+        });
+    }
+
+    // Eliminar Seleccionados (Batch Delete)
+    if (deleteSelectedBtn) {
+        deleteSelectedBtn.addEventListener('click', () => {
+            const count = selectedAdminUserIds.size;
+            if (count === 0) return;
+
+            showConfirm(
+                'Eliminar Usuarios de la Base de Datos',
+                `¿Estás seguro de eliminar permanentemente los <strong>${count} usuario(s) seleccionado(s)</strong> del sistema y la base de datos?<br><span class="text-danger small">Esta acción no se puede deshacer.</span>`,
+                async () => {
+                    try {
+                        const res = await fetch('/api/admin/users/batch-delete', {
+                            method: 'POST',
+                            headers: getAuthHeaders(),
+                            body: JSON.stringify({ user_ids: Array.from(selectedAdminUserIds) })
+                        });
+                        const data = await res.json();
+                        if (!res.ok || !data.success) {
+                            showToast(data.error || 'Error al eliminar los usuarios seleccionados', 'error');
+                            return;
+                        }
+
+                        showToast(`🗑️ ${data.message}`, 'info');
+                        selectedAdminUserIds.clear();
+                        updateAdminBulkActionBar();
+                        fetchAdminUsers(false);
+                    } catch (e) {
+                        showToast('Error de conexión al eliminar usuarios', 'error');
+                    }
+                },
+                { confirmText: `Eliminar (${count})`, type: 'danger', icon: 'bi bi-trash-fill' }
+            );
+        });
     }
 
     // Modal Crear Usuario
@@ -715,6 +794,46 @@ function initSuperAdminView() {
     }
 }
 
+function updateAdminBulkActionBar() {
+    const bar = document.getElementById('admin-bulk-actions-bar');
+    const textEl = document.getElementById('admin-selected-count-text');
+    const deleteBtn = document.getElementById('btn-admin-delete-selected');
+    const selectAllCheckbox = document.getElementById('admin-select-all-users');
+
+    const count = selectedAdminUserIds.size;
+    if (bar) {
+        if (count > 0) {
+            bar.classList.remove('d-none');
+        } else {
+            bar.classList.add('d-none');
+        }
+    }
+
+    if (textEl) {
+        textEl.textContent = `${count} usuario${count === 1 ? '' : 's'} seleccionado${count === 1 ? '' : 's'}`;
+    }
+
+    if (deleteBtn) {
+        deleteBtn.innerHTML = `<i class="bi bi-trash-fill me-1"></i> Eliminar Seleccionados (${count})`;
+    }
+
+    // Actualizar estado del checkbox general
+    const checkboxes = document.querySelectorAll('.admin-user-checkbox:not(:disabled)');
+    if (selectAllCheckbox && checkboxes.length > 0) {
+        const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        if (checkedCount === 0) {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = false;
+        } else if (checkedCount === checkboxes.length) {
+            selectAllCheckbox.checked = true;
+            selectAllCheckbox.indeterminate = false;
+        } else {
+            selectAllCheckbox.checked = false;
+            selectAllCheckbox.indeterminate = true;
+        }
+    }
+}
+
 async function fetchAdminUsers(showToastFeedback = false) {
     const tbody = document.getElementById('tbody-admin-users');
     if (!tbody) return;
@@ -722,7 +841,7 @@ async function fetchAdminUsers(showToastFeedback = false) {
     if (showToastFeedback) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-5 text-muted">
+                <td colspan="9" class="text-center py-5 text-muted">
                     <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
                     Actualizando lista de usuarios...
                 </td>
@@ -766,7 +885,7 @@ async function fetchAdminUsers(showToastFeedback = false) {
         if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center py-4 text-danger">
+                    <td colspan="9" class="text-center py-4 text-danger">
                         <i class="bi bi-exclamation-triangle-fill me-1"></i> Error de conexión al cargar usuarios.
                     </td>
                 </tr>
@@ -834,12 +953,13 @@ function renderAdminUsers() {
     if (filtered.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="8" class="text-center py-5 text-muted">
+                <td colspan="9" class="text-center py-5 text-muted">
                     <i class="bi bi-people fs-2 d-block mb-2 text-secondary opacity-50"></i>
                     No se encontraron usuarios con los filtros seleccionados.
                 </td>
             </tr>
         `;
+        updateAdminBulkActionBar();
         return;
     }
 
@@ -895,9 +1015,15 @@ function renderAdminUsers() {
         const cleanPhone = (u.phone || '').replace(/[^0-9]/g, '');
         const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${u.full_name}, te escribimos desde el soporte de VitaMetrix para ayudarte con tu suscripción clínica.`)}` : '';
 
+        const isChecked = selectedAdminUserIds.has(u.id);
+
         return `
-            <tr>
-                <td class="ps-3 py-3">
+            <tr class="${isChecked ? 'table-active' : ''}">
+                <td class="ps-3 py-3 text-center">
+                    <input type="checkbox" class="form-check-input admin-user-checkbox" value="${u.id}" 
+                           ${isAdmin ? 'disabled title="SuperAdmin protegido contra borrado"' : (isChecked ? 'checked' : '')}>
+                </td>
+                <td>
                     <div class="d-flex align-items-center gap-2.5">
                         <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'Dr')}&background=${isAdmin ? '6366f1' : (isActive ? '005bbf' : '64748b')}&color=fff" 
                              alt="Avatar" class="rounded-circle shadow-2xs flex-shrink-0" style="width: 38px; height: 38px;">
@@ -952,7 +1078,7 @@ function renderAdminUsers() {
                             <i class="bi bi-gear-fill"></i>
                         </button>
                         ${!isAdmin ? `
-                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar usuario">
+                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar usuario de la base de datos">
                                 <i class="bi bi-trash"></i>
                             </button>
                         ` : ''}
@@ -961,6 +1087,24 @@ function renderAdminUsers() {
             </tr>
         `;
     }).join('');
+
+    // Conectar eventos de cambio en cada checkbox individual
+    document.querySelectorAll('.admin-user-checkbox:not(:disabled)').forEach(cb => {
+        cb.addEventListener('change', () => {
+            if (cb.checked) {
+                selectedAdminUserIds.add(cb.value);
+                const row = cb.closest('tr');
+                if (row) row.classList.add('table-active');
+            } else {
+                selectedAdminUserIds.delete(cb.value);
+                const row = cb.closest('tr');
+                if (row) row.classList.remove('table-active');
+            }
+            updateAdminBulkActionBar();
+        });
+    });
+
+    updateAdminBulkActionBar();
 }
 
 async function quickExtendUserDirect(userId, days = 30) {

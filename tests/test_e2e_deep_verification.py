@@ -799,14 +799,41 @@ class TestE2EDeepVerification(unittest.TestCase):
         self.assertEqual(status_res.status_code, 200)
         self.assertEqual(json.loads(status_res.data)['user']['subscription']['status'], 'lifetime')
 
-        # 7. SuperAdmin elimina el usuario creado
+        # 7. SuperAdmin elimina el usuario creado individualmente
         del_res = self.app.delete(f'/api/admin/users/{created_user_id}', headers={"Authorization": f"Bearer {admin_token}"})
         self.assertEqual(del_res.status_code, 200)
 
-        # 8. Protección: SuperAdmin no puede auto-eliminarse
+        # 8. SuperAdmin elimina múltiples usuarios por lote (Batch Delete)
+        batch_u1 = self.app.post('/api/auth/register', data=json.dumps({
+            "email": f"batch1.{t_id}@vitametrix.com",
+            "password": "PasswordBatch123!",
+            "full_name": "Dr. Batch Uno"
+        }), content_type='application/json')
+        batch_u2 = self.app.post('/api/auth/register', data=json.dumps({
+            "email": f"batch2.{t_id}@vitametrix.com",
+            "password": "PasswordBatch123!",
+            "full_name": "Dr. Batch Dos"
+        }), content_type='application/json')
+        u1_id = json.loads(batch_u1.data)['user']['id']
+        u2_id = json.loads(batch_u2.data)['user']['id']
+
+        batch_del_res = self.app.post('/api/admin/users/batch-delete', data=json.dumps({
+            "user_ids": [u1_id, u2_id]
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(batch_del_res.status_code, 200)
+        batch_data = json.loads(batch_del_res.data)
+        self.assertTrue(batch_data.get('success'))
+        self.assertEqual(batch_data.get('deleted_count'), 2)
+
+        # 9. Protección: SuperAdmin no puede auto-eliminarse individualmente ni por lote
         admin_user_id = json.loads(admin_login.data)['user']['id']
         self_del_res = self.app.delete(f'/api/admin/users/{admin_user_id}', headers={"Authorization": f"Bearer {admin_token}"})
         self.assertEqual(self_del_res.status_code, 400)
+
+        self_batch_res = self.app.post('/api/admin/users/batch-delete', data=json.dumps({
+            "user_ids": [admin_user_id]
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(self_batch_res.status_code, 400)
 
 if __name__ == '__main__':
     unittest.main()

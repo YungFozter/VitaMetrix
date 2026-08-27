@@ -882,7 +882,49 @@ def admin_delete_user(user_id):
         return jsonify({"error": "Usuario no encontrado"}), 404
 
     _save_users(users)
-    return jsonify({"success": True, "message": "Usuario eliminado exitosamente"})
+
+    if supabase:
+        try:
+            supabase.table('users').delete().eq('id', user_id).execute()
+        except Exception as e:
+            logging.warning("Error eliminando usuario en Supabase: %s", e)
+
+    return jsonify({"success": True, "message": "Usuario eliminado exitosamente de la base de datos."})
+
+@app.route('/api/admin/users/batch-delete', methods=['POST'])
+def admin_batch_delete_users():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    user_ids = data.get('user_ids', [])
+    if not isinstance(user_ids, list) or len(user_ids) == 0:
+        return jsonify({"error": "Debes seleccionar al menos un usuario para eliminar"}), 400
+
+    caller_id = caller.get('id')
+    filtered_ids = [uid for uid in user_ids if uid != caller_id]
+    if len(filtered_ids) == 0:
+        return jsonify({"error": "No puedes eliminar tu propia cuenta de Administrador"}), 400
+
+    users = _load_users()
+    initial_len = len(users)
+    users = [u for u in users if u.get('id') not in filtered_ids]
+    deleted_count = initial_len - len(users)
+
+    _save_users(users)
+
+    if supabase:
+        try:
+            supabase.table('users').delete().in_('id', tuple(filtered_ids)).execute()
+        except Exception as e:
+            logging.warning("Error eliminando lote de usuarios en Supabase: %s", e)
+
+    return jsonify({
+        "success": True,
+        "deleted_count": deleted_count,
+        "message": f"Se eliminaron {deleted_count} usuario(s) exitosamente de la base de datos."
+    }), 200
 
 @app.route('/')
 def index():
