@@ -134,6 +134,21 @@ _DEFAULT_INITIAL_USERS = [
     },
     {
         "id": "usr-doctor-001",
+        "email": "ashly@vitametrix.com",
+        "password_hash": generate_password_hash("Doctora2026!"),
+        "full_name": "Dra. Ashly",
+        "professional_title": "Manager / Especialista BIA",
+        "clinic_name": "Centro Médico VitaMetrix",
+        "phone": "+59171234567",
+        "role": "user",
+        "subscription_status": "active",
+        "subscription_plan": "Plan Pro Mensual",
+        "subscription_expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+        "trial_started_at": "2026-08-01T00:00:00Z",
+        "created_at": "2026-08-01T00:00:00Z"
+    },
+    {
+        "id": "usr-doctor-002",
         "email": "audrey@vitametrix.com",
         "password_hash": generate_password_hash("Doctora2026!"),
         "full_name": "Dra. Audrey",
