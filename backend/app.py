@@ -459,13 +459,45 @@ def auth_login():
 
 @app.route('/api/auth/me', methods=['GET'])
 def auth_me():
-    user = _get_current_user()
-    if not user:
-        return jsonify({"error": "No autenticado"}), 401
+    auth_header = request.headers.get('Authorization', '')
+    token = None
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1].strip()
+    elif request.cookies.get('vm_auth_token'):
+        token = request.cookies.get('vm_auth_token')
+    elif request.args.get('token'):
+        token = request.args.get('token')
+
+    if not token:
+        return jsonify({"error": "No autenticado", "authenticated": False}), 401
+
+    payload = _verify_auth_token(token)
+    if not payload or not payload.get('user_id'):
+        return jsonify({"error": "Token inválido o expirado", "authenticated": False}), 401
+
+    user_id = payload['user_id']
+    target_user = None
+    for u in _load_users():
+        if u.get('id') == user_id:
+            target_user = u
+            break
+
+    if not target_user and supabase:
+        try:
+            res = supabase.table('users').select('*').eq('id', user_id).execute()
+            if res.data:
+                target_user = res.data[0]
+        except Exception:
+            pass
+
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado", "authenticated": False}), 404
+
     return jsonify({
         "success": True,
-        "user": _build_safe_user_dict(user)
-    })
+        "authenticated": True,
+        "user": _build_safe_user_dict(target_user)
+    }), 200
 
 @app.route('/api/auth/logout', methods=['POST'])
 def auth_logout():

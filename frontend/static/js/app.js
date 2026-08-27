@@ -228,6 +228,7 @@ function initAuthSystem() {
                 localStorage.setItem('vm_auth_token', data.token);
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
+                if (btnClose) btnClose.style.display = '';
                 showToast(`¡Bienvenido de nuevo, ${data.user.full_name}!`, 'success');
 
                 // Refrescar vistas
@@ -289,6 +290,7 @@ function initAuthSystem() {
                 localStorage.setItem('vm_auth_token', data.token);
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
+                if (btnClose) btnClose.style.display = '';
                 showToast('🎉 ¡Cuenta creada con éxito! Tienes 7 días de prueba activa.', 'success');
 
                 // Refrescar vistas para nuevo tenant
@@ -315,6 +317,7 @@ function initAuthSystem() {
     if (switchAccountBtn && modal) {
         switchAccountBtn.addEventListener('click', () => {
             showLoginTab();
+            if (btnClose) btnClose.style.display = '';
             modal.classList.remove('hidden');
         });
     }
@@ -331,9 +334,10 @@ function initAuthSystem() {
                     } catch (e) {}
                     localStorage.removeItem('vm_auth_token');
                     sessionStorage.removeItem('vm_auth_token');
-                    showToast('Sesión cerrada. Inicia sesión con otra cuenta.', 'info');
+                    showToast('Sesión cerrada. Inicia sesión con tu cuenta.', 'info');
                     if (modal) {
                         showLoginTab();
+                        if (btnClose) btnClose.style.display = 'none';
                         modal.classList.remove('hidden');
                     }
                 },
@@ -342,21 +346,49 @@ function initAuthSystem() {
         });
     }
 
-    // Verificar sesión existente en arranque
+    // Verificar sesión existente en arranque (Gating obligatorio)
     fetchAuthMe();
 }
 
 async function fetchAuthMe() {
+    const modal = document.getElementById('modal-auth');
+    const btnClose = document.getElementById('btn-close-auth-modal');
+    const token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
+
+    if (!token) {
+        // No hay sesión activa: mostrar pantalla de Login obligatoria
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (btnClose) btnClose.style.display = 'none';
+        }
+        return;
+    }
+
     try {
         const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
         if (res.ok) {
             const data = await res.json();
             if (data.success && data.user) {
                 updateUIWithUserData(data.user);
+                if (modal) modal.classList.add('hidden');
+                if (btnClose) btnClose.style.display = '';
+                return;
             }
+        }
+
+        // Token inválido o expirado
+        localStorage.removeItem('vm_auth_token');
+        sessionStorage.removeItem('vm_auth_token');
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (btnClose) btnClose.style.display = 'none';
         }
     } catch (e) {
         console.warn('Sesión no autenticada o local:', e);
+        if (modal) {
+            modal.classList.remove('hidden');
+            if (btnClose) btnClose.style.display = 'none';
+        }
     }
 }
 
