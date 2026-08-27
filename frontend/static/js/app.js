@@ -7513,7 +7513,10 @@ function initDigitalReceiptModal() {
     const btnPrint = document.getElementById('btn-receipt-print');
     const btnWhatsApp = document.getElementById('btn-receipt-whatsapp');
 
-    const closeModal = () => modal.classList.add('d-none');
+    const closeModal = () => {
+        modal.classList.add('d-none', 'hidden');
+        modal.style.display = 'none';
+    };
 
     if (btnCloseHeader) btnCloseHeader.addEventListener('click', closeModal);
     if (btnCloseFooter) btnCloseFooter.addEventListener('click', closeModal);
@@ -7558,6 +7561,9 @@ function openDigitalReceiptModal(sale) {
     currentViewedReceipt = sale;
     const modal = document.getElementById('modal-digital-receipt');
     if (!modal) return;
+
+    modal.classList.remove('d-none', 'hidden');
+    modal.style.display = 'flex';
 
     document.getElementById('receipt-modal-number').textContent = sale.receipt_number;
     document.getElementById('receipt-patient-name').textContent = sale.patient_name || 'Cliente Ocasional';

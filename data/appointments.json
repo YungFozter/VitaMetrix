@@ -154,5 +154,18 @@
     "status": "confirmed",
     "notes": "",
     "created_at": "2026-08-27T21:04:32.884255+00:00"
+  },
+  {
+    "id": "apt_13_1787865220",
+    "user_id": "3c3f5663-3e91-4e68-8f79-0168323982b8",
+    "patient_name": "Paciente Cita Dr A 1787865215",
+    "patient_phone": "",
+    "patient_idp": "",
+    "date": "2026-10-15",
+    "time": "10:30",
+    "type": "Evaluación BIA",
+    "status": "confirmed",
+    "notes": "",
+    "created_at": "2026-08-27T21:13:40.022899+00:00"
   }
 ]

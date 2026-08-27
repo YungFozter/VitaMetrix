@@ -1,5 +1,37 @@
 [
   {
+    "id": "dc5d16fe-b064-470d-8394-cad0ce2b6cd5",
+    "user_id": "usr-doctor-001",
+    "receipt_number": "REC-2026-0058",
+    "patient_name": "Paciente E2E Prueba",
+    "patient_idp": "IDP-9999",
+    "patient_phone": "+59177889900",
+    "items": [
+      {
+        "stock_item_id": "2f43656c-1a17-4514-aa9f-73e1647773cb",
+        "code": "PROTP-001",
+        "name": "Proteína Whey E2E Test 1kg",
+        "unit": "Frasco / Bote",
+        "quantity": 2.0,
+        "unit_price": 90.0,
+        "cost_price": 50.0,
+        "subtotal": 180.0
+      }
+    ],
+    "subtotal": 180.0,
+    "discount": 5.0,
+    "total": 175.0,
+    "total_cost": 100.0,
+    "profit": 75.0,
+    "payment_method": "Efectivo",
+    "amount_received": 200.0,
+    "change_given": 25.0,
+    "status": "CANCELLED",
+    "notes": "",
+    "created_at": "2026-08-27T21:13:53.997810+00:00",
+    "cancelled_at": "2026-08-27T21:13:54.879634+00:00"
+  },
+  {
     "id": "ea3ee752-f272-489a-b672-5eb45ea1e5db",
     "user_id": "usr-doctor-001",
     "receipt_number": "REC-2026-0057",

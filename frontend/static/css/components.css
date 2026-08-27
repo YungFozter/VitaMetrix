@@ -785,29 +785,28 @@
 
 /* Modales Globales & SuperAdmin: Centrado Perfecto en Viewport y Adaptabilidad Móvil */
 .modal-overlay {
-    position: fixed !important;
-    inset: 0 !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    background: rgba(15, 23, 42, 0.65) !important;
-    backdrop-filter: blur(8px) !important;
-    -webkit-backdrop-filter: blur(8px) !important;
-    z-index: 10050 !important;
-    align-items: center !important;
-    justify-content: center !important;
-    padding: 1.25rem !important;
-    overflow-y: auto !important;
+    position: fixed;
+    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    overflow-y: auto;
 }
 
 .modal-overlay.hidden,
+.modal-overlay.d-none,
+.modal-overlay[hidden],
 .modal-overlay[style*="display: none"] {
     display: none !important;
-}
-
-.modal-overlay:not(.hidden):not([style*="display: none"]) {
-    display: flex !important;
 }
 
 .admin-modal-card {
