@@ -275,6 +275,14 @@ function initAuthSystem() {
         });
     }
 
+    const switchAccountBtn = document.getElementById('dropdown-switch-account-btn');
+    if (switchAccountBtn && modal) {
+        switchAccountBtn.addEventListener('click', () => {
+            showLoginTab();
+            modal.classList.remove('hidden');
+        });
+    }
+
     // Logout
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
