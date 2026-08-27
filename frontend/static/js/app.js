@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
     initAuthSystem();
     initSubscriptionView();
+    initSuperAdminView();
     initBioForm();
     initBioClientAutocomplete();
     initClients();
@@ -68,6 +69,14 @@ function updateUIWithUserData(userData) {
     if (!userData) return;
     currentAuthUser = userData;
 
+    const isAdmin = userData.role === 'admin';
+
+    // Mostrar / Ocultar elementos exclusivos de SuperAdmin en Sidebar y Dropdown
+    const adminElements = document.querySelectorAll('.admin-only-element');
+    adminElements.forEach(el => {
+        el.style.display = isAdmin ? '' : 'none';
+    });
+
     // Actualizar nombre y título en TopBar
     const nameEl = document.getElementById('topbar-user-name');
     const titleEl = document.getElementById('topbar-user-title');
@@ -76,17 +85,17 @@ function updateUIWithUserData(userData) {
     const subBadgeEl = document.getElementById('topbar-sub-badge');
 
     if (nameEl) nameEl.textContent = userData.full_name || 'Profesional';
-    if (titleEl) titleEl.textContent = userData.professional_title || 'Especialista BIA';
+    if (titleEl) titleEl.textContent = userData.professional_title || (isAdmin ? 'Director / SuperAdmin' : 'Especialista BIA');
     if (avatarEl) {
-        avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.full_name || 'Doctor')}&background=00b4d8&color=fff`;
+        avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.full_name || 'Doctor')}&background=${isAdmin ? '6366f1' : '00b4d8'}&color=fff`;
     }
 
     // Actualizar badge de suscripción en TopBar
     if (userData.subscription) {
         const sub = userData.subscription;
         if (subTextEl) {
-            if (sub.status === 'lifetime' || userData.role === 'admin') {
-                subTextEl.textContent = 'Plan Ilimitado ⭐';
+            if (sub.status === 'lifetime' || isAdmin) {
+                subTextEl.textContent = '👑 SuperAdmin ⭐';
             } else if (sub.status === 'active') {
                 subTextEl.textContent = `Plan Pro (${sub.days_left}d)`;
             } else if (sub.status === 'trial') {
@@ -233,15 +242,21 @@ function initAuthSystem() {
                 if (btnClose) btnClose.style.display = '';
                 showToast(`¡Bienvenido de nuevo, ${data.user.full_name}!`, 'success');
 
-                // Refrescar vistas
-                clientsDataLoaded = false;
-                evalsDataLoaded = false;
-                stockDataLoaded = false;
-                fetchClients();
-                fetchEvaluaciones();
-                fetchStockItems();
-                fetchDashboardStats();
-                fetchSubscriptionStatus();
+                // Si el usuario es SuperAdmin, redirigir directamente al panel de gestión global
+                if (data.user.role === 'admin') {
+                    navigateToView('superadmin-view', true);
+                    fetchAdminUsers(false);
+                } else {
+                    // Refrescar vistas clínicas
+                    clientsDataLoaded = false;
+                    evalsDataLoaded = false;
+                    stockDataLoaded = false;
+                    fetchClients();
+                    fetchEvaluaciones();
+                    fetchStockItems();
+                    fetchDashboardStats();
+                    fetchSubscriptionStatus();
+                }
             } catch (err) {
                 if (loginError) {
                     loginError.textContent = 'Error de conexión con el servidor.';
@@ -381,6 +396,13 @@ async function fetchAuthMe() {
                 updateUIWithUserData(data.user);
                 if (modal) modal.classList.add('hidden');
                 if (btnClose) btnClose.style.display = '';
+
+                if (data.user.role === 'admin') {
+                    const activeView = localStorage.getItem('vita_active_view');
+                    if (!activeView || activeView === 'superadmin-view' || window.location.hash === '#superadmin-view') {
+                        navigateToView('superadmin-view', false);
+                    }
+                }
                 return;
             }
         }
@@ -526,6 +548,517 @@ function initSubscriptionView() {
     }
 
     fetchSubscriptionStatus();
+}
+
+// --- 0.09 GESTIÓN CENTRAL SUPERADMIN (LISTADO GLOBAL DE USUARIOS Y LICENCIAS) ---
+let allAdminUsersData = [];
+
+function initSuperAdminView() {
+    const refreshBtn = document.getElementById('btn-admin-refresh-users');
+    const searchInput = document.getElementById('admin-user-search');
+    const filterStatus = document.getElementById('admin-user-filter-status');
+    const sortSelect = document.getElementById('admin-user-sort');
+
+    // Modales
+    const openCreateBtn = document.getElementById('btn-admin-open-create-user');
+    const closeCreateBtn = document.getElementById('btn-close-admin-create-user');
+    const cancelCreateBtn = document.getElementById('btn-cancel-admin-create-user');
+    const modalCreate = document.getElementById('modal-admin-create-user');
+    const formCreate = document.getElementById('form-admin-create-user');
+    const createError = document.getElementById('admin-create-error');
+
+    const closeManageBtn = document.getElementById('btn-close-admin-manage-user');
+    const cancelManageBtn = document.getElementById('btn-cancel-admin-manage-user');
+    const modalManage = document.getElementById('modal-admin-manage-user');
+    const formManage = document.getElementById('form-admin-manage-user');
+    const manageError = document.getElementById('admin-manage-error');
+
+    // Eventos de Filtrado y Búsqueda
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', () => fetchAdminUsers(true));
+    }
+    if (searchInput) {
+        searchInput.addEventListener('input', () => renderAdminUsers());
+    }
+    if (filterStatus) {
+        filterStatus.addEventListener('change', () => renderAdminUsers());
+    }
+    if (sortSelect) {
+        sortSelect.addEventListener('change', () => renderAdminUsers());
+    }
+
+    // Modal Crear Usuario
+    if (openCreateBtn && modalCreate) {
+        openCreateBtn.addEventListener('click', () => {
+            if (formCreate) formCreate.reset();
+            if (createError) createError.classList.add('d-none');
+            modalCreate.classList.remove('hidden');
+        });
+    }
+    if (closeCreateBtn && modalCreate) {
+        closeCreateBtn.addEventListener('click', () => modalCreate.classList.add('hidden'));
+    }
+    if (cancelCreateBtn && modalCreate) {
+        cancelCreateBtn.addEventListener('click', () => modalCreate.classList.add('hidden'));
+    }
+
+    if (formCreate) {
+        formCreate.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit-admin-create-user');
+            const fullName = document.getElementById('admin-new-name').value.trim();
+            const email = document.getElementById('admin-new-email').value.trim();
+            const password = document.getElementById('admin-new-password').value;
+            const title = document.getElementById('admin-new-title').value.trim();
+            const clinic = document.getElementById('admin-new-clinic').value.trim();
+            const phone = document.getElementById('admin-new-phone').value.trim();
+            const role = document.getElementById('admin-new-role').value;
+            const plan = document.getElementById('admin-new-plan').value;
+            const duration = parseInt(document.getElementById('admin-new-duration').value || 30);
+
+            if (createError) createError.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/users/create', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        full_name: fullName,
+                        email: email,
+                        password: password,
+                        professional_title: title,
+                        clinic_name: clinic,
+                        phone: phone,
+                        role: role,
+                        subscription_plan: plan,
+                        duration_days: duration
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    if (createError) {
+                        createError.textContent = data.error || 'Error al crear el usuario';
+                        createError.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                showToast(`🎉 ${data.message}`, 'success');
+                if (modalCreate) modalCreate.classList.add('hidden');
+                fetchAdminUsers(false);
+            } catch (err) {
+                if (createError) {
+                    createError.textContent = 'Error de conexión con el servidor.';
+                    createError.classList.remove('d-none');
+                }
+            } finally {
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
+        });
+    }
+
+    // Modal Gestionar Usuario
+    if (closeManageBtn && modalManage) {
+        closeManageBtn.addEventListener('click', () => modalManage.classList.add('hidden'));
+    }
+    if (cancelManageBtn && modalManage) {
+        cancelManageBtn.addEventListener('click', () => modalManage.classList.add('hidden'));
+    }
+
+    if (formManage) {
+        formManage.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit-admin-manage-user');
+            const userId = document.getElementById('admin-manage-user-id').value;
+            const status = document.getElementById('admin-manage-status-select').value;
+            const role = document.getElementById('admin-manage-role-select').value;
+            const planName = document.getElementById('admin-manage-plan-name').value.trim();
+
+            if (!userId) return;
+            if (manageError) manageError.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/status`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        status: status,
+                        role: role,
+                        plan_name: planName
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    if (manageError) {
+                        manageError.textContent = data.error || 'Error al actualizar usuario';
+                        manageError.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                showToast('✅ Cambios de usuario guardados correctamente.', 'success');
+                if (modalManage) modalManage.classList.add('hidden');
+                fetchAdminUsers(false);
+            } catch (err) {
+                if (manageError) {
+                    manageError.textContent = 'Error de conexión con el servidor.';
+                    manageError.classList.remove('d-none');
+                }
+            } finally {
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
+        });
+    }
+}
+
+async function fetchAdminUsers(showToastFeedback = false) {
+    const tbody = document.getElementById('tbody-admin-users');
+    if (!tbody) return;
+
+    if (showToastFeedback) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                    Actualizando lista de usuarios...
+                </td>
+            </tr>
+        `;
+    }
+
+    try {
+        const res = await fetch('/api/admin/users', { headers: getAuthHeaders() });
+        if (!res.ok) {
+            if (res.status === 403) {
+                showToast('Acceso denegado: se requieren permisos de SuperAdmin', 'error');
+            }
+            return;
+        }
+
+        const data = await res.json();
+        if (!data.success) return;
+
+        allAdminUsersData = data.users || [];
+
+        // Actualizar KPIs de plataforma
+        const stats = data.stats || {};
+        const kpiTotal = document.getElementById('kpi-admin-total-users');
+        const kpiActive = document.getElementById('kpi-admin-active-users');
+        const kpiTrial = document.getElementById('kpi-admin-trial-users');
+        const kpiExpired = document.getElementById('kpi-admin-expired-users');
+
+        if (kpiTotal) kpiTotal.textContent = stats.total_users || allAdminUsersData.length;
+        if (kpiActive) kpiActive.textContent = stats.active_users || 0;
+        if (kpiTrial) kpiTrial.textContent = stats.trial_users || 0;
+        if (kpiExpired) kpiExpired.textContent = stats.expired_users || 0;
+
+        renderAdminUsers();
+
+        if (showToastFeedback) {
+            showToast('Usuarios actualizados correctamente.', 'success');
+        }
+    } catch (e) {
+        console.error('Error al obtener usuarios de SuperAdmin:', e);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Error de conexión al cargar usuarios.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+function renderAdminUsers() {
+    const tbody = document.getElementById('tbody-admin-users');
+    const searchInput = document.getElementById('admin-user-search');
+    const filterStatus = document.getElementById('admin-user-filter-status');
+    const sortSelect = document.getElementById('admin-user-sort');
+    const showingCount = document.getElementById('admin-showing-count');
+    const totalCount = document.getElementById('admin-total-count');
+
+    if (!tbody) return;
+
+    let filtered = [...allAdminUsersData];
+    if (totalCount) totalCount.textContent = allAdminUsersData.length;
+
+    // Filtro por texto
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    if (query) {
+        filtered = filtered.filter(u => 
+            (u.full_name || '').toLowerCase().includes(query) ||
+            (u.email || '').toLowerCase().includes(query) ||
+            (u.clinic_name || '').toLowerCase().includes(query) ||
+            (u.professional_title || '').toLowerCase().includes(query) ||
+            (u.phone || '').includes(query)
+        );
+    }
+
+    // Filtro por Estado
+    const statusVal = filterStatus ? filterStatus.value : 'all';
+    if (statusVal !== 'all') {
+        if (statusVal === 'active') {
+            filtered = filtered.filter(u => u.subscription_status === 'active' || u.subscription_status === 'lifetime');
+        } else if (statusVal === 'trial') {
+            filtered = filtered.filter(u => u.subscription_status === 'trial');
+        } else if (statusVal === 'expired') {
+            filtered = filtered.filter(u => u.subscription_status === 'expired');
+        } else if (statusVal === 'admin') {
+            filtered = filtered.filter(u => u.role === 'admin');
+        }
+    }
+
+    // Ordenación
+    const sortVal = sortSelect ? sortSelect.value : 'newest';
+    if (sortVal === 'name_asc') {
+        filtered.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+    } else if (sortVal === 'days_asc') {
+        filtered.sort((a, b) => (a.days_left || 0) - (b.days_left || 0));
+    } else {
+        // newest
+        filtered.sort((a, b) => {
+            if (a.role === 'admin' && b.role !== 'admin') return -1;
+            if (b.role === 'admin' && a.role !== 'admin') return 1;
+            return (b.created_at || '').localeCompare(a.created_at || '');
+        });
+    }
+
+    if (showingCount) showingCount.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="text-center py-5 text-muted">
+                    <i class="bi bi-people fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                    No se encontraron usuarios con los filtros seleccionados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(u => {
+        const isAdmin = u.role === 'admin';
+        const isLifetime = u.subscription_status === 'lifetime';
+        const isActive = u.subscription_status === 'active';
+        const isTrial = u.subscription_status === 'trial';
+        const isExpired = u.subscription_status === 'expired';
+
+        let badgeClass = 'bg-secondary text-white';
+        let badgeLabel = 'Vencido';
+        let progressClass = 'bg-danger';
+
+        if (isAdmin || isLifetime) {
+            badgeClass = 'bg-purple text-white';
+            badgeLabel = isAdmin ? '👑 SuperAdmin' : '⭐ Lifetime';
+            progressClass = 'bg-purple';
+        } else if (isActive) {
+            badgeClass = 'bg-success text-white';
+            badgeLabel = '🟢 Activo';
+            progressClass = 'bg-success';
+        } else if (isTrial) {
+            badgeClass = 'bg-warning text-dark';
+            badgeLabel = '🟡 Prueba (7d)';
+            progressClass = 'bg-warning';
+        } else {
+            badgeClass = 'bg-danger text-white';
+            badgeLabel = '🔴 Expirado';
+            progressClass = 'bg-danger';
+        }
+
+        const days = u.days_left || 0;
+        const percent = (isAdmin || isLifetime) ? 100 : Math.min(100, Math.max(5, (days / 30) * 100));
+        const daysLabel = (isAdmin || isLifetime) ? 'Ilimitado' : (days > 0 ? `${days} día${days === 1 ? '' : 's'}` : '<span class="text-danger fw-bold">Vencido</span>');
+
+        // Formatear fechas
+        let createdStr = '---';
+        if (u.created_at) {
+            try {
+                createdStr = new Date(u.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {}
+        }
+
+        let expStr = 'Sin Vencimiento';
+        if (u.subscription_expires_at && !isAdmin && !isLifetime) {
+            try {
+                expStr = new Date(u.subscription_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {}
+        }
+
+        // WhatsApp direct link
+        const cleanPhone = (u.phone || '').replace(/[^0-9]/g, '');
+        const waLink = cleanPhone ? `https://wa.me/${cleanPhone}?text=${encodeURIComponent(`Hola ${u.full_name}, te escribimos desde el soporte de VitaMetrix para ayudarte con tu suscripción clínica.`)}` : '';
+
+        return `
+            <tr>
+                <td class="ps-3 py-3">
+                    <div class="d-flex align-items-center gap-2.5">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(u.full_name || 'Dr')}&background=${isAdmin ? '6366f1' : (isActive ? '005bbf' : '64748b')}&color=fff" 
+                             alt="Avatar" class="rounded-circle shadow-2xs flex-shrink-0" style="width: 38px; height: 38px;">
+                        <div class="overflow-hidden">
+                            <div class="fw-bold text-navy text-truncate" style="max-width: 170px;">${escapeHtml(u.full_name)}</div>
+                            <div class="text-muted text-xs text-truncate" style="max-width: 170px;">${escapeHtml(u.email)}</div>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="fw-semibold text-secondary text-xs text-truncate" style="max-width: 170px;">${escapeHtml(u.professional_title || 'Nutricionista BIA')}</div>
+                    <div class="text-muted text-xs text-truncate" style="max-width: 170px;"><i class="bi bi-hospital me-1"></i>${escapeHtml(u.clinic_name || 'Mi Consultorio')}</div>
+                </td>
+                <td>
+                    ${cleanPhone ? `
+                        <a href="${waLink}" target="_blank" class="btn btn-xs btn-outline-success d-inline-flex align-items-center gap-1 rounded-pill px-2.5 py-1" title="Chatear por WhatsApp">
+                            <i class="bi bi-whatsapp"></i>
+                            <span style="font-size: 0.72rem;">${escapeHtml(u.phone)}</span>
+                        </a>
+                    ` : `<span class="text-muted text-xs">Sin teléfono</span>`}
+                </td>
+                <td>
+                    <span class="badge ${isAdmin ? 'bg-primary-subtle text-primary border border-primary border-opacity-30' : 'bg-light text-secondary border'} px-2.5 py-1 fw-bold text-xs rounded-pill">
+                        ${isAdmin ? '👑 SuperAdmin' : '👨‍⚕️ Doctor'}
+                    </span>
+                </td>
+                <td>
+                    <span class="badge ${badgeClass} px-2.5 py-1 rounded-pill text-xs fw-bold mb-1 d-inline-block">
+                        ${badgeLabel}
+                    </span>
+                    <div class="text-muted text-xs text-truncate" style="max-width: 150px;">
+                        ${escapeHtml(u.subscription_plan || 'Plan Pro')}
+                    </div>
+                </td>
+                <td>
+                    <div class="d-flex align-items-center justify-content-between text-xs mb-1">
+                        <span class="fw-bold">${daysLabel}</span>
+                        <span class="text-muted" style="font-size: 0.7rem;">${percent.toFixed(0)}%</span>
+                    </div>
+                    <div class="progress" style="height: 6px; border-radius: 9999px; background-color: #f1f5f9;">
+                        <div class="progress-bar ${progressClass}" role="progressbar" style="width: ${percent}%; border-radius: 9999px;"></div>
+                    </div>
+                </td>
+                <td>
+                    <div class="text-xs text-secondary mb-0.5">📅 Alta: <strong>${createdStr}</strong></div>
+                    <div class="text-xs text-muted">⏳ Vence: <strong class="${isExpired ? 'text-danger' : 'text-navy'}">${expStr}</strong></div>
+                </td>
+                <td class="text-end pe-3">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 fw-semibold" onclick="quickExtendUserDirect('${u.id}', 30)" title="Extender 30 días de suscripción">+30d</button>
+                        <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-secondary" onclick="openAdminManageUserModal('${u.id}')" title="Gestionar cuenta">
+                            <i class="bi bi-gear-fill"></i>
+                        </button>
+                        ${!isAdmin ? `
+                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar usuario">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+async function quickExtendUserDirect(userId, days = 30) {
+    try {
+        const res = await fetch(`/api/admin/users/${userId}/extend`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+            body: JSON.stringify({ days: days })
+        });
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+            showToast(data.error || 'Error al extender suscripción', 'error');
+            return;
+        }
+        showToast(`⚡ ${data.message}`, 'success');
+        fetchAdminUsers(false);
+    } catch (e) {
+        showToast('Error de conexión al extender suscripción', 'error');
+    }
+}
+
+function openAdminManageUserModal(userId) {
+    const user = allAdminUsersData.find(u => u.id === userId);
+    if (!user) return;
+
+    const modal = document.getElementById('modal-admin-manage-user');
+    const inputId = document.getElementById('admin-manage-user-id');
+    const subtitle = document.getElementById('admin-manage-subtitle');
+    const emailEl = document.getElementById('admin-manage-email');
+    const badgeEl = document.getElementById('admin-manage-current-badge');
+    const expEl = document.getElementById('admin-manage-current-exp');
+    const daysEl = document.getElementById('admin-manage-current-days');
+    const statusSelect = document.getElementById('admin-manage-status-select');
+    const roleSelect = document.getElementById('admin-manage-role-select');
+    const planNameInput = document.getElementById('admin-manage-plan-name');
+    const errorEl = document.getElementById('admin-manage-error');
+
+    if (inputId) inputId.value = user.id;
+    if (subtitle) subtitle.textContent = `Doctor: ${user.full_name}`;
+    if (emailEl) emailEl.textContent = user.email;
+    if (daysEl) daysEl.textContent = user.role === 'admin' ? 'Ilimitado (Admin)' : `${user.days_left || 0} días restantes`;
+    
+    if (expEl) {
+        if (user.subscription_expires_at && user.role !== 'admin') {
+            try {
+                expEl.textContent = new Date(user.subscription_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+            } catch (e) {
+                expEl.textContent = '---';
+            }
+        } else {
+            expEl.textContent = 'Sin Vencimiento';
+        }
+    }
+
+    if (badgeEl) {
+        badgeEl.textContent = user.subscription_status === 'active' ? '🟢 Activo' : (user.subscription_status === 'trial' ? '🟡 Prueba' : (user.role === 'admin' ? '👑 Admin' : '🔴 Vencido'));
+        badgeEl.className = `badge ${user.subscription_status === 'active' ? 'bg-success text-white' : (user.subscription_status === 'trial' ? 'bg-warning text-dark' : 'bg-danger text-white')}`;
+    }
+
+    if (statusSelect) statusSelect.value = user.subscription_status || 'active';
+    if (roleSelect) roleSelect.value = user.role || 'user';
+    if (planNameInput) planNameInput.value = user.subscription_plan || 'Plan Pro Mensual';
+    if (errorEl) errorEl.classList.add('d-none');
+
+    if (modal) modal.classList.remove('hidden');
+}
+
+async function quickExtendDays(days) {
+    const userId = document.getElementById('admin-manage-user-id').value;
+    if (!userId) return;
+    await quickExtendUserDirect(userId, days);
+    const modal = document.getElementById('modal-admin-manage-user');
+    if (modal) modal.classList.add('hidden');
+}
+
+function deleteAdminUser(userId, userName) {
+    showConfirm(
+        'Eliminar Usuario',
+        `¿Estás seguro de eliminar la cuenta del doctor <strong>${userName}</strong>?<br><span class="text-danger small">Esta acción no se puede deshacer.</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Error al eliminar usuario', 'error');
+                    return;
+                }
+                showToast(`🗑️ Usuario ${userName} eliminado exitosamente.`, 'info');
+                fetchAdminUsers(false);
+            } catch (e) {
+                showToast('Error de conexión al eliminar usuario', 'error');
+            }
+        },
+        { confirmText: 'Eliminar Usuario', type: 'danger', icon: 'bi bi-trash-fill' }
+    );
 }
 
 // --- 0.1 TOASTS & MODALS ---
@@ -715,6 +1248,8 @@ function navigateToView(targetId, updateHistory = true) {
         }, 120);
     } else if (cleanId === 'subscription-view') {
         fetchSubscriptionStatus();
+    } else if (cleanId === 'superadmin-view') {
+        fetchAdminUsers();
     }
 }
 

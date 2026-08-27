@@ -631,10 +631,258 @@ def admin_create_license():
         "license_keys": created_keys
     }), 201
 
+def _require_admin():
+    auth_header = request.headers.get('Authorization', '')
+    token = None
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1].strip()
+    elif request.cookies.get('vm_auth_token'):
+        token = request.cookies.get('vm_auth_token')
+    elif request.args.get('token'):
+        token = request.args.get('token')
+
+    if not token:
+        curr = _get_current_user()
+        if curr and curr.get('role') == 'admin':
+            return curr, None
+        return None, (jsonify({"error": "No autenticado", "authenticated": False}), 401)
+
+    payload = _verify_auth_token(token)
+    if not payload or not payload.get('user_id'):
+        return None, (jsonify({"error": "Token inválido o expirado", "authenticated": False}), 401)
+
+    user_id = payload['user_id']
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return None, (jsonify({"error": "Usuario no encontrado"}), 404)
+
+    if target_user.get('role') != 'admin':
+        return None, (jsonify({"error": "Acceso restringido: Se requieren privilegios de SuperAdmin"}), 403)
+
+    return target_user, None
+
 @app.route('/api/admin/licenses', methods=['GET'])
 def admin_get_licenses():
+    caller, err = _require_admin()
+    if err:
+        return err
     licenses = _load_licenses()
     return jsonify(licenses)
+
+@app.route('/api/admin/users', methods=['GET'])
+def admin_get_users():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    users = _load_users()
+    enriched_users = []
+    
+    active_count = 0
+    trial_count = 0
+    expired_count = 0
+    admin_count = 0
+
+    for u in users:
+        status, days_left, expires_at, plan_name = _calc_subscription_status(u)
+        is_admin = u.get('role') == 'admin'
+        
+        if is_admin:
+            admin_count += 1
+            active_count += 1
+        elif status == 'active' or status == 'lifetime':
+            active_count += 1
+        elif status == 'trial':
+            trial_count += 1
+        else:
+            expired_count += 1
+
+        enriched_users.append({
+            "id": u.get('id'),
+            "email": u.get('email'),
+            "full_name": u.get('full_name'),
+            "professional_title": u.get('professional_title', 'Nutricionista / Especialista BIA'),
+            "clinic_name": u.get('clinic_name', 'Mi Consultorio'),
+            "phone": u.get('phone', ''),
+            "role": u.get('role', 'user'),
+            "subscription_status": status,
+            "subscription_plan": plan_name,
+            "subscription_expires_at": expires_at,
+            "trial_started_at": u.get('trial_started_at'),
+            "created_at": u.get('created_at'),
+            "days_left": days_left
+        })
+
+    enriched_users.sort(key=lambda x: (0 if x['role'] == 'admin' else 1, x.get('created_at') or ''), reverse=False)
+
+    stats = {
+        "total_users": len(users),
+        "active_users": active_count,
+        "trial_users": trial_count,
+        "expired_users": expired_count,
+        "admin_users": admin_count
+    }
+
+    return jsonify({
+        "success": True,
+        "users": enriched_users,
+        "stats": stats
+    }), 200
+
+@app.route('/api/admin/users/create', methods=['POST'])
+def admin_create_user():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    email = _clean_str(data.get('email'), max_len=120).lower().strip()
+    password = str(data.get('password') or '').strip()
+    full_name = _clean_str(data.get('full_name'), max_len=120)
+    professional_title = _clean_str(data.get('professional_title'), max_len=100) or "Nutricionista / Especialista BIA"
+    clinic_name = _clean_str(data.get('clinic_name'), max_len=150) or "Mi Consultorio Clínico"
+    phone = _clean_str(data.get('phone'), max_len=30)
+    role = "admin" if data.get('role') == 'admin' else "user"
+    duration_days = int(data.get('duration_days', 30))
+    plan_name = _clean_str(data.get('subscription_plan')) or (f"Plan Pro ({duration_days} días)" if duration_days < 365 else "Plan Anual Pro")
+
+    if not email or '@' not in email:
+        return jsonify({"error": "Correo electrónico inválido"}), 400
+    if not password or len(password) < 6:
+        return jsonify({"error": "La contraseña debe tener mínimo 6 caracteres"}), 400
+    if not full_name:
+        return jsonify({"error": "El nombre completo es obligatorio"}), 400
+
+    users = _load_users()
+    if any(u.get('email', '').lower() == email for u in users):
+        return jsonify({"error": "Ya existe un usuario con este correo electrónico"}), 409
+
+    now_utc = datetime.now(timezone.utc)
+    expires_dt = now_utc + timedelta(days=duration_days)
+
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "full_name": full_name,
+        "professional_title": professional_title,
+        "clinic_name": clinic_name,
+        "phone": phone,
+        "role": role,
+        "subscription_status": "active" if role == 'user' else "lifetime",
+        "subscription_plan": plan_name,
+        "subscription_expires_at": expires_dt.isoformat() if role == 'user' else "2099-12-31T23:59:59Z",
+        "trial_started_at": now_utc.isoformat(),
+        "created_at": now_utc.isoformat()
+    }
+
+    users.append(new_user)
+    _save_users(users)
+
+    return jsonify({
+        "success": True,
+        "message": f"Usuario {full_name} creado exitosamente con {duration_days} días de suscripción.",
+        "user": _build_safe_user_dict(new_user)
+    }), 201
+
+@app.route('/api/admin/users/<user_id>/extend', methods=['POST'])
+def admin_extend_user(user_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    days = int(data.get('days', 30))
+    plan_name = _clean_str(data.get('plan_name'))
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    now_utc = datetime.now(timezone.utc)
+    curr_exp = target_user.get('subscription_expires_at')
+    base_date = now_utc
+
+    if curr_exp:
+        try:
+            exp_dt = datetime.fromisoformat(curr_exp.replace('Z', '+00:00'))
+            if exp_dt > now_utc:
+                base_date = exp_dt
+        except Exception:
+            pass
+
+    new_exp_dt = base_date + timedelta(days=days)
+    target_user['subscription_expires_at'] = new_exp_dt.isoformat()
+    target_user['subscription_status'] = 'active'
+    if plan_name:
+        target_user['subscription_plan'] = plan_name
+    elif not target_user.get('subscription_plan') or 'prueba' in target_user.get('subscription_plan', '').lower():
+        target_user['subscription_plan'] = f"Plan Pro ({days} días)"
+
+    _save_users(users)
+    return jsonify({
+        "success": True,
+        "message": f"Suscripción extendida +{days} días exitosamente para {target_user.get('full_name')}.",
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
+@app.route('/api/admin/users/<user_id>/status', methods=['POST'])
+def admin_set_user_status(user_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    new_status = _clean_str(data.get('status'))
+    new_plan = _clean_str(data.get('plan_name'))
+    new_role = _clean_str(data.get('role'))
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if new_status in ['active', 'trial', 'expired', 'lifetime']:
+        target_user['subscription_status'] = new_status
+        if new_status == 'lifetime':
+            target_user['subscription_expires_at'] = '2099-12-31T23:59:59Z'
+        elif new_status == 'active' and (not target_user.get('subscription_expires_at') or _calc_subscription_status(target_user)[0] == 'expired'):
+            target_user['subscription_expires_at'] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+        elif new_status == 'expired':
+            target_user['subscription_expires_at'] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+
+    if new_plan:
+        target_user['subscription_plan'] = new_plan
+    if new_role in ['user', 'admin']:
+        target_user['role'] = new_role
+
+    _save_users(users)
+    return jsonify({
+        "success": True,
+        "message": f"Estado de usuario actualizado correctamente.",
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
+@app.route('/api/admin/users/<user_id>', methods=['DELETE'])
+def admin_delete_user(user_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    if caller.get('id') == user_id:
+        return jsonify({"error": "No puedes eliminar tu propia cuenta de Administrador"}), 400
+
+    users = _load_users()
+    initial_len = len(users)
+    users = [u for u in users if u.get('id') != user_id]
+
+    if len(users) == initial_len:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    _save_users(users)
+    return jsonify({"success": True, "message": "Usuario eliminado exitosamente"})
 
 @app.route('/')
 def index():

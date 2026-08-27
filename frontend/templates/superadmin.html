@@ -1,0 +1,343 @@
+<!-- ========================================================================= -->
+<!-- VISTA: PANEL SUPERADMIN — GESTIÓN GLOBAL DE USUARIOS Y LICENCIAS         -->
+<!-- ========================================================================= -->
+<section id="superadmin-view" class="view hidden-view">
+    <div class="container-fluid px-0">
+        
+        <!-- Encabezado de Sección SuperAdmin -->
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="fs-4">👑</span>
+                    <h3 class="fw-bold text-navy mb-0 display-font">Panel SuperAdmin — Gestión de Usuarios</h3>
+                    <span class="badge bg-primary text-white rounded-pill px-2.5 py-1 text-xs fw-bold">SaaS Master</span>
+                </div>
+                <p class="text-muted small mb-0 mt-1">Control central de cuentas médicas, monitoreo de pruebas (trial), activación de planes y vigencias.</p>
+            </div>
+            
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" class="btn btn-outline-secondary btn-sm px-3 py-2 rounded-3 fw-semibold shadow-2xs d-inline-flex align-items-center gap-1.5" id="btn-admin-refresh-users">
+                    <i class="bi bi-arrow-clockwise fs-6"></i>
+                    <span>Actualizar</span>
+                </button>
+                <button type="button" class="btn btn-primary btn-sm px-3.5 py-2 rounded-3 fw-semibold shadow-sm d-inline-flex align-items-center gap-1.5" id="btn-admin-open-create-user">
+                    <i class="bi bi-person-plus-fill fs-6"></i>
+                    <span>Nuevo Usuario</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- KPI Cards de Plataforma -->
+        <div class="row g-3 mb-4">
+            <!-- KPI 1: Total Usuarios -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="bento-card p-3.5 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-xs uppercase fw-bold tracking-wider text-muted d-block mb-1">TOTAL USUARIOS</span>
+                        <h3 class="fw-extrabold text-navy mb-0 display-font" id="kpi-admin-total-users">0</h3>
+                        <span class="text-muted text-xs">Cuentas registradas</span>
+                    </div>
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-4 text-primary">
+                        <i class="bi bi-people-fill fs-3"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 2: Activos / Vitalicios -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="bento-card p-3.5 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-xs uppercase fw-bold tracking-wider text-muted d-block mb-1">SUSCRIPCIONES ACTIVAS</span>
+                        <h3 class="fw-extrabold text-success mb-0 display-font" id="kpi-admin-active-users">0</h3>
+                        <span class="text-muted text-xs">Planes Pro & Lifetime</span>
+                    </div>
+                    <div class="bg-success bg-opacity-10 p-3 rounded-4 text-success">
+                        <i class="bi bi-shield-fill-check fs-3"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 3: En Período de Prueba (Trial) -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="bento-card p-3.5 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-xs uppercase fw-bold tracking-wider text-muted d-block mb-1">EN PRUEBA (TRIAL)</span>
+                        <h3 class="fw-extrabold text-warning mb-0 display-font" id="kpi-admin-trial-users">0</h3>
+                        <span class="text-muted text-xs">7 días de evaluación</span>
+                    </div>
+                    <div class="bg-warning bg-opacity-10 p-3 rounded-4 text-warning">
+                        <i class="bi bi-hourglass-split fs-3"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KPI 4: Expirados / Por Renovar -->
+            <div class="col-12 col-sm-6 col-xl-3">
+                <div class="bento-card p-3.5 h-100 d-flex align-items-center justify-content-between">
+                    <div>
+                        <span class="text-xs uppercase fw-bold tracking-wider text-muted d-block mb-1">PLANES VENCIDOS</span>
+                        <h3 class="fw-extrabold text-danger mb-0 display-font" id="kpi-admin-expired-users">0</h3>
+                        <span class="text-muted text-xs">Pendientes de renovación</span>
+                    </div>
+                    <div class="bg-danger bg-opacity-10 p-3 rounded-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Barra de Búsqueda y Filtros de Usuarios -->
+        <div class="bento-card p-3 mb-3">
+            <div class="row g-2 align-items-center">
+                <div class="col-12 col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                        <input type="text" class="form-control border-start-0 ps-0 text-sm" id="admin-user-search" placeholder="Buscar por doctor, correo, clínica o cargo...">
+                    </div>
+                </div>
+                
+                <div class="col-6 col-md-4">
+                    <select class="form-select text-sm" id="admin-user-filter-status">
+                        <option value="all">Todos los Estados (Todos)</option>
+                        <option value="active">🟢 Activos & Vitalicios</option>
+                        <option value="trial">🟡 En Prueba (Trial 7d)</option>
+                        <option value="expired">🔴 Vencidos / Expirados</option>
+                        <option value="admin">🟣 Administradores</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <select class="form-select text-sm" id="admin-user-sort">
+                        <option value="newest">Más Recientes</option>
+                        <option value="name_asc">Nombre (A - Z)</option>
+                        <option value="days_asc">Días Restantes (Menor a Mayor)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Contenedor Principal: Tabla de Usuarios -->
+        <div class="bento-card p-0 overflow-hidden shadow-sm">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="table-admin-users">
+                    <thead class="bg-light border-bottom text-secondary text-xs text-uppercase fw-bold">
+                        <tr>
+                            <th class="ps-3 py-3" style="min-width: 230px;">Profesional / Usuario</th>
+                            <th style="min-width: 180px;">Cargo & Consultorio</th>
+                            <th style="min-width: 130px;">Teléfono / WhatsApp</th>
+                            <th style="min-width: 140px;">Rol</th>
+                            <th style="min-width: 160px;">Plan & Estado</th>
+                            <th style="min-width: 180px;">Vigencia / Días</th>
+                            <th style="min-width: 140px;">Registro / Vencimiento</th>
+                            <th class="text-end pe-3" style="min-width: 150px;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody-admin-users">
+                        <tr>
+                            <td colspan="8" class="text-center py-5 text-muted">
+                                <div class="spinner-border text-primary spinner-border-sm me-2" role="status"></div>
+                                Cargando usuarios registrados...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer de la Tabla con Conteo -->
+            <div class="p-3 bg-light border-top d-flex flex-wrap align-items-center justify-content-between text-muted text-xs">
+                <div>
+                    Mostrando <strong class="text-navy" id="admin-showing-count">0</strong> de <strong class="text-navy" id="admin-total-count">0</strong> usuarios
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-20 px-2 py-1">Soporte WhatsApp Oficial: +591 72125280</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- ========================================================================= -->
+<!-- MODAL: CREAR NUEVO USUARIO / MÉDICO DIRECTAMENTE (SUPERADMIN)             -->
+<!-- ========================================================================= -->
+<div id="modal-admin-create-user" class="modal-overlay hidden">
+    <div class="modal-box bento-card p-4" style="max-width: 540px; width: 94%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary bg-opacity-10 p-2 rounded-3 text-primary">
+                    <i class="bi bi-person-plus-fill fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-navy mb-0">Crear Nuevo Médico / Usuario</h5>
+                    <span class="text-muted text-xs">Alta directa con asignación de plan y vigencia</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" id="btn-close-admin-create-user" aria-label="Cerrar"></button>
+        </div>
+
+        <form id="form-admin-create-user" class="d-flex flex-column gap-3">
+            <div>
+                <label for="admin-new-name" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre Completo *</label>
+                <input type="text" class="form-control" id="admin-new-name" placeholder="Dr. Roberto Vaca" required>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-email" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Correo Electrónico *</label>
+                    <input type="email" class="form-control" id="admin-new-email" placeholder="doctor@clinica.com" required>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-password" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Contraseña *</label>
+                    <input type="password" class="form-control" id="admin-new-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-title" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Título / Cargo</label>
+                    <input type="text" class="form-control" id="admin-new-title" value="Nutricionista / Especialista BIA">
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-clinic" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Consultorio / Clínica</label>
+                    <input type="text" class="form-control" id="admin-new-clinic" value="Mi Consultorio VitaMetrix">
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-phone" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Teléfono / WhatsApp</label>
+                    <input type="text" class="form-control" id="admin-new-phone" placeholder="+591 7XXXXXXX">
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-role" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Rol de Cuenta</label>
+                    <select class="form-select" id="admin-new-role">
+                        <option value="user" selected>Doctor / Usuario Estándar</option>
+                        <option value="admin">SuperAdmin (Acceso Total)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-plan" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Plan Inicial</label>
+                    <select class="form-select" id="admin-new-plan">
+                        <option value="Plan Pro Mensual (30 días)" selected>Plan Pro Mensual</option>
+                        <option value="Plan Anual Pro (365 días)">Plan Anual Pro</option>
+                        <option value="Plan de Prueba (7 días)">Plan de Prueba (7 días)</option>
+                        <option value="Plan Ilimitado / Administrador">Plan Ilimitado</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-6">
+                    <label for="admin-new-duration" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Duración (Días)</label>
+                    <select class="form-select" id="admin-new-duration">
+                        <option value="7">7 días (Prueba)</option>
+                        <option value="30" selected>30 días (1 Mes)</option>
+                        <option value="90">90 días (3 Meses)</option>
+                        <option value="180">180 días (6 Meses)</option>
+                        <option value="365">365 días (1 Año)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="admin-create-error" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top mt-2">
+                <button type="button" class="btn btn-secondary px-3 py-2 rounded-3" id="btn-cancel-admin-create-user">Cancelar</button>
+                <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5" id="btn-submit-admin-create-user">
+                    <i class="bi bi-check-circle-fill"></i>
+                    <span>Crear Usuario</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: GESTIONAR / EXTENDER SUSCRIPCIÓN DE USUARIO                        -->
+<!-- ========================================================================= -->
+<div id="modal-admin-manage-user" class="modal-overlay hidden">
+    <div class="modal-box bento-card p-4" style="max-width: 520px; width: 94%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-warning bg-opacity-10 p-2 rounded-3 text-warning">
+                    <i class="bi bi-stars fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-navy mb-0" id="admin-manage-title">Gestionar Suscripción</h5>
+                    <span class="text-muted text-xs" id="admin-manage-subtitle">Doctor: ---</span>
+                </div>
+            </div>
+            <button type="button" class="btn-close" id="btn-close-admin-manage-user" aria-label="Cerrar"></button>
+        </div>
+
+        <form id="form-admin-manage-user" class="d-flex flex-column gap-3">
+            <input type="hidden" id="admin-manage-user-id" value="">
+
+            <!-- Info Resumen Actual -->
+            <div class="bg-light rounded-3 p-3 border">
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-secondary text-xs">Correo:</span>
+                    <strong class="text-navy text-xs" id="admin-manage-email">---</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-secondary text-xs">Estado Actual:</span>
+                    <span class="badge px-2 py-0.5" id="admin-manage-current-badge">---</span>
+                </div>
+                <div class="d-flex justify-content-between mb-1">
+                    <span class="text-secondary text-xs">Vence el:</span>
+                    <strong class="text-navy text-xs" id="admin-manage-current-exp">---</strong>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-secondary text-xs">Tiempo Restante:</span>
+                    <strong class="text-primary text-xs" id="admin-manage-current-days">---</strong>
+                </div>
+            </div>
+
+            <!-- Acción 1: Extender Días Rápidos -->
+            <div>
+                <label class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Añadir Tiempo / Extender Vigencia</label>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-1.5 fw-bold" onclick="quickExtendDays(7)">+7 Días</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-1.5 fw-bold" onclick="quickExtendDays(30)">+30 Días (1M)</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-1.5 fw-bold" onclick="quickExtendDays(90)">+90 Días (3M)</button>
+                    <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-1.5 fw-bold" onclick="quickExtendDays(365)">+1 Año</button>
+                </div>
+            </div>
+
+            <!-- Acción 2: Cambiar Estado y Plan Manualmente -->
+            <div class="row g-2">
+                <div class="col-6">
+                    <label for="admin-manage-status-select" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Estado</label>
+                    <select class="form-select form-select-sm" id="admin-manage-status-select">
+                        <option value="active">🟢 Activo</option>
+                        <option value="trial">🟡 Prueba (Trial)</option>
+                        <option value="expired">🔴 Expirado / Vencido</option>
+                        <option value="lifetime">🟣 Ilimitado / Lifetime</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label for="admin-manage-role-select" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Rol</label>
+                    <select class="form-select form-select-sm" id="admin-manage-role-select">
+                        <option value="user">Doctor / Usuario</option>
+                        <option value="admin">SuperAdmin</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label for="admin-manage-plan-name" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre del Plan</label>
+                <input type="text" class="form-control form-control-sm" id="admin-manage-plan-name" value="Plan Pro Mensual">
+            </div>
+
+            <div id="admin-manage-error" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
+
+            <div class="d-flex justify-content-end gap-2 pt-2 border-top mt-2">
+                <button type="button" class="btn btn-secondary btn-sm px-3 py-1.5 rounded-3" id="btn-cancel-admin-manage-user">Cerrar</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4 py-1.5 rounded-3 fw-semibold d-inline-flex align-items-center gap-1" id="btn-submit-admin-manage-user">
+                    <i class="bi bi-save"></i>
+                    <span>Guardar Cambios</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

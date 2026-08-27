@@ -768,3 +768,19 @@
     transform: translateY(-1px);
 }
 
+/* ============================================================
+   SUPERADMIN PANEL STYLING & UTILITIES
+   ============================================================ */
+.bg-purple {
+    background-color: #6366f1 !important;
+}
+.text-purple {
+    color: #6366f1 !important;
+}
+.btn-xs {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+}
+
+

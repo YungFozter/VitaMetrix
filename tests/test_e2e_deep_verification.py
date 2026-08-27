@@ -719,5 +719,94 @@ class TestE2EDeepVerification(unittest.TestCase):
         self.assertFalse(dup_data.get('success', False))
         self.assertIn('registrad', dup_data.get('error', '').lower())
 
+    def test_13_superadmin_panel_apis_and_access_control(self):
+        """
+        Test E2E de SuperAdmin:
+        1. Login con credenciales de SuperAdmin (admin@vitametrix.com)
+        2. Consulta del listado global de usuarios y estadísticas
+        3. Control de acceso: bloqueo 403 para usuarios estándar y 401 para anónimos
+        4. Creación de doctor desde el panel SuperAdmin
+        5. Extensión de suscripción (+30 días)
+        6. Cambio de estado/plan
+        7. Eliminación de usuario y protección de auto-eliminación
+        """
+        # 1. Login SuperAdmin
+        admin_login = self.app.post('/api/auth/login', data=json.dumps({
+            "email": "admin@vitametrix.com",
+            "password": "AdminVita2026!"
+        }), content_type='application/json')
+        self.assertEqual(admin_login.status_code, 200)
+        admin_token = json.loads(admin_login.data)['token']
+        self.assertEqual(json.loads(admin_login.data)['user']['role'], 'admin')
+
+        # 2. Login Usuario Estándar para pruebas de control de acceso
+        t_id = int(time.time() * 1000)
+        user_reg = self.app.post('/api/auth/register', data=json.dumps({
+            "email": f"dr.estandar.{t_id}@vitametrix.com",
+            "password": "PasswordDoctor123!",
+            "full_name": "Dr. Estandar Test"
+        }), content_type='application/json')
+        user_token = json.loads(user_reg.data)['token']
+
+        # 3. Control de Acceso a GET /api/admin/users
+        # Con token de SuperAdmin -> 200 OK
+        admin_users_res = self.app.get('/api/admin/users', headers={"Authorization": f"Bearer {admin_token}"})
+        self.assertEqual(admin_users_res.status_code, 200)
+        admin_users_data = json.loads(admin_users_res.data)
+        self.assertTrue(admin_users_data.get('success'))
+        self.assertIn('users', admin_users_data)
+        self.assertIn('stats', admin_users_data)
+        self.assertGreaterEqual(admin_users_data['stats']['total_users'], 1)
+
+        # Con token de usuario común -> 403 Forbidden
+        forbidden_res = self.app.get('/api/admin/users', headers={"Authorization": f"Bearer {user_token}"})
+        self.assertEqual(forbidden_res.status_code, 403)
+
+        # Sin token -> 401 Unauthorized
+        unauth_res = self.app.get('/api/admin/users')
+        self.assertEqual(unauth_res.status_code, 401)
+
+        # 4. SuperAdmin crea un nuevo usuario médico
+        new_doc_email = f"dr.creado.{t_id}@clinicavita.com"
+        create_res = self.app.post('/api/admin/users/create', data=json.dumps({
+            "email": new_doc_email,
+            "password": "PasswordPro2026!",
+            "full_name": "Dr. Médico Creado SuperAdmin",
+            "professional_title": "Especialista Clínico BIA",
+            "clinic_name": "Clínica San Gabriel",
+            "phone": "+59171234567",
+            "role": "user",
+            "subscription_plan": "Plan Pro Mensual (30 días)",
+            "duration_days": 30
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(create_res.status_code, 201)
+        created_user_id = json.loads(create_res.data)['user']['id']
+
+        # 5. SuperAdmin extiende la suscripción (+60 días)
+        extend_res = self.app.post(f'/api/admin/users/{created_user_id}/extend', data=json.dumps({
+            "days": 60,
+            "plan_name": "Plan Pro Trimestral"
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(extend_res.status_code, 200)
+        extend_data = json.loads(extend_res.data)
+        self.assertGreaterEqual(extend_data['user']['subscription']['days_left'], 60)
+
+        # 6. SuperAdmin cambia el estado del usuario
+        status_res = self.app.post(f'/api/admin/users/{created_user_id}/status', data=json.dumps({
+            "status": "lifetime",
+            "plan_name": "Plan Ilimitado / Lifetime"
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(status_res.status_code, 200)
+        self.assertEqual(json.loads(status_res.data)['user']['subscription']['status'], 'lifetime')
+
+        # 7. SuperAdmin elimina el usuario creado
+        del_res = self.app.delete(f'/api/admin/users/{created_user_id}', headers={"Authorization": f"Bearer {admin_token}"})
+        self.assertEqual(del_res.status_code, 200)
+
+        # 8. Protección: SuperAdmin no puede auto-eliminarse
+        admin_user_id = json.loads(admin_login.data)['user']['id']
+        self_del_res = self.app.delete(f'/api/admin/users/{admin_user_id}', headers={"Authorization": f"Bearer {admin_token}"})
+        self.assertEqual(self_del_res.status_code, 400)
+
 if __name__ == '__main__':
     unittest.main()
