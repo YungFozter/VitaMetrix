@@ -6,7 +6,12 @@ import time
 import math
 import uuid
 import re
-from datetime import datetime, timezone
+import hmac
+import hashlib
+import base64
+import secrets
+from datetime import datetime, timezone, timedelta
+from werkzeug.security import generate_password_hash, check_password_hash
 
 # Configurar logging seguro
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -105,11 +110,484 @@ def _cell_bucket(phase_angle, valid=True):
     return "Bajo"
 
 
-def _normalize_gender(value):
-    raw = (value or "male").strip().lower()
-    if raw in ("f", "female", "mujer", "femenino"):
-        return "female"
-    return "male"
+# --- SISTEMA DE AUTENTICACIÓN MULTI-TENANT & SUSCRIPCIONES SAAS ---
+
+_USERS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "users.json")
+_LICENSES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "subscription_licenses.json")
+_JWT_SECRET = os.environ.get("JWT_SECRET", "vitametrix_master_security_jwt_secret_2026_super_key_bolivia")
+
+_DEFAULT_INITIAL_USERS = [
+    {
+        "id": "usr-admin-001",
+        "email": "admin@vitametrix.com",
+        "password_hash": generate_password_hash("AdminVita2026!"),
+        "full_name": "Administrador General",
+        "professional_title": "Director / Administrador de Plataforma",
+        "clinic_name": "Sede Central VitaMetrix",
+        "phone": "+59172125280",
+        "role": "admin",
+        "subscription_status": "lifetime",
+        "subscription_plan": "Plan Ilimitado / Administrador",
+        "subscription_expires_at": "2099-12-31T23:59:59Z",
+        "trial_started_at": "2026-01-01T00:00:00Z",
+        "created_at": "2026-01-01T00:00:00Z"
+    },
+    {
+        "id": "usr-doctor-001",
+        "email": "audrey@vitametrix.com",
+        "password_hash": generate_password_hash("Doctora2026!"),
+        "full_name": "Dra. Audrey",
+        "professional_title": "Especialista BIA / Nutricionista",
+        "clinic_name": "Centro Médico VitaMetrix",
+        "phone": "+59171234567",
+        "role": "user",
+        "subscription_status": "active",
+        "subscription_plan": "Plan Pro Mensual",
+        "subscription_expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
+        "trial_started_at": "2026-08-01T00:00:00Z",
+        "created_at": "2026-08-01T00:00:00Z"
+    }
+]
+
+_DEFAULT_INITIAL_LICENSES = [
+    {
+        "id": "lic-001",
+        "license_key": "VM-1M-PRO7-9B2F",
+        "duration_days": 30,
+        "plan_name": "Plan Pro Mensual (30 días)",
+        "is_used": False,
+        "used_by_user_id": None,
+        "used_at": None,
+        "created_at": "2026-08-20T10:00:00Z"
+    },
+    {
+        "id": "lic-002",
+        "license_key": "VM-1M-K4A8-11D9",
+        "duration_days": 30,
+        "plan_name": "Plan Pro Mensual (30 días)",
+        "is_used": False,
+        "used_by_user_id": None,
+        "used_at": None,
+        "created_at": "2026-08-20T10:00:00Z"
+    },
+    {
+        "id": "lic-003",
+        "license_key": "VM-1A-VITA-2026",
+        "duration_days": 365,
+        "plan_name": "Plan Anual Pro (365 días)",
+        "is_used": False,
+        "used_by_user_id": None,
+        "used_at": None,
+        "created_at": "2026-08-20T10:00:00Z"
+    }
+]
+
+def _load_users():
+    if os.path.exists(_USERS_PATH):
+        try:
+            with open(_USERS_PATH, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+                if isinstance(users, list) and len(users) > 0:
+                    return users
+        except Exception as e:
+            logging.warning("Error al leer users.json: %s", e)
+    _save_users(_DEFAULT_INITIAL_USERS)
+    return list(_DEFAULT_INITIAL_USERS)
+
+def _save_users(users):
+    try:
+        os.makedirs(os.path.dirname(_USERS_PATH), exist_ok=True)
+        with open(_USERS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(users, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar users.json: %s", e)
+        return False
+
+def _load_licenses():
+    if os.path.exists(_LICENSES_PATH):
+        try:
+            with open(_LICENSES_PATH, 'r', encoding='utf-8') as f:
+                licenses = json.load(f)
+                if isinstance(licenses, list) and len(licenses) > 0:
+                    return licenses
+        except Exception as e:
+            logging.warning("Error al leer subscription_licenses.json: %s", e)
+    _save_licenses(_DEFAULT_INITIAL_LICENSES)
+    return list(_DEFAULT_INITIAL_LICENSES)
+
+def _save_licenses(licenses):
+    try:
+        os.makedirs(os.path.dirname(_LICENSES_PATH), exist_ok=True)
+        with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(licenses, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar subscription_licenses.json: %s", e)
+        return False
+
+def _generate_auth_token(user_id, email, role="user"):
+    payload = {
+        "user_id": user_id,
+        "email": email,
+        "role": role,
+        "exp": int(time.time()) + (30 * 86400) # 30 días de validez
+    }
+    payload_json = json.dumps(payload, separators=(',', ':'))
+    b64_payload = base64.urlsafe_b64encode(payload_json.encode()).decode().rstrip('=')
+    sig = hmac.new(_JWT_SECRET.encode(), b64_payload.encode(), hashlib.sha256).hexdigest()
+    return f"{b64_payload}.{sig}"
+
+def _verify_auth_token(token_str):
+    if not token_str or '.' not in token_str:
+        return None
+    try:
+        b64_payload, sig = token_str.split('.', 1)
+        expected_sig = hmac.new(_JWT_SECRET.encode(), b64_payload.encode(), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return None
+
+        padded = b64_payload + '=' * ((4 - len(b64_payload) % 4) % 4)
+        payload_bytes = base64.urlsafe_b64decode(padded)
+        payload = json.loads(payload_bytes.decode())
+
+        if payload.get('exp', 0) < time.time():
+            return None
+        return payload
+    except Exception as e:
+        logging.warning("Error validando token: %s", e)
+        return None
+
+def _get_current_user():
+    auth_header = request.headers.get('Authorization', '')
+    token = None
+    if auth_header.startswith('Bearer '):
+        token = auth_header.split(' ', 1)[1].strip()
+    elif request.cookies.get('vm_auth_token'):
+        token = request.cookies.get('vm_auth_token')
+    elif request.args.get('token'):
+        token = request.args.get('token')
+
+    if token:
+        payload = _verify_auth_token(token)
+        if payload and payload.get('user_id'):
+            user_id = payload['user_id']
+            for u in _load_users():
+                if u.get('id') == user_id:
+                    return u
+            if supabase:
+                try:
+                    res = supabase.table('users').select('*').eq('id', user_id).execute()
+                    if res.data:
+                        return res.data[0]
+                except Exception:
+                    pass
+
+    # Usuario demo predeterminado para retrocompatibilidad
+    users = _load_users()
+    if len(users) > 1:
+        return users[1]
+    return _DEFAULT_INITIAL_USERS[1]
+
+def _calc_subscription_status(user):
+    if not user:
+        return "expired", 0, None, "Plan Vencido"
+
+    if user.get('role') == 'admin' or user.get('subscription_status') == 'lifetime':
+        return "lifetime", 9999, "2099-12-31T23:59:59Z", user.get('subscription_plan', 'Plan Ilimitado / Administrador')
+
+    expires_at_str = user.get('subscription_expires_at')
+    plan_name = user.get('subscription_plan', 'Plan Pro Mensual')
+    if not expires_at_str:
+        return "trial", 7, (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(), plan_name
+
+    try:
+        exp_dt = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
+        now_dt = datetime.now(timezone.utc)
+        diff = exp_dt - now_dt
+        days_left = max(0, diff.days + (1 if diff.seconds > 0 else 0))
+        is_active = diff.total_seconds() > 0
+
+        if is_active:
+            status = "trial" if ("prueba" in plan_name.lower() or "trial" in plan_name.lower()) else "active"
+            return status, days_left, exp_dt.isoformat(), plan_name
+        else:
+            return "expired", 0, exp_dt.isoformat(), plan_name
+    except Exception:
+        return "expired", 0, None, plan_name
+
+def _build_safe_user_dict(user):
+    status, days_left, expires_at, plan_name = _calc_subscription_status(user)
+    return {
+        "id": user.get('id'),
+        "email": user.get('email'),
+        "full_name": user.get('full_name'),
+        "professional_title": user.get('professional_title', 'Nutricionista / Especialista BIA'),
+        "clinic_name": user.get('clinic_name', 'Centro Médico VitaMetrix'),
+        "phone": user.get('phone', ''),
+        "role": user.get('role', 'user'),
+        "subscription": {
+            "status": status,
+            "days_left": days_left,
+            "expires_at": expires_at,
+            "plan_name": plan_name,
+            "whatsapp_contact": "+591 72125280",
+            "whatsapp_phone_clean": "59172125280"
+        }
+    }
+
+# --- RUTAS DE AUTENTICACIÓN ---
+
+@app.route('/api/auth/register', methods=['POST'])
+def auth_register():
+    data = request.json or {}
+    email = _clean_str(data.get('email'), max_len=120).lower().strip()
+    password = str(data.get('password') or '').strip()
+    full_name = _clean_str(data.get('full_name'), max_len=120)
+    professional_title = _clean_str(data.get('professional_title'), max_len=100) or "Nutricionista / Especialista BIA"
+    clinic_name = _clean_str(data.get('clinic_name'), max_len=150) or "Mi Consultorio VitaMetrix"
+    phone = _clean_str(data.get('phone'), max_len=30)
+
+    if not email or '@' not in email:
+        return jsonify({"error": "Por favor ingresa un correo electrónico válido"}), 400
+    if not password or len(password) < 6:
+        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+    if not full_name:
+        return jsonify({"error": "El nombre completo del profesional es obligatorio"}), 400
+
+    users = _load_users()
+    if any(u.get('email', '').lower() == email for u in users):
+        return jsonify({"error": "Ya existe una cuenta registrada con este correo electrónico"}), 409
+
+    now_utc = datetime.now(timezone.utc)
+    trial_expires = now_utc + timedelta(days=7)
+
+    new_user = {
+        "id": str(uuid.uuid4()),
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "full_name": full_name,
+        "professional_title": professional_title,
+        "clinic_name": clinic_name,
+        "phone": phone,
+        "role": "user",
+        "subscription_status": "trial",
+        "subscription_plan": "Plan de Prueba (7 días)",
+        "subscription_expires_at": trial_expires.isoformat(),
+        "trial_started_at": now_utc.isoformat(),
+        "created_at": now_utc.isoformat()
+    }
+
+    if supabase:
+        try:
+            supabase.table('users').insert({
+                "id": new_user['id'],
+                "email": email,
+                "password_hash": new_user['password_hash'],
+                "full_name": full_name,
+                "professional_title": professional_title,
+                "clinic_name": clinic_name,
+                "phone": phone,
+                "role": "user",
+                "subscription_status": "trial",
+                "subscription_plan": "Plan de Prueba (7 días)",
+                "subscription_expires_at": trial_expires.isoformat()
+            }).execute()
+        except Exception as e:
+            logging.warning("Error al guardar usuario en Supabase (usando fallback local): %s", e)
+
+    users.append(new_user)
+    _save_users(users)
+
+    token = _generate_auth_token(new_user['id'], email, new_user['role'])
+    return jsonify({
+        "success": True,
+        "token": token,
+        "user": _build_safe_user_dict(new_user),
+        "message": "¡Cuenta creada con éxito! Se han activado 7 días de prueba gratuita."
+    }), 201
+
+@app.route('/api/auth/login', methods=['POST'])
+def auth_login():
+    data = request.json or {}
+    email = _clean_str(data.get('email'), max_len=120).lower().strip()
+    password = str(data.get('password') or '').strip()
+
+    if not email or not password:
+        return jsonify({"error": "Correo y contraseña son obligatorios"}), 400
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('email', '').lower() == email), None)
+
+    if not target_user and supabase:
+        try:
+            res = supabase.table('users').select('*').eq('email', email).execute()
+            if res.data:
+                target_user = res.data[0]
+                users.append(target_user)
+                _save_users(users)
+        except Exception:
+            pass
+
+    if not target_user:
+        return jsonify({"error": "Credenciales incorrectas. Verifica tu correo o crea una cuenta nueva."}), 401
+
+    if not check_password_hash(target_user.get('password_hash', ''), password):
+        return jsonify({"error": "Contraseña incorrecta."}), 401
+
+    token = _generate_auth_token(target_user['id'], target_user['email'], target_user.get('role', 'user'))
+    return jsonify({
+        "success": True,
+        "token": token,
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
+@app.route('/api/auth/me', methods=['GET'])
+def auth_me():
+    user = _get_current_user()
+    if not user:
+        return jsonify({"error": "No autenticado"}), 401
+    return jsonify({
+        "success": True,
+        "user": _build_safe_user_dict(user)
+    })
+
+@app.route('/api/auth/logout', methods=['POST'])
+def auth_logout():
+    return jsonify({"success": True, "message": "Sesión cerrada correctamente"})
+
+# --- RUTAS DE SUSCRIPCIÓN & LICENCIAMIENTO ---
+
+@app.route('/api/subscription/status', methods=['GET'])
+def subscription_status():
+    user = _get_current_user()
+    safe_user = _build_safe_user_dict(user)
+    sub = safe_user['subscription']
+
+    # Mensaje predeterminado de WhatsApp codificado
+    wa_msg = (
+        f"¡Hola VitaMetrix! Deseo renovar/activar mi suscripción mensual Pro.\n"
+        f"👤 Profesional: {safe_user.get('full_name')}\n"
+        f"📧 Correo: {safe_user.get('email')}\n"
+        f"🆔 ID de Cuenta: {safe_user.get('id')}"
+    )
+
+    return jsonify({
+        "success": True,
+        "subscription": sub,
+        "user": safe_user,
+        "whatsapp": {
+            "phone_display": "+591 72125280",
+            "phone_e164": "59172125280",
+            "message_text": wa_msg
+        }
+    })
+
+@app.route('/api/subscription/redeem', methods=['POST'])
+def subscription_redeem():
+    data = request.json or {}
+    key_input = _clean_str(data.get('license_key'), max_len=60).upper().strip()
+
+    if not key_input:
+        return jsonify({"error": "Por favor ingresa una clave de licencia válida"}), 400
+
+    user = _get_current_user()
+    if not user:
+        return jsonify({"error": "Debes iniciar sesión para canjear una licencia"}), 401
+
+    licenses = _load_licenses()
+    target_license = next((lic for lic in licenses if lic.get('license_key', '').upper().strip() == key_input), None)
+
+    if not target_license:
+        return jsonify({"error": "La clave de licencia ingresada no existe o es inválida. Verifica con soporte vía WhatsApp (+591 72125280)."}), 404
+
+    if target_license.get('is_used'):
+        return jsonify({"error": "Esta clave de licencia ya fue canjeada anteriormente."}), 409
+
+    duration_days = int(target_license.get('duration_days', 30))
+    plan_name = target_license.get('plan_name', 'Plan Pro Mensual')
+
+    # Calcular nueva fecha de expiración
+    now_utc = datetime.now(timezone.utc)
+    current_exp_str = user.get('subscription_expires_at')
+    
+    base_date = now_utc
+    if current_exp_str:
+        try:
+            curr_dt = datetime.fromisoformat(current_exp_str.replace('Z', '+00:00'))
+            if curr_dt > now_utc:
+                base_date = curr_dt # Sumar sobre el saldo activo
+        except Exception:
+            pass
+
+    new_expires_dt = base_date + timedelta(days=duration_days)
+
+    # Actualizar usuario
+    users = _load_users()
+    for u in users:
+        if u.get('id') == user.get('id'):
+            u['subscription_status'] = 'active'
+            u['subscription_plan'] = plan_name
+            u['subscription_expires_at'] = new_expires_dt.isoformat()
+            user = u
+            break
+    _save_users(users)
+
+    # Marcar licencia como usada
+    target_license['is_used'] = True
+    target_license['used_by_user_id'] = user.get('id')
+    target_license['used_by_email'] = user.get('email')
+    target_license['used_at'] = now_utc.isoformat()
+    _save_licenses(licenses)
+
+    safe_user = _build_safe_user_dict(user)
+    return jsonify({
+        "success": True,
+        "message": f"¡Licencia canjeada con éxito! Se han añadido {duration_days} días de suscripción activa.",
+        "subscription": safe_user['subscription'],
+        "user": safe_user
+    }), 200
+
+@app.route('/api/admin/licenses/create', methods=['POST'])
+def admin_create_license():
+    data = request.json or {}
+    duration_days = int(data.get('duration_days', 30))
+    plan_name = _clean_str(data.get('plan_name')) or (f"Plan Pro {duration_days} días")
+    count = min(max(int(data.get('count', 1)), 1), 20)
+
+    created_keys = []
+    licenses = _load_licenses()
+
+    for _ in range(count):
+        prefix = "VM-1M" if duration_days <= 30 else ("VM-3M" if duration_days <= 90 else "VM-1A")
+        p1 = secrets.token_hex(2).upper()
+        p2 = secrets.token_hex(2).upper()
+        lic_key = f"{prefix}-{p1}-{p2}"
+        
+        lic_record = {
+            "id": str(uuid.uuid4()),
+            "license_key": lic_key,
+            "duration_days": duration_days,
+            "plan_name": plan_name,
+            "is_used": False,
+            "used_by_user_id": None,
+            "used_at": None,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        licenses.append(lic_record)
+        created_keys.append(lic_key)
+
+    _save_licenses(licenses)
+    return jsonify({
+        "success": True,
+        "created_count": len(created_keys),
+        "license_keys": created_keys
+    }), 201
+
+@app.route('/api/admin/licenses', methods=['GET'])
+def admin_get_licenses():
+    licenses = _load_licenses()
+    return jsonify(licenses)
 
 @app.route('/')
 def index():

@@ -140,7 +140,38 @@ CREATE INDEX IF NOT EXISTS idx_stock_movements_item_id ON public.stock_movements
 CREATE INDEX IF NOT EXISTS idx_sales_created_at ON public.sales(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sales_receipt ON public.sales(receipt_number);
 
--- 10. SEGURIDAD Y POLÍTICAS RLS (Row Level Security)
+-- 10. TABLA DE USUARIOS Y PROFESIONALES (MULTI-TENANT SAAS)
+CREATE TABLE IF NOT EXISTS public.users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    email VARCHAR(180) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    full_name VARCHAR(150) NOT NULL,
+    professional_title VARCHAR(100) DEFAULT 'Nutricionista / Especialista BIA',
+    clinic_name VARCHAR(150) DEFAULT 'Mi Consultorio VitaMetrix',
+    phone VARCHAR(30),
+    role VARCHAR(20) DEFAULT 'user', -- 'admin', 'user'
+    subscription_status VARCHAR(20) DEFAULT 'trial', -- 'trial', 'active', 'expired', 'lifetime'
+    subscription_plan VARCHAR(50) DEFAULT 'Plan de Prueba (7 días)',
+    subscription_expires_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (NOW() + INTERVAL '7 days'),
+    trial_started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 11. TABLA DE LICENCIAS Y CÓDIGOS DE ACTIVACIÓN SAAS
+CREATE TABLE IF NOT EXISTS public.subscription_licenses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    license_key VARCHAR(50) UNIQUE NOT NULL,
+    duration_days INT NOT NULL DEFAULT 30,
+    plan_name VARCHAR(50) DEFAULT 'Plan Pro Mensual (30 días)',
+    is_used BOOLEAN DEFAULT FALSE,
+    used_by_user_id UUID REFERENCES public.users(id),
+    used_by_email VARCHAR(180),
+    used_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 12. SEGURIDAD Y POLÍTICAS RLS (Row Level Security)
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.evaluations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.appointments ENABLE ROW LEVEL SECURITY;
@@ -148,12 +179,17 @@ ALTER TABLE public.stock_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.stock_movements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.subscription_licenses ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de acceso anónimo/servicio para API backend
+CREATE POLICY "Permitir acceso a users" ON public.users FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir acceso a subscription_licenses" ON public.subscription_licenses FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a clientes" ON public.clients FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir acceso anonimo a evaluaciones" ON public.evaluations FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir acceso anonimo a evaluaciones" ON public.evaluaciones FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a citas" ON public.appointments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a stock_items" ON public.stock_items FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a stock_movements" ON public.stock_movements FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a sales" ON public.sales FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a sale_items" ON public.sale_items FOR ALL USING (true) WITH CHECK (true);
+

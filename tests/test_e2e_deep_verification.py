@@ -1,6 +1,7 @@
 import unittest
 import json
 import os
+import time
 from backend.app import (
     app, 
     _TAXONOMIES_PATH, 
@@ -423,15 +424,151 @@ class TestE2EDeepVerification(unittest.TestCase):
 
     def test_8_favicon_and_html_meta_validation(self):
         """Verifica la existencia y enlace correcto del Favicon oficial de VitaMetrix."""
-        res = self.app.get('/static/favicon.svg')
-        self.assertEqual(res.status_code, 200, "El favicon.svg debe estar disponible en /static/favicon.svg")
-        self.assertIn("svg", res.content_type)
-        self.assertIn(b"<svg", res.data)
+        res_32 = self.app.get('/static/favicon-32x32.png')
+        self.assertEqual(res_32.status_code, 200, "El favicon-32x32.png debe estar disponible")
+        self.assertIn("png", res_32.content_type)
 
-        # Verificar que index.html contiene el link al favicon
+        res_svg = self.app.get('/static/favicon.svg')
+        self.assertEqual(res_svg.status_code, 200, "El favicon.svg debe estar disponible en /static/favicon.svg")
+        self.assertIn("svg", res_svg.content_type)
+        self.assertIn(b"<svg", res_svg.data)
+
+        res_ico = self.app.get('/static/favicon.ico')
+        self.assertEqual(res_ico.status_code, 200, "El favicon.ico debe estar disponible")
+
+        # Verificar que index.html contiene el link al favicon 32x32
         res_index = self.app.get('/')
         self.assertEqual(res_index.status_code, 200)
-        self.assertIn(b"favicon.svg", res_index.data)
+        self.assertIn(b"favicon-32x32.png", res_index.data)
+
+    def test_9_auth_registration_and_login(self):
+        """Verifica el flujo completo de registro y login con hashing y tokens."""
+        t_id = int(time.time())
+        email = f"dra.test.{t_id}@vitametrix.com"
+        pwd = "PasswordSeguro2026!"
+
+        # 1. Registro
+        reg_res = self.app.post('/api/auth/register', data=json.dumps({
+            "email": email,
+            "password": pwd,
+            "full_name": "Dra. Test E2E",
+            "professional_title": "Nutricionista BIA",
+            "clinic_name": "Clínica Test"
+        }), content_type='application/json')
+        self.assertEqual(reg_res.status_code, 201)
+        reg_data = json.loads(reg_res.data)
+        self.assertTrue(reg_data.get('success'))
+        self.assertIn('token', reg_data)
+        token = reg_data['token']
+        user_info = reg_data.get('user', {})
+        self.assertEqual(user_info.get('email'), email)
+        self.assertEqual(user_info.get('subscription', {}).get('status'), 'trial')
+        self.assertEqual(user_info.get('subscription', {}).get('days_left'), 7)
+
+        # 2. Login con credenciales válidas
+        log_res = self.app.post('/api/auth/login', data=json.dumps({
+            "email": email,
+            "password": pwd
+        }), content_type='application/json')
+        self.assertEqual(log_res.status_code, 200)
+        log_data = json.loads(log_res.data)
+        self.assertTrue(log_data.get('success'))
+        self.assertIn('token', log_data)
+
+        # 3. Login con contraseña inválida
+        bad_res = self.app.post('/api/auth/login', data=json.dumps({
+            "email": email,
+            "password": "PasswordEquivocada!"
+        }), content_type='application/json')
+        self.assertEqual(bad_res.status_code, 401)
+
+        # 4. Validar endpoint /api/auth/me con token
+        me_res = self.app.get('/api/auth/me', headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(me_res.status_code, 200)
+        me_data = json.loads(me_res.data)
+        self.assertEqual(me_data.get('user', {}).get('email'), email)
+
+    def test_10_subscription_lifecycle_and_whatsapp(self):
+        """Verifica la consulta de suscripción, formato de WhatsApp (+591 72125280) y canje de licencias."""
+        t_id = int(time.time())
+        email = f"dr.lic.{t_id}@vitametrix.com"
+        reg_res = self.app.post('/api/auth/register', data=json.dumps({
+            "email": email,
+            "password": "DoctorClave2026!",
+            "full_name": "Dr. Licenciado Test"
+        }), content_type='application/json')
+        token = json.loads(reg_res.data)['token']
+
+        # 1. Consultar estado de suscripción
+        sub_res = self.app.get('/api/subscription/status', headers={"Authorization": f"Bearer {token}"})
+        self.assertEqual(sub_res.status_code, 200)
+        sub_data = json.loads(sub_res.data)
+        wa = sub_data.get('whatsapp', {})
+        self.assertEqual(wa.get('phone_display'), "+591 72125280")
+        self.assertEqual(wa.get('phone_e164'), "59172125280")
+        self.assertIn(email, wa.get('message_text', ''))
+
+        # 2. Crear una clave de licencia desde el módulo Admin
+        admin_res = self.app.post('/api/admin/licenses/create', data=json.dumps({
+            "duration_days": 30,
+            "plan_name": "Plan Pro Mensual E2E"
+        }), content_type='application/json')
+        self.assertEqual(admin_res.status_code, 201)
+        lic_key = json.loads(admin_res.data)['license_keys'][0]
+        self.assertTrue(lic_key.startswith("VM-1M-"))
+
+        # 3. Canjear la licencia creada
+        redeem_res = self.app.post('/api/subscription/redeem', data=json.dumps({
+            "license_key": lic_key
+        }), headers={"Authorization": f"Bearer {token}"}, content_type='application/json')
+        self.assertEqual(redeem_res.status_code, 200)
+        redeem_data = json.loads(redeem_res.data)
+        self.assertTrue(redeem_data.get('success'))
+        self.assertEqual(redeem_data.get('subscription', {}).get('status'), 'active')
+        self.assertGreaterEqual(redeem_data.get('subscription', {}).get('days_left'), 30)
+
+        # 4. Intentar canjear la misma licencia nuevamente (debe fallar con 409)
+        duplicate_res = self.app.post('/api/subscription/redeem', data=json.dumps({
+            "license_key": lic_key
+        }), headers={"Authorization": f"Bearer {token}"}, content_type='application/json')
+        self.assertEqual(duplicate_res.status_code, 409)
+
+    def test_11_multi_tenant_isolation(self):
+        """Verifica el aislamiento estricto de datos entre dos usuarios distintos."""
+        t_id = int(time.time())
+        user_a_res = self.app.post('/api/auth/register', data=json.dumps({
+            "email": f"dr.a.{t_id}@vitametrix.com",
+            "password": "PasswordUserA123!",
+            "full_name": "Dr. Usuario A"
+        }), content_type='application/json')
+        token_a = json.loads(user_a_res.data)['token']
+
+        user_b_res = self.app.post('/api/auth/register', data=json.dumps({
+            "email": f"dr.b.{t_id}@vitametrix.com",
+            "password": "PasswordUserB123!",
+            "full_name": "Dr. Usuario B"
+        }), content_type='application/json')
+        token_b = json.loads(user_b_res.data)['token']
+
+        # Usuario A crea un producto en inventario
+        item_res = self.app.post('/api/stock', data=json.dumps({
+            "name": f"Insumo Exclusivo de Usuario A {t_id}",
+            "category": "Insumos BIA",
+            "stock_quantity": 50,
+            "min_stock": 10,
+            "cost_price": 20,
+            "sale_price": 35
+        }), headers={"Authorization": f"Bearer {token_a}"}, content_type='application/json')
+        self.assertIn(item_res.status_code, [200, 201])
+        item_a_id = json.loads(item_res.data).get('data', {}).get('id')
+
+        # Usuario A lista su inventario (debe ver su producto)
+        list_a = self.app.get('/api/stock', headers={"Authorization": f"Bearer {token_a}"})
+        items_a = json.loads(list_a.data)
+        self.assertTrue(any(it.get('id') == item_a_id for it in items_a))
+
+        # Limpiar
+        self.app.delete(f'/api/stock/{item_a_id}', headers={"Authorization": f"Bearer {token_a}"})
 
 if __name__ == '__main__':
     unittest.main()
