@@ -308,8 +308,11 @@ def _calc_subscription_status(user):
     if not user:
         return "expired", 0, None, "Plan Vencido"
 
-    if user.get('role') == 'admin' or user.get('subscription_status') == 'lifetime':
-        return "lifetime", 9999, "2099-12-31T23:59:59Z", user.get('subscription_plan', 'Plan Ilimitado / Administrador')
+    if user.get('role') == 'admin':
+        return "lifetime", None, None, "Acceso Total SuperAdmin / Incaducable"
+
+    if user.get('subscription_status') == 'lifetime':
+        return "lifetime", None, None, user.get('subscription_plan', 'Plan Vitalicio Ilimitado')
 
     expires_at_str = user.get('subscription_expires_at')
     plan_name = user.get('subscription_plan', 'Plan Pro Mensual')
@@ -533,70 +536,205 @@ def subscription_status():
 @app.route('/api/subscription/redeem', methods=['POST'])
 def subscription_redeem():
     data = request.json or {}
-    key_input = _clean_str(data.get('license_key'), max_len=60).upper().strip()
+    key_input = _clean_str(data.get('license_key') or data.get('pin'), max_len=80).upper().strip()
 
     if not key_input:
-        return jsonify({"error": "Por favor ingresa una clave de licencia válida"}), 400
+        return jsonify({"error": "Por favor ingresa un PIN de activación válido"}), 400
 
     user = _get_current_user()
     if not user:
-        return jsonify({"error": "Debes iniciar sesión para canjear una licencia"}), 401
+        return jsonify({"error": "Debes iniciar sesión para canjear un PIN"}), 401
 
     licenses = _load_licenses()
     target_license = next((lic for lic in licenses if lic.get('license_key', '').upper().strip() == key_input), None)
 
     if not target_license:
-        return jsonify({"error": "La clave de licencia ingresada no existe o es inválida. Verifica con soporte vía WhatsApp (+591 72125280)."}), 404
+        return jsonify({"error": "El PIN de activación ingresado no existe o es inválido. Verifica con soporte vía WhatsApp (+591 72125280)."}), 404
 
     if target_license.get('is_used'):
-        return jsonify({"error": "Esta clave de licencia ya fue canjeada anteriormente."}), 409
+        return jsonify({"error": "Este PIN de activación ya fue canjeado anteriormente."}), 409
 
     duration_days = int(target_license.get('duration_days', 30))
     plan_name = target_license.get('plan_name', 'Plan Pro Mensual')
-
-    # Calcular nueva fecha de expiración
     now_utc = datetime.now(timezone.utc)
-    current_exp_str = user.get('subscription_expires_at')
-    
-    base_date = now_utc
-    if current_exp_str:
-        try:
-            curr_dt = datetime.fromisoformat(current_exp_str.replace('Z', '+00:00'))
-            if curr_dt > now_utc:
-                base_date = curr_dt # Sumar sobre el saldo activo
-        except Exception:
-            pass
+    is_lifetime = duration_days >= 9999 or "lifetime" in plan_name.lower() or "ilimitado" in plan_name.lower() or "vitalicio" in plan_name.lower()
 
-    new_expires_dt = base_date + timedelta(days=duration_days)
-
-    # Actualizar usuario
+    # Actualizar suscripción del usuario
     users = _load_users()
     for u in users:
         if u.get('id') == user.get('id'):
-            u['subscription_status'] = 'active'
-            u['subscription_plan'] = plan_name
-            u['subscription_expires_at'] = new_expires_dt.isoformat()
+            if is_lifetime:
+                u['subscription_status'] = 'lifetime'
+                u['subscription_plan'] = plan_name
+                u['subscription_expires_at'] = '2099-12-31T23:59:59Z'
+            else:
+                current_exp_str = u.get('subscription_expires_at')
+                base_date = now_utc
+                if current_exp_str:
+                    try:
+                        curr_dt = datetime.fromisoformat(current_exp_str.replace('Z', '+00:00'))
+                        if curr_dt > now_utc:
+                            base_date = curr_dt
+                    except Exception:
+                        pass
+                new_expires_dt = base_date + timedelta(days=duration_days)
+                u['subscription_status'] = 'active'
+                u['subscription_plan'] = plan_name
+                u['subscription_expires_at'] = new_expires_dt.isoformat()
             user = u
             break
     _save_users(users)
 
-    # Marcar licencia como usada
+    # Marcar PIN como usado
     target_license['is_used'] = True
     target_license['used_by_user_id'] = user.get('id')
+    target_license['used_by_name'] = user.get('full_name')
     target_license['used_by_email'] = user.get('email')
     target_license['used_at'] = now_utc.isoformat()
     _save_licenses(licenses)
 
     safe_user = _build_safe_user_dict(user)
+    msg = "¡PIN canjeado con éxito! Tienes acceso ilimitado activado." if is_lifetime else f"¡PIN canjeado con éxito! Se han añadido {duration_days} días de suscripción Pro activa."
     return jsonify({
         "success": True,
-        "message": f"¡Licencia canjeada con éxito! Se han añadido {duration_days} días de suscripción activa.",
+        "message": msg,
         "subscription": safe_user['subscription'],
         "user": safe_user
     }), 200
 
+# --- ENDPOINTS SUPERADMIN: GENERACIÓN & GESTIÓN DE PINS / LICENCIAS ---
+
+@app.route('/api/admin/pins', methods=['GET'])
+def admin_get_pins():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    licenses = _load_licenses()
+    users = _load_users()
+    user_map = {u.get('id'): u for u in users}
+
+    enriched_pins = []
+    for lic in licenses:
+        pin_copy = dict(lic)
+        used_id = pin_copy.get('used_by_user_id')
+        if used_id and used_id in user_map:
+            doctor = user_map[used_id]
+            pin_copy['used_by_name'] = doctor.get('full_name', pin_copy.get('used_by_name'))
+            pin_copy['used_by_email'] = doctor.get('email', pin_copy.get('used_by_email'))
+            pin_copy['used_by_clinic'] = doctor.get('clinic_name')
+        enriched_pins.append(pin_copy)
+
+    # Ordenar más recientes primero
+    enriched_pins.sort(key=lambda p: p.get('created_at') or '', reverse=True)
+
+    available_count = sum(1 for p in enriched_pins if not p.get('is_used'))
+    used_count = sum(1 for p in enriched_pins if p.get('is_used'))
+
+    return jsonify({
+        "success": True,
+        "pins": enriched_pins,
+        "stats": {
+            "total_pins": len(enriched_pins),
+            "available_pins": available_count,
+            "used_pins": used_count
+        }
+    }), 200
+
+@app.route('/api/admin/pins/create', methods=['POST'])
+def admin_create_pin():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    duration_days = int(data.get('duration_days', 30))
+    plan_name = _clean_str(data.get('plan_name'))
+    custom_pin = _clean_str(data.get('custom_pin'), max_len=60).upper().strip()
+    note = _clean_str(data.get('note'), max_len=200)
+    count = min(max(int(data.get('count', 1)), 1), 50)
+
+    if not plan_name:
+        if duration_days >= 9999:
+            plan_name = "Plan Vitalicio / Lifetime"
+        elif duration_days == 365:
+            plan_name = "Plan Anual Pro (365 días)"
+        elif duration_days == 180:
+            plan_name = "Plan Pro Semestral (180 días)"
+        elif duration_days == 90:
+            plan_name = "Plan Pro Trimestral (90 días)"
+        elif duration_days == 7:
+            plan_name = "Plan Prueba Especial (7 días)"
+        else:
+            plan_name = f"Plan Pro ({duration_days} días)"
+
+    licenses = _load_licenses()
+    existing_keys = {lic.get('license_key', '').upper().strip() for lic in licenses}
+
+    created_records = []
+    now_iso = datetime.now(timezone.utc).isoformat()
+
+    for _ in range(count):
+        if custom_pin and count == 1:
+            pin_key = custom_pin
+            if pin_key in existing_keys:
+                return jsonify({"error": f"El PIN '{pin_key}' ya existe. Por favor utiliza otro código."}), 409
+        else:
+            prefix = "VM-LIFE" if duration_days >= 9999 else ("VM-1M" if duration_days <= 30 else ("VM-3M" if duration_days <= 90 else "VM-1A"))
+            part1 = secrets.token_hex(2).upper()
+            part2 = secrets.token_hex(2).upper()
+            pin_key = f"{prefix}-{part1}-{part2}"
+            while pin_key in existing_keys:
+                part1 = secrets.token_hex(2).upper()
+                part2 = secrets.token_hex(2).upper()
+                pin_key = f"{prefix}-{part1}-{part2}"
+
+        existing_keys.add(pin_key)
+        record = {
+            "id": str(uuid.uuid4()),
+            "license_key": pin_key,
+            "duration_days": duration_days,
+            "plan_name": plan_name,
+            "note": note or "",
+            "is_used": False,
+            "used_by_user_id": None,
+            "used_by_name": None,
+            "used_by_email": None,
+            "used_at": None,
+            "created_at": now_iso
+        }
+        licenses.append(record)
+        created_records.append(record)
+
+    _save_licenses(licenses)
+
+    return jsonify({
+        "success": True,
+        "message": f"Se generó {len(created_records)} PIN(s) de activación exitosamente.",
+        "created_pins": created_records
+    }), 201
+
+@app.route('/api/admin/pins/<pin_id>', methods=['DELETE'])
+def admin_delete_pin(pin_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    licenses = _load_licenses()
+    initial_len = len(licenses)
+    licenses = [lic for lic in licenses if lic.get('id') != pin_id and lic.get('license_key') != pin_id]
+
+    if len(licenses) == initial_len:
+        return jsonify({"error": "PIN no encontrado"}), 404
+
+    _save_licenses(licenses)
+    return jsonify({
+        "success": True,
+        "message": "PIN de activación eliminado correctamente."
+    }), 200
+
 @app.route('/api/admin/licenses/create', methods=['POST'])
-def admin_create_license():
+def admin_create_license_compat():
     data = request.json or {}
     duration_days = int(data.get('duration_days', 30))
     plan_name = _clean_str(data.get('plan_name')) or (f"Plan Pro {duration_days} días")
@@ -604,6 +742,7 @@ def admin_create_license():
 
     created_keys = []
     licenses = _load_licenses()
+    now_iso = datetime.now(timezone.utc).isoformat()
 
     for _ in range(count):
         prefix = "VM-1M" if duration_days <= 30 else ("VM-3M" if duration_days <= 90 else "VM-1A")
@@ -616,10 +755,13 @@ def admin_create_license():
             "license_key": lic_key,
             "duration_days": duration_days,
             "plan_name": plan_name,
+            "note": "",
             "is_used": False,
             "used_by_user_id": None,
+            "used_by_name": None,
+            "used_by_email": None,
             "used_at": None,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": now_iso
         }
         licenses.append(lic_record)
         created_keys.append(lic_key)

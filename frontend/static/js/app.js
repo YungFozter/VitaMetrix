@@ -451,49 +451,67 @@ async function fetchSubscriptionStatus() {
         const clinicBadge = document.getElementById('sub-clinic-badge');
         const waBtn = document.getElementById('btn-whatsapp-sub-contact');
 
-        if (planTitle) planTitle.textContent = sub.plan_name || 'Plan Pro Mensual';
-        if (daysText) {
-            daysText.textContent = sub.status === 'lifetime' ? 'Ilimitado' : `${sub.days_left} día${sub.days_left === 1 ? '' : 's'}`;
+        if (user.role === 'admin') {
+            if (planTitle) planTitle.textContent = 'Acceso Total SuperAdmin / Incaducable ⭐';
+            if (daysText) daysText.textContent = 'Incaducable / Permanente';
+            if (expiryDate) expiryDate.textContent = 'Sin Vencimiento (Acceso Master)';
+            if (progressBar) {
+                progressBar.style.width = '100%';
+                progressBar.className = 'progress-bar bg-purple';
+            }
+            if (statusPill) {
+                statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-purple text-white';
+                statusPill.textContent = '👑 SuperAdmin - Acceso Total';
+            }
+            if (headerBadge) {
+                headerBadge.innerHTML = `<i class="bi bi-shield-lock-fill text-primary me-1"></i> Cuenta Master: <strong>Acceso Total e Incaducable</strong>`;
+            }
+        } else {
+            if (planTitle) planTitle.textContent = sub.plan_name || 'Plan Pro Mensual';
+            if (daysText) {
+                daysText.textContent = sub.status === 'lifetime' ? 'Ilimitado' : `${sub.days_left} día${sub.days_left === 1 ? '' : 's'}`;
+            }
+
+            if (expiryDate) {
+                if (sub.expires_at) {
+                    const d = new Date(sub.expires_at);
+                    expiryDate.textContent = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
+                } else {
+                    expiryDate.textContent = 'Sin Vencimiento';
+                }
+            }
+
+            if (progressBar) {
+                const percent = sub.status === 'lifetime' ? 100 : Math.min(100, Math.max(5, (sub.days_left / 30) * 100));
+                progressBar.style.width = `${percent}%`;
+                progressBar.className = `progress-bar ${sub.status === 'expired' ? 'bg-danger' : (sub.days_left <= 3 ? 'bg-warning' : 'bg-primary')}`;
+            }
+
+            if (statusPill) {
+                if (sub.status === 'lifetime') {
+                    statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-success text-white';
+                    statusPill.textContent = '⭐ Activo Ilimitado';
+                } else if (sub.status === 'active') {
+                    statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-success text-white';
+                    statusPill.textContent = `🟢 Activo (${sub.days_left} días)`;
+                } else if (sub.status === 'trial') {
+                    statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-warning text-dark';
+                    statusPill.textContent = `🟡 Prueba Gratis (${sub.days_left} días)`;
+                } else {
+                    statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-danger text-white';
+                    statusPill.textContent = '🔴 Suscripción Vencida';
+                }
+            }
+
+            if (headerBadge) {
+                headerBadge.innerHTML = `<i class="bi bi-shield-check text-success me-1"></i> Vigencia: <strong>${sub.days_left} días</strong>`;
+            }
         }
+
         if (userId) userId.textContent = (user.id || '').substring(0, 13) + '...';
         if (userName) userName.textContent = user.full_name || 'Profesional';
         if (userEmail) userEmail.textContent = user.email || '';
         if (clinicBadge) clinicBadge.textContent = user.clinic_name || 'Consultorio Médico';
-
-        if (expiryDate) {
-            if (sub.expires_at) {
-                const d = new Date(sub.expires_at);
-                expiryDate.textContent = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'long', year: 'numeric' });
-            } else {
-                expiryDate.textContent = 'Sin Vencimiento';
-            }
-        }
-
-        if (progressBar) {
-            const percent = sub.status === 'lifetime' ? 100 : Math.min(100, Math.max(5, (sub.days_left / 30) * 100));
-            progressBar.style.width = `${percent}%`;
-            progressBar.className = `progress-bar ${sub.status === 'expired' ? 'bg-danger' : (sub.days_left <= 3 ? 'bg-warning' : 'bg-primary')}`;
-        }
-
-        if (statusPill) {
-            if (sub.status === 'lifetime') {
-                statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-success text-white';
-                statusPill.textContent = '⭐ Activo Ilimitado';
-            } else if (sub.status === 'active') {
-                statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-success text-white';
-                statusPill.textContent = `🟢 Activo (${sub.days_left} días)`;
-            } else if (sub.status === 'trial') {
-                statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-warning text-dark';
-                statusPill.textContent = `🟡 Prueba Gratis (${sub.days_left} días)`;
-            } else {
-                statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold bg-danger text-white';
-                statusPill.textContent = '🔴 Suscripción Vencida';
-            }
-        }
-
-        if (headerBadge) {
-            headerBadge.innerHTML = `<i class="bi bi-shield-check text-success me-1"></i> Vigencia: <strong>${sub.days_left} días</strong>`;
-        }
 
         // Enlace dinámico de WhatsApp (+591 72125280)
         if (waBtn && wa) {
@@ -508,16 +526,14 @@ async function fetchSubscriptionStatus() {
 }
 
 function initSubscriptionView() {
-    const formRedeem = document.getElementById('form-redeem-license');
-    const inputLicense = document.getElementById('sub-license-input');
     const btnRedeem = document.getElementById('btn-redeem-license');
+    const inputLicense = document.getElementById('input-license-key');
 
-    if (formRedeem) {
-        formRedeem.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const key = (inputLicense ? inputLicense.value : '').trim();
+    if (btnRedeem && inputLicense) {
+        btnRedeem.addEventListener('click', async () => {
+            const key = inputLicense.value.trim();
             if (!key) {
-                showToast('Ingresa una clave de licencia', 'warning');
+                showToast('Por favor ingresa un PIN de activación válido', 'error');
                 return;
             }
 
@@ -532,15 +548,15 @@ function initSubscriptionView() {
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
-                    showToast(data.error || 'Error al canjear la licencia', 'error');
+                    showToast(data.error || 'Error al canjear el PIN', 'error');
                     return;
                 }
 
-                showToast(data.message || '¡Licencia canjeada con éxito!', 'success');
+                showToast(data.message || '¡PIN de activación canjeado con éxito!', 'success');
                 if (inputLicense) inputLicense.value = '';
                 fetchSubscriptionStatus();
             } catch (err) {
-                showToast('Error de conexión al canjear la licencia', 'error');
+                showToast('Error de conexión al canjear el PIN', 'error');
             } finally {
                 if (btnRedeem) btnRedeem.disabled = false;
             }
@@ -550,9 +566,45 @@ function initSubscriptionView() {
     fetchSubscriptionStatus();
 }
 
-// --- 0.09 GESTIÓN CENTRAL SUPERADMIN (LISTADO GLOBAL DE USUARIOS Y LICENCIAS) ---
+// --- 0.09 GESTIÓN CENTRAL SUPERADMIN (USUARIOS, PINS Y LICENCIAS) ---
 let allAdminUsersData = [];
+let allAdminPinsData = [];
 let selectedAdminUserIds = new Set();
+let currentAdminTab = 'users';
+
+function switchAdminTab(tabName) {
+    currentAdminTab = tabName;
+    const btnUsers = document.getElementById('tab-btn-admin-users');
+    const btnPins = document.getElementById('tab-btn-admin-pins');
+    const paneUsers = document.getElementById('admin-tab-pane-users');
+    const panePins = document.getElementById('admin-tab-pane-pins');
+
+    if (tabName === 'pins') {
+        if (btnUsers) {
+            btnUsers.classList.remove('active', 'btn-primary');
+            btnUsers.classList.add('text-secondary');
+        }
+        if (btnPins) {
+            btnPins.classList.add('active', 'btn-warning', 'text-dark');
+            btnPins.classList.remove('text-secondary');
+        }
+        if (paneUsers) paneUsers.classList.add('d-none');
+        if (panePins) panePins.classList.remove('d-none');
+        fetchAdminPins();
+    } else {
+        if (btnUsers) {
+            btnUsers.classList.add('active', 'btn-primary');
+            btnUsers.classList.remove('text-secondary');
+        }
+        if (btnPins) {
+            btnPins.classList.remove('active', 'btn-warning', 'text-dark');
+            btnPins.classList.add('text-secondary');
+        }
+        if (paneUsers) paneUsers.classList.remove('d-none');
+        if (panePins) panePins.classList.add('d-none');
+        fetchAdminUsers();
+    }
+}
 
 function initSuperAdminView() {
     const refreshBtn = document.getElementById('btn-admin-refresh-users');
@@ -560,7 +612,7 @@ function initSuperAdminView() {
     const filterStatus = document.getElementById('admin-user-filter-status');
     const sortSelect = document.getElementById('admin-user-sort');
 
-    // Modales
+    // Modales de Usuario
     const openCreateBtn = document.getElementById('btn-admin-open-create-user');
     const closeCreateBtn = document.getElementById('btn-close-admin-create-user');
     const cancelCreateBtn = document.getElementById('btn-cancel-admin-create-user');
@@ -574,14 +626,30 @@ function initSuperAdminView() {
     const formManage = document.getElementById('form-admin-manage-user');
     const manageError = document.getElementById('admin-manage-error');
 
+    // Modales de PINs
+    const openCreatePinBtn = document.getElementById('btn-admin-open-create-pin');
+    const closeCreatePinBtn = document.getElementById('btn-close-admin-create-pin');
+    const cancelCreatePinBtn = document.getElementById('btn-cancel-admin-create-pin');
+    const modalCreatePin = document.getElementById('modal-admin-create-pin');
+    const formCreatePin = document.getElementById('form-admin-create-pin');
+    const pinError = document.getElementById('admin-pin-error');
+    const pinsSearchInput = document.getElementById('admin-pins-search');
+    const pinsFilterStatus = document.getElementById('admin-pins-filter-status');
+
     // Elementos de Acciones Masivas
     const selectAllCheckbox = document.getElementById('admin-select-all-users');
     const clearSelectionBtn = document.getElementById('btn-admin-clear-selection');
     const deleteSelectedBtn = document.getElementById('btn-admin-delete-selected');
 
-    // Eventos de Filtrado y Búsqueda
+    // Eventos de Usuarios
     if (refreshBtn) {
-        refreshBtn.addEventListener('click', () => fetchAdminUsers(true));
+        refreshBtn.addEventListener('click', () => {
+            if (currentAdminTab === 'pins') {
+                fetchAdminPins(true);
+            } else {
+                fetchAdminUsers(true);
+            }
+        });
     }
     if (searchInput) {
         searchInput.addEventListener('input', () => renderAdminUsers());
@@ -591,6 +659,14 @@ function initSuperAdminView() {
     }
     if (sortSelect) {
         sortSelect.addEventListener('change', () => renderAdminUsers());
+    }
+
+    // Eventos de PINs
+    if (pinsSearchInput) {
+        pinsSearchInput.addEventListener('input', () => renderAdminPins());
+    }
+    if (pinsFilterStatus) {
+        pinsFilterStatus.addEventListener('change', () => renderAdminPins());
     }
 
     // Seleccionar / Deseleccionar todos
@@ -666,19 +742,26 @@ function initSuperAdminView() {
         });
     }
 
-    // Modal Crear Usuario
+    // Modal Crear Usuario (Centrado y Reactivo)
     if (openCreateBtn && modalCreate) {
         openCreateBtn.addEventListener('click', () => {
             if (formCreate) formCreate.reset();
             if (createError) createError.classList.add('d-none');
+            modalCreate.style.display = 'flex';
             modalCreate.classList.remove('hidden');
         });
     }
     if (closeCreateBtn && modalCreate) {
-        closeCreateBtn.addEventListener('click', () => modalCreate.classList.add('hidden'));
+        closeCreateBtn.addEventListener('click', () => {
+            modalCreate.style.display = 'none';
+            modalCreate.classList.add('hidden');
+        });
     }
     if (cancelCreateBtn && modalCreate) {
-        cancelCreateBtn.addEventListener('click', () => modalCreate.classList.add('hidden'));
+        cancelCreateBtn.addEventListener('click', () => {
+            modalCreate.style.display = 'none';
+            modalCreate.classList.add('hidden');
+        });
     }
 
     if (formCreate) {
@@ -725,7 +808,8 @@ function initSuperAdminView() {
                 }
 
                 showToast(`🎉 ${data.message}`, 'success');
-                if (modalCreate) modalCreate.classList.add('hidden');
+                modalCreate.style.display = 'none';
+                modalCreate.classList.add('hidden');
                 fetchAdminUsers(false);
             } catch (err) {
                 if (createError) {
@@ -738,12 +822,18 @@ function initSuperAdminView() {
         });
     }
 
-    // Modal Gestionar Usuario
+    // Modal Gestionar Usuario (Centrado y Reactivo)
     if (closeManageBtn && modalManage) {
-        closeManageBtn.addEventListener('click', () => modalManage.classList.add('hidden'));
+        closeManageBtn.addEventListener('click', () => {
+            modalManage.style.display = 'none';
+            modalManage.classList.add('hidden');
+        });
     }
     if (cancelManageBtn && modalManage) {
-        cancelManageBtn.addEventListener('click', () => modalManage.classList.add('hidden'));
+        cancelManageBtn.addEventListener('click', () => {
+            modalManage.style.display = 'none';
+            modalManage.classList.add('hidden');
+        });
     }
 
     if (formManage) {
@@ -780,12 +870,83 @@ function initSuperAdminView() {
                 }
 
                 showToast('✅ Cambios de usuario guardados correctamente.', 'success');
-                if (modalManage) modalManage.classList.add('hidden');
+                modalManage.style.display = 'none';
+                modalManage.classList.add('hidden');
                 fetchAdminUsers(false);
             } catch (err) {
                 if (manageError) {
                     manageError.textContent = 'Error de conexión con el servidor.';
                     manageError.classList.remove('d-none');
+                }
+            } finally {
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
+        });
+    }
+
+    // Modal Generar PINs (Centrado y Reactivo)
+    if (openCreatePinBtn && modalCreatePin) {
+        openCreatePinBtn.addEventListener('click', () => {
+            if (formCreatePin) formCreatePin.reset();
+            if (pinError) pinError.classList.add('d-none');
+            modalCreatePin.style.display = 'flex';
+            modalCreatePin.classList.remove('hidden');
+        });
+    }
+    if (closeCreatePinBtn && modalCreatePin) {
+        closeCreatePinBtn.addEventListener('click', () => {
+            modalCreatePin.style.display = 'none';
+            modalCreatePin.classList.add('hidden');
+        });
+    }
+    if (cancelCreatePinBtn && modalCreatePin) {
+        cancelCreatePinBtn.addEventListener('click', () => {
+            modalCreatePin.style.display = 'none';
+            modalCreatePin.classList.add('hidden');
+        });
+    }
+
+    if (formCreatePin) {
+        formCreatePin.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnSubmit = document.getElementById('btn-submit-admin-create-pin');
+            const durationDays = parseInt(document.getElementById('admin-pin-duration').value || 30);
+            const count = parseInt(document.getElementById('admin-pin-count').value || 1);
+            const customPin = document.getElementById('admin-pin-custom').value.trim();
+            const note = document.getElementById('admin-pin-note').value.trim();
+
+            if (pinError) pinError.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/pins/create', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        duration_days: durationDays,
+                        count: count,
+                        custom_pin: customPin,
+                        note: note
+                    })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    if (pinError) {
+                        pinError.textContent = data.error || 'Error al generar el PIN';
+                        pinError.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                showToast(`🔑 ${data.message}`, 'success');
+                modalCreatePin.style.display = 'none';
+                modalCreatePin.classList.add('hidden');
+                fetchAdminPins(false);
+            } catch (err) {
+                if (pinError) {
+                    pinError.textContent = 'Error de conexión con el servidor.';
+                    pinError.classList.remove('d-none');
                 }
             } finally {
                 if (btnSubmit) btnSubmit.disabled = false;
@@ -1107,6 +1268,226 @@ function renderAdminUsers() {
     updateAdminBulkActionBar();
 }
 
+async function fetchAdminPins(showToastFeedback = false) {
+    const tbody = document.getElementById('tbody-admin-pins');
+    if (!tbody) return;
+
+    if (showToastFeedback) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <div class="spinner-border text-warning spinner-border-sm me-2" role="status"></div>
+                    Actualizando lista de PINs de activación...
+                </td>
+            </tr>
+        `;
+    }
+
+    try {
+        const res = await fetch('/api/admin/pins', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+
+        const data = await res.json();
+        if (!data.success) return;
+
+        allAdminPinsData = data.pins || [];
+
+        // Actualizar KPIs de PINs
+        const stats = data.stats || {};
+        const kpiTotal = document.getElementById('kpi-admin-total-pins');
+        const kpiAvailable = document.getElementById('kpi-admin-available-pins');
+        const kpiUsed = document.getElementById('kpi-admin-used-pins');
+
+        if (kpiTotal) kpiTotal.textContent = stats.total_pins || allAdminPinsData.length;
+        if (kpiAvailable) kpiAvailable.textContent = stats.available_pins || 0;
+        if (kpiUsed) kpiUsed.textContent = stats.used_pins || 0;
+
+        renderAdminPins();
+
+        if (showToastFeedback) {
+            showToast('PINs de activación actualizados correctamente.', 'success');
+        }
+    } catch (e) {
+        console.error('Error al cargar PINs de SuperAdmin:', e);
+        if (tbody) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Error de conexión al cargar PINs.
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+function renderAdminPins() {
+    const tbody = document.getElementById('tbody-admin-pins');
+    const searchInput = document.getElementById('admin-pins-search');
+    const filterStatus = document.getElementById('admin-pins-filter-status');
+    const showingCount = document.getElementById('admin-pins-showing-count');
+    const totalCount = document.getElementById('admin-pins-total-count');
+
+    if (!tbody) return;
+
+    let filtered = [...allAdminPinsData];
+    if (totalCount) totalCount.textContent = allAdminPinsData.length;
+
+    const query = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    if (query) {
+        filtered = filtered.filter(p => 
+            (p.license_key || '').toLowerCase().includes(query) ||
+            (p.plan_name || '').toLowerCase().includes(query) ||
+            (p.note || '').toLowerCase().includes(query) ||
+            (p.used_by_name || '').toLowerCase().includes(query) ||
+            (p.used_by_email || '').toLowerCase().includes(query)
+        );
+    }
+
+    const statusVal = filterStatus ? filterStatus.value : 'all';
+    if (statusVal !== 'all') {
+        if (statusVal === 'available') {
+            filtered = filtered.filter(p => !p.is_used);
+        } else if (statusVal === 'used') {
+            filtered = filtered.filter(p => p.is_used);
+        }
+    }
+
+    if (showingCount) showingCount.textContent = filtered.length;
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-key fs-2 d-block mb-2 text-warning opacity-50"></i>
+                    No se encontraron PINs con los filtros seleccionados.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+        const isUsed = Boolean(p.is_used);
+        const pinKey = escapeHtml(p.license_key || '');
+        const planName = escapeHtml(p.plan_name || 'Plan Pro Mensual');
+        const note = escapeHtml(p.note || '—');
+
+        let createdStr = '---';
+        if (p.created_at) {
+            try {
+                createdStr = new Date(p.created_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+            } catch (e) {}
+        }
+
+        let usedInfo = '<span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1 rounded-pill fw-bold text-xs">✨ Disponible (Listo para entregar)</span>';
+        if (isUsed) {
+            let usedDateStr = '';
+            if (p.used_at) {
+                try {
+                    usedDateStr = new Date(p.used_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+                } catch (e) {}
+            }
+            usedInfo = `
+                <div>
+                    <strong class="text-navy text-xs d-block">${escapeHtml(p.used_by_name || 'Doctor')}</strong>
+                    <span class="text-muted text-xs d-block">${escapeHtml(p.used_by_email || '')}</span>
+                    <span class="text-secondary text-xs" style="font-size: 0.7rem;">📅 Canjeado: ${usedDateStr}</span>
+                </div>
+            `;
+        }
+
+        return `
+            <tr>
+                <td class="ps-3 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-light text-navy border px-2.5 py-1.5 font-monospace fw-bold fs-7 shadow-2xs">
+                            ${pinKey}
+                        </span>
+                        <button type="button" class="btn btn-outline-secondary btn-xs py-1 px-2 rounded-2" onclick="copyPinToClipboard('${pinKey}')" title="Copiar PIN al portapapeles">
+                            <i class="bi bi-clipboard"></i>
+                        </button>
+                    </div>
+                </td>
+                <td>
+                    <span class="badge ${p.duration_days >= 9999 ? 'bg-purple text-white' : 'bg-primary-subtle text-primary'} px-2.5 py-1 rounded-pill text-xs fw-bold mb-0.5 d-inline-block">
+                        ${p.duration_days >= 9999 ? '⭐ Lifetime' : `${p.duration_days} días`}
+                    </span>
+                    <div class="text-muted text-xs text-truncate" style="max-width: 170px;">${planName}</div>
+                </td>
+                <td>
+                    <span class="badge ${isUsed ? 'bg-secondary text-white' : 'bg-success text-white'} px-2.5 py-1 rounded-pill text-xs fw-bold">
+                        ${isUsed ? '⚪ USADO' : '🟢 DISPONIBLE'}
+                    </span>
+                </td>
+                <td>
+                    ${usedInfo}
+                </td>
+                <td>
+                    <span class="text-secondary text-xs text-truncate d-block" style="max-width: 170px;">${note}</span>
+                </td>
+                <td>
+                    <span class="text-muted text-xs">${createdStr}</span>
+                </td>
+                <td class="text-end pe-3">
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-success btn-xs py-1 px-2" onclick="sharePinWhatsApp('${pinKey}', '${planName}', '${note}')" title="Compartir PIN por WhatsApp">
+                            <i class="bi bi-whatsapp"></i>
+                        </button>
+                        <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminPin('${p.id}', '${pinKey}')" title="Eliminar PIN de la base de datos">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function copyPinToClipboard(pinKey) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(pinKey).then(() => {
+            showToast(`📋 PIN copiado: ${pinKey}`, 'success');
+        }).catch(() => {
+            showToast(`PIN: ${pinKey}`, 'info');
+        });
+    } else {
+        showToast(`PIN: ${pinKey}`, 'info');
+    }
+}
+
+function sharePinWhatsApp(pinKey, planName, note) {
+    const noteText = (note && note !== '—') ? ` (Ref: ${note})` : '';
+    const message = `Hola estimado(a) Dr(a). Aquí tiene su PIN de activación para VitaMetrix:\n\n🔑 *PIN:* ${pinKey}\n📦 *Plan:* ${planName}${noteText}\n\n👉 Para activarlo: Inicie sesión en VitaMetrix, diríjase al menú *"Mi Plan"* e ingrese este PIN en la sección *"Canjear Clave de Licencia"*.`;
+    const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+}
+
+function deleteAdminPin(pinId, pinKey) {
+    showConfirm(
+        'Eliminar PIN de Activación',
+        `¿Estás seguro de eliminar permanentemente el PIN <strong>${pinKey}</strong> de la base de datos?<br><span class="text-danger small">Si ya fue entregado a un médico, no podrá ser canjeado.</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/pins/${pinId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Error al eliminar PIN', 'error');
+                    return;
+                }
+                showToast(`🗑️ ${data.message}`, 'info');
+                fetchAdminPins(false);
+            } catch (e) {
+                showToast('Error de conexión al eliminar PIN', 'error');
+            }
+        },
+        { confirmText: 'Eliminar PIN', type: 'danger', icon: 'bi bi-trash-fill' }
+    );
+}
+
 async function quickExtendUserDirect(userId, days = 30) {
     try {
         const res = await fetch(`/api/admin/users/${userId}/extend`, {
@@ -1145,7 +1526,7 @@ function openAdminManageUserModal(userId) {
     if (inputId) inputId.value = user.id;
     if (subtitle) subtitle.textContent = `Doctor: ${user.full_name}`;
     if (emailEl) emailEl.textContent = user.email;
-    if (daysEl) daysEl.textContent = user.role === 'admin' ? 'Ilimitado (Admin)' : `${user.days_left || 0} días restantes`;
+    if (daysEl) daysEl.textContent = user.role === 'admin' ? 'Incaducable (Acceso SuperAdmin)' : `${user.days_left || 0} días restantes`;
     
     if (expEl) {
         if (user.subscription_expires_at && user.role !== 'admin') {
@@ -1155,7 +1536,7 @@ function openAdminManageUserModal(userId) {
                 expEl.textContent = '---';
             }
         } else {
-            expEl.textContent = 'Sin Vencimiento';
+            expEl.textContent = 'Sin Vencimiento (Permanente)';
         }
     }
 
@@ -1169,7 +1550,10 @@ function openAdminManageUserModal(userId) {
     if (planNameInput) planNameInput.value = user.subscription_plan || 'Plan Pro Mensual';
     if (errorEl) errorEl.classList.add('d-none');
 
-    if (modal) modal.classList.remove('hidden');
+    if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.remove('hidden');
+    }
 }
 
 async function quickExtendDays(days) {
@@ -1177,13 +1561,16 @@ async function quickExtendDays(days) {
     if (!userId) return;
     await quickExtendUserDirect(userId, days);
     const modal = document.getElementById('modal-admin-manage-user');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
 }
 
 function deleteAdminUser(userId, userName) {
     showConfirm(
         'Eliminar Usuario',
-        `¿Estás seguro de eliminar la cuenta del doctor <strong>${userName}</strong>?<br><span class="text-danger small">Esta acción no se puede deshacer.</span>`,
+        `¿Estás seguro de eliminar permanentemente la cuenta del doctor <strong>${userName}</strong> de la base de datos?<br><span class="text-danger small">Esta acción no se puede deshacer.</span>`,
         async () => {
             try {
                 const res = await fetch(`/api/admin/users/${userId}`, {

@@ -2,6 +2,7 @@ import unittest
 import json
 import os
 import time
+import secrets
 from werkzeug.security import check_password_hash
 from backend.app import (
     app, 
@@ -835,5 +836,105 @@ class TestE2EDeepVerification(unittest.TestCase):
         }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
         self.assertEqual(self_batch_res.status_code, 400)
 
+    def test_14_superadmin_lifetime_status_and_pins_management(self):
+        """
+        Test E2E de Estatus Vitalicio SuperAdmin, Gestión de PINs y Canje:
+        1. Login SuperAdmin -> Verificar status lifetime, days_left is None, expires_at is None
+        2. SuperAdmin genera PINs de prueba (1 mensual + 1 vitalicio)
+        3. SuperAdmin consulta lista de PINs y KPIs
+        4. Doctor estándar canjea el PIN y obtiene 30 días de suscripción
+        5. Intentar canjear el mismo PIN de nuevo -> Bloqueo 409
+        6. SuperAdmin elimina un PIN
+        7. Verificar que usuarios no admin reciban 403 en endpoints de PINs
+        8. Verificar que Tigo Money no existe en el template de suscripción
+        """
+        # 1. Login SuperAdmin
+        admin_login = self.app.post('/api/auth/login', data=json.dumps({
+            "email": "admin@vitametrix.com",
+            "password": "AdminVita2026!"
+        }), content_type='application/json')
+        self.assertEqual(admin_login.status_code, 200)
+        admin_data = json.loads(admin_login.data)
+        admin_token = admin_data['token']
+        admin_sub = admin_data['user']['subscription']
+
+        # Verificar que el SuperAdmin no tiene vencimiento ni días restantes limitados
+        self.assertEqual(admin_sub['status'], 'lifetime')
+        self.assertIsNone(admin_sub['days_left'])
+        self.assertIsNone(admin_sub['expires_at'])
+        self.assertIn('SuperAdmin', admin_sub['plan_name'])
+
+        # 2. SuperAdmin genera 1 PIN personalizado de 30 días
+        t_id = int(time.time() * 1000)
+        custom_pin_key = f"VM-TEST-{secrets.token_hex(3).upper()}"
+        create_pin_res = self.app.post('/api/admin/pins/create', data=json.dumps({
+            "duration_days": 30,
+            "plan_name": "Plan Pro Mensual (30 días)",
+            "custom_pin": custom_pin_key,
+            "note": "PIN de Prueba para Doctor Test",
+            "count": 1
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(create_pin_res.status_code, 201)
+        created_pin = json.loads(create_pin_res.data)['created_pins'][0]
+        self.assertEqual(created_pin['license_key'], custom_pin_key)
+
+        # Generar PIN automático para eliminación
+        pin_for_delete_res = self.app.post('/api/admin/pins/create', data=json.dumps({
+            "duration_days": 90,
+            "note": "PIN temporal para test de eliminación",
+            "count": 1
+        }), headers={"Authorization": f"Bearer {admin_token}"}, content_type='application/json')
+        self.assertEqual(pin_for_delete_res.status_code, 201)
+        pin_to_delete_id = json.loads(pin_for_delete_res.data)['created_pins'][0]['id']
+
+        # 3. Consultar lista de PINs
+        pins_list_res = self.app.get('/api/admin/pins', headers={"Authorization": f"Bearer {admin_token}"})
+        self.assertEqual(pins_list_res.status_code, 200)
+        pins_data = json.loads(pins_list_res.data)
+        self.assertTrue(pins_data.get('success'))
+        self.assertIn('pins', pins_data)
+        self.assertIn('stats', pins_data)
+        self.assertGreaterEqual(pins_data['stats']['total_pins'], 2)
+        self.assertGreaterEqual(pins_data['stats']['available_pins'], 2)
+
+        # 4. Doctor estándar canjea el PIN
+        doc_email = f"dr.canje.{t_id}@clinicavita.com"
+        doc_reg = self.app.post('/api/auth/register', data=json.dumps({
+            "email": doc_email,
+            "password": "PasswordDoc123!",
+            "full_name": "Dra. Sofía Morales"
+        }), content_type='application/json')
+        doc_token = json.loads(doc_reg.data)['token']
+
+        redeem_res = self.app.post('/api/subscription/redeem', data=json.dumps({
+            "license_key": custom_pin_key
+        }), headers={"Authorization": f"Bearer {doc_token}"}, content_type='application/json')
+        self.assertEqual(redeem_res.status_code, 200)
+        redeem_data = json.loads(redeem_res.data)
+        self.assertTrue(redeem_data.get('success'))
+        self.assertGreaterEqual(redeem_data['subscription']['days_left'], 30)
+
+        # 5. Intentar canjear de nuevo el mismo PIN -> 409 Conflict
+        redeem_dup = self.app.post('/api/subscription/redeem', data=json.dumps({
+            "license_key": custom_pin_key
+        }), headers={"Authorization": f"Bearer {doc_token}"}, content_type='application/json')
+        self.assertEqual(redeem_dup.status_code, 409)
+
+        # 6. Eliminar PIN temporal
+        del_pin_res = self.app.delete(f'/api/admin/pins/{pin_to_delete_id}', headers={"Authorization": f"Bearer {admin_token}"})
+        self.assertEqual(del_pin_res.status_code, 200)
+
+        # 7. Control de Acceso: Usuario normal recibe 403
+        user_pins_res = self.app.get('/api/admin/pins', headers={"Authorization": f"Bearer {doc_token}"})
+        self.assertEqual(user_pins_res.status_code, 403)
+
+        # 8. Verificar que Tigo Money no existe en el template
+        with open('frontend/templates/suscripcion.html', 'r', encoding='utf-8') as f:
+            template_content = f.read()
+        self.assertNotIn('Tigo Money', template_content)
+        self.assertIn('QR Simple', template_content)
+        self.assertIn('Transferencia', template_content)
+
 if __name__ == '__main__':
     unittest.main()
+

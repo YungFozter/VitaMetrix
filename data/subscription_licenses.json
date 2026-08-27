@@ -72,5 +72,130 @@
     "used_at": "2026-08-27T17:42:36.747786+00:00",
     "created_at": "2026-08-27T17:42:36.738717+00:00",
     "used_by_email": "dr.lic.1787852555@vitametrix.com"
+  },
+  {
+    "id": "50979ad2-3189-404b-9cc5-24fb3f29d835",
+    "license_key": "VM-1M-C3D3-CCDE",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "e2e6da1a-135d-4c08-9cca-1d65476b3e66",
+    "used_at": "2026-08-27T17:49:15.452441+00:00",
+    "created_at": "2026-08-27T17:49:15.436574+00:00",
+    "used_by_email": "dr.lic.1787852953@vitametrix.com"
+  },
+  {
+    "id": "80a1d7a8-aa68-4547-b0da-2a6abf566113",
+    "license_key": "VM-1M-80F1-4FFC",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "53c72ccc-549a-4885-a94b-372d6303703f",
+    "used_at": "2026-08-27T17:59:15.339385+00:00",
+    "created_at": "2026-08-27T17:59:15.320649+00:00",
+    "used_by_email": "dr.lic.1787853553@vitametrix.com"
+  },
+  {
+    "id": "787d1e6c-66fa-420b-a3a8-13a0a34626ef",
+    "license_key": "VM-1M-240E-B5F3",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "bfcb1419-73ba-4574-81d2-44b21f072786",
+    "used_at": "2026-08-27T18:28:21.143380+00:00",
+    "created_at": "2026-08-27T18:28:21.130422+00:00",
+    "used_by_email": "dr.lic.1787855299@vitametrix.com"
+  },
+  {
+    "id": "774361fc-e08a-40a9-bf36-5f2830c1fe1a",
+    "license_key": "VM-1M-CA00-390C",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "e6e9648c-cb89-49a6-999f-68e8f12564de",
+    "used_at": "2026-08-27T19:19:10.907251+00:00",
+    "created_at": "2026-08-27T19:19:10.891082+00:00",
+    "used_by_email": "dr.lic.1787858349@vitametrix.com"
+  },
+  {
+    "id": "30c04c6b-3ddb-47de-b206-91d44d8d2fef",
+    "license_key": "VM-1M-17DF-40E3",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "fef1120d-6318-4f9f-84c3-cb80cdd001ab",
+    "used_at": "2026-08-27T19:24:02.356492+00:00",
+    "created_at": "2026-08-27T19:24:02.328537+00:00",
+    "used_by_email": "dr.lic.1787858640@vitametrix.com"
+  },
+  {
+    "id": "6aa49277-71b5-47a6-8882-760f59954565",
+    "license_key": "VM-1M-2D51-7A1A",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "54318b73-92cc-42fa-8f14-95c590e1bdb9",
+    "used_at": "2026-08-27T19:29:27.821618+00:00",
+    "created_at": "2026-08-27T19:29:27.809658+00:00",
+    "used_by_email": "dr.lic.1787858966@vitametrix.com"
+  },
+  {
+    "id": "83c123b7-dfb2-42d6-8366-1ab3865861d9",
+    "license_key": "VM-1M-7643-7A5C",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "39495f86-9639-479a-8c48-a76538670a67",
+    "used_at": "2026-08-27T19:38:36.976496+00:00",
+    "created_at": "2026-08-27T19:38:36.959705+00:00",
+    "used_by_email": "dr.lic.1787859515@vitametrix.com"
+  },
+  {
+    "id": "89463514-8467-4876-9a62-ee6c47984961",
+    "license_key": "VM-1M-5642-41A9",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "1dbfb2e3-b1c0-421b-9dd5-e154de410bee",
+    "used_at": "2026-08-27T19:55:55.978543+00:00",
+    "created_at": "2026-08-27T19:55:55.955735+00:00",
+    "used_by_email": "dr.lic.1787860555@vitametrix.com"
+  },
+  {
+    "id": "2893020d-218a-4d3c-a430-eccc48ea9108",
+    "license_key": "VM-1M-64D3-D9EE",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "is_used": true,
+    "used_by_user_id": "d8d0e01f-9fe0-4768-b59b-acf03c706e7f",
+    "used_at": "2026-08-27T20:34:53.351149+00:00",
+    "created_at": "2026-08-27T20:34:53.334208+00:00",
+    "used_by_email": "dr.lic.1787862892@vitametrix.com"
+  },
+  {
+    "id": "e46235fa-f95c-484d-b7b4-7990b1475515",
+    "license_key": "VM-1M-25E0-F2C2",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "note": "",
+    "is_used": true,
+    "used_by_user_id": "b5aa8736-70c1-4614-b7cf-5b8e6ce7682b",
+    "used_by_name": "Dr. Licenciado Test",
+    "used_by_email": "dr.lic.1787864664@vitametrix.com",
+    "used_at": "2026-08-27T21:04:26.309562+00:00",
+    "created_at": "2026-08-27T21:04:26.296005+00:00"
+  },
+  {
+    "id": "93ca7cb0-9065-481e-90c7-58395b6689e6",
+    "license_key": "VM-TEST-FFE65C",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual (30 días)",
+    "note": "PIN de Prueba para Doctor Test",
+    "is_used": true,
+    "used_by_user_id": "2edd81ef-83c7-400d-adf9-61495456b524",
+    "used_by_name": "Dra. Sofía Morales",
+    "used_by_email": "dr.canje.1787864681133@clinicavita.com",
+    "used_at": "2026-08-27T21:04:42.046028+00:00",
+    "created_at": "2026-08-27T21:04:41.133229+00:00"
   }
 ]
