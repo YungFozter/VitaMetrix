@@ -141,11 +141,11 @@ _DEFAULT_INITIAL_USERS = [
         "clinic_name": "Centro Médico VitaMetrix",
         "phone": "+59171234567",
         "role": "user",
-        "subscription_status": "active",
-        "subscription_plan": "Plan Pro Mensual",
-        "subscription_expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
-        "trial_started_at": "2026-08-01T00:00:00Z",
-        "created_at": "2026-08-01T00:00:00Z"
+        "subscription_status": "expired",
+        "subscription_plan": "Plan Vencido",
+        "subscription_expires_at": "2026-01-01T00:00:00Z",
+        "trial_started_at": "2026-01-01T00:00:00Z",
+        "created_at": "2026-01-01T00:00:00Z"
     }
 ]
 
