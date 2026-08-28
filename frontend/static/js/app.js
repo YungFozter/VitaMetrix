@@ -113,6 +113,18 @@ function updateUIWithUserData(userData) {
             }
         }
     }
+
+    // Actualizar nombre y título en Dropdown del perfil
+    const dropProfileText = document.getElementById('dropdown-profile-text');
+    const dropProfileIcon = document.getElementById('dropdown-profile-icon');
+    if (dropProfileText) {
+        dropProfileText.textContent = isAdmin ? '👑 Mi Perfil SuperAdmin' : 'Mi Perfil Clínico';
+    }
+    if (dropProfileIcon) {
+        dropProfileIcon.className = isAdmin ? 'bi bi-shield-check text-warning fs-6' : 'bi bi-person-badge text-primary fs-6';
+    }
+
+    updateUserProfileUI();
 }
 
 function initAuthSystem() {
@@ -4747,11 +4759,14 @@ function initDemoDataInjector() {
 
 // --- PROFILE & WORKSTATION STATE CONTROLLER (OPCIÓN 1) ---
 function updateUserProfileUI() {
-    const name = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
-    const title = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
-    const clinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
+    const user = currentAuthUser || {};
+    const isAdmin = user.role === 'admin';
+
+    const name = user.full_name || localStorage.getItem('vm_user_name') || (isAdmin ? 'Administrador General' : 'Dra. Audrey');
+    const title = user.professional_title || localStorage.getItem('vm_user_title') || (isAdmin ? 'Director / Administrador de Plataforma' : 'Manager / Especialista BIA');
+    const clinic = user.clinic_name || localStorage.getItem('vm_clinic_name') || (isAdmin ? 'Sede Central VitaMetrix' : 'Centro Médico VitaMetrix');
+    const phone = user.phone || localStorage.getItem('vm_pdf_phone') || '+591 72125280';
     const mp = localStorage.getItem('vm_pdf_mp') || 'MP: 45892 / MN: 1204';
-    const phone = localStorage.getItem('vm_pdf_phone') || '+54 9 11 4455-6677';
     
     // Topbar update
     const topName = document.getElementById('topbar-user-name');
@@ -4760,44 +4775,182 @@ function updateUserProfileUI() {
     if (topName) topName.textContent = name;
     if (topTitle) topTitle.textContent = title;
     if (topAvatar) {
-        topAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=00b4d8&color=fff`;
+        topAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${isAdmin ? '6366f1' : '00b4d8'}&color=fff`;
     }
 
-    // Modal Profile update
+    // Modal Profile Elements
+    const modalHeader = document.getElementById('profile-modal-header');
     const modalName = document.getElementById('profile-modal-name');
+    const modalRoleBadge = document.getElementById('profile-modal-role-badge');
     const modalTitle = document.getElementById('profile-modal-title');
     const modalAvatar = document.getElementById('profile-modal-avatar');
+
+    // 4 Bento Cards
+    const card1Label = document.getElementById('profile-modal-card1-label');
+    const card1IconBox = document.getElementById('profile-modal-card1-icon-box');
+    const card1Icon = document.getElementById('profile-modal-card1-icon');
     const modalMp = document.getElementById('profile-modal-mp');
+
+    const card2Label = document.getElementById('profile-modal-card2-label');
+    const card2IconBox = document.getElementById('profile-modal-card2-icon-box');
+    const card2Icon = document.getElementById('profile-modal-card2-icon');
     const modalClinic = document.getElementById('profile-modal-clinic');
+
+    const card3Label = document.getElementById('profile-modal-card3-label');
+    const card3IconBox = document.getElementById('profile-modal-card3-icon-box');
+    const card3Icon = document.getElementById('profile-modal-card3-icon');
     const modalPhone = document.getElementById('profile-modal-phone');
+
+    const card4Label = document.getElementById('profile-modal-card4-label');
+    const card4IconBox = document.getElementById('profile-modal-card4-icon-box');
+    const card4Icon = document.getElementById('profile-modal-card4-icon');
+    const card4Content = document.getElementById('profile-modal-card4-content');
+
+    // Stats Section
+    const statsTitle = document.getElementById('profile-modal-stats-title');
+    const stat1Label = document.getElementById('profile-modal-stat1-label');
+    const statPatients = document.getElementById('profile-modal-stat-patients');
+    const stat2Label = document.getElementById('profile-modal-stat2-label');
+    const statEvals = document.getElementById('profile-modal-stat-evals');
+    const stat3Label = document.getElementById('profile-modal-stat3-label');
+    const statAppts = document.getElementById('profile-modal-stat-appts');
+
+    // Action Button
+    const btnEdit = document.getElementById('profile-modal-btn-edit');
 
     if (modalName) modalName.textContent = name;
     if (modalTitle) modalTitle.textContent = title;
-    if (modalAvatar) {
-        modalAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffffff&color=0284c7&size=128`;
-    }
-    if (modalMp) modalMp.textContent = mp || 'Sin matrícula registrada';
-    if (modalClinic) modalClinic.textContent = clinic || 'Centro Médico VitaMetrix';
-    if (modalPhone) modalPhone.textContent = phone || 'Sin teléfono de contacto';
 
-    // Update live stats in modal
-    const statPatients = document.getElementById('profile-modal-stat-patients');
-    const statEvals = document.getElementById('profile-modal-stat-evals');
-    const statAppts = document.getElementById('profile-modal-stat-appts');
+    if (isAdmin) {
+        // --- VISTA EXCLUSIVA SUPERADMIN ---
+        if (modalHeader) {
+            modalHeader.style.background = 'linear-gradient(135deg, #091e3a 0%, #1e1b4b 45%, #4338ca 100%)';
+        }
+        if (modalAvatar) {
+            modalAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=4338ca&color=ffffff&size=128`;
+        }
+        if (modalRoleBadge) {
+            modalRoleBadge.classList.remove('d-none');
+            modalRoleBadge.textContent = '👑 SuperAdmin Master';
+        }
 
-    if (statPatients) {
-        const clientsTotalEl = document.getElementById('clients-total-count');
-        const dashPatientsEl = document.getElementById('dash-total-patients');
-        statPatients.textContent = (clientsTotalEl && clientsTotalEl.textContent !== '0') ? clientsTotalEl.textContent : (dashPatientsEl ? dashPatientsEl.textContent : '0');
-    }
-    if (statEvals) {
-        const dashEvalsEl = document.getElementById('dash-total-evals');
-        statEvals.textContent = (typeof allEvaluationsData !== 'undefined' && allEvaluationsData.length > 0) ? allEvaluationsData.length : (dashEvalsEl ? dashEvalsEl.textContent : '0');
-    }
-    if (statAppts) {
-        const todayStr = new Date().toISOString().split('T')[0];
-        const todayCount = (typeof clinicAppointments !== 'undefined') ? clinicAppointments.filter(a => a.date === todayStr).length : 0;
-        statAppts.textContent = todayCount;
+        // Bento 1: Rol de Plataforma
+        if (card1Label) card1Label.textContent = 'Rol en la Plataforma';
+        if (card1IconBox) { card1IconBox.style.backgroundColor = '#ede9fe'; card1IconBox.style.color = '#6d28d9'; }
+        if (card1Icon) card1Icon.className = 'bi bi-shield-lock-fill fs-5';
+        if (modalMp) modalMp.innerHTML = '<span class="text-primary fw-bold">SuperAdmin (Control Total)</span>';
+
+        // Bento 2: Sede de Administración
+        if (card2Label) card2Label.textContent = 'Sede de Administración';
+        if (card2IconBox) { card2IconBox.style.backgroundColor = '#e0e7ff'; card2IconBox.style.color = '#4338ca'; }
+        if (card2Icon) card2Icon.className = 'bi bi-building-fill fs-5';
+        if (modalClinic) modalClinic.textContent = clinic || 'Sede Central VitaMetrix';
+
+        // Bento 3: Teléfono Soporte
+        if (card3Label) card3Label.textContent = 'Teléfono / Soporte Oficial';
+        if (card3IconBox) { card3IconBox.style.backgroundColor = '#dcfce7'; card3IconBox.style.color = '#15803d'; }
+        if (card3Icon) card3Icon.className = 'bi bi-telephone-fill fs-5';
+        if (modalPhone) modalPhone.textContent = phone || '+591 72125280';
+
+        // Bento 4: Suscripción / Acceso
+        if (card4Label) card4Label.textContent = 'Estado de Suscripción';
+        if (card4IconBox) { card4IconBox.style.backgroundColor = '#fef3c7'; card4IconBox.style.color = '#b45309'; }
+        if (card4Icon) card4Icon.className = 'bi bi-infinity fs-5';
+        if (card4Content) {
+            card4Content.innerHTML = `
+                <span class="badge bg-warning bg-opacity-15 text-dark border border-warning rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                    <i class="bi bi-award-fill text-warning me-1"></i>Acceso Total Incaducible
+                </span>
+            `;
+        }
+
+        // Estadísticas de Plataforma Global
+        if (statsTitle) statsTitle.textContent = 'Métricas Globales de Plataforma';
+        if (stat1Label) stat1Label.textContent = 'Médicos Registrados';
+        if (stat2Label) stat2Label.textContent = 'PINs Creados';
+        if (stat3Label) stat3Label.textContent = 'PINs Disponibles';
+
+        const totalUsers = allAdminUsersData.length || 2;
+        const totalPins = allAdminPinsData.length || 0;
+        const availablePins = allAdminPinsData.filter(p => !p.is_used).length || 0;
+
+        if (statPatients) statPatients.textContent = totalUsers;
+        if (statEvals) statEvals.textContent = totalPins;
+        if (statAppts) statAppts.textContent = availablePins;
+
+        // Botón de Acción para SuperAdmin
+        if (btnEdit) {
+            btnEdit.className = 'btn btn-warning text-dark px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md';
+            btnEdit.innerHTML = '<i class="bi bi-shield-lock-fill fs-5"></i><span>Ir al Panel SuperAdmin</span>';
+        }
+    } else {
+        // --- VISTA MÉDICO / USUARIO CLÍNICO ---
+        if (modalHeader) {
+            modalHeader.style.background = 'linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%)';
+        }
+        if (modalAvatar) {
+            modalAvatar.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=ffffff&color=0284c7&size=128`;
+        }
+        if (modalRoleBadge) {
+            modalRoleBadge.classList.add('d-none');
+        }
+
+        // Bento 1: Matrícula Profesional
+        if (card1Label) card1Label.textContent = 'Matrícula Profesional';
+        if (card1IconBox) { card1IconBox.style.backgroundColor = '#e0f2fe'; card1IconBox.style.color = '#0284c7'; }
+        if (card1Icon) card1Icon.className = 'bi bi-award-fill fs-5';
+        if (modalMp) modalMp.textContent = mp || 'Sin matrícula registrada';
+
+        // Bento 2: Centro Clínico
+        if (card2Label) card2Label.textContent = 'Centro Clínico Asignado';
+        if (card2IconBox) { card2IconBox.style.backgroundColor = '#e0e7ff'; card2IconBox.style.color = '#4338ca'; }
+        if (card2Icon) card2Icon.className = 'bi bi-hospital-fill fs-5';
+        if (modalClinic) modalClinic.textContent = clinic || 'Centro Médico VitaMetrix';
+
+        // Bento 3: Contacto
+        if (card3Label) card3Label.textContent = 'Contacto / Teléfono';
+        if (card3IconBox) { card3IconBox.style.backgroundColor = '#dcfce7'; card3IconBox.style.color = '#15803d'; }
+        if (card3Icon) card3Icon.className = 'bi bi-telephone-fill fs-5';
+        if (modalPhone) modalPhone.textContent = phone || 'Sin teléfono';
+
+        // Bento 4: Estación
+        if (card4Label) card4Label.textContent = 'Modo de Estación';
+        if (card4IconBox) { card4IconBox.style.backgroundColor = '#fef3c7'; card4IconBox.style.color = '#b45309'; }
+        if (card4Icon) card4Icon.className = 'bi bi-shield-lock-fill fs-5';
+        if (card4Content) {
+            card4Content.innerHTML = `
+                <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                    <i class="bi bi-check-circle-fill me-1"></i>Estación Local Activa
+                </span>
+            `;
+        }
+
+        // Resumen de Actividad
+        if (statsTitle) statsTitle.textContent = 'Resumen de Actividad';
+        if (stat1Label) stat1Label.textContent = 'Pacientes';
+        if (stat2Label) stat2Label.textContent = 'Estudios BIA';
+        if (stat3Label) stat3Label.textContent = 'Citas de Hoy';
+
+        if (statPatients) {
+            const clientsTotalEl = document.getElementById('clients-total-count');
+            const dashPatientsEl = document.getElementById('dash-total-patients');
+            statPatients.textContent = (clientsTotalEl && clientsTotalEl.textContent !== '0') ? clientsTotalEl.textContent : (dashPatientsEl ? dashPatientsEl.textContent : (allClientsData.length || '0'));
+        }
+        if (statEvals) {
+            const dashEvalsEl = document.getElementById('dash-total-evals');
+            statEvals.textContent = (typeof allEvaluationsData !== 'undefined' && allEvaluationsData.length > 0) ? allEvaluationsData.length : (dashEvalsEl ? dashEvalsEl.textContent : '0');
+        }
+        if (statAppts) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const todayCount = (typeof clinicAppointments !== 'undefined') ? clinicAppointments.filter(a => a.date === todayStr).length : 0;
+            statAppts.textContent = todayCount;
+        }
+
+        // Botón de Acción para Médicos
+        if (btnEdit) {
+            btnEdit.className = 'btn btn-primary px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md';
+            btnEdit.innerHTML = '<i class="bi bi-gear-fill fs-5"></i><span>Editar en Configuración</span>';
+        }
     }
 }
 
@@ -4850,24 +5003,28 @@ function initSystemMenuListeners() {
         });
     }
 
-    // Botón "Editar en Configuración" dentro del modal de perfil
+    // Botón de acción dentro del modal de perfil (SuperAdmin vs Doctor)
     if (profileModalBtnEdit) {
         profileModalBtnEdit.addEventListener('click', () => {
             closeProfileModal();
-            const configNav = document.getElementById('nav-settings-btn');
-            if (configNav) {
-                configNav.click();
-                setTimeout(() => {
-                    const cfgCard = document.querySelector('#configuracion-view .card');
-                    const userNameInput = document.getElementById('cfg-user-name');
-                    if (cfgCard) {
-                        cfgCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        cfgCard.classList.remove('highlight-pulse');
-                        void cfgCard.offsetWidth; // Trigger reflow
-                        cfgCard.classList.add('highlight-pulse');
-                    }
-                    if (userNameInput) userNameInput.focus();
-                }, 250);
+            if (currentAuthUser && currentAuthUser.role === 'admin') {
+                navigateToView('superadmin-view', true);
+            } else {
+                const configNav = document.getElementById('nav-settings-btn');
+                if (configNav) {
+                    configNav.click();
+                    setTimeout(() => {
+                        const cfgCard = document.querySelector('#configuracion-view .card');
+                        const userNameInput = document.getElementById('cfg-user-name');
+                        if (cfgCard) {
+                            cfgCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            cfgCard.classList.remove('highlight-pulse');
+                            void cfgCard.offsetWidth; // Trigger reflow
+                            cfgCard.classList.add('highlight-pulse');
+                        }
+                        if (userNameInput) userNameInput.focus();
+                    }, 250);
+                }
             }
         });
     }

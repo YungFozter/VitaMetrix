@@ -402,8 +402,8 @@
                         <!-- Dropdown Menu -->
                         <div class="profile-dropdown hidden" id="profile-dropdown">
                             <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2" id="dropdown-profile-btn">
-                                <i class="bi bi-person-badge text-primary fs-6"></i>
-                                <span>Mi Perfil Clínico</span>
+                                <i class="bi bi-person-badge text-primary fs-6" id="dropdown-profile-icon"></i>
+                                <span id="dropdown-profile-text">Mi Perfil Clínico</span>
                             </a>
                             <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2" onclick="document.querySelector('[data-target=\'subscription-view\']').click()">
                                 <i class="bi bi-star-fill text-warning fs-6"></i>
@@ -692,65 +692,68 @@
     <div id="profile-card-modal" class="modal-overlay hidden" style="z-index: 9998;">
         <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden" style="max-width: 760px; width: 94%; text-align: left;">
             <!-- Header Banner Grande con Degradado Profundo -->
-            <div class="position-relative p-4 sm:p-5 text-white" style="background: linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%);">
+            <div class="position-relative p-4 sm:p-5 text-white" id="profile-modal-header" style="background: linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%);">
                 <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 shadow-none" id="profile-modal-close" aria-label="Cerrar" style="opacity: 0.85;"></button>
                 <div class="d-flex flex-wrap align-items-center gap-4 mt-2">
                     <div class="position-relative">
-                        <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Dra+Audrey&background=ffffff&color=0284c7&size=128" alt="Avatar" class="rounded-circle border border-4 border-white shadow-md" style="width: 88px; height: 88px; object-fit: cover;">
-                        <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style="width: 18px; height: 18px;" title="Estación en línea"></span>
+                        <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Administrador+General&background=4338ca&color=ffffff&size=128" alt="Avatar" class="rounded-circle border border-4 border-white shadow-md" style="width: 88px; height: 88px; object-fit: cover;">
+                        <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" id="profile-modal-status-dot" style="width: 18px; height: 18px;" title="Sesión activa"></span>
                     </div>
                     <div class="flex-grow-1">
-                        <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name" style="letter-spacing: -0.5px;">Dra. Audrey</h2>
-                        <p class="m-0 fs-6 fw-medium mt-1" id="profile-modal-title" style="color: #bae6fd;">Manager / Especialista BIA</p>
+                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                            <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name" style="letter-spacing: -0.5px;">Administrador General</h2>
+                            <span class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-1 fw-bold fs-7 d-none" id="profile-modal-role-badge">👑 SuperAdmin Master</span>
+                        </div>
+                        <p class="m-0 fs-6 fw-medium mt-1" id="profile-modal-title" style="color: #bae6fd;">Director / Administrador de Plataforma</p>
                     </div>
                 </div>
             </div>
 
             <!-- Cuerpo de la Credencial -->
             <div class="p-4 sm:p-5">
-                <!-- Ficha de Datos Clínicos (4 Bento Cards con alto contraste) -->
+                <!-- Ficha de Datos (4 Bento Cards con alto contraste) -->
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-sm-6">
                         <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #e0f2fe; color: #0284c7; width: 44px; height: 44px;">
-                                <i class="bi bi-award-fill fs-5"></i>
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card1-icon-box" style="background-color: #e0f2fe; color: #0284c7; width: 44px; height: 44px;">
+                                <i class="bi bi-award-fill fs-5" id="profile-modal-card1-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Matrícula Profesional</span>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card1-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Matrícula Profesional</span>
                                 <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-mp">MP: 45892 / MN: 1204</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #e0e7ff; color: #4338ca; width: 44px; height: 44px;">
-                                <i class="bi bi-hospital-fill fs-5"></i>
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card2-icon-box" style="background-color: #e0e7ff; color: #4338ca; width: 44px; height: 44px;">
+                                <i class="bi bi-hospital-fill fs-5" id="profile-modal-card2-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Centro Clínico Asignado</span>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card2-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Centro Clínico Asignado</span>
                                 <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-clinic">Centro Médico VitaMetrix</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #dcfce7; color: #15803d; width: 44px; height: 44px;">
-                                <i class="bi bi-telephone-fill fs-5"></i>
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card3-icon-box" style="background-color: #dcfce7; color: #15803d; width: 44px; height: 44px;">
+                                <i class="bi bi-telephone-fill fs-5" id="profile-modal-card3-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Contacto / Teléfono</span>
-                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-phone">+54 9 11 4455-6677</strong>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card3-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Contacto / Teléfono</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-phone">+591 72125280</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
                         <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" style="background-color: #fef3c7; color: #b45309; width: 44px; height: 44px;">
-                                <i class="bi bi-shield-lock-fill fs-5"></i>
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card4-icon-box" style="background-color: #fef3c7; color: #b45309; width: 44px; height: 44px;">
+                                <i class="bi bi-shield-lock-fill fs-5" id="profile-modal-card4-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Modo de Estación</span>
-                                <div class="mt-1">
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card4-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Modo de Estación</span>
+                                <div class="mt-1" id="profile-modal-card4-content">
                                     <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;">
                                         <i class="bi bi-check-circle-fill me-1"></i>Estación Local Activa
                                     </span>
@@ -760,27 +763,27 @@
                     </div>
                 </div>
 
-                <!-- Métricas de Actividad Clínica -->
+                <!-- Métricas de Actividad -->
                 <div class="mb-3">
-                    <h4 class="display-font text-navy fw-bold fs-5 m-0">Resumen de Actividad</h4>
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0" id="profile-modal-stats-title">Resumen de Actividad</h4>
                 </div>
                 <div class="row g-3 mb-4 text-center">
                     <div class="col-4">
                         <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
                             <span class="d-block display-font fw-extrabold text-primary fs-2 lh-1 mb-1" id="profile-modal-stat-patients">0</span>
-                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Pacientes</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat1-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Pacientes</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
                             <span class="d-block display-font fw-extrabold text-info fs-2 lh-1 mb-1" id="profile-modal-stat-evals" style="color: #0891b2 !important;">0</span>
-                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Estudios BIA</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat2-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Estudios BIA</span>
                         </div>
                     </div>
                     <div class="col-4">
                         <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
                             <span class="d-block display-font fw-extrabold fs-2 lh-1 mb-1" id="profile-modal-stat-appts" style="color: #d97706 !important;">0</span>
-                            <span class="fw-bold text-uppercase" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Citas de Hoy</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat3-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Citas de Hoy</span>
                         </div>
                     </div>
                 </div>
@@ -789,7 +792,7 @@
                 <div class="d-flex align-items-center justify-content-end pt-4 border-top" style="border-color: #e2e8f0;">
                     <button type="button" id="profile-modal-btn-edit" class="btn btn-primary px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md">
                         <i class="bi bi-gear-fill fs-5"></i>
-                        <span>Editar en Configuración</span>
+                        <span id="profile-modal-btn-text">Editar en Configuración</span>
                     </button>
                 </div>
             </div>
