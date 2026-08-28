@@ -325,6 +325,8 @@ def _build_safe_user_dict(user):
         "clinic_name": user.get('clinic_name', 'Centro Médico VitaMetrix'),
         "phone": user.get('phone', ''),
         "role": user.get('role', 'user'),
+        "subscription_status": status,
+        "subscription_plan": plan_name,
         "subscription": {
             "status": status,
             "days_left": days_left,
@@ -517,7 +519,7 @@ def subscription_status():
 @app.route('/api/subscription/redeem', methods=['POST'])
 def subscription_redeem():
     data = request.json or {}
-    key_input = _clean_str(data.get('license_key') or data.get('pin'), max_len=80).upper().strip()
+    key_input = _clean_str(data.get('license_key') or data.get('pin_key') or data.get('pin'), max_len=80).upper().strip()
 
     if not key_input:
         return jsonify({"error": "Por favor ingresa un PIN de activación válido"}), 400
@@ -692,6 +694,7 @@ def admin_create_pin():
     return jsonify({
         "success": True,
         "message": f"Se generó {len(created_records)} PIN(s) de activación exitosamente.",
+        "pins": created_records,
         "created_pins": created_records
     }), 201
 
@@ -1086,8 +1089,13 @@ def _invalidate_dashboard_cache():
 
 @app.route('/api/dashboard-stats', methods=['GET'])
 def dashboard_stats():
+    current_user = _get_current_user()
+    current_uid = current_user.get('id') if current_user else None
+    is_admin = current_user and current_user.get('role') == 'admin'
+
     now_ts = time.time()
-    if _DASHBOARD_CACHE["data"] and now_ts < _DASHBOARD_CACHE["expires_at"]:
+    tenant_cache_key = current_uid or 'global'
+    if _DASHBOARD_CACHE["data"] and _DASHBOARD_CACHE.get("tenant") == tenant_cache_key and now_ts < _DASHBOARD_CACHE["expires_at"]:
         return jsonify(_DASHBOARD_CACHE["data"])
 
     if not supabase:
@@ -1095,14 +1103,19 @@ def dashboard_stats():
         
     try:
         # Contar clientes
-        clients_res = supabase.table('clients').select('id', count='exact').execute()
-        total_clients = clients_res.count if clients_res.count is not None else len(clients_res.data or [])
+        clients_res = supabase.table('clients').select('id,user_id').execute()
+        all_clients = clients_res.data or []
+        if not is_admin and current_uid:
+            all_clients = [c for c in all_clients if c.get('user_id') == current_uid or not c.get('user_id') or c.get('user_id') == 'usr-doctor-001']
+        total_clients = len(all_clients)
         
         # Obtener evaluaciones recientes (optimizando columnas para menor payload de red)
-        evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance', count='exact').order('created_at', desc=True).limit(100).execute()
+        evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance,user_id').order('created_at', desc=True).limit(100).execute()
         evaluations = evals_res.data or []
+        if not is_admin and current_uid:
+            evaluations = [e for e in evaluations if e.get('user_id') == current_uid or not e.get('user_id') or e.get('user_id') == 'usr-doctor-001']
         
-        total_evaluations = evals_res.count if evals_res.count is not None else len(evaluations)
+        total_evaluations = len(evaluations)
         
         # Calcular promedio de TRU Score
         valid_scores = [float(e['global_score']) for e in evaluations if e.get('global_score') is not None]
@@ -1136,9 +1149,10 @@ def dashboard_stats():
             "population": cell_status_counts
         }
 
-        # Almacenar en caché en memoria por 30s
+        # Almacenar en caché en memoria por 15s por tenant
         _DASHBOARD_CACHE["data"] = result_payload
-        _DASHBOARD_CACHE["expires_at"] = now_ts + 30
+        _DASHBOARD_CACHE["tenant"] = tenant_cache_key
+        _DASHBOARD_CACHE["expires_at"] = now_ts + 15
 
         return jsonify(result_payload)
     except Exception as e:
@@ -1318,6 +1332,9 @@ def _run_analysis(data):
 
             assigned_code = f"EVA-{next_num:03d}"
 
+            current_user = _get_current_user()
+            current_uid = current_user.get('id') if current_user else None
+
             insert_payload = {
                 "patient_idp": patient_idp,
                 "patient_name": patient_name,
@@ -1339,13 +1356,19 @@ def _run_analysis(data):
                 "waist": waist,
                 "code": assigned_code
             }
+            if current_uid:
+                insert_payload["user_id"] = current_uid
 
             try:
                 supabase.table('evaluations').insert(insert_payload).execute()
             except Exception:
-                # Fallback si la columna 'code' aún no existe en el esquema de la BD
-                insert_payload.pop('code', None)
-                supabase.table('evaluations').insert(insert_payload).execute()
+                try:
+                    # Fallback si la columna 'code' aún no existe en el esquema de la BD
+                    insert_fallback = {k: v for k, v in insert_payload.items() if k != 'code'}
+                    supabase.table('evaluations').insert(insert_fallback).execute()
+                except Exception:
+                    insert_fallback2 = {k: v for k, v in insert_payload.items() if k not in ('code', 'user_id')}
+                    supabase.table('evaluations').insert(insert_fallback2).execute()
 
             # --- AUTO-REGISTRO / VINCULACIÓN SILENCIOSA DE PACIENTE EN CLIENTS ---
             try:
@@ -1387,11 +1410,17 @@ def _run_analysis(data):
                         "phone": None,
                         "email": None
                     }
+                    if current_uid:
+                        new_client_record["user_id"] = current_uid
                     try:
                         supabase.table('clients').insert(new_client_record).execute()
                     except Exception:
-                        fallback_c = {"code": new_c_code, "name": patient_name, "phone": None, "email": None}
-                        supabase.table('clients').insert(fallback_c).execute()
+                        try:
+                            nc_fallback = {k: v for k, v in new_client_record.items() if k != 'user_id'}
+                            supabase.table('clients').insert(nc_fallback).execute()
+                        except Exception:
+                            fallback_c = {"code": new_c_code, "name": patient_name, "phone": None, "email": None}
+                            supabase.table('clients').insert(fallback_c).execute()
                 else:
                     update_fields = {}
                     if age and match_client.get('age') != age:
@@ -2134,6 +2163,9 @@ def _calc_item_status(qty, min_qty):
 
 @app.route('/api/stock', methods=['GET'])
 def get_stock_items():
+    current_user = _get_current_user()
+    current_uid = current_user.get('id') if current_user else None
+
     remote_items = []
     if supabase:
         try:
@@ -2164,6 +2196,13 @@ def get_stock_items():
             combined_items.append(it_copy)
             local_items.append(it_copy)
             _save_persisted_stock_items(local_items)
+
+    # Filtrar por multi-tenant (si no es SuperAdmin)
+    if current_uid and current_user.get('role') != 'admin':
+        filtered_items = [it for it in combined_items if it.get('user_id') == current_uid]
+        if not filtered_items and (current_uid == 'usr-doctor-001' or current_user.get('email') == 'audrey@vitametrix.com'):
+            filtered_items = [it for it in combined_items if not it.get('user_id') or it.get('user_id') == 'usr-doctor-001']
+        return jsonify(filtered_items)
 
     return jsonify(combined_items)
 
@@ -2261,6 +2300,9 @@ def _ensure_category_and_unit_persisted(category_name, unit_name=None):
 
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
+    current_user = _get_current_user()
+    current_uid = current_user.get('id') if current_user else None
+
     data = request.json or {}
     name = _clean_str(data.get('name'), max_len=150)
     if not name:
@@ -2282,6 +2324,7 @@ def create_stock_item():
 
     new_item = {
         "id": item_id,
+        "user_id": current_uid,
         "code": code,
         "name": name,
         "category": category,
@@ -2313,10 +2356,11 @@ def create_stock_item():
         except Exception:
             try:
                 # Reintento sin columnas adicionales si el esquema remoto aún no fue migrado
-                fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date']}
+                fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
                 res = supabase.table('stock_items').insert(fallback_item).execute()
                 if res.data:
                     item_res = res.data[0]
+                    item_res['user_id'] = new_item.get('user_id')
                     item_res['batch_number'] = new_item.get('batch_number')
                     item_res['expiry_date'] = new_item.get('expiry_date')
                     item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
@@ -2520,6 +2564,9 @@ def record_stock_movement(item_id):
 
 @app.route('/api/stock/movements', methods=['GET'])
 def get_stock_movements():
+    current_user = _get_current_user()
+    current_uid = current_user.get('id') if current_user else None
+
     item_id = _clean_str(request.args.get('item_id'))
     remote_movs = []
     if supabase:
@@ -2551,6 +2598,9 @@ def get_stock_movements():
             if m_id:
                 seen_ids.add(m_id)
             combined_movs.append(m)
+
+    if current_uid and current_user.get('role') != 'admin':
+        combined_movs = [m for m in combined_movs if m.get('user_id') == current_uid or not m.get('user_id') or m.get('user_id') == 'usr-doctor-001']
 
     return jsonify(combined_movs[:100])
 
