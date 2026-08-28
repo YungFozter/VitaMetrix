@@ -1005,21 +1005,6 @@ function initSuperAdminView() {
         });
     }
 
-    // Precargar PINs desde cache local inmediato para evitar parpadeo
-    try {
-        const cachedPins = JSON.parse(localStorage.getItem('vm_admin_pins_cache') || '[]');
-        if (Array.isArray(cachedPins) && cachedPins.length > 0) {
-            allAdminPinsData = cachedPins;
-            const kpiTotal = document.getElementById('kpi-admin-total-pins');
-            const kpiAvailable = document.getElementById('kpi-admin-available-pins');
-            const kpiUsed = document.getElementById('kpi-admin-used-pins');
-            if (kpiTotal) kpiTotal.textContent = allAdminPinsData.length;
-            if (kpiAvailable) kpiAvailable.textContent = allAdminPinsData.filter(p => !p.is_used).length;
-            if (kpiUsed) kpiUsed.textContent = allAdminPinsData.filter(p => p.is_used).length;
-            renderAdminPins();
-        }
-    } catch (e) {}
-
     // Restaurar subpestaña activa
     const savedAdminTab = localStorage.getItem('vm_admin_active_tab');
     if (savedAdminTab === 'pins') {
@@ -1344,17 +1329,6 @@ async function fetchAdminPins(showToastFeedback = false) {
     const tbody = document.getElementById('tbody-admin-pins');
     if (!tbody) return;
 
-    // Si no hay datos en memoria, intentar leer cache local primero para render inmediato
-    if (allAdminPinsData.length === 0) {
-        try {
-            const cached = JSON.parse(localStorage.getItem('vm_admin_pins_cache') || '[]');
-            if (Array.isArray(cached) && cached.length > 0) {
-                allAdminPinsData = cached;
-                renderAdminPins();
-            }
-        } catch (e) {}
-    }
-
     if (showToastFeedback && allAdminPinsData.length === 0) {
         tbody.innerHTML = `
             <tr>
@@ -1373,33 +1347,11 @@ async function fetchAdminPins(showToastFeedback = false) {
         const data = await res.json();
         if (!data.success) return;
 
-        let serverPins = Array.isArray(data.pins) ? data.pins : [];
-
-        // Auto-sincronización: Si el servidor retornó 0 pins (por reinicio en Render) pero tenemos PINs en cache local:
-        if (serverPins.length === 0 && allAdminPinsData.length > 0) {
-            try {
-                const syncRes = await fetch('/api/admin/pins/sync', {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ pins: allAdminPinsData })
-                });
-                if (syncRes.ok) {
-                    const syncData = await syncRes.json();
-                    if (syncData.success && syncData.pins) {
-                        serverPins = syncData.pins;
-                    }
-                }
-            } catch (syncErr) {
-                console.warn('Error sincronizando PINs con el servidor:', syncErr);
-            }
-        }
-
-        if (serverPins.length > 0) {
-            allAdminPinsData = serverPins;
-            try {
-                localStorage.setItem('vm_admin_pins_cache', JSON.stringify(allAdminPinsData));
-            } catch (e) {}
-        }
+        const serverPins = Array.isArray(data.pins) ? data.pins : [];
+        allAdminPinsData = serverPins;
+        try {
+            localStorage.setItem('vm_admin_pins_cache', JSON.stringify(allAdminPinsData));
+        } catch (e) {}
 
         // Actualizar KPIs de PINs
         const stats = data.stats || {};
@@ -1423,6 +1375,17 @@ async function fetchAdminPins(showToastFeedback = false) {
     } catch (e) {
         console.error('Error al cargar PINs de SuperAdmin:', e);
         if (allAdminPinsData.length > 0) {
+            renderAdminPins();
+        } else {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-danger">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Error de conexión al cargar PINs.
+                    </td>
+                </tr>
+            `;
+        }
+    }
             renderAdminPins();
         } else {
             tbody.innerHTML = `

@@ -77,6 +77,14 @@ def _clean_str(val, max_len=150):
         return ""
     return html.escape(str(val).strip()[:max_len])
 
+def _normalize_gender(val):
+    if not val:
+        return "male"
+    v = str(val).strip().lower()
+    if v in ("f", "female", "femenino", "mujer", "femenina"):
+        return "female"
+    return "male"
+
 # Inicializar Supabase
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
@@ -173,8 +181,6 @@ def _save_users(users):
         logging.error("Error al guardar users.json: %s", e)
         return False
 
-_RUNTIME_LICENSES_CACHE = None
-
 def _save_licenses_disk_only(licenses):
     try:
         os.makedirs(os.path.dirname(_LICENSES_PATH), exist_ok=True)
@@ -186,7 +192,6 @@ def _save_licenses_disk_only(licenses):
         return False
 
 def _load_licenses():
-    global _RUNTIME_LICENSES_CACHE
     local_licenses = []
     if os.path.exists(_LICENSES_PATH):
         try:
@@ -197,44 +202,24 @@ def _load_licenses():
         except Exception as e:
             logging.warning("Error al leer subscription_licenses.json: %s", e)
 
-    # Si la memoria en ejecución tiene registros creados recientemente, preservarlos
-    if _RUNTIME_LICENSES_CACHE and isinstance(_RUNTIME_LICENSES_CACHE, list) and len(_RUNTIME_LICENSES_CACHE) > len(local_licenses):
-        local_keys = {l.get('license_key') for l in local_licenses if l.get('license_key')}
-        for cached in _RUNTIME_LICENSES_CACHE:
-            if cached.get('license_key') and cached.get('license_key') not in local_keys:
-                local_licenses.append(cached)
-                local_keys.add(cached.get('license_key'))
-        _save_licenses_disk_only(local_licenses)
-
     if supabase:
         try:
             res = supabase.table('subscription_licenses').select('*').execute()
-            if res and res.data and len(res.data) > 0:
-                remote_keys = {item.get('license_key') for item in res.data if item.get('license_key')}
-                merged = list(res.data)
-                for loc in local_licenses:
-                    if loc.get('license_key') and loc.get('license_key') not in remote_keys:
-                        merged.append(loc)
-                _RUNTIME_LICENSES_CACHE = merged
-                return merged
+            if res and res.data is not None:
+                return list(res.data)
         except Exception:
             pass
 
-    _RUNTIME_LICENSES_CACHE = local_licenses
     return local_licenses
 
 def _save_licenses(licenses):
-    global _RUNTIME_LICENSES_CACHE
-    _RUNTIME_LICENSES_CACHE = list(licenses)
     _save_licenses_disk_only(licenses)
-
     if supabase:
         try:
             for lic in licenses:
                 supabase.table('subscription_licenses').upsert(lic).execute()
         except Exception:
             pass
-
     return True
 
 def _generate_auth_token(user_id, email, role="user"):
@@ -723,11 +708,12 @@ def admin_delete_pin(pin_id):
     if len(licenses) == initial_len:
         return jsonify({"error": "PIN no encontrado"}), 404
 
-    _save_licenses(licenses)
+    _save_licenses_disk_only(licenses)
 
     if supabase:
         try:
             supabase.table('subscription_licenses').delete().eq('id', pin_id).execute()
+            supabase.table('subscription_licenses').delete().eq('license_key', pin_id).execute()
         except Exception:
             pass
 
@@ -742,29 +728,11 @@ def admin_sync_pins():
     if err:
         return err
 
-    data = request.json or {}
-    incoming_pins = data.get('pins', [])
-    if not isinstance(incoming_pins, list) or len(incoming_pins) == 0:
-        return jsonify({"success": True, "pins": _load_licenses()}), 200
-
-    existing_licenses = _load_licenses()
-    existing_map = {lic.get('license_key'): lic for lic in existing_licenses if lic.get('license_key')}
-
-    added = 0
-    for pin in incoming_pins:
-        key = pin.get('license_key')
-        if key and key not in existing_map:
-            existing_licenses.append(pin)
-            existing_map[key] = pin
-            added += 1
-
-    if added > 0:
-        _save_licenses(existing_licenses)
-
     return jsonify({
         "success": True,
-        "synced_count": added,
-        "total_pins": len(existing_licenses)
+        "synced_count": 0,
+        "total_pins": len(_load_licenses()),
+        "pins": _load_licenses()
     }), 200
 
 @app.route('/api/admin/licenses/create', methods=['POST'])

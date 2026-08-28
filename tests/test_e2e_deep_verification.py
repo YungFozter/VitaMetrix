@@ -26,6 +26,25 @@ class TestE2EDeepVerification(unittest.TestCase):
     - Citas y Agenda Clínica
     """
 
+    _snapshots = {}
+
+    @classmethod
+    def setUpClass(cls):
+        """Guarda snapshot de todos los archivos JSON de datos antes de ejecutar pruebas."""
+        paths = [
+            _TAXONOMIES_PATH,
+            _STOCK_ITEMS_PATH,
+            _STOCK_MOVEMENTS_PATH,
+            _APPOINTMENTS_PATH,
+            _SALES_PATH,
+            _USERS_PATH,
+            _LICENSES_PATH
+        ]
+        for p in paths:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as f:
+                    cls._snapshots[p] = f.read()
+
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True
@@ -938,18 +957,13 @@ class TestE2EDeepVerification(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Restaura la base de datos de usuarios a únicamente las 2 cuentas oficiales y limpia licencias de prueba."""
-        if os.path.exists(_USERS_PATH):
-            with open(_USERS_PATH, 'r', encoding='utf-8') as f:
-                users = json.load(f)
-            official_users = [u for u in users if u.get('email') in ['admin@vitametrix.com', 'audrey@vitametrix.com']]
-            if official_users:
-                with open(_USERS_PATH, 'w', encoding='utf-8') as f:
-                    json.dump(official_users, f, indent=2, ensure_ascii=False)
-
-        if os.path.exists(_LICENSES_PATH):
-            with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
-                json.dump([], f, indent=2)
+        """Restaura fielmente el estado original exacto de todos los archivos de datos JSON."""
+        for p, original_content in cls._snapshots.items():
+            try:
+                with open(p, 'w', encoding='utf-8') as f:
+                    f.write(original_content)
+            except Exception as e:
+                print(f"Error restaurando snapshot de {p}: {e}")
 
 if __name__ == '__main__':
     unittest.main()

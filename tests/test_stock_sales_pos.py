@@ -1,8 +1,33 @@
 import unittest
 import json
-from backend.app import app
+import os
+from backend.app import (
+    app,
+    _TAXONOMIES_PATH,
+    _STOCK_ITEMS_PATH,
+    _STOCK_MOVEMENTS_PATH,
+    _SALES_PATH
+)
 
 class TestStockAndSalesPOS(unittest.TestCase):
+    _snapshots = {}
+
+    @classmethod
+    def setUpClass(cls):
+        for p in [_TAXONOMIES_PATH, _STOCK_ITEMS_PATH, _STOCK_MOVEMENTS_PATH, _SALES_PATH]:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as f:
+                    cls._snapshots[p] = f.read()
+
+    @classmethod
+    def tearDownClass(cls):
+        for p, content in cls._snapshots.items():
+            try:
+                with open(p, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception:
+                pass
+
     def setUp(self):
         self.app = app.test_client()
         self.app.testing = True

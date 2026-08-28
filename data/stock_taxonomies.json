@@ -39,28 +39,6 @@
       "name": "Otros",
       "icon": "🏷️",
       "description": "Artículos varios no clasificados"
-    },
-    {
-      "name": "Suplementos Botánicos E2E",
-      "icon": "🌿",
-      "description": "Fitoterapia y extractos botánicos clínicos"
-    },
-    {
-      "name": "Electrónica",
-      "icon": "📦",
-      "description": "Categoría personalizada",
-      "count": 1
-    },
-    {
-      "name": "TEST",
-      "icon": "📦",
-      "description": "Categoría personalizada",
-      "count": 1
-    },
-    {
-      "name": "&lt;svg onload=alert(2)&gt;",
-      "icon": "📦",
-      "description": "Categoría personalizada"
     }
   ],
   "units": [
@@ -108,9 +86,6 @@
     },
     {
       "name": "Kit Terapéutico (kit)"
-    },
-    {
-      "name": "&lt;script&gt;"
     }
   ]
 }

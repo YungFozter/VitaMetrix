@@ -19,10 +19,47 @@ from reference import (
     analyze_segmental,
     analyze_composition_indices
 )
-from app import app, _clean_str, _run_analysis
+from app import (
+    app,
+    _clean_str,
+    _run_analysis,
+    _TAXONOMIES_PATH,
+    _STOCK_ITEMS_PATH,
+    _STOCK_MOVEMENTS_PATH,
+    _APPOINTMENTS_PATH,
+    _SALES_PATH,
+    _USERS_PATH,
+    _LICENSES_PATH
+)
 
 
 class TestVitaMetrixCore(unittest.TestCase):
+    _snapshots = {}
+
+    @classmethod
+    def setUpClass(cls):
+        paths = [
+            _TAXONOMIES_PATH,
+            _STOCK_ITEMS_PATH,
+            _STOCK_MOVEMENTS_PATH,
+            _APPOINTMENTS_PATH,
+            _SALES_PATH,
+            _USERS_PATH,
+            _LICENSES_PATH
+        ]
+        for p in paths:
+            if os.path.exists(p):
+                with open(p, 'r', encoding='utf-8') as f:
+                    cls._snapshots[p] = f.read()
+
+    @classmethod
+    def tearDownClass(cls):
+        for p, content in cls._snapshots.items():
+            try:
+                with open(p, 'w', encoding='utf-8') as f:
+                    f.write(content)
+            except Exception:
+                pass
 
     def test_biva_and_phase_angle(self):
         # Caso típico: R=575.6, Xc=59.0 -> PhA approx 5.85°
