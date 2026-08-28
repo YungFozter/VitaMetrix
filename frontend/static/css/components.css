@@ -586,6 +586,17 @@ body.is-admin-session .admin-only-element {
     background-repeat: no-repeat;
 }
 
+.auth-screen-overlay.hidden,
+.auth-screen-overlay.d-none,
+.auth-screen-overlay[hidden],
+.auth-screen-overlay[style*="display: none"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: -100 !important;
+}
+
 .auth-pattern-grid {
     position: absolute;
     inset: 0;

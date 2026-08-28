@@ -140,6 +140,45 @@ function updateUIWithUserData(userData) {
     updateUserProfileUI();
 }
 
+function hideAuthModal() {
+    const modal = document.getElementById('modal-auth');
+    const btnClose = document.getElementById('btn-close-auth-modal');
+    document.documentElement.classList.add('has-auth-token');
+    document.documentElement.classList.remove('no-auth-token');
+    if (modal) {
+        modal.classList.add('hidden', 'd-none');
+        modal.setAttribute('hidden', 'true');
+        modal.style.setProperty('display', 'none', 'important');
+        modal.style.setProperty('visibility', 'hidden', 'important');
+        modal.style.setProperty('opacity', '0', 'important');
+        modal.style.setProperty('pointer-events', 'none', 'important');
+        modal.style.setProperty('z-index', '-100', 'important');
+    }
+    if (btnClose) btnClose.style.display = '';
+}
+
+function showAuthModal(isMandatory = false) {
+    const modal = document.getElementById('modal-auth');
+    const btnClose = document.getElementById('btn-close-auth-modal');
+    if (isMandatory) {
+        document.documentElement.classList.remove('has-auth-token');
+        document.documentElement.classList.add('no-auth-token');
+    }
+    if (modal) {
+        modal.classList.remove('hidden', 'd-none');
+        modal.removeAttribute('hidden');
+        modal.style.removeProperty('display');
+        modal.style.removeProperty('visibility');
+        modal.style.removeProperty('opacity');
+        modal.style.removeProperty('pointer-events');
+        modal.style.removeProperty('z-index');
+        modal.style.display = 'flex';
+    }
+    if (btnClose) {
+        btnClose.style.display = isMandatory ? 'none' : '';
+    }
+}
+
 function initAuthSystem() {
     const modal = document.getElementById('modal-auth');
     const btnClose = document.getElementById('btn-close-auth-modal');
@@ -226,9 +265,9 @@ function initAuthSystem() {
         });
     }
 
-    if (btnClose && modal) {
+    if (btnClose) {
         btnClose.addEventListener('click', () => {
-            modal.classList.add('hidden');
+            hideAuthModal();
         });
     }
 
@@ -260,11 +299,9 @@ function initAuthSystem() {
                 }
 
                 localStorage.setItem('vm_auth_token', data.token);
-                document.documentElement.classList.add('has-auth-token');
-                document.documentElement.classList.remove('no-auth-token');
+                sessionStorage.setItem('vm_auth_token', data.token);
                 updateUIWithUserData(data.user);
-                if (modal) modal.classList.add('hidden');
-                if (btnClose) btnClose.style.display = '';
+                hideAuthModal();
                 showToast(`¡Bienvenido de nuevo, ${data.user.full_name}!`, 'success');
 
                 // Redirigir siempre al Dashboard al iniciar sesión para cualquier usuario
@@ -362,11 +399,10 @@ function initAuthSystem() {
     }
 
     const switchAccountBtn = document.getElementById('dropdown-switch-account-btn');
-    if (switchAccountBtn && modal) {
+    if (switchAccountBtn) {
         switchAccountBtn.addEventListener('click', () => {
             showLoginTab();
-            if (btnClose) btnClose.style.display = '';
-            modal.classList.remove('hidden');
+            showAuthModal(false);
         });
     }
 
@@ -391,11 +427,8 @@ function initAuthSystem() {
                     document.documentElement.classList.remove('has-auth-token', 'is-admin-session');
                     document.documentElement.classList.add('no-auth-token');
                     showToast('Sesión cerrada. Inicia sesión con tu cuenta.', 'info');
-                    if (modal) {
-                        showLoginTab();
-                        if (btnClose) btnClose.style.display = 'none';
-                        modal.classList.remove('hidden');
-                    }
+                    showLoginTab();
+                    showAuthModal(true);
                 },
                 { confirmText: 'Cerrar Sesión', type: 'danger', icon: 'bi bi-box-arrow-right' }
             );
@@ -407,18 +440,11 @@ function initAuthSystem() {
 }
 
 async function fetchAuthMe() {
-    const modal = document.getElementById('modal-auth');
-    const btnClose = document.getElementById('btn-close-auth-modal');
     const token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
 
     if (!token) {
         // No hay sesión activa: pantalla de Login obligatoria desde el inicio
-        document.documentElement.classList.remove('has-auth-token');
-        document.documentElement.classList.add('no-auth-token');
-        if (modal) {
-            modal.classList.remove('hidden');
-            if (btnClose) btnClose.style.display = 'none';
-        }
+        showAuthModal(true);
         return;
     }
 
@@ -427,11 +453,8 @@ async function fetchAuthMe() {
         if (res.ok) {
             const data = await res.json();
             if (data.success && data.user) {
-                document.documentElement.classList.add('has-auth-token');
-                document.documentElement.classList.remove('no-auth-token');
                 updateUIWithUserData(data.user);
-                if (modal) modal.classList.add('hidden');
-                if (btnClose) btnClose.style.display = '';
+                hideAuthModal();
 
                 // Si el usuario no es admin pero la memoria/hash intentaba abrir superadmin-view, forzar dashboard
                 const activeView = localStorage.getItem('vita_active_view') || window.location.hash.replace(/^#/, '');
@@ -446,20 +469,10 @@ async function fetchAuthMe() {
         // Token inválido o expirado
         localStorage.removeItem('vm_auth_token');
         sessionStorage.removeItem('vm_auth_token');
-        document.documentElement.classList.remove('has-auth-token');
-        document.documentElement.classList.add('no-auth-token');
-        if (modal) {
-            modal.classList.remove('hidden');
-            if (btnClose) btnClose.style.display = 'none';
-        }
+        showAuthModal(true);
     } catch (e) {
         console.warn('Sesión no autenticada o local:', e);
-        document.documentElement.classList.remove('has-auth-token');
-        document.documentElement.classList.add('no-auth-token');
-        if (modal) {
-            modal.classList.remove('hidden');
-            if (btnClose) btnClose.style.display = 'none';
-        }
+        showAuthModal(true);
     }
 }
 

@@ -66,15 +66,15 @@
     </script>
     <style>
         /* Gating de Cero FOUC: Si el usuario no está autenticado, ocultar COMPLETAMENTE la app */
-        html:not(.has-auth-token) .app-layout,
-        html.no-auth-token .app-layout {
+        html.no-auth-token .app-layout,
+        html:not(.has-auth-token) .app-layout {
             display: none !important;
             visibility: hidden !important;
         }
 
-        /* La pantalla de Login cubre el 100% de la ventana de forma incondicional */
-        html:not(.has-auth-token) #modal-auth,
-        html.no-auth-token #modal-auth {
+        /* La pantalla de Login cubre el 100% de la ventana solo si NO está autenticado y NO está marcado como oculto */
+        html.no-auth-token #modal-auth:not(.hidden):not(.d-none):not([hidden]),
+        html:not(.has-auth-token) #modal-auth:not(.hidden):not(.d-none):not([hidden]) {
             display: flex !important;
             visibility: visible !important;
             opacity: 1 !important;
@@ -89,8 +89,20 @@
             visibility: visible !important;
         }
 
-        html.has-auth-token #modal-auth.hidden {
+        /* Regla universal para ocultar el modal de autenticación */
+        #modal-auth.hidden,
+        #modal-auth.d-none,
+        #modal-auth[hidden],
+        #modal-auth[style*="display: none"],
+        html.has-auth-token #modal-auth.hidden,
+        html.has-auth-token #modal-auth.d-none,
+        html.has-auth-token #modal-auth[hidden],
+        html.has-auth-token #modal-auth[style*="display: none"] {
             display: none !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+            z-index: -100 !important;
         }
     </style>
 </head>
