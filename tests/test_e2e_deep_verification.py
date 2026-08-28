@@ -935,6 +935,17 @@ class TestE2EDeepVerification(unittest.TestCase):
         self.assertIn('QR Simple', template_content)
         self.assertIn('Transferencia', template_content)
 
+    @classmethod
+    def tearDownClass(cls):
+        """Restaura la base de datos de usuarios a únicamente las 2 cuentas oficiales."""
+        if os.path.exists(_USERS_PATH):
+            with open(_USERS_PATH, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+            official_users = [u for u in users if u.get('email') in ['admin@vitametrix.com', 'audrey@vitametrix.com']]
+            if official_users:
+                with open(_USERS_PATH, 'w', encoding='utf-8') as f:
+                    json.dump(official_users, f, indent=2, ensure_ascii=False)
+
 if __name__ == '__main__':
     unittest.main()
 
