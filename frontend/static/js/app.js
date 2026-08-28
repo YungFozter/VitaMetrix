@@ -1399,17 +1399,6 @@ async function fetchAdminPins(showToastFeedback = false) {
             `;
         }
     }
-            renderAdminPins();
-        } else {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="7" class="text-center py-4 text-danger">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> Error de conexión al cargar PINs.
-                    </td>
-                </tr>
-            `;
-        }
-    }
 }
 
 function renderAdminPins() {
