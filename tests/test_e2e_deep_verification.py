@@ -11,7 +11,8 @@ from backend.app import (
     _STOCK_MOVEMENTS_PATH, 
     _APPOINTMENTS_PATH, 
     _SALES_PATH,
-    _USERS_PATH
+    _USERS_PATH,
+    _LICENSES_PATH
 )
 
 class TestE2EDeepVerification(unittest.TestCase):
@@ -937,7 +938,7 @@ class TestE2EDeepVerification(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Restaura la base de datos de usuarios a únicamente las 2 cuentas oficiales."""
+        """Restaura la base de datos de usuarios a únicamente las 2 cuentas oficiales y limpia licencias de prueba."""
         if os.path.exists(_USERS_PATH):
             with open(_USERS_PATH, 'r', encoding='utf-8') as f:
                 users = json.load(f)
@@ -945,6 +946,10 @@ class TestE2EDeepVerification(unittest.TestCase):
             if official_users:
                 with open(_USERS_PATH, 'w', encoding='utf-8') as f:
                     json.dump(official_users, f, indent=2, ensure_ascii=False)
+
+        if os.path.exists(_LICENSES_PATH):
+            with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
+                json.dump([], f, indent=2)
 
 if __name__ == '__main__':
     unittest.main()
