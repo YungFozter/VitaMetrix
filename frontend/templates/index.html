@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,7 +14,9 @@
     <!-- Tipografía Profesional Premium (Manrope + Plus Jakarta Sans + Inter) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <!-- Bootstrap 5.3 & Bootstrap Icons (CSS framework base) -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -26,40 +29,40 @@
     <!-- Bootstrap Theme Overrides (variables, tipografía, mapeo BS, dark mode) -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap-theme.css') }}?v=55">
     <!-- CSS Principal Modular (Master Manifest: base, layout, components, dashboard, bioimpedancia, evaluaciones, citas) -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=114">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}?v=115">
     <!-- Tailwind CSS (UI/UX) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-      tailwind.config = {
-        corePlugins: { preflight: false },
-        theme: {
-          extend: {
-            fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] },
-            colors: {
-              navy:   '#1A2A4A',
-              slatey: '#5a6f8c',
-              bronze: '#cd7f32',
-              alert:  '#b94a4a',
-              health: '#2d7a4a',
-              mint:   '#e2f0e8'
-            },
-            borderRadius: { '4xl': '28px' },
-            boxShadow: { glass: '0 20px 40px -12px rgba(20,40,80,0.18)', 'glass-lg': '0 30px 60px -12px rgba(26,42,74,0.28)' }
-          }
+        tailwind.config = {
+            corePlugins: { preflight: false },
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'] },
+                    colors: {
+                        navy: '#1A2A4A',
+                        slatey: '#5a6f8c',
+                        bronze: '#cd7f32',
+                        alert: '#b94a4a',
+                        health: '#2d7a4a',
+                        mint: '#e2f0e8'
+                    },
+                    borderRadius: { '4xl': '28px' },
+                    boxShadow: { glass: '0 20px 40px -12px rgba(20,40,80,0.18)', 'glass-lg': '0 30px 60px -12px rgba(26,42,74,0.28)' }
+                }
+            }
         }
-      }
     </script>
 
     <!-- Verificación Instantánea de Sesión (Eliminación de FOUC / Login Primario) -->
     <script>
-        (function() {
-            var token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
-            if (token) {
-                document.documentElement.classList.add('has-auth-token');
-            } else {
-                document.documentElement.classList.add('no-auth-token');
-            }
-        })();
+            (function () {
+                var token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
+                if (token) {
+                    document.documentElement.classList.add('has-auth-token');
+                } else {
+                    document.documentElement.classList.add('no-auth-token');
+                }
+            })();
     </script>
     <style>
         /* Gating de Cero FOUC: Si el usuario no está autenticado, ocultar COMPLETAMENTE la app */
@@ -91,6 +94,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <!-- ========================================================================= -->
@@ -102,24 +106,35 @@
         <div class="auth-ambient-orb-1"></div>
         <div class="auth-ambient-orb-2"></div>
 
-        <div class="d-flex flex-column align-items-center gap-3 w-100 position-relative z-2 my-auto" style="max-width: 440px; width: 94%;">
-            
+        <div class="d-flex flex-column align-items-center gap-3 w-100 position-relative z-2 my-auto"
+            style="max-width: 440px; width: 94%;">
+
             <!-- Branding Superior Stitch -->
             <div class="text-center">
-                <div class="bg-white rounded-4 shadow-md border p-2 d-inline-flex align-items-center justify-content-center mb-2.5" style="width: 78px; height: 78px; border-color: rgba(226, 232, 240, 0.95) !important;">
-                    <img src="{{ url_for('static', filename='favicon-64x64.png') }}?v=15" alt="VitaMetrix Logo" style="width: 58px; height: 58px; border-radius: 14px;" class="object-fit-cover shadow-2xs">
+                <div class="bg-white rounded-4 shadow-md border p-2 d-inline-flex align-items-center justify-content-center mb-2.5"
+                    style="width: 78px; height: 78px; border-color: rgba(226, 232, 240, 0.95) !important;">
+                    <img src="{{ url_for('static', filename='favicon-64x64.png') }}?v=15" alt="VitaMetrix Logo"
+                        style="width: 58px; height: 58px; border-radius: 14px;" class="object-fit-cover shadow-2xs">
                 </div>
-                <h1 class="fw-extrabold mb-1.5 tracking-tight" style="color: #ffffff; text-shadow: 0 2px 14px rgba(0, 91, 191, 0.5); font-size: 2.2rem; letter-spacing: -0.8px; font-family: 'Manrope', sans-serif;">VitaMetrix</h1>
-                <div class="d-inline-flex align-items-center justify-content-center bg-white px-4 py-1.5 rounded-pill shadow-md border" style="border-color: rgba(226, 232, 240, 0.95) !important; background: #ffffff !important; font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;">
-                    <span class="fw-bold text-uppercase" style="color: #005bbf !important; font-size: 0.80rem; letter-spacing: 0.4px; line-height: 1.3;">
+                <h1 class="fw-extrabold mb-1.5 tracking-tight"
+                    style="color: #ffffff; text-shadow: 0 2px 14px rgba(0, 91, 191, 0.5); font-size: 2.2rem; letter-spacing: -0.8px; font-family: 'Manrope', sans-serif;">
+                    VitaMetrix</h1>
+                <div class="d-inline-flex align-items-center justify-content-center bg-white px-4 py-1.5 rounded-pill shadow-md border"
+                    style="border-color: rgba(226, 232, 240, 0.95) !important; background: #ffffff !important; font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;">
+                    <span class="fw-bold text-uppercase"
+                        style="color: #005bbf !important; font-size: 0.80rem; letter-spacing: 0.4px; line-height: 1.3;">
                         Analizador Corporal Médico & Software Clínico
                     </span>
                 </div>
             </div>
 
             <!-- Contenedor Glass Card Principal Stitch -->
-            <div class="glass-card-auth w-100 overflow-hidden position-relative" style="font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;">
-                <button type="button" class="btn-close position-absolute top-0 end-0 m-3.5 z-3 shadow-none p-2 rounded-circle" id="btn-close-auth-modal" aria-label="Cerrar" style="background-color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; display: none;"></button>
+            <div class="glass-card-auth w-100 overflow-hidden position-relative"
+                style="font-family: 'Plus Jakarta Sans', 'Manrope', sans-serif;">
+                <button type="button"
+                    class="btn-close position-absolute top-0 end-0 m-3.5 z-3 shadow-none p-2 rounded-circle"
+                    id="btn-close-auth-modal" aria-label="Cerrar"
+                    style="background-color: rgba(255, 255, 255, 0.6); font-size: 0.75rem; display: none;"></button>
 
                 <!-- Tabs de Navegación Stitch -->
                 <div class="d-flex border-bottom bg-white bg-opacity-40 pt-1.5 px-2">
@@ -135,33 +150,41 @@
 
                 <!-- Contenido de Formularios -->
                 <div class="p-4 p-sm-4.5 bg-white bg-opacity-95">
-                    
+
                     <!-- FORMULARIO 1: LOGIN -->
                     <form id="form-auth-login" class="d-flex flex-column gap-3">
                         <div>
-                            <label for="login-email" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <label for="login-email"
+                                class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">
                                 Correo Electrónico
                             </label>
                             <div class="auth-input-container">
                                 <i class="bi bi-envelope input-icon-left"></i>
-                                <input type="email" id="login-email" placeholder="doctor@vitametrix.com" required autocomplete="email">
+                                <input type="email" id="login-email" placeholder="doctor@vitametrix.com" required
+                                    autocomplete="email">
                             </div>
                         </div>
 
                         <div>
-                            <label for="login-password" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <label for="login-password"
+                                class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">
                                 Contraseña
                             </label>
                             <div class="auth-input-container">
                                 <i class="bi bi-lock input-icon-left"></i>
-                                <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
-                                <button type="button" class="toggle-password-btn" id="login-toggle-password" title="Mostrar/ocultar contraseña">
+                                <input type="password" id="login-password" placeholder="••••••••" required
+                                    autocomplete="current-password">
+                                <button type="button" class="toggle-password-btn" id="login-toggle-password"
+                                    title="Mostrar/ocultar contraseña">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
                         </div>
 
-                        <div id="login-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
+                        <div id="login-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3">
+                        </div>
 
                         <button type="submit" id="btn-submit-login" class="btn-auth-primary mt-1">
                             <span>Ingresar a VitaMetrix</span>
@@ -170,7 +193,8 @@
 
                         <div class="text-center mt-1">
                             <span class="text-secondary small">¿No tienes cuenta?</span><br>
-                            <a href="javascript:void(0)" class="small fw-bold text-primary text-decoration-none" id="link-switch-to-register">
+                            <a href="javascript:void(0)" class="small fw-bold text-primary text-decoration-none"
+                                id="link-switch-to-register">
                                 Regístrate (7 días gratis)
                             </a>
                         </div>
@@ -179,33 +203,43 @@
                     <!-- FORMULARIO 2: REGISTRO -->
                     <form id="form-auth-register" class="d-none d-flex flex-column gap-2.5">
                         <div>
-                            <label for="reg-full-name" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <label for="reg-full-name"
+                                class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">
                                 Nombre y Apellido del Profesional *
                             </label>
                             <div class="auth-input-container">
                                 <i class="bi bi-person input-icon-left"></i>
-                                <input type="text" id="reg-full-name" placeholder="Dr. Carlos Mendoza" required autocomplete="name">
+                                <input type="text" id="reg-full-name" placeholder="Dr. Carlos Mendoza" required
+                                    autocomplete="name">
                             </div>
                         </div>
 
                         <div>
-                            <label for="reg-email" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <label for="reg-email"
+                                class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">
                                 Correo Electrónico *
                             </label>
                             <div class="auth-input-container">
                                 <i class="bi bi-envelope input-icon-left"></i>
-                                <input type="email" id="reg-email" placeholder="carlos@clinicavita.com" required autocomplete="email">
+                                <input type="email" id="reg-email" placeholder="carlos@clinicavita.com" required
+                                    autocomplete="email">
                             </div>
                         </div>
 
                         <div>
-                            <label for="reg-password" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.72rem; letter-spacing: 0.5px;">
+                            <label for="reg-password"
+                                class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">
                                 Contraseña * (Mín. 6 caracteres)
                             </label>
                             <div class="auth-input-container">
                                 <i class="bi bi-lock input-icon-left"></i>
-                                <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required autocomplete="new-password">
-                                <button type="button" class="toggle-password-btn" id="reg-toggle-password" title="Mostrar/ocultar contraseña">
+                                <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required
+                                    autocomplete="new-password">
+                                <button type="button" class="toggle-password-btn" id="reg-toggle-password"
+                                    title="Mostrar/ocultar contraseña">
                                     <i class="bi bi-eye"></i>
                                 </button>
                             </div>
@@ -213,26 +247,34 @@
 
                         <div class="row g-2">
                             <div class="col-6">
-                                <label for="reg-title" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                                <label for="reg-title"
+                                    class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                    style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                     Título / Cargo
                                 </label>
                                 <div class="auth-input-container">
                                     <i class="bi bi-award input-icon-left" style="font-size: 1rem; left: 10px;"></i>
-                                    <input type="text" id="reg-title" placeholder="Nutricionista BIA" value="Nutricionista / Especialista BIA" style="padding-left: 34px; font-size: 0.82rem;">
+                                    <input type="text" id="reg-title" placeholder="Nutricionista BIA"
+                                        value="Nutricionista / Especialista BIA"
+                                        style="padding-left: 34px; font-size: 0.82rem;">
                                 </div>
                             </div>
                             <div class="col-6">
-                                <label for="reg-clinic" class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1" style="font-size: 0.68rem; letter-spacing: 0.5px;">
+                                <label for="reg-clinic"
+                                    class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
+                                    style="font-size: 0.68rem; letter-spacing: 0.5px;">
                                     Consultorio
                                 </label>
                                 <div class="auth-input-container">
                                     <i class="bi bi-hospital input-icon-left" style="font-size: 1rem; left: 10px;"></i>
-                                    <input type="text" id="reg-clinic" placeholder="Consultorio Vita" value="Mi Consultorio Clínico" style="padding-left: 34px; font-size: 0.82rem;">
+                                    <input type="text" id="reg-clinic" placeholder="Consultorio Vita"
+                                        value="Mi Consultorio Clínico" style="padding-left: 34px; font-size: 0.82rem;">
                                 </div>
                             </div>
                         </div>
 
-                        <div id="register-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
+                        <div id="register-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3">
+                        </div>
 
                         <button type="submit" id="btn-submit-register" class="btn-auth-success mt-1.5">
                             <i class="bi bi-check-circle-fill fs-5"></i>
@@ -241,7 +283,8 @@
 
                         <div class="text-center mt-1">
                             <span class="text-secondary small">¿Ya tienes cuenta?</span><br>
-                            <a href="javascript:void(0)" class="small fw-bold text-primary text-decoration-none" id="link-switch-to-login">
+                            <a href="javascript:void(0)" class="small fw-bold text-primary text-decoration-none"
+                                id="link-switch-to-login">
                                 Inicia Sesión
                             </a>
                         </div>
@@ -249,7 +292,8 @@
                 </div>
 
                 <!-- Footer Stitch con Soporte WhatsApp Oficial -->
-                <div class="p-3 px-4 bg-light bg-opacity-70 border-top d-flex align-items-center justify-content-center text-center">
+                <div
+                    class="p-3 px-4 bg-light bg-opacity-70 border-top d-flex align-items-center justify-content-center text-center">
                     <div class="d-inline-flex align-items-center gap-1.5 text-secondary" style="font-size: 0.75rem;">
                         <i class="bi bi-whatsapp text-success fs-6"></i>
                         <span>Soporte de activación: <strong class="text-navy fw-bold">+591 72125280</strong></span>
@@ -272,19 +316,23 @@
         <aside class="sidebar">
             <div class="sidebar-logo">
                 <div style="display: flex; align-items: center; gap: 0.8rem;">
-                    <div class="brand-icon p-0 d-flex align-items-center justify-content-center" style="background: transparent; box-shadow: none;">
-                        <img src="{{ url_for('static', filename='favicon-32x32.png') }}?v=10" alt="VitaMetrix" style="width: 32px; height: 32px; border-radius: 7px; object-fit: contain;">
+                    <div class="brand-icon p-0 d-flex align-items-center justify-content-center"
+                        style="background: transparent; box-shadow: none;">
+                        <img src="{{ url_for('static', filename='favicon-32x32.png') }}?v=10" alt="VitaMetrix"
+                            style="width: 32px; height: 32px; border-radius: 7px; object-fit: contain;">
                     </div>
                     <h2 class="display-font vm-heading-1 sidebar-brand">VitaMetrix</h2>
                 </div>
-                <button type="button" class="sidebar-close-btn" id="sidebar-close-btn" aria-label="Cerrar menú">✕</button>
+                <button type="button" class="sidebar-close-btn" id="sidebar-close-btn"
+                    aria-label="Cerrar menú">✕</button>
             </div>
 
             <div class="sidebar-section-label">NAVEGACIÓN</div>
             <nav class="sidebar-nav">
                 <a href="#dashboard-view" class="nav-item active" data-target="dashboard-view" data-title="Dashboard">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7" rx="1"></rect>
                             <rect x="14" y="3" width="7" height="7" rx="1"></rect>
                             <rect x="14" y="14" width="7" height="7" rx="1"></rect>
@@ -295,15 +343,18 @@
                 </a>
                 <a href="#bio-view" class="nav-item" data-target="bio-view" data-title="Bioimpedancia">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
                         </svg>
                     </span>
                     <span>Bioimpedancia</span>
                 </a>
-                <a href="#evaluaciones-view" class="nav-item" data-target="evaluaciones-view" data-title="Historial de Evaluaciones">
+                <a href="#evaluaciones-view" class="nav-item" data-target="evaluaciones-view"
+                    data-title="Historial de Evaluaciones">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                             <polyline points="14 2 14 8 20 8"></polyline>
                             <line x1="16" y1="13" x2="8" y2="13"></line>
@@ -313,9 +364,11 @@
                     </span>
                     <span>Evaluaciones</span>
                 </a>
-                <a href="#clientes-view" class="nav-item" data-target="clientes-view" data-title="Directorio de Clientes">
+                <a href="#clientes-view" class="nav-item" data-target="clientes-view"
+                    data-title="Directorio de Clientes">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
                             <circle cx="9" cy="7" r="4"></circle>
                             <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -329,36 +382,50 @@
             <div class="sidebar-divider"></div>
             <div class="sidebar-section-label">SISTEMA</div>
             <nav class="sidebar-nav">
-                <a href="#stock-view" class="nav-item" id="nav-stock-btn" data-target="stock-view" data-title="Stock Control">
+                <a href="#stock-view" class="nav-item" id="nav-stock-btn" data-target="stock-view"
+                    data-title="Stock Control">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
                             <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
                             <line x1="12" y1="22.08" x2="12" y2="12"></line>
                         </svg>
                     </span>
                     <span>Stock Control</span>
                 </a>
-                <a href="#configuracion-view" class="nav-item" id="nav-settings-btn" data-target="configuracion-view" data-title="Configuración">
+                <a href="#configuracion-view" class="nav-item" id="nav-settings-btn" data-target="configuracion-view"
+                    data-title="Configuración">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
-                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            <path
+                                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z">
+                            </path>
                         </svg>
                     </span>
                     <span>Configuración</span>
                 </a>
-                <a href="#subscription-view" class="nav-item" id="nav-subscription-btn" data-target="subscription-view" data-title="Mi Plan & Suscripción">
+                <a href="#subscription-view" class="nav-item" id="nav-subscription-btn" data-target="subscription-view"
+                    data-title="Mi Plan & Suscripción">
                     <span class="nav-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon
+                                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                            </polygon>
                         </svg>
                     </span>
                     <span>Mi Plan</span>
                 </a>
-                <a href="#superadmin-view" class="nav-item admin-only-element" id="nav-superadmin-btn" data-target="superadmin-view" data-title="Panel SuperAdmin" style="display: none;">
+                <a href="#superadmin-view" class="nav-item admin-only-element" id="nav-superadmin-btn"
+                    data-target="superadmin-view" data-title="Panel SuperAdmin" style="display: none;">
                     <span class="nav-icon text-primary">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                         </svg>
                     </span>
@@ -372,7 +439,8 @@
             <!-- TOPBAR -->
             <header class="topbar">
                 <div class="topbar-left">
-                    <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn" aria-label="Ocultar o mostrar menú lateral" title="Ocultar / Mostrar menú lateral (Ctrl + B)">
+                    <button type="button" class="sidebar-toggle-btn" id="sidebar-toggle-btn"
+                        aria-label="Ocultar o mostrar menú lateral" title="Ocultar / Mostrar menú lateral (Ctrl + B)">
                         <i class="bi bi-layout-sidebar-inset fs-5"></i>
                     </button>
                     <div class="topbar-titles">
@@ -382,43 +450,52 @@
                 </div>
                 <div class="topbar-right">
                     <!-- Pill Indicador de Suscripción -->
-                    <button type="button" 
-                            class="btn btn-sm d-none d-md-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-light border shadow-2xs text-navy fw-semibold" 
-                            id="topbar-sub-badge"
-                            onclick="document.querySelector('[data-target=\'subscription-view\']').click()" 
-                            title="Ver estado de mi suscripción">
+                    <button type="button"
+                        class="btn btn-sm d-none d-md-inline-flex align-items-center gap-1.5 px-3 py-1.5 rounded-pill bg-light border shadow-2xs text-navy fw-semibold"
+                        id="topbar-sub-badge"
+                        onclick="document.querySelector('[data-target=\'subscription-view\']').click()"
+                        title="Ver estado de mi suscripción">
                         <span class="text-success">●</span> <span id="topbar-sub-text">Plan Pro</span>
                     </button>
 
                     <div class="time-badge">🕒 <span id="current-time">00:00 AM</span></div>
 
                     <div class="user-profile" id="user-profile-btn" style="position: relative; cursor: pointer;">
-                        <img id="topbar-user-avatar" src="https://ui-avatars.com/api/?name=Dr+Audrey&background=00b4d8&color=fff" alt="User">
+                        <img id="topbar-user-avatar"
+                            src="https://ui-avatars.com/api/?name=Dr+Audrey&background=00b4d8&color=fff" alt="User">
                         <div class="user-info" id="topbar-user-info">
                             <strong id="topbar-user-name">Dra. Audrey</strong>
                             <span id="topbar-user-title">Manager</span>
                         </div>
-                        
+
                         <!-- Dropdown Menu -->
                         <div class="profile-dropdown hidden" id="profile-dropdown">
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2" id="dropdown-profile-btn">
+                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2"
+                                id="dropdown-profile-btn">
                                 <i class="bi bi-person-badge text-primary fs-6" id="dropdown-profile-icon"></i>
                                 <span id="dropdown-profile-text">Mi Perfil Clínico</span>
                             </a>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2" onclick="document.querySelector('[data-target=\'subscription-view\']').click()">
+                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2"
+                                onclick="document.querySelector('[data-target=\'subscription-view\']').click()">
                                 <i class="bi bi-star-fill text-warning fs-6"></i>
                                 <span>Mi Plan & Licencia</span>
                             </a>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2" id="dropdown-settings-btn">
+                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2"
+                                id="dropdown-settings-btn">
                                 <i class="bi bi-gear text-secondary fs-6"></i>
                                 <span>Configuración</span>
                             </a>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2 text-primary fw-bold admin-only-element" id="dropdown-superadmin-btn" style="display: none;" onclick="navigateToView('superadmin-view', true)">
+                            <a href="javascript:void(0)"
+                                class="dropdown-item d-flex align-items-center gap-2 text-primary fw-bold admin-only-element"
+                                id="dropdown-superadmin-btn" style="display: none;"
+                                onclick="navigateToView('superadmin-view', true)">
                                 <i class="bi bi-shield-lock-fill text-primary fs-6"></i>
                                 <span>👑 Panel SuperAdmin</span>
                             </a>
                             <div class="dropdown-divider my-1"></div>
-                            <a href="javascript:void(0)" class="dropdown-item d-flex align-items-center gap-2 text-danger" id="dropdown-logout-btn">
+                            <a href="javascript:void(0)"
+                                class="dropdown-item d-flex align-items-center gap-2 text-danger"
+                                id="dropdown-logout-btn">
                                 <i class="bi bi-box-arrow-right text-danger fs-6"></i>
                                 <span>Cerrar Sesión</span>
                             </a>
@@ -461,7 +538,7 @@
     <div id="sidebar-backdrop" class="sidebar-backdrop"></div>
     <div id="toast-container"></div>
 
-    
+
     <!-- MODAL DE INFORMACIÓN Y REQUISITOS DE DISPOSITIVO -->
     <div id="info-modal" class="modal-overlay hidden">
         <div class="modal-box bento-card info-modal-box">
@@ -470,7 +547,8 @@
                     <span class="info-modal-icon">ℹ️</span>
                     <h3 id="info-modal-title">Requisitos del Campo</h3>
                 </div>
-                <button type="button" class="info-modal-close" id="info-modal-close" aria-label="Cerrar ventana">✕</button>
+                <button type="button" class="info-modal-close" id="info-modal-close"
+                    aria-label="Cerrar ventana">✕</button>
             </div>
             <div class="info-modal-body">
                 <p id="info-modal-desc" class="info-modal-desc">Descripción del índice...</p>
@@ -478,13 +556,18 @@
                     <div class="info-req-label">📋 DATO REQUERIDO DEL EQUIPO:</div>
                     <div class="info-req-value" id="info-modal-req">Masa Grasa (kg)</div>
                 </div>
-                <p class="info-modal-hint">Este valor lo proporciona el reporte impreso o digital de tu analizador de bioimpedancia.</p>
+                <p class="info-modal-hint">Este valor lo proporciona el reporte impreso o digital de tu analizador de
+                    bioimpedancia.</p>
             </div>
             <div class="modal-actions info-modal-actions pt-3 border-top mt-3 d-flex justify-content-end gap-2">
-                <button type="button" id="info-modal-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs" style="font-size: 0.85rem;">
+                <button type="button" id="info-modal-btn-cancel"
+                    class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs"
+                    style="font-size: 0.85rem;">
                     Entendido
                 </button>
-                <button type="button" id="info-modal-btn-go" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem;">
+                <button type="button" id="info-modal-btn-go"
+                    class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5"
+                    style="font-size: 0.85rem;">
                     <i class="bi bi-pencil-fill text-warning"></i>
                     <span>Completar en el Formulario</span>
                 </button>
@@ -499,43 +582,62 @@
                 <div class="info-modal-title-wrap">
                     <span class="info-modal-icon">📅</span>
                     <div style="text-align: left;">
-                        <h3 class="modal-title" id="appt-modal-title" style="font-size:1.15rem; font-weight:700; color:#1a2a4a; margin:0; text-align:left;">Agendar Nueva Cita</h3>
-                        <p class="modal-sub" style="font-size:0.78rem; color:#64748b; margin:0.15rem 0 0 0; text-align:left;">Programa una consulta o evaluación de bioimpedancia</p>
+                        <h3 class="modal-title" id="appt-modal-title"
+                            style="font-size:1.15rem; font-weight:700; color:#1a2a4a; margin:0; text-align:left;">
+                            Agendar Nueva Cita</h3>
+                        <p class="modal-sub"
+                            style="font-size:0.78rem; color:#64748b; margin:0.15rem 0 0 0; text-align:left;">Programa
+                            una consulta o evaluación de bioimpedancia</p>
                     </div>
                 </div>
-                <button type="button" class="info-modal-close" id="appt-modal-close" aria-label="Cerrar ventana">✕</button>
+                <button type="button" class="info-modal-close" id="appt-modal-close"
+                    aria-label="Cerrar ventana">✕</button>
             </div>
 
             <form id="appointment-form" class="appointment-form" style="margin-top: 1rem;">
                 <input type="hidden" id="appt-edit-id" value="">
-                
+
                 <div class="form-row-grid">
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Nombre del Paciente *</label>
-                        <input type="text" id="appt-patient-name" required placeholder="Ej: Dr. Carlos Mendoza" list="clients-datalist" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label
+                            style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Nombre
+                            del Paciente *</label>
+                        <input type="text" id="appt-patient-name" required placeholder="Ej: Dr. Carlos Mendoza"
+                            list="clients-datalist"
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                         <datalist id="clients-datalist"></datalist>
                     </div>
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Teléfono (WhatsApp)</label>
-                        <input type="tel" id="appt-patient-phone" placeholder="Ej: +54 9 11 1234-5678" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label
+                            style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Teléfono
+                            (WhatsApp)</label>
+                        <input type="tel" id="appt-patient-phone" placeholder="Ej: +54 9 11 1234-5678"
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                     </div>
                 </div>
 
                 <div class="form-row-grid" style="margin-top:0.8rem;">
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Fecha de la Cita *</label>
-                        <input type="date" id="appt-date" required style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label
+                            style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Fecha
+                            de la Cita *</label>
+                        <input type="date" id="appt-date" required
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                     </div>
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Hora *</label>
-                        <input type="time" id="appt-time" required value="09:30" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Hora
+                            *</label>
+                        <input type="time" id="appt-time" required value="09:30"
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                     </div>
                 </div>
 
                 <div class="form-row-grid" style="margin-top:0.8rem;">
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Tipo de Consulta</label>
-                        <select id="appt-type" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Tipo
+                            de Consulta</label>
+                        <select id="appt-type"
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                             <option value="Evaluación Inicial BIA">⚡ Evaluación Inicial BIA</option>
                             <option value="Control Trimestral">📈 Control Trimestral</option>
                             <option value="Seguimiento Deportivo">💪 Seguimiento Deportivo</option>
@@ -543,8 +645,10 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Estado</label>
-                        <select id="appt-status" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                        <label
+                            style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Estado</label>
+                        <select id="appt-status"
+                            style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                             <option value="confirmed">🟢 Confirmada</option>
                             <option value="pending">🟡 Pendiente de Confirmación</option>
                         </select>
@@ -552,13 +656,19 @@
                 </div>
 
                 <div class="form-group" style="margin-top:0.8rem;">
-                    <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Notas Clínicas / Indicaciones Previas</label>
-                    <input type="text" id="appt-notes" placeholder="Ej: Ayuno de 2h, ropa ligera, hidratación normal" style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
+                    <label style="font-size:0.75rem; font-weight:600; color:#5a6f8c; text-transform:uppercase;">Notas
+                        Clínicas / Indicaciones Previas</label>
+                    <input type="text" id="appt-notes" placeholder="Ej: Ayuno de 2h, ropa ligera, hidratación normal"
+                        style="width:100%; padding:0.65rem 0.85rem; border-radius:10px; border:1px solid #cbd5e1; font-size:0.9rem;">
                 </div>
 
                 <div class="modal-actions info-modal-actions pt-3 border-top mt-3 d-flex justify-content-end gap-2">
-                    <button type="button" id="appt-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs" style="font-size: 0.85rem;">Cancelar</button>
-                    <button type="submit" id="appt-btn-save" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem;">
+                    <button type="button" id="appt-btn-cancel"
+                        class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold shadow-2xs"
+                        style="font-size: 0.85rem;">Cancelar</button>
+                    <button type="submit" id="appt-btn-save"
+                        class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5"
+                        style="font-size: 0.85rem;">
                         <i class="bi bi-calendar-check-fill text-warning"></i>
                         <span>Guardar Cita</span>
                     </button>
@@ -569,7 +679,8 @@
 
     <!-- MODAL DE CONFIGURACIÓN DEL SISTEMA -->
     <div id="settings-modal" class="modal-overlay hidden">
-        <div class="modal-box bg-white rounded-4 shadow-lg border-0" style="max-width: 640px; width: 92%; padding: 1.85rem; text-align: left;">
+        <div class="modal-box bg-white rounded-4 shadow-lg border-0"
+            style="max-width: 640px; width: 92%; padding: 1.85rem; text-align: left;">
             <div class="info-modal-header d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                 <div class="d-flex align-items-center gap-2">
                     <span class="fs-4 text-primary"><i class="bi bi-gear-wide-connected"></i></span>
@@ -578,22 +689,29 @@
                         <span class="text-muted small">Preferencias del profesional y parámetros clínicos BIA</span>
                     </div>
                 </div>
-                <button type="button" class="info-modal-close" id="settings-modal-close" aria-label="Cerrar ventana">✕</button>
+                <button type="button" class="info-modal-close" id="settings-modal-close"
+                    aria-label="Cerrar ventana">✕</button>
             </div>
 
             <form id="settings-form" class="d-flex flex-column gap-3">
                 <div class="row g-3">
                     <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Profesional</label>
-                        <input type="text" id="settings-user-name" class="form-control shadow-none" required value="Dra. Audrey">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del
+                            Profesional</label>
+                        <input type="text" id="settings-user-name" class="form-control shadow-none" required
+                            value="Dra. Audrey">
                     </div>
                     <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Especialidad / Cargo</label>
-                        <input type="text" id="settings-user-title" class="form-control shadow-none" required value="Manager / Especialista BIA">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Especialidad /
+                            Cargo</label>
+                        <input type="text" id="settings-user-title" class="form-control shadow-none" required
+                            value="Manager / Especialista BIA">
                     </div>
                     <div class="col-12">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Centro Clínico</label>
-                        <input type="text" id="settings-clinic-name" class="form-control shadow-none" value="Centro Médico VitaMetrix">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Nombre del Centro
+                            Clínico</label>
+                        <input type="text" id="settings-clinic-name" class="form-control shadow-none"
+                            value="Centro Médico VitaMetrix">
                     </div>
                     <div class="col-12 col-md-6">
                         <label class="form-label text-muted small fw-semibold text-uppercase">Unidad de Peso</label>
@@ -603,14 +721,18 @@
                         </select>
                     </div>
                     <div class="col-12 col-md-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase">Ángulo de Fase Mínimo Óptimo</label>
-                        <input type="number" id="settings-pha-optimal" class="form-control shadow-none" step="0.1" value="6.0">
+                        <label class="form-label text-muted small fw-semibold text-uppercase">Ángulo de Fase Mínimo
+                            Óptimo</label>
+                        <input type="number" id="settings-pha-optimal" class="form-control shadow-none" step="0.1"
+                            value="6.0">
                     </div>
                 </div>
 
                 <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top">
-                    <button type="button" id="settings-btn-cancel" class="btn btn-outline-secondary px-4">Cancelar</button>
-                    <button type="submit" id="settings-btn-save" class="btn btn-primary px-4 fw-semibold">💾 Guardar Configuración</button>
+                    <button type="button" id="settings-btn-cancel"
+                        class="btn btn-outline-secondary px-4">Cancelar</button>
+                    <button type="submit" id="settings-btn-save" class="btn btn-primary px-4 fw-semibold">💾 Guardar
+                        Configuración</button>
                 </div>
             </form>
         </div>
@@ -618,14 +740,18 @@
 
     <!-- MODAL DE VISTA PREVIA COMPLETA DE LOGO (LIGHTBOX) -->
     <div id="logo-lightbox-modal" class="modal-overlay hidden" style="z-index: 9999;">
-        <div class="modal-box bg-white rounded-4 shadow-lg border-0 text-center position-relative p-4" style="max-width: 520px; width: 92%;">
-            <button type="button" id="logo-lightbox-close" class="btn-close position-absolute top-0 end-0 m-3 shadow-none" aria-label="Cerrar"></button>
+        <div class="modal-box bg-white rounded-4 shadow-lg border-0 text-center position-relative p-4"
+            style="max-width: 520px; width: 92%;">
+            <button type="button" id="logo-lightbox-close"
+                class="btn-close position-absolute top-0 end-0 m-3 shadow-none" aria-label="Cerrar"></button>
             <div class="d-flex align-items-center justify-content-center gap-2 mb-3 pb-2 border-bottom">
                 <span class="fs-4 text-primary"><i class="bi bi-image-fill"></i></span>
                 <h3 class="display-font fw-bold text-navy fs-5 m-0">Logo del Centro Médico</h3>
             </div>
-            <div class="rounded-3 border bg-light p-3 d-flex align-items-center justify-content-center overflow-hidden shadow-inner" style="min-height: 200px; max-height: 400px;">
-                <img id="logo-lightbox-img" src="" alt="Logo Completo" class="img-fluid rounded-2" style="max-height: 340px; object-fit: contain;">
+            <div class="rounded-3 border bg-light p-3 d-flex align-items-center justify-content-center overflow-hidden shadow-inner"
+                style="min-height: 200px; max-height: 400px;">
+                <img id="logo-lightbox-img" src="" alt="Logo Completo" class="img-fluid rounded-2"
+                    style="max-height: 340px; object-fit: contain;">
             </div>
         </div>
     </div>
@@ -637,7 +763,8 @@
                 <i class="bi bi-trash3-fill"></i>
             </div>
             <h3 id="modal-title" class="confirm-modal-title">Eliminar Insumo / Producto</h3>
-            <p id="modal-message" class="confirm-modal-message">¿Estás seguro de que deseas eliminar este registro del catálogo e inventario?</p>
+            <p id="modal-message" class="confirm-modal-message">¿Estás seguro de que deseas eliminar este registro del
+                catálogo e inventario?</p>
             <div class="confirm-modal-actions">
                 <button type="button" id="modal-btn-cancel" class="btn-confirm-cancel">
                     <i class="bi bi-x-lg"></i> <span>Cancelar</span>
@@ -651,29 +778,37 @@
 
     <!-- MODAL CONFIRMACIÓN ELIMINACIÓN MASIVA DE PRODUCTOS (MULTI-SELECT) -->
     <div id="modal-bulk-delete-stock" class="modal-overlay hidden" style="z-index: 10000;">
-        <div class="confirm-modal-box" style="max-width: 520px; width: 94%; text-align: left; padding: 1.8rem 1.8rem 1.6rem;">
+        <div class="confirm-modal-box"
+            style="max-width: 520px; width: 94%; text-align: left; padding: 1.8rem 1.8rem 1.6rem;">
             <div class="d-flex align-items-center gap-3 mb-3">
-                <div class="modal-icon-badge danger m-0 flex-shrink-0" style="width: 48px; height: 48px; font-size: 1.35rem;">
+                <div class="modal-icon-badge danger m-0 flex-shrink-0"
+                    style="width: 48px; height: 48px; font-size: 1.35rem;">
                     <i class="bi bi-trash3-fill"></i>
                 </div>
                 <div>
                     <h5 class="confirm-modal-title mb-0" style="font-size: 1.18rem;">Eliminar Productos Marcados</h5>
-                    <p class="text-muted small mb-0">Esta acción removerá los ítems marcados del catálogo e inventario.</p>
+                    <p class="text-muted small mb-0">Esta acción removerá los ítems marcados del catálogo e inventario.
+                    </p>
                 </div>
             </div>
 
             <div class="mb-3">
                 <div class="d-flex align-items-center justify-content-between mb-1.5">
                     <span class="fw-bold text-navy small">Productos a eliminar:</span>
-                    <span class="badge bg-danger-subtle text-danger font-monospace fw-bold" id="bulk-delete-modal-badge">0 seleccionados</span>
+                    <span class="badge bg-danger-subtle text-danger font-monospace fw-bold"
+                        id="bulk-delete-modal-badge">0 seleccionados</span>
                 </div>
                 <!-- Lista de Productos con Scroll a partir de 10 ítems -->
-                <div id="bulk-delete-items-list" class="bulk-delete-items-list stock-custom-scrollbar border rounded-3 p-2 bg-light bg-opacity-50" style="max-height: 260px; overflow-y: auto;">
+                <div id="bulk-delete-items-list"
+                    class="bulk-delete-items-list stock-custom-scrollbar border rounded-3 p-2 bg-light bg-opacity-50"
+                    style="max-height: 260px; overflow-y: auto;">
                     <!-- Inyectado dinámicamente -->
                 </div>
-                <div class="alert alert-warning py-2 px-3 small rounded-3 mt-2 mb-0 d-flex align-items-center gap-2" style="font-size: 0.78rem;">
+                <div class="alert alert-warning py-2 px-3 small rounded-3 mt-2 mb-0 d-flex align-items-center gap-2"
+                    style="font-size: 0.78rem;">
                     <i class="bi bi-exclamation-triangle-fill text-warning flex-shrink-0"></i>
-                    <span>Esta operación no se puede deshacer. Las existencias y registros se eliminarán permanentemente.</span>
+                    <span>Esta operación no se puede deshacer. Las existencias y registros se eliminarán
+                        permanentemente.</span>
                 </div>
             </div>
 
@@ -690,21 +825,34 @@
 
     <!-- MODAL DE PERFIL PROFESIONAL / CREDENCIAL DIGITAL (OPCIÓN 1) -->
     <div id="profile-card-modal" class="modal-overlay hidden" style="z-index: 9998;">
-        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden" style="max-width: 760px; width: 94%; text-align: left;">
+        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden"
+            style="max-width: 760px; width: 94%; text-align: left;">
             <!-- Header Banner Grande con Degradado Profundo -->
-            <div class="position-relative p-4 sm:p-5 text-white" id="profile-modal-header" style="background: linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%);">
-                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 shadow-none" id="profile-modal-close" aria-label="Cerrar" style="opacity: 0.85;"></button>
+            <div class="position-relative p-4 sm:p-5 text-white" id="profile-modal-header"
+                style="background: linear-gradient(135deg, #091e3a 0%, #0f2b4c 50%, #0284c7 100%);">
+                <button type="button" class="btn-close btn-close-white position-absolute top-0 end-0 m-4 shadow-none"
+                    id="profile-modal-close" aria-label="Cerrar" style="opacity: 0.85;"></button>
                 <div class="d-flex flex-wrap align-items-center gap-4 mt-2">
                     <div class="position-relative">
-                        <img id="profile-modal-avatar" src="https://ui-avatars.com/api/?name=Administrador+General&background=4338ca&color=ffffff&size=128" alt="Avatar" class="rounded-circle border border-4 border-white shadow-md" style="width: 88px; height: 88px; object-fit: cover;">
-                        <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" id="profile-modal-status-dot" style="width: 18px; height: 18px;" title="Sesión activa"></span>
+                        <img id="profile-modal-avatar"
+                            src="https://ui-avatars.com/api/?name=Administrador+General&background=4338ca&color=ffffff&size=128"
+                            alt="Avatar" class="rounded-circle border border-4 border-white shadow-md"
+                            style="width: 88px; height: 88px; object-fit: cover;">
+                        <span
+                            class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
+                            id="profile-modal-status-dot" style="width: 18px; height: 18px;"
+                            title="Sesión activa"></span>
                     </div>
                     <div class="flex-grow-1">
                         <div class="d-flex align-items-center gap-2 flex-wrap">
-                            <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name" style="letter-spacing: -0.5px;">Administrador General</h2>
-                            <span class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-1 fw-bold fs-7 d-none" id="profile-modal-role-badge">👑 SuperAdmin Master</span>
+                            <h2 class="display-font fw-bold text-white fs-3 m-0" id="profile-modal-name"
+                                style="letter-spacing: -0.5px;">Administrador General</h2>
+                            <span
+                                class="badge bg-warning text-dark border border-warning rounded-pill px-3 py-1 fw-bold fs-7 d-none"
+                                id="profile-modal-role-badge">👑 SuperAdmin Master</span>
                         </div>
-                        <p class="m-0 fs-6 fw-medium mt-1" id="profile-modal-title" style="color: #bae6fd;">Director / Administrador de Plataforma</p>
+                        <p class="m-0 fs-6 fw-medium mt-1" id="profile-modal-title" style="color: #bae6fd;">Director /
+                            Administrador de Plataforma</p>
                     </div>
                 </div>
             </div>
@@ -714,47 +862,72 @@
                 <!-- Ficha de Datos (4 Bento Cards con alto contraste) -->
                 <div class="row g-3 mb-4">
                     <div class="col-12 col-sm-6">
-                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card1-icon-box" style="background-color: #e0f2fe; color: #0284c7; width: 44px; height: 44px;">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs"
+                            style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0"
+                                id="profile-modal-card1-icon-box"
+                                style="background-color: #e0f2fe; color: #0284c7; width: 44px; height: 44px;">
                                 <i class="bi bi-award-fill fs-5" id="profile-modal-card1-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card1-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Matrícula Profesional</span>
-                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-mp">MP: 45892 / MN: 1204</strong>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card1-label"
+                                    style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Matrícula
+                                    Profesional</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-mp">MP:
+                                    45892 / MN: 1204</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card2-icon-box" style="background-color: #e0e7ff; color: #4338ca; width: 44px; height: 44px;">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs"
+                            style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0"
+                                id="profile-modal-card2-icon-box"
+                                style="background-color: #e0e7ff; color: #4338ca; width: 44px; height: 44px;">
                                 <i class="bi bi-hospital-fill fs-5" id="profile-modal-card2-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card2-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Centro Clínico Asignado</span>
-                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-clinic">Centro Médico VitaMetrix</strong>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card2-label"
+                                    style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Centro Clínico
+                                    Asignado</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate"
+                                    id="profile-modal-clinic">Centro Médico VitaMetrix</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card3-icon-box" style="background-color: #dcfce7; color: #15803d; width: 44px; height: 44px;">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs"
+                            style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0"
+                                id="profile-modal-card3-icon-box"
+                                style="background-color: #dcfce7; color: #15803d; width: 44px; height: 44px;">
                                 <i class="bi bi-telephone-fill fs-5" id="profile-modal-card3-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card3-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Contacto / Teléfono</span>
-                                <strong class="d-block text-navy fs-6 fw-bold text-truncate" id="profile-modal-phone">+591 72125280</strong>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card3-label"
+                                    style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Contacto /
+                                    Teléfono</span>
+                                <strong class="d-block text-navy fs-6 fw-bold text-truncate"
+                                    id="profile-modal-phone">+591 72125280</strong>
                             </div>
                         </div>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs" style="background-color: #f8fafc; border-color: #e2e8f0;">
-                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0" id="profile-modal-card4-icon-box" style="background-color: #fef3c7; color: #b45309; width: 44px; height: 44px;">
+                        <div class="p-3.5 rounded-4 border bg-slate-50 d-flex align-items-start gap-3 h-100 shadow-xs"
+                            style="background-color: #f8fafc; border-color: #e2e8f0;">
+                            <div class="rounded-3 p-2.5 d-flex align-items-center justify-content-center flex-shrink-0"
+                                id="profile-modal-card4-icon-box"
+                                style="background-color: #fef3c7; color: #b45309; width: 44px; height: 44px;">
                                 <i class="bi bi-shield-lock-fill fs-5" id="profile-modal-card4-icon"></i>
                             </div>
                             <div class="flex-grow-1 min-w-0">
-                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card4-label" style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Modo de Estación</span>
+                                <span class="d-block text-uppercase fw-bold mb-1" id="profile-modal-card4-label"
+                                    style="color: #475569; font-size: 0.75rem; letter-spacing: 0.6px;">Modo de
+                                    Estación</span>
                                 <div class="mt-1" id="profile-modal-card4-content">
-                                    <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold" style="font-size: 0.8rem;">
+                                    <span
+                                        class="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-3 py-1 fw-bold"
+                                        style="font-size: 0.8rem;">
                                         <i class="bi bi-check-circle-fill me-1"></i>Estación Local Activa
                                     </span>
                                 </div>
@@ -765,32 +938,44 @@
 
                 <!-- Métricas de Actividad -->
                 <div class="mb-3">
-                    <h4 class="display-font text-navy fw-bold fs-5 m-0" id="profile-modal-stats-title">Resumen de Actividad</h4>
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0" id="profile-modal-stats-title">Resumen de
+                        Actividad</h4>
                 </div>
                 <div class="row g-3 mb-4 text-center">
                     <div class="col-4">
-                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="d-block display-font fw-extrabold text-primary fs-2 lh-1 mb-1" id="profile-modal-stat-patients">0</span>
-                            <span class="fw-bold text-uppercase" id="profile-modal-stat1-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Pacientes</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold text-primary fs-2 lh-1 mb-1"
+                                id="profile-modal-stat-patients">0</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat1-label"
+                                style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Pacientes</span>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="d-block display-font fw-extrabold text-info fs-2 lh-1 mb-1" id="profile-modal-stat-evals" style="color: #0891b2 !important;">0</span>
-                            <span class="fw-bold text-uppercase" id="profile-modal-stat2-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Estudios BIA</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold text-info fs-2 lh-1 mb-1"
+                                id="profile-modal-stat-evals" style="color: #0891b2 !important;">0</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat2-label"
+                                style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Estudios BIA</span>
                         </div>
                     </div>
                     <div class="col-4">
-                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="d-block display-font fw-extrabold fs-2 lh-1 mb-1" id="profile-modal-stat-appts" style="color: #d97706 !important;">0</span>
-                            <span class="fw-bold text-uppercase" id="profile-modal-stat3-label" style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Citas de Hoy</span>
+                        <div class="border rounded-4 p-3.5 bg-white shadow-xs h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="d-block display-font fw-extrabold fs-2 lh-1 mb-1" id="profile-modal-stat-appts"
+                                style="color: #d97706 !important;">0</span>
+                            <span class="fw-bold text-uppercase" id="profile-modal-stat3-label"
+                                style="color: #475569; font-size: 0.78rem; letter-spacing: 0.5px;">Citas de Hoy</span>
                         </div>
                     </div>
                 </div>
 
                 <!-- Acciones Rápidas -->
-                <div class="d-flex align-items-center justify-content-end pt-4 border-top" style="border-color: #e2e8f0;">
-                    <button type="button" id="profile-modal-btn-edit" class="btn btn-primary px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md">
+                <div class="d-flex align-items-center justify-content-end pt-4 border-top"
+                    style="border-color: #e2e8f0;">
+                    <button type="button" id="profile-modal-btn-edit"
+                        class="btn btn-primary px-4 py-2.5 fw-bold d-inline-flex align-items-center gap-2 rounded-3 shadow-md">
                         <i class="bi bi-gear-fill fs-5"></i>
                         <span id="profile-modal-btn-text">Editar en Configuración</span>
                     </button>
@@ -803,11 +988,14 @@
 
     <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN MASIVA DE EVALUACIONES -->
     <div id="batch-delete-evals-modal" class="modal-overlay hidden" style="z-index: 9999;">
-        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden d-flex flex-column" style="max-width: 760px; width: 94%; max-height: 90vh; text-align: left;">
+        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden d-flex flex-column"
+            style="max-width: 760px; width: 94%; max-height: 90vh; text-align: left;">
             <!-- Header con Alerta Roja Suave -->
-            <div class="p-4 bg-danger bg-opacity-10 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
+            <div
+                class="p-4 bg-danger bg-opacity-10 border-bottom d-flex align-items-center justify-content-between flex-shrink-0">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="rounded-circle p-2.5 bg-danger text-white d-flex align-items-center justify-content-center shadow-xs" style="width: 44px; height: 44px;">
+                    <div class="rounded-circle p-2.5 bg-danger text-white d-flex align-items-center justify-content-center shadow-xs"
+                        style="width: 44px; height: 44px;">
                         <i class="bi bi-trash3-fill fs-5"></i>
                     </div>
                     <div>
@@ -815,16 +1003,19 @@
                         <span class="text-muted small">Se eliminarán permanentemente del historial clínico</span>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="batch-delete-modal-close" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close shadow-none" id="batch-delete-modal-close"
+                    aria-label="Cerrar"></button>
             </div>
 
             <div class="p-4 d-flex flex-column flex-grow-1" style="min-height: 0;">
                 <p class="text-secondary mb-2.5 flex-shrink-0">
-                    Has marcado <strong class="text-danger" id="batch-delete-count-text">0 evaluaciones</strong> para eliminar. Revisa el listado antes de confirmar:
+                    Has marcado <strong class="text-danger" id="batch-delete-count-text">0 evaluaciones</strong> para
+                    eliminar. Revisa el listado antes de confirmar:
                 </p>
 
                 <!-- Listado con scroll de todas las evaluaciones marcadas -->
-                <div class="batch-delete-scroll-area mb-3 flex-grow-1" style="max-height: 290px; overflow-y: auto !important; overflow-x: hidden;">
+                <div class="batch-delete-scroll-area mb-3 flex-grow-1"
+                    style="max-height: 290px; overflow-y: auto !important; overflow-x: hidden;">
                     <table class="table table-hover table-sm mb-0 align-middle small" style="font-size: 0.85rem;">
                         <thead class="table-light sticky-top" style="border-bottom: 2px solid #e2e8f0; z-index: 2;">
                             <tr>
@@ -841,19 +1032,23 @@
                     </table>
                 </div>
 
-                <div class="alert alert-warning d-flex align-items-center gap-2 py-2.5 px-3 mb-0 rounded-3 small flex-shrink-0">
+                <div
+                    class="alert alert-warning d-flex align-items-center gap-2 py-2.5 px-3 mb-0 rounded-3 small flex-shrink-0">
                     <i class="bi bi-exclamation-triangle-fill text-warning fs-5 flex-shrink-0"></i>
                     <div>
-                        <strong>Atención:</strong> Esta acción no se puede deshacer. Los registros y sus métricas calculadas se eliminarán de la base de datos clínica.
+                        <strong>Atención:</strong> Esta acción no se puede deshacer. Los registros y sus métricas
+                        calculadas se eliminarán de la base de datos clínica.
                     </div>
                 </div>
 
                 <!-- Botones de Acción -->
                 <div class="d-flex justify-content-end gap-2 mt-3 pt-3 border-top flex-shrink-0">
-                    <button type="button" id="batch-delete-btn-cancel" class="btn btn-light border px-4 py-2 rounded-3 fw-semibold">
+                    <button type="button" id="batch-delete-btn-cancel"
+                        class="btn btn-light border px-4 py-2 rounded-3 fw-semibold">
                         Cancelar
                     </button>
-                    <button type="button" id="batch-delete-btn-confirm" class="btn btn-danger px-4 py-2 rounded-3 fw-bold shadow-sm d-flex align-items-center gap-2">
+                    <button type="button" id="batch-delete-btn-confirm"
+                        class="btn btn-danger px-4 py-2 rounded-3 fw-bold shadow-sm d-flex align-items-center gap-2">
                         <i class="bi bi-trash3-fill"></i>
                         <span>Eliminar Definitivamente (<span id="batch-delete-btn-count">0</span>)</span>
                     </button>
@@ -864,41 +1059,59 @@
 
     <!-- MODAL DE DETALLE COMPLETO DE EVALUACIÓN CLÍNICA (Centrado en viewport) -->
     <div id="eval-detail-modal" class="modal-overlay hidden" style="z-index: 9999;">
-        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden d-flex flex-column" style="max-width: 900px; width: 95%; max-height: 90vh; text-align: left;">
+        <div class="modal-box bg-white rounded-4 shadow-2xl border-0 p-0 overflow-hidden d-flex flex-column"
+            style="max-width: 900px; width: 95%; max-height: 90vh; text-align: left;">
             <!-- Header Modal -->
-            <div class="p-4 border-bottom d-flex align-items-center justify-content-between flex-shrink-0" style="background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%);">
+            <div class="p-4 border-bottom d-flex align-items-center justify-content-between flex-shrink-0"
+                style="background: linear-gradient(135deg, rgba(248,250,252,0.95) 0%, rgba(241,245,249,0.9) 100%);">
                 <div>
-                    <span class="badge rounded-pill fw-bold text-uppercase px-2.5 py-1 mb-1.5" style="background: rgba(0, 180, 216, 0.12); color: #00b4d8; font-size: 0.75rem; letter-spacing: 0.5px;">
+                    <span class="badge rounded-pill fw-bold text-uppercase px-2.5 py-1 mb-1.5"
+                        style="background: rgba(0, 180, 216, 0.12); color: #00b4d8; font-size: 0.75rem; letter-spacing: 0.5px;">
                         <i class="bi bi-file-earmark-medical me-1"></i> EVALUACIÓN MÉDICA
                     </span>
                     <h3 id="eval-modal-name" class="display-font fw-bold text-navy fs-4 m-0">Paciente</h3>
-                    <div style="font-size: 0.82rem; color: #5a6f8c;" id="eval-modal-meta" class="mt-0.5">IDP: -- | Fecha: --</div>
+                    <div style="font-size: 0.82rem; color: #5a6f8c;" id="eval-modal-meta" class="mt-0.5">IDP: -- |
+                        Fecha: --</div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="eval-modal-close" aria-label="Cerrar modal"></button>
+                <button type="button" class="btn-close shadow-none" id="eval-modal-close"
+                    aria-label="Cerrar modal"></button>
             </div>
 
             <!-- Body Modal con Scroll -->
-            <div id="eval-modal-body" class="p-4 d-flex flex-column gap-3.5 flex-grow-1" style="overflow-y: auto; min-height: 0;">
+            <div id="eval-modal-body" class="p-4 d-flex flex-column gap-3.5 flex-grow-1"
+                style="overflow-y: auto; min-height: 0;">
                 <!-- Resumen de Métricas Clave -->
                 <div class="row g-3">
                     <div class="col-12 col-md-4">
-                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Global TRU Score</span>
-                            <div id="eval-modal-score" class="display-font fw-extrabold text-navy my-1" style="font-size: 2.2rem; line-height: 1;">0</div>
-                            <div id="eval-modal-rank" class="badge rounded-pill fw-bold mx-auto px-3 py-1" style="font-size: 0.75rem; background: rgba(45, 122, 74, 0.12); color: #2d7a4a;">--</div>
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">Global TRU Score</span>
+                            <div id="eval-modal-score" class="display-font fw-extrabold text-navy my-1"
+                                style="font-size: 2.2rem; line-height: 1;">0</div>
+                            <div id="eval-modal-rank" class="badge rounded-pill fw-bold mx-auto px-3 py-1"
+                                style="font-size: 0.75rem; background: rgba(45, 122, 74, 0.12); color: #2d7a4a;">--
+                            </div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Ángulo de Fase</span>
-                            <div id="eval-modal-phase" class="display-font fw-extrabold text-info my-1" style="font-size: 2.2rem; line-height: 1;">0.0°</div>
-                            <div id="eval-modal-cell" class="small fw-semibold text-secondary" style="font-size: 0.76rem;">--</div>
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">Ángulo de Fase</span>
+                            <div id="eval-modal-phase" class="display-font fw-extrabold text-info my-1"
+                                style="font-size: 2.2rem; line-height: 1;">0.0°</div>
+                            <div id="eval-modal-cell" class="small fw-semibold text-secondary"
+                                style="font-size: 0.76rem;">--</div>
                         </div>
                     </div>
                     <div class="col-12 col-md-4">
-                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center" style="border-color: #e2e8f0;">
-                            <span class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Gasto Calórico TEE</span>
-                            <div id="eval-modal-tee" class="display-font fw-extrabold text-success my-1" style="font-size: 2.2rem; line-height: 1; color: #2d7a4a !important;">0</div>
+                        <div class="p-3 rounded-4 border bg-white shadow-xs text-center h-100 d-flex flex-column justify-content-center"
+                            style="border-color: #e2e8f0;">
+                            <span class="text-muted fw-bold text-uppercase"
+                                style="font-size: 0.72rem; letter-spacing: 0.5px;">Gasto Calórico TEE</span>
+                            <div id="eval-modal-tee" class="display-font fw-extrabold text-success my-1"
+                                style="font-size: 2.2rem; line-height: 1; color: #2d7a4a !important;">0</div>
                             <div class="text-muted small" style="font-size: 0.76rem;">kcal/día</div>
                         </div>
                     </div>
@@ -910,7 +1123,8 @@
                         <i class="bi bi-sliders text-primary"></i>
                         <span>Parámetros Físicos & Bioimpedancia</span>
                     </h5>
-                    <div id="eval-modal-inputs-grid" class="d-grid gap-2" style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); font-size: 0.84rem;">
+                    <div id="eval-modal-inputs-grid" class="d-grid gap-2"
+                        style="grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); font-size: 0.84rem;">
                         <!-- Llenado dinámico por JS -->
                     </div>
                 </div>
@@ -921,30 +1135,40 @@
                         <i class="bi bi-clipboard2-pulse text-info"></i>
                         <span>Diagnóstico & Hallazgos Clínicos</span>
                     </h5>
-                    <div id="eval-modal-clinical" class="text-secondary small" style="font-size: 0.88rem; line-height: 1.55;">
+                    <div id="eval-modal-clinical" class="text-secondary small"
+                        style="font-size: 0.88rem; line-height: 1.55;">
                         <!-- Contenido dinámico -->
                     </div>
                 </div>
             </div>
 
             <!-- Footer con Botones Estilizados del Sistema -->
-            <div class="p-3.5 px-4 bg-light bg-opacity-75 border-top d-flex flex-wrap align-items-center justify-content-between gap-2.5 flex-shrink-0">
+            <div
+                class="p-3.5 px-4 bg-light bg-opacity-75 border-top d-flex flex-wrap align-items-center justify-content-between gap-2.5 flex-shrink-0">
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" id="btn-modal-edit-client" class="btn btn-outline-primary px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-primary" style="font-size: 0.85rem;">
+                    <button type="button" id="btn-modal-edit-client"
+                        class="btn btn-outline-primary px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-primary"
+                        style="font-size: 0.85rem;">
                         <i class="bi bi-pencil-square"></i>
                         <span>Editar Datos</span>
                     </button>
-                    <button type="button" id="btn-modal-share-wa" class="btn btn-outline-success px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5" style="font-size: 0.85rem; border-color: #25D366; color: #128C7E;">
+                    <button type="button" id="btn-modal-share-wa"
+                        class="btn btn-outline-success px-3 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5"
+                        style="font-size: 0.85rem; border-color: #25D366; color: #128C7E;">
                         <i class="bi bi-whatsapp"></i>
                         <span>Enviar WhatsApp</span>
                     </button>
                 </div>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" id="btn-modal-print-eval" class="btn btn-light border px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-secondary shadow-2xs" onclick="window.print()" style="font-size: 0.85rem;">
+                    <button type="button" id="btn-modal-print-eval"
+                        class="btn btn-light border px-3.5 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 text-secondary shadow-2xs"
+                        onclick="window.print()" style="font-size: 0.85rem;">
                         <i class="bi bi-printer-fill text-muted"></i>
                         <span>Imprimir</span>
                     </button>
-                    <button type="button" id="btn-modal-open-calc" class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm" style="font-size: 0.85rem;">
+                    <button type="button" id="btn-modal-open-calc"
+                        class="btn btn-primary px-3.5 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm"
+                        style="font-size: 0.85rem;">
                         <i class="bi bi-lightning-charge-fill text-warning"></i>
                         <span>Recargar en Calculadora</span>
                     </button>
@@ -954,8 +1178,10 @@
     </div>
 
     <!-- MODAL DE MENSAJERÍA DIRECTA AL PACIENTE (WHATSAPP & EMAIL) -->
-    <div id="patient-message-modal" class="modal-overlay hidden" style="position: fixed; inset: 0; z-index: 100000; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 1rem;">
-        <div class="modal-box bg-white rounded-4 shadow-xl border-0" style="max-width: 580px; width: 100%; max-height: 92vh; overflow-y: auto; text-align: left; padding: 1.6rem;">
+    <div id="patient-message-modal" class="modal-overlay hidden"
+        style="position: fixed; inset: 0; z-index: 100000; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; padding: 1rem;">
+        <div class="modal-box bg-white rounded-4 shadow-xl border-0"
+            style="max-width: 580px; width: 100%; max-height: 92vh; overflow-y: auto; text-align: left; padding: 1.6rem;">
             <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                 <div class="d-flex align-items-center gap-2.5">
                     <span class="fs-4 text-success"><i class="bi bi-chat-dots-fill"></i></span>
@@ -964,7 +1190,8 @@
                         <p class="text-muted small m-0">Envío predeterminado o personalizado con reporte clínico</p>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="msg-modal-close" aria-label="Cerrar modal"></button>
+                <button type="button" class="btn-close shadow-none" id="msg-modal-close"
+                    aria-label="Cerrar modal"></button>
             </div>
 
             <!-- Banner Resumen del Paciente -->
@@ -973,11 +1200,14 @@
                     <div>
                         <h4 class="fw-bold text-navy fs-6 m-0" id="msg-patient-name">Cargando paciente...</h4>
                         <div class="text-muted small mt-1 d-flex flex-wrap align-items-center gap-3">
-                            <span id="msg-patient-phone"><i class="bi bi-whatsapp text-success me-1"></i> Sin teléfono</span>
+                            <span id="msg-patient-phone"><i class="bi bi-whatsapp text-success me-1"></i> Sin
+                                teléfono</span>
                             <span id="msg-patient-email"><i class="bi bi-envelope text-muted me-1"></i> Sin email</span>
                         </div>
                     </div>
-                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-pill small" id="msg-eval-badge">
+                    <span
+                        class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 px-2.5 py-1.5 rounded-pill small"
+                        id="msg-eval-badge">
                         Evaluación BIA
                     </span>
                 </div>
@@ -985,9 +1215,11 @@
 
             <!-- Selector de Plantillas Predeterminadas -->
             <div class="mb-3">
-                <label class="form-label text-muted small fw-semibold text-uppercase mb-1.5">Seleccionar Plantilla</label>
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1.5">Seleccionar
+                    Plantilla</label>
                 <div class="d-flex flex-wrap gap-2">
-                    <button type="button" class="btn btn-sm btn-outline-primary active msg-tpl-btn" data-template="results">
+                    <button type="button" class="btn btn-sm btn-outline-primary active msg-tpl-btn"
+                        data-template="results">
                         <i class="bi bi-clipboard2-pulse-fill me-1"></i> Resultados BIA
                     </button>
                     <button type="button" class="btn btn-sm btn-outline-secondary msg-tpl-btn" data-template="reminder">
@@ -1000,7 +1232,8 @@
             </div>
 
             <!-- Interruptor para incluir / excluir métricas -->
-            <div class="form-check form-switch mb-3 p-2.5 px-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
+            <div
+                class="form-check form-switch mb-3 p-2.5 px-3 bg-light rounded-3 border d-flex align-items-center justify-content-between">
                 <label class="form-check-label text-secondary fw-semibold small m-0" for="msg-attach-eval">
                     📊 Adjuntar métricas de última evaluación (TRU Score, Músculo, Grasa, PhA)
                 </label>
@@ -1010,21 +1243,27 @@
             <!-- Textarea con el mensaje editable -->
             <div class="mb-3">
                 <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Contenido del Mensaje</label>
-                <textarea id="msg-textarea" class="form-control shadow-none font-monospace small" rows="8" placeholder="Escribe el mensaje aquí..." style="resize: vertical; font-size: 0.88rem;"></textarea>
-                <div class="form-text small text-muted text-end mt-1">Puedes personalizar el texto antes de enviar.</div>
+                <textarea id="msg-textarea" class="form-control shadow-none font-monospace small" rows="8"
+                    placeholder="Escribe el mensaje aquí..." style="resize: vertical; font-size: 0.88rem;"></textarea>
+                <div class="form-text small text-muted text-end mt-1">Puedes personalizar el texto antes de enviar.
+                </div>
             </div>
 
             <!-- Botones de Acción -->
             <div class="pt-3 border-top d-flex flex-wrap align-items-center justify-content-between gap-2">
-                <button type="button" id="msg-btn-cancel" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="msg-btn-cancel"
+                    class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold">
                     Cancelar
                 </button>
                 <div class="d-flex align-items-center gap-2">
-                    <button type="button" id="msg-btn-email" class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                    <button type="button" id="msg-btn-email"
+                        class="btn btn-light border px-3.5 py-2 rounded-3 text-secondary fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
                         <i class="bi bi-envelope-fill text-muted"></i>
                         <span>Enviar por Correo</span>
                     </button>
-                    <button type="button" id="msg-btn-whatsapp" class="btn btn-success px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-2" style="background-color: #25D366; border-color: #25D366;">
+                    <button type="button" id="msg-btn-whatsapp"
+                        class="btn btn-success px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-2"
+                        style="background-color: #25D366; border-color: #25D366;">
                         <i class="bi bi-whatsapp fs-6"></i>
                         <span>Abrir en WhatsApp</span>
                     </button>
@@ -1039,13 +1278,16 @@
             <!-- Header -->
             <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style="width: 42px; height: 42px;">
                         <i class="bi bi-journal-medical fs-5"></i>
                     </div>
                     <div>
-                        <h4 class="display-font text-navy fw-bold fs-5 m-0" id="hist-modal-patient-name">Historial de Evaluaciones</h4>
+                        <h4 class="display-font text-navy fw-bold fs-5 m-0" id="hist-modal-patient-name">Historial de
+                            Evaluaciones</h4>
                         <div class="d-flex align-items-center gap-2 mt-0.5">
-                            <span class="badge bg-light text-secondary border font-monospace" id="hist-modal-patient-idp">IDP: --</span>
+                            <span class="badge bg-light text-secondary border font-monospace"
+                                id="hist-modal-patient-idp">IDP: --</span>
                             <span class="text-muted small" id="hist-modal-eval-count">0 evaluaciones</span>
                         </div>
                     </div>
@@ -1055,7 +1297,8 @@
 
             <!-- Botón EVALUAR sobre el listado -->
             <div class="mb-3">
-                <button type="button" id="hist-btn-new-eval" class="btn btn-primary w-100 py-2.5 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2">
+                <button type="button" id="hist-btn-new-eval"
+                    class="btn btn-primary w-100 py-2.5 rounded-3 fw-semibold shadow-sm d-flex align-items-center justify-content-center gap-2">
                     <i class="bi bi-lightning-charge-fill text-warning"></i>
                     <span>⚡ Evaluar / Nueva Medición a este Paciente</span>
                 </button>
@@ -1064,16 +1307,19 @@
             <!-- Lista de Evaluaciones Puntuales -->
             <div class="mb-3">
                 <div class="d-flex align-items-center justify-content-between mb-2">
-                    <span class="text-muted small fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Evaluaciones Realizadas</span>
+                    <span class="text-muted small fw-bold text-uppercase"
+                        style="font-size: 0.72rem; letter-spacing: 0.5px;">Evaluaciones Realizadas</span>
                 </div>
-                <div id="hist-modal-evals-list" class="d-flex flex-column gap-2" style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
+                <div id="hist-modal-evals-list" class="d-flex flex-column gap-2"
+                    style="max-height: 280px; overflow-y: auto; padding-right: 4px;">
                     <!-- Items inyectados dinámicamente -->
                 </div>
             </div>
 
             <!-- Footer -->
             <div class="pt-3 border-top d-flex align-items-center justify-content-end">
-                <button type="button" id="hist-modal-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="hist-modal-btn-close"
+                    class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
                     Cerrar
                 </button>
             </div>
@@ -1085,26 +1331,33 @@
         <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 500px; width: 95%;">
             <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style="width: 42px; height: 42px;">
                         <i class="bi bi-arrow-left-right fs-5"></i>
                     </div>
                     <div>
-                        <h4 class="display-font text-navy fw-bold fs-5 m-0" id="stock-mov-modal-title">Ajuste de Existencias</h4>
+                        <h4 class="display-font text-navy fw-bold fs-5 m-0" id="stock-mov-modal-title">Ajuste de
+                            Existencias</h4>
                         <div class="text-muted small" id="stock-mov-modal-subtitle">Producto: --</div>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="stock-mov-modal-close" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close shadow-none" id="stock-mov-modal-close"
+                    aria-label="Cerrar"></button>
             </div>
 
             <form id="stock-movement-form">
                 <!-- Tipo de Movimiento -->
                 <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Tipo de Movimiento</label>
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Tipo de
+                        Movimiento</label>
                     <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-outline-success flex-fill py-2 fw-semibold active stock-type-btn" data-type="IN">
+                        <button type="button"
+                            class="btn btn-outline-success flex-fill py-2 fw-semibold active stock-type-btn"
+                            data-type="IN">
                             <i class="bi bi-box-arrow-in-down me-1"></i> ➕ Entrada (Compra)
                         </button>
-                        <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-semibold stock-type-btn" data-type="OUT">
+                        <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-semibold stock-type-btn"
+                            data-type="OUT">
                             <i class="bi bi-box-arrow-up me-1"></i> ➖ Salida (Consumo)
                         </button>
                     </div>
@@ -1114,26 +1367,34 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual</label>
-                        <input type="text" id="stock-mov-current-qty" class="form-control shadow-none font-monospace fw-bold bg-light" readonly value="0">
+                        <input type="text" id="stock-mov-current-qty"
+                            class="form-control shadow-none font-monospace fw-bold bg-light" readonly value="0">
                     </div>
                     <div class="col-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Cantidad a Ajustar <span class="text-danger">*</span></label>
-                        <input type="number" id="stock-mov-qty" class="form-control shadow-none font-monospace fw-bold border-primary" placeholder="0" min="0.01" step="any" required>
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Cantidad a Ajustar
+                            <span class="text-danger">*</span></label>
+                        <input type="number" id="stock-mov-qty"
+                            class="form-control shadow-none font-monospace fw-bold border-primary" placeholder="0"
+                            min="0.01" step="any" required>
                     </div>
                 </div>
 
                 <!-- Motivo / Justificación -->
                 <div class="mb-3">
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Detalle del Movimiento</label>
-                    <input type="text" id="stock-mov-reason" class="form-control shadow-none small" placeholder="Ej: Reposición mensual / Consumo en consulta de bioimpedancia...">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Detalle del
+                        Movimiento</label>
+                    <input type="text" id="stock-mov-reason" class="form-control shadow-none small"
+                        placeholder="Ej: Reposición mensual / Consumo en consulta de bioimpedancia...">
                 </div>
 
                 <!-- Botones -->
                 <div class="pt-3 border-top d-flex align-items-center justify-content-end gap-2">
-                    <button type="button" id="stock-mov-btn-cancel" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                    <button type="button" id="stock-mov-btn-cancel"
+                        class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
                         Cancelar
                     </button>
-                    <button type="submit" id="stock-mov-btn-save" class="btn btn-primary px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-1.5">
+                    <button type="submit" id="stock-mov-btn-save"
+                        class="btn btn-primary px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-1.5">
                         <i class="bi bi-check2-circle"></i>
                         <span>Confirmar Ajuste</span>
                     </button>
@@ -1147,7 +1408,8 @@
         <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 580px; width: 95%;">
             <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center"
+                        style="width: 42px; height: 42px;">
                         <i class="bi bi-clock-history fs-5"></i>
                     </div>
                     <div>
@@ -1155,15 +1417,18 @@
                         <div class="text-muted small" id="stock-hist-item-name">Producto: --</div>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="stock-hist-modal-close" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close shadow-none" id="stock-hist-modal-close"
+                    aria-label="Cerrar"></button>
             </div>
 
-            <div id="stock-hist-list" class="d-flex flex-column gap-2" style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
+            <div id="stock-hist-list" class="d-flex flex-column gap-2"
+                style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
                 <!-- Movimientos inyectados dinámicamente -->
             </div>
 
             <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
-                <button type="button" id="stock-hist-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="stock-hist-btn-close"
+                    class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
                     Cerrar
                 </button>
             </div>
@@ -1175,15 +1440,18 @@
         <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 620px; width: 92%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <div class="bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center"
+                        style="width: 38px; height: 38px;">
                         <i class="bi bi-tags-fill fs-5"></i>
                     </div>
                     <div>
                         <h4 class="display-font text-navy fw-bold fs-5 m-0">Catálogo de Categorías y Unidades</h4>
-                        <small class="text-muted" style="font-size: 0.76rem;">Configura las clasificaciones y presentaciones de tus productos</small>
+                        <small class="text-muted" style="font-size: 0.76rem;">Configura las clasificaciones y
+                            presentaciones de tus productos</small>
                     </div>
                 </div>
-                <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close" aria-label="Cerrar"></button>
+                <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close"
+                    aria-label="Cerrar"></button>
             </div>
 
             <!-- Selector Segmentado Horizontal con Animación Deslizante -->
@@ -1203,7 +1471,8 @@
                 <div class="p-3 bg-light rounded-3 border mb-3">
                     <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Categoría</label>
                     <div class="input-group">
-                        <input type="text" id="new-cat-name" class="form-control shadow-none small" placeholder="Ej: Fórmulas Magistrales, Inyectables...">
+                        <input type="text" id="new-cat-name" class="form-control shadow-none small"
+                            placeholder="Ej: Fórmulas Magistrales, Inyectables...">
                         <button type="button" id="btn-add-cat" class="btn btn-primary btn-sm px-3 fw-semibold">
                             <i class="bi bi-plus-lg me-1"></i> Agregar
                         </button>
@@ -1215,12 +1484,16 @@
                     <div class="text-muted small fw-bold text-uppercase">Categorías Activas</div>
                     <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
                         <div class="input-group input-group-sm rounded-3 shadow-2xs">
-                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
-                            <input type="text" id="search-tax-cats" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Filtrar categorías...">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i
+                                    class="bi bi-search"></i></span>
+                            <input type="text" id="search-tax-cats"
+                                class="form-control border-start-0 shadow-none ps-0 py-2"
+                                style="font-size: 0.9rem; height: 38px;" placeholder="Filtrar categorías...">
                         </div>
                     </div>
                 </div>
-                <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 330px; overflow-y: auto; padding-right: 6px;">
+                <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar"
+                    style="max-height: 330px; overflow-y: auto; padding-right: 6px;">
                     <!-- Inyectado dinámicamente -->
                 </div>
             </div>
@@ -1233,7 +1506,8 @@
                         Nombre de la Unidad / Presentación <span class="text-danger">*</span>
                     </label>
                     <div class="input-group">
-                        <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Frasco, Caja, Cápsulas, Tubo, Gotero, ml, Unidad...">
+                        <input type="text" id="new-unit-name" class="form-control shadow-none small"
+                            placeholder="Ej: Frasco, Caja, Cápsulas, Tubo, Gotero, ml, Unidad...">
                         <button type="button" id="btn-add-unit" class="btn btn-primary btn-sm px-3 fw-semibold">
                             <i class="bi bi-plus-lg me-1"></i> Agregar Unidad
                         </button>
@@ -1245,19 +1519,24 @@
                     <div class="text-muted small fw-bold text-uppercase">Unidades Registradas</div>
                     <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
                         <div class="input-group input-group-sm rounded-3 shadow-2xs">
-                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
-                            <input type="text" id="search-tax-units" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Buscar unidad...">
+                            <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i
+                                    class="bi bi-search"></i></span>
+                            <input type="text" id="search-tax-units"
+                                class="form-control border-start-0 shadow-none ps-0 py-2"
+                                style="font-size: 0.9rem; height: 38px;" placeholder="Buscar unidad...">
                         </div>
                     </div>
                 </div>
 
-                <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 330px; overflow-y: auto; padding-right: 6px;">
+                <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar"
+                    style="max-height: 330px; overflow-y: auto; padding-right: 6px;">
                     <!-- Inyectado dinámicamente -->
                 </div>
             </div>
 
             <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
-                <button type="button" id="stock-tax-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="stock-tax-btn-close"
+                    class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
                     Listo
                 </button>
             </div>
@@ -1269,7 +1548,8 @@
         <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3"
+                        style="width: 38px; height: 38px; font-size: 1.1rem;">
                         <i class="bi bi-rulers"></i>
                     </div>
                     <div>
@@ -1277,20 +1557,25 @@
                         <small class="text-muted" style="font-size: 0.75rem;">Actualiza el nombre de la unidad</small>
                     </div>
                 </div>
-                <button type="button" id="btn-close-edit-unit-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+                <button type="button" id="btn-close-edit-unit-modal" class="btn-close shadow-none"
+                    aria-label="Cerrar"></button>
             </div>
 
             <div class="mb-3">
-                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span class="text-danger">*</span></label>
-                <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Vial, Cápsula, Ampolla, Frasco...">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span
+                        class="text-danger">*</span></label>
+                <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none"
+                    placeholder="Ej: Vial, Cápsula, Ampolla, Frasco...">
                 <input type="hidden" id="edit-unit-modal-old-name-hidden">
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                <button type="button" id="btn-cancel-edit-unit-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="btn-cancel-edit-unit-modal"
+                    class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirm-edit-unit-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <button type="button" id="btn-confirm-edit-unit-modal"
+                    class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
                     <i class="bi bi-check-lg"></i> Guardar Cambios
                 </button>
             </div>
@@ -1302,31 +1587,39 @@
         <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3"
+                        style="width: 38px; height: 38px; font-size: 1.1rem;">
                         <i class="bi bi-pencil-square"></i>
                     </div>
                     <div>
                         <h6 class="fw-bold text-navy mb-0">Renombrar Categoría</h6>
-                        <small class="text-muted" style="font-size: 0.75rem;">Actualización en tiempo real y en cascada</small>
+                        <small class="text-muted" style="font-size: 0.75rem;">Actualización en tiempo real y en
+                            cascada</small>
                     </div>
                 </div>
-                <button type="button" id="btn-close-rename-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+                <button type="button" id="btn-close-rename-modal" class="btn-close shadow-none"
+                    aria-label="Cerrar"></button>
             </div>
 
             <div class="mb-3">
                 <p class="text-secondary small mb-2.5">
-                    Ingresa el nuevo nombre para <strong id="rename-modal-old-name-display" class="text-navy"></strong>. Todos los productos asociados se actualizarán automáticamente:
+                    Ingresa el nuevo nombre para <strong id="rename-modal-old-name-display" class="text-navy"></strong>.
+                    Todos los productos asociados se actualizarán automáticamente:
                 </p>
-                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nuevo Nombre <span class="text-danger">*</span></label>
-                <input type="text" id="rename-modal-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Insumos de Laboratorio">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nuevo Nombre <span
+                        class="text-danger">*</span></label>
+                <input type="text" id="rename-modal-input" class="form-control rounded-3 py-2 px-3 shadow-none"
+                    placeholder="Ej: Insumos de Laboratorio">
                 <input type="hidden" id="rename-modal-old-name-hidden">
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                <button type="button" id="btn-cancel-rename-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="btn-cancel-rename-modal"
+                    class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirm-rename-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <button type="button" id="btn-confirm-rename-modal"
+                    class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
                     <i class="bi bi-check-lg"></i> Guardar Cambios
                 </button>
             </div>
@@ -1338,7 +1631,8 @@
         <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-3" style="width: 38px; height: 38px; font-size: 1.15rem;">
+                    <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-3"
+                        style="width: 38px; height: 38px; font-size: 1.15rem;">
                         <i class="bi bi-trash3-fill"></i>
                     </div>
                     <div>
@@ -1346,23 +1640,28 @@
                         <small class="text-muted" style="font-size: 0.75rem;">Acción en el catálogo maestro</small>
                     </div>
                 </div>
-                <button type="button" id="btn-close-delete-tax-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+                <button type="button" id="btn-close-delete-tax-modal" class="btn-close shadow-none"
+                    aria-label="Cerrar"></button>
             </div>
 
             <div class="mb-3">
                 <p class="text-secondary small mb-2" id="delete-tax-modal-message">
                     ¿Estás seguro de que deseas eliminar este elemento?
                 </p>
-                <div id="delete-tax-modal-warning" class="alert alert-warning py-2 px-3 small rounded-3 d-none mb-0" style="font-size: 0.8rem;">
-                    <i class="bi bi-exclamation-triangle-fill me-1"></i> <span id="delete-tax-modal-warning-text"></span>
+                <div id="delete-tax-modal-warning" class="alert alert-warning py-2 px-3 small rounded-3 d-none mb-0"
+                    style="font-size: 0.8rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> <span
+                        id="delete-tax-modal-warning-text"></span>
                 </div>
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                <button type="button" id="btn-cancel-delete-tax-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="btn-cancel-delete-tax-modal"
+                    class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirm-delete-tax-modal" class="btn btn-danger px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <button type="button" id="btn-confirm-delete-tax-modal"
+                    class="btn btn-danger px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
                     <i class="bi bi-trash3"></i> Sí, Eliminar
                 </button>
             </div>
@@ -1374,7 +1673,8 @@
         <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 480px; width: 92%;">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
-                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                    <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3"
+                        style="width: 40px; height: 40px; font-size: 1.2rem;">
                         <i class="bi bi-arrow-left-right"></i>
                     </div>
                     <div>
@@ -1382,7 +1682,8 @@
                         <small class="text-muted" id="quick-adjust-item-name">Cargando...</small>
                     </div>
                 </div>
-                <button type="button" id="btn-close-quick-adjust" class="btn-close shadow-none" aria-label="Cerrar"></button>
+                <button type="button" id="btn-close-quick-adjust" class="btn-close shadow-none"
+                    aria-label="Cerrar"></button>
             </div>
 
             <input type="hidden" id="quick-adjust-item-id">
@@ -1405,25 +1706,33 @@
                 <div class="row g-2 mb-3">
                     <div class="col-6">
                         <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual</label>
-                        <div class="form-control bg-light font-monospace fw-bold" id="quick-adjust-current-stock">0</div>
+                        <div class="form-control bg-light font-monospace fw-bold" id="quick-adjust-current-stock">0
+                        </div>
                     </div>
                     <div class="col-6">
-                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1" id="quick-adjust-qty-label">Cantidad a Ingresar</label>
-                        <input type="number" id="quick-adjust-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0.01" step="any">
+                        <label class="form-label text-muted small fw-semibold text-uppercase mb-1"
+                            id="quick-adjust-qty-label">Cantidad a Ingresar</label>
+                        <input type="number" id="quick-adjust-quantity"
+                            class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0.01"
+                            step="any">
                     </div>
                 </div>
 
                 <div>
-                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Justificación</label>
-                    <input type="text" id="quick-adjust-reason" class="form-control shadow-none small" placeholder="Ej: Compra de lote mensual, consumo en consulta...">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo /
+                        Justificación</label>
+                    <input type="text" id="quick-adjust-reason" class="form-control shadow-none small"
+                        placeholder="Ej: Compra de lote mensual, consumo en consulta...">
                 </div>
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
-                <button type="button" id="btn-cancel-quick-adjust" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                <button type="button" id="btn-cancel-quick-adjust"
+                    class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
                     Cancelar
                 </button>
-                <button type="button" id="btn-confirm-quick-adjust" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <button type="button" id="btn-confirm-quick-adjust"
+                    class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
                     <i class="bi bi-check-lg"></i> Registrar Movimiento
                 </button>
             </div>
@@ -1433,7 +1742,7 @@
     <!-- MODAL: COMPROBANTE / RECIBO DIGITAL CLÍNICO (PRINTABLE & WHATSAPP) -->
     <div id="modal-digital-receipt" class="modal-overlay hidden d-none" style="display: none; z-index: 1080;">
         <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 540px; width: 94%;">
-            
+
             <!-- Barra Superior de Acciones de Recibo -->
             <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-2">
@@ -1443,45 +1752,59 @@
                     <span class="text-muted small font-monospace fw-bold" id="receipt-modal-number">REC-2026-0000</span>
                 </div>
                 <div class="d-flex align-items-center gap-1.5">
-                    <button type="button" id="btn-receipt-whatsapp" class="btn btn-sm btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Enviar por WhatsApp">
+                    <button type="button" id="btn-receipt-whatsapp"
+                        class="btn btn-sm btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs"
+                        title="Enviar por WhatsApp">
                         <i class="bi bi-whatsapp"></i> <span class="d-none d-sm-inline">WhatsApp</span>
                     </button>
-                    <button type="button" id="btn-receipt-print" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Imprimir Recibo">
+                    <button type="button" id="btn-receipt-print"
+                        class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs"
+                        title="Imprimir Recibo">
                         <i class="bi bi-printer"></i> <span class="d-none d-sm-inline">Imprimir</span>
                     </button>
-                    <button type="button" id="btn-close-receipt-modal" class="btn-close shadow-none ms-1" aria-label="Cerrar"></button>
+                    <button type="button" id="btn-close-receipt-modal" class="btn-close shadow-none ms-1"
+                        aria-label="Cerrar"></button>
                 </div>
             </div>
 
             <!-- Cuerpo del Recibo Imprimible -->
-            <div class="p-4 receipt-printable-body stock-custom-scrollbar" id="receipt-printable-content" style="max-height: 70vh; overflow-y: auto;">
-                
+            <div class="p-4 receipt-printable-body stock-custom-scrollbar" id="receipt-printable-content"
+                style="max-height: 70vh; overflow-y: auto;">
+
                 <!-- Membrete Clínico -->
                 <div class="text-center pb-3 border-bottom mb-3">
                     <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                        <div class="brand-icon" style="width: 28px; height: 28px; font-size: 1rem; border-radius: 8px;">⚡</div>
-                        <h4 class="fw-extrabold text-navy mb-0 display-font" style="letter-spacing: -0.5px;">VitaMetrix</h4>
+                        <div class="brand-icon" style="width: 28px; height: 28px; font-size: 1rem; border-radius: 8px;">
+                            ⚡</div>
+                        <h4 class="fw-extrabold text-navy mb-0 display-font" style="letter-spacing: -0.5px;">VitaMetrix
+                        </h4>
                     </div>
-                    <div class="text-muted small fw-semibold" style="font-size: 0.78rem;">CLÍNICA DE NUTRICIÓN & BIOIMPEDANCIA BIVA</div>
-                    <div class="text-muted" style="font-size: 0.72rem;">Santa Cruz de la Sierra, Bolivia • Especialista: Dra. Audrey</div>
+                    <div class="text-muted small fw-semibold" style="font-size: 0.78rem;">CLÍNICA DE NUTRICIÓN &
+                        BIOIMPEDANCIA BIVA</div>
+                    <div class="text-muted" style="font-size: 0.72rem;">Santa Cruz de la Sierra, Bolivia • Especialista:
+                        Dra. Audrey</div>
                 </div>
 
                 <!-- Datos de la Transacción -->
                 <div class="row g-2 mb-3 text-secondary small" style="font-size: 0.8rem;">
                     <div class="col-6">
-                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Paciente / Cliente:</div>
+                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">
+                            Paciente / Cliente:</div>
                         <div class="fw-bold text-navy text-truncate" id="receipt-patient-name">Carlos Rodríguez</div>
                         <div class="text-muted" id="receipt-patient-idp" style="font-size: 0.72rem;">IDP: IDP-1002</div>
                     </div>
                     <div class="col-6 text-end">
-                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Fecha & Hora:</div>
+                        <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">
+                            Fecha & Hora:</div>
                         <div class="fw-bold text-navy" id="receipt-datetime">25/08/2026 20:50</div>
-                        <div class="text-muted" id="receipt-payment-method-badge" style="font-size: 0.72rem;">Método: Transferencia / QR</div>
+                        <div class="text-muted" id="receipt-payment-method-badge" style="font-size: 0.72rem;">Método:
+                            Transferencia / QR</div>
                     </div>
                 </div>
 
                 <!-- Tabla de Productos del Recibo -->
-                <table class="table table-sm table-borderless align-middle mb-3 receipt-items-table" style="font-size: 0.82rem;">
+                <table class="table table-sm table-borderless align-middle mb-3 receipt-items-table"
+                    style="font-size: 0.82rem;">
                     <thead style="border-bottom: 2px solid #e2e8f0;">
                         <tr class="text-muted small fw-bold text-uppercase">
                             <th class="ps-0">ÍTEM / CONCEPTO</th>
@@ -1507,18 +1830,22 @@
                     </div>
                     <div class="d-flex justify-content-between align-items-center pt-2 border-top">
                         <span class="fw-extrabold text-navy fs-6">TOTAL CANCELADO:</span>
-                        <span class="fw-extrabold text-primary fs-5 font-monospace" id="receipt-total-val">Bs. 0.00</span>
+                        <span class="fw-extrabold text-primary fs-5 font-monospace" id="receipt-total-val">Bs.
+                            0.00</span>
                     </div>
                     <div class="d-flex justify-content-between text-muted small mt-1" id="receipt-cash-breakdown">
-                        <span style="font-size: 0.75rem;">Efectivo recibido: <strong class="font-monospace text-dark" id="receipt-amount-received">Bs. 0.00</strong></span>
-                        <span style="font-size: 0.75rem;">Cambio entregado: <strong class="font-monospace text-success" id="receipt-change-given">Bs. 0.00</strong></span>
+                        <span style="font-size: 0.75rem;">Efectivo recibido: <strong class="font-monospace text-dark"
+                                id="receipt-amount-received">Bs. 0.00</strong></span>
+                        <span style="font-size: 0.75rem;">Cambio entregado: <strong class="font-monospace text-success"
+                                id="receipt-change-given">Bs. 0.00</strong></span>
                     </div>
                 </div>
 
                 <!-- Notas y Pie de Página -->
                 <div class="p-2.5 bg-light rounded-3 border text-muted mb-3" style="font-size: 0.72rem;">
                     <div class="fw-bold text-navy mb-0.5">Indicaciones Clínicas / Observaciones:</div>
-                    <div id="receipt-notes-val">Gracias por su confianza. Siga las instrucciones nutricionales indicadas.</div>
+                    <div id="receipt-notes-val">Gracias por su confianza. Siga las instrucciones nutricionales
+                        indicadas.</div>
                 </div>
 
                 <div class="text-center text-muted" style="font-size: 0.68rem;">
@@ -1529,7 +1856,8 @@
 
             <!-- Footer con Botón Cerrar -->
             <div class="p-3 bg-light border-top d-flex justify-content-end">
-                <button type="button" id="btn-footer-close-receipt" class="btn btn-secondary px-4 py-2 rounded-3 fw-semibold">
+                <button type="button" id="btn-footer-close-receipt"
+                    class="btn btn-secondary px-4 py-2 rounded-3 fw-semibold">
                     Cerrar
                 </button>
             </div>
@@ -1543,7 +1871,8 @@
 
     <!-- MODAL: CREAR NUEVO USUARIO / MÉDICO DIRECTAMENTE (SUPERADMIN) -->
     <div id="modal-admin-create-user" class="modal-overlay hidden d-none" style="display: none; z-index: 10050;">
-        <div class="bento-card admin-modal-card p-4 p-md-4.5" style="max-width: 620px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
+        <div class="bento-card admin-modal-card p-4 p-md-4.5"
+            style="max-width: 620px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="bg-primary bg-opacity-10 p-2.5 rounded-3 text-primary">
@@ -1551,7 +1880,8 @@
                     </div>
                     <div>
                         <h5 class="fw-bold text-navy mb-0" style="font-size: 1.15rem;">Crear Nuevo Médico / Usuario</h5>
-                        <span class="text-muted text-xs">Alta directa con asignación de plan y vigencia en base de datos</span>
+                        <span class="text-muted text-xs">Alta directa con asignación de plan y vigencia en base de
+                            datos</span>
                     </div>
                 </div>
                 <button type="button" class="btn-close" id="btn-close-admin-create-user" aria-label="Cerrar"></button>
@@ -1559,39 +1889,55 @@
 
             <form id="form-admin-create-user" class="d-flex flex-column gap-3">
                 <div>
-                    <label for="admin-new-name" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre Completo *</label>
-                    <input type="text" class="form-control form-control-lg text-sm" id="admin-new-name" placeholder="Dr. Roberto Vaca" required>
+                    <label for="admin-new-name"
+                        class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre Completo *</label>
+                    <input type="text" class="form-control form-control-lg text-sm" id="admin-new-name"
+                        placeholder="Dr. Roberto Vaca" required>
                 </div>
 
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-email" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Correo Electrónico *</label>
-                        <input type="email" class="form-control text-sm" id="admin-new-email" placeholder="doctor@clinica.com" required>
+                        <label for="admin-new-email"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Correo Electrónico
+                            *</label>
+                        <input type="email" class="form-control text-sm" id="admin-new-email"
+                            placeholder="doctor@clinica.com" required>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-password" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Contraseña *</label>
-                        <input type="password" class="form-control text-sm" id="admin-new-password" placeholder="Mínimo 6 caracteres" minlength="6" required>
-                    </div>
-                </div>
-
-                <div class="row g-2">
-                    <div class="col-12 col-sm-6">
-                        <label for="admin-new-title" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Título / Cargo</label>
-                        <input type="text" class="form-control text-sm" id="admin-new-title" value="Nutricionista / Especialista BIA">
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <label for="admin-new-clinic" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Consultorio / Clínica</label>
-                        <input type="text" class="form-control text-sm" id="admin-new-clinic" value="Mi Consultorio VitaMetrix">
+                        <label for="admin-new-password"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Contraseña *</label>
+                        <input type="password" class="form-control text-sm" id="admin-new-password"
+                            placeholder="Mínimo 6 caracteres" minlength="6" required>
                     </div>
                 </div>
 
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-phone" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Teléfono / WhatsApp</label>
-                        <input type="text" class="form-control text-sm" id="admin-new-phone" placeholder="+591 7XXXXXXX">
+                        <label for="admin-new-title"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Título / Cargo</label>
+                        <input type="text" class="form-control text-sm" id="admin-new-title"
+                            value="Nutricionista / Especialista BIA">
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-role" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Rol de Cuenta</label>
+                        <label for="admin-new-clinic"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Consultorio /
+                            Clínica</label>
+                        <input type="text" class="form-control text-sm" id="admin-new-clinic"
+                            value="Mi Consultorio VitaMetrix">
+                    </div>
+                </div>
+
+                <div class="row g-2">
+                    <div class="col-12 col-sm-6">
+                        <label for="admin-new-phone"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Teléfono /
+                            WhatsApp</label>
+                        <input type="text" class="form-control text-sm" id="admin-new-phone"
+                            placeholder="+591 7XXXXXXX">
+                    </div>
+                    <div class="col-12 col-sm-6">
+                        <label for="admin-new-role"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Rol de Cuenta</label>
                         <select class="form-select text-sm" id="admin-new-role">
                             <option value="user" selected>Doctor / Usuario Estándar</option>
                             <option value="admin">SuperAdmin (Acceso Total)</option>
@@ -1601,7 +1947,8 @@
 
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-plan" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Plan Inicial</label>
+                        <label for="admin-new-plan"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Plan Inicial</label>
                         <select class="form-select text-sm" id="admin-new-plan">
                             <option value="Plan Pro Mensual (30 días)" selected>Plan Pro Mensual</option>
                             <option value="Plan Anual Pro (365 días)">Plan Anual Pro</option>
@@ -1610,7 +1957,9 @@
                         </select>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label for="admin-new-duration" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Duración (Días)</label>
+                        <label for="admin-new-duration"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Duración
+                            (Días)</label>
                         <select class="form-select text-sm" id="admin-new-duration">
                             <option value="7">7 días (Prueba)</option>
                             <option value="30" selected>30 días (1 Mes)</option>
@@ -1625,8 +1974,11 @@
                 <div id="admin-create-error" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
 
                 <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-2">
-                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3" id="btn-cancel-admin-create-user">Cancelar</button>
-                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm" id="btn-submit-admin-create-user">
+                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3"
+                        id="btn-cancel-admin-create-user">Cancelar</button>
+                    <button type="submit"
+                        class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm"
+                        id="btn-submit-admin-create-user">
                         <i class="bi bi-check-circle-fill"></i>
                         <span>Crear Usuario</span>
                     </button>
@@ -1637,14 +1989,16 @@
 
     <!-- MODAL: GESTIONAR / EXTENDER SUSCRIPCIÓN DE USUARIO -->
     <div id="modal-admin-manage-user" class="modal-overlay hidden d-none" style="display: none; z-index: 10050;">
-        <div class="bento-card admin-modal-card p-4 p-md-4.5" style="max-width: 620px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
+        <div class="bento-card admin-modal-card p-4 p-md-4.5"
+            style="max-width: 620px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="bg-warning bg-opacity-10 p-2.5 rounded-3 text-warning">
                         <i class="bi bi-stars fs-4"></i>
                     </div>
                     <div>
-                        <h5 class="fw-bold text-navy mb-0" id="admin-manage-title" style="font-size: 1.15rem;">Gestionar Suscripción</h5>
+                        <h5 class="fw-bold text-navy mb-0" id="admin-manage-title" style="font-size: 1.15rem;">Gestionar
+                            Suscripción</h5>
                         <span class="text-muted text-xs" id="admin-manage-subtitle">Doctor: ---</span>
                     </div>
                 </div>
@@ -1676,19 +2030,25 @@
 
                 <!-- Acción 1: Extender Días Rápidos -->
                 <div>
-                    <label class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Añadir Tiempo / Extender Vigencia Rápida</label>
+                    <label class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Añadir Tiempo /
+                        Extender Vigencia Rápida</label>
                     <div class="d-flex flex-wrap gap-2">
-                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold" onclick="quickExtendDays(7)">+7 Días</button>
-                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold" onclick="quickExtendDays(30)">+30 Días (1M)</button>
-                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold" onclick="quickExtendDays(90)">+90 Días (3M)</button>
-                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold" onclick="quickExtendDays(365)">+1 Año</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold"
+                            onclick="quickExtendDays(7)">+7 Días</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold"
+                            onclick="quickExtendDays(30)">+30 Días (1M)</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold"
+                            onclick="quickExtendDays(90)">+90 Días (3M)</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm flex-fill py-2 fw-bold"
+                            onclick="quickExtendDays(365)">+1 Año</button>
                     </div>
                 </div>
 
                 <!-- Acción 2: Cambiar Estado y Plan Manualmente -->
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label for="admin-manage-status-select" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Estado</label>
+                        <label for="admin-manage-status-select"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Estado</label>
                         <select class="form-select text-sm" id="admin-manage-status-select">
                             <option value="active">🟢 Activo</option>
                             <option value="trial">🟡 Prueba (Trial)</option>
@@ -1697,7 +2057,8 @@
                         </select>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label for="admin-manage-role-select" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Rol</label>
+                        <label for="admin-manage-role-select"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cambiar Rol</label>
                         <select class="form-select text-sm" id="admin-manage-role-select">
                             <option value="user">Doctor / Usuario Estándar</option>
                             <option value="admin">👑 SuperAdmin (Acceso Total)</option>
@@ -1706,15 +2067,20 @@
                 </div>
 
                 <div>
-                    <label for="admin-manage-plan-name" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre del Plan</label>
-                    <input type="text" class="form-control text-sm" id="admin-manage-plan-name" value="Plan Pro Mensual">
+                    <label for="admin-manage-plan-name"
+                        class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nombre del Plan</label>
+                    <input type="text" class="form-control text-sm" id="admin-manage-plan-name"
+                        value="Plan Pro Mensual">
                 </div>
 
                 <div id="admin-manage-error" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
 
                 <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-2">
-                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3" id="btn-cancel-admin-manage-user">Cerrar</button>
-                    <button type="submit" class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm" id="btn-submit-admin-manage-user">
+                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3"
+                        id="btn-cancel-admin-manage-user">Cerrar</button>
+                    <button type="submit"
+                        class="btn btn-primary px-4 py-2 rounded-3 fw-bold d-inline-flex align-items-center gap-1.5 shadow-sm"
+                        id="btn-submit-admin-manage-user">
                         <i class="bi bi-save-fill"></i>
                         <span>Guardar Cambios</span>
                     </button>
@@ -1725,7 +2091,8 @@
 
     <!-- MODAL: GENERAR NUEVO PIN DE ACTIVACIÓN (SUPERADMIN) -->
     <div id="modal-admin-create-pin" class="modal-overlay hidden d-none" style="display: none; z-index: 10050;">
-        <div class="bento-card admin-modal-card p-4 p-md-4.5" style="max-width: 560px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
+        <div class="bento-card admin-modal-card p-4 p-md-4.5"
+            style="max-width: 560px; width: 94%; max-height: 92vh; overflow-y: auto; margin: auto; border-radius: 1.25rem; box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.4);">
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
                 <div class="d-flex align-items-center gap-2.5">
                     <div class="bg-warning bg-opacity-10 p-2.5 rounded-3 text-warning">
@@ -1733,7 +2100,8 @@
                     </div>
                     <div>
                         <h5 class="fw-bold text-navy mb-0" style="font-size: 1.15rem;">Generar PIN de Activación</h5>
-                        <span class="text-muted text-xs">Crea claves de licencia listas para entregar a los doctores</span>
+                        <span class="text-muted text-xs">Crea claves de licencia listas para entregar a los
+                            doctores</span>
                     </div>
                 </div>
                 <button type="button" class="btn-close" id="btn-close-admin-create-pin" aria-label="Cerrar"></button>
@@ -1742,7 +2110,9 @@
             <form id="form-admin-create-pin" class="d-flex flex-column gap-3">
                 <div class="row g-2">
                     <div class="col-12 col-sm-6">
-                        <label for="admin-pin-duration" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Duración del Plan *</label>
+                        <label for="admin-pin-duration"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Duración del Plan
+                            *</label>
                         <select class="form-select text-sm" id="admin-pin-duration" required>
                             <option value="30" selected>Plan Pro 1 Mes (30 días)</option>
                             <option value="90">Plan Pro 3 Meses (90 días)</option>
@@ -1753,7 +2123,9 @@
                         </select>
                     </div>
                     <div class="col-12 col-sm-6">
-                        <label for="admin-pin-count" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cantidad de PINs</label>
+                        <label for="admin-pin-count"
+                            class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Cantidad de
+                            PINs</label>
                         <select class="form-select text-sm" id="admin-pin-count">
                             <option value="1" selected>1 PIN</option>
                             <option value="3">3 PINs</option>
@@ -1764,21 +2136,31 @@
                 </div>
 
                 <div>
-                    <label for="admin-pin-custom" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Código PIN Personalizado (Opcional)</label>
-                    <input type="text" class="form-control text-sm font-monospace" id="admin-pin-custom" placeholder="Ej: VITA-DR-CARLOS-2026 (Dejar vacío para auto-generar)">
-                    <span class="text-muted" style="font-size: 0.72rem;">Si dejas el campo vacío, el sistema generará un PIN criptográficamente seguro de forma automática.</span>
+                    <label for="admin-pin-custom"
+                        class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Código PIN Personalizado
+                        (Opcional)</label>
+                    <input type="text" class="form-control text-sm font-monospace" id="admin-pin-custom"
+                        placeholder="Ej: VITA-DR-CARLOS-2026 (Dejar vacío para auto-generar)">
+                    <span class="text-muted" style="font-size: 0.72rem;">Si dejas el campo vacío, el sistema generará un
+                        PIN criptográficamente seguro de forma automática.</span>
                 </div>
 
                 <div>
-                    <label for="admin-pin-note" class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nota / Destinatario (Opcional)</label>
-                    <input type="text" class="form-control text-sm" id="admin-pin-note" placeholder="Ej: Para Dr. Hugo Morales - Clínica Los Pinos">
+                    <label for="admin-pin-note"
+                        class="form-label text-xs text-uppercase fw-bold text-secondary mb-1">Nota / Destinatario
+                        (Opcional)</label>
+                    <input type="text" class="form-control text-sm" id="admin-pin-note"
+                        placeholder="Ej: Para Dr. Hugo Morales - Clínica Los Pinos">
                 </div>
 
                 <div id="admin-pin-error" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3"></div>
 
                 <div class="d-flex justify-content-end gap-2 pt-3 border-top mt-2">
-                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3" id="btn-cancel-admin-create-pin">Cancelar</button>
-                    <button type="submit" class="btn btn-warning px-4 py-2 rounded-3 fw-bold text-dark d-inline-flex align-items-center gap-1.5 shadow-sm" id="btn-submit-admin-create-pin">
+                    <button type="button" class="btn btn-secondary px-3.5 py-2 rounded-3"
+                        id="btn-cancel-admin-create-pin">Cancelar</button>
+                    <button type="submit"
+                        class="btn btn-warning px-4 py-2 rounded-3 fw-bold text-dark d-inline-flex align-items-center gap-1.5 shadow-sm"
+                        id="btn-submit-admin-create-pin">
                         <i class="bi bi-magic"></i>
                         <span>Generar PIN(s)</span>
                     </button>
@@ -1794,6 +2176,7 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=55"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=125"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=126"></script>
 </body>
+
 </html>

@@ -232,5 +232,44 @@
     "status": "confirmed",
     "notes": "",
     "created_at": "2026-08-28T12:48:12.587218+00:00"
+  },
+  {
+    "id": "apt_19_1787921872",
+    "user_id": "b1ad326e-307c-4cdf-b741-054665b5270a",
+    "patient_name": "Paciente Cita Dr A 1787921867",
+    "patient_phone": "",
+    "patient_idp": "",
+    "date": "2026-10-15",
+    "time": "10:30",
+    "type": "Evaluación BIA",
+    "status": "confirmed",
+    "notes": "",
+    "created_at": "2026-08-28T12:57:52.843762+00:00"
+  },
+  {
+    "id": "apt_20_1787921950",
+    "user_id": "801d3900-22fa-4cfd-9682-b5b1d2ed9649",
+    "patient_name": "Paciente Cita Dr A 1787921946",
+    "patient_phone": "",
+    "patient_idp": "",
+    "date": "2026-10-15",
+    "time": "10:30",
+    "type": "Evaluación BIA",
+    "status": "confirmed",
+    "notes": "",
+    "created_at": "2026-08-28T12:59:10.160810+00:00"
+  },
+  {
+    "id": "apt_21_1787924976",
+    "user_id": "67ef437c-96ed-4c5b-a314-12ae234ad0c4",
+    "patient_name": "Paciente Cita Dr A 1787924972",
+    "patient_phone": "",
+    "patient_idp": "",
+    "date": "2026-10-15",
+    "time": "10:30",
+    "type": "Evaluación BIA",
+    "status": "confirmed",
+    "notes": "",
+    "created_at": "2026-08-28T13:49:36.911873+00:00"
   }
 ]

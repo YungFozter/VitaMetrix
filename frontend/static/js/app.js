@@ -254,11 +254,16 @@ function initAuthSystem() {
                 if (btnClose) btnClose.style.display = '';
                 showToast(`¡Bienvenido de nuevo, ${data.user.full_name}!`, 'success');
 
-                // Si el usuario es SuperAdmin, redirigir directamente al panel de gestión global
+                // Redirigir siempre al Dashboard al iniciar sesión para cualquier usuario
+                navigateToView('dashboard-view', true);
+
                 if (data.user.role === 'admin') {
-                    navigateToView('superadmin-view', true);
                     fetchAdminUsers(false);
                 } else {
+                    // Limpiar cualquier residuo de vista admin anterior
+                    if (localStorage.getItem('vita_active_view') === 'superadmin-view') {
+                        localStorage.setItem('vita_active_view', 'dashboard-view');
+                    }
                     // Refrescar vistas clínicas
                     clientsDataLoaded = false;
                     evalsDataLoaded = false;
@@ -364,6 +369,12 @@ function initAuthSystem() {
                     } catch (e) {}
                     localStorage.removeItem('vm_auth_token');
                     sessionStorage.removeItem('vm_auth_token');
+                    currentAuthUser = null;
+                    localStorage.setItem('vita_active_view', 'dashboard-view');
+                    sessionStorage.setItem('vita_active_view', 'dashboard-view');
+                    if (window.location.hash === '#superadmin-view') {
+                        window.history.replaceState({ view: 'dashboard-view' }, '', '#dashboard-view');
+                    }
                     document.documentElement.classList.remove('has-auth-token');
                     document.documentElement.classList.add('no-auth-token');
                     showToast('Sesión cerrada. Inicia sesión con tu cuenta.', 'info');
@@ -409,11 +420,11 @@ async function fetchAuthMe() {
                 if (modal) modal.classList.add('hidden');
                 if (btnClose) btnClose.style.display = '';
 
-                if (data.user.role === 'admin') {
-                    const activeView = localStorage.getItem('vita_active_view');
-                    if (!activeView || activeView === 'superadmin-view' || window.location.hash === '#superadmin-view') {
-                        navigateToView('superadmin-view', false);
-                    }
+                // Si el usuario no es admin pero la memoria/hash intentaba abrir superadmin-view, forzar dashboard
+                const activeView = localStorage.getItem('vita_active_view') || window.location.hash.replace(/^#/, '');
+                if (data.user.role !== 'admin' && (activeView === 'superadmin-view' || window.location.hash === '#superadmin-view')) {
+                    localStorage.setItem('vita_active_view', 'dashboard-view');
+                    navigateToView('dashboard-view', true);
                 }
                 return;
             }
@@ -1832,7 +1843,14 @@ function initProfileDropdown() {
 function navigateToView(targetId, updateHistory = true) {
     if (!targetId) return;
 
-    const cleanId = targetId.replace(/^#/, '').trim();
+    let cleanId = targetId.replace(/^#/, '').trim();
+
+    // Guardia de Permisos: Si el usuario actual NO es SuperAdmin, bloquear acceso a superadmin-view
+    const userRole = currentAuthUser?.role || (typeof currentAuthUser !== 'undefined' && currentAuthUser ? currentAuthUser.role : null);
+    if (cleanId === 'superadmin-view' && userRole !== 'admin') {
+        cleanId = 'dashboard-view';
+    }
+
     const targetView = document.getElementById(cleanId);
     if (!targetView || !targetView.classList.contains('view')) return;
 
