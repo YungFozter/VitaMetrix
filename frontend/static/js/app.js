@@ -69,12 +69,25 @@ function updateUIWithUserData(userData) {
     if (!userData) return;
     currentAuthUser = userData;
 
-    const isAdmin = userData.role === 'admin';
+    const isAdmin = userData && userData.role === 'admin';
+
+    if (isAdmin) {
+        document.documentElement.classList.add('is-admin-session');
+    } else {
+        document.documentElement.classList.remove('is-admin-session');
+    }
 
     // Mostrar / Ocultar elementos exclusivos de SuperAdmin en Sidebar y Dropdown
     const adminElements = document.querySelectorAll('.admin-only-element');
     adminElements.forEach(el => {
-        el.style.display = isAdmin ? '' : 'none';
+        if (!isAdmin) {
+            el.style.setProperty('display', 'none', 'important');
+            el.classList.add('d-none');
+        } else {
+            el.style.removeProperty('display');
+            el.classList.remove('d-none');
+            el.style.display = el.tagName === 'A' || el.classList.contains('d-flex') ? 'flex' : 'block';
+        }
     });
 
     // Actualizar nombre y título en TopBar
@@ -375,7 +388,7 @@ function initAuthSystem() {
                     if (window.location.hash === '#superadmin-view') {
                         window.history.replaceState({ view: 'dashboard-view' }, '', '#dashboard-view');
                     }
-                    document.documentElement.classList.remove('has-auth-token');
+                    document.documentElement.classList.remove('has-auth-token', 'is-admin-session');
                     document.documentElement.classList.add('no-auth-token');
                     showToast('Sesión cerrada. Inicia sesión con tu cuenta.', 'info');
                     if (modal) {

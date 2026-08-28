@@ -128,5 +128,31 @@
     "used_by_email": "dr.canje.1787924984855@clinicavita.com",
     "used_at": "2026-08-28T13:49:47.108783+00:00",
     "created_at": "2026-08-28T13:49:45.093100+00:00"
+  },
+  {
+    "id": "56c07469-cc1e-469d-9ce9-78fbab1267f5",
+    "license_key": "VM-1M-3F32-6C9C",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual E2E",
+    "note": "",
+    "is_used": true,
+    "used_by_user_id": "8583cef2-42a7-4fb5-bd21-4d079f83a22f",
+    "used_by_name": "Dr. Licenciado Test",
+    "used_by_email": "dr.lic.1787925446@vitametrix.com",
+    "used_at": "2026-08-28T13:57:28.014895+00:00",
+    "created_at": "2026-08-28T13:57:27.538880+00:00"
+  },
+  {
+    "id": "09c4979d-1f8f-4e5e-a178-4c089af9b628",
+    "license_key": "VM-TEST-217F0E",
+    "duration_days": 30,
+    "plan_name": "Plan Pro Mensual (30 días)",
+    "note": "PIN de Prueba para Doctor Test",
+    "is_used": true,
+    "used_by_user_id": "f309d340-8557-4856-baeb-b3a3b2b653d5",
+    "used_by_name": "Dra. Sofía Morales",
+    "used_by_email": "dr.canje.1787925460739@clinicavita.com",
+    "used_at": "2026-08-28T13:57:42.965627+00:00",
+    "created_at": "2026-08-28T13:57:40.968354+00:00"
   }
 ]

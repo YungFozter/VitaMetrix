@@ -123,6 +123,16 @@
     margin: 0.3rem 0;
 }
 
+/* Ocultamiento Estricto de Elementos Exclusivos de SuperAdmin */
+.admin-only-element {
+    display: none !important;
+}
+
+html.is-admin-session .admin-only-element,
+body.is-admin-session .admin-only-element {
+    display: flex !important;
+}
+
 /* --- TARJETAS BENTO (Base Glass) --- */
 .bento-card {
     background: rgba(255, 255, 255, 0.90);
