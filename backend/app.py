@@ -188,7 +188,20 @@ def _save_users(users):
         logging.error("Error al guardar users.json: %s", e)
         return False
 
+_RUNTIME_LICENSES_CACHE = None
+
+def _save_licenses_disk_only(licenses):
+    try:
+        os.makedirs(os.path.dirname(_LICENSES_PATH), exist_ok=True)
+        with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(licenses, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar subscription_licenses.json: %s", e)
+        return False
+
 def _load_licenses():
+    global _RUNTIME_LICENSES_CACHE
     local_licenses = []
     if os.path.exists(_LICENSES_PATH):
         try:
@@ -199,6 +212,15 @@ def _load_licenses():
         except Exception as e:
             logging.warning("Error al leer subscription_licenses.json: %s", e)
 
+    # Si la memoria en ejecución tiene registros creados recientemente, preservarlos
+    if _RUNTIME_LICENSES_CACHE and isinstance(_RUNTIME_LICENSES_CACHE, list) and len(_RUNTIME_LICENSES_CACHE) > len(local_licenses):
+        local_keys = {l.get('license_key') for l in local_licenses if l.get('license_key')}
+        for cached in _RUNTIME_LICENSES_CACHE:
+            if cached.get('license_key') and cached.get('license_key') not in local_keys:
+                local_licenses.append(cached)
+                local_keys.add(cached.get('license_key'))
+        _save_licenses_disk_only(local_licenses)
+
     if supabase:
         try:
             res = supabase.table('subscription_licenses').select('*').execute()
@@ -206,21 +228,20 @@ def _load_licenses():
                 remote_keys = {item.get('license_key') for item in res.data if item.get('license_key')}
                 merged = list(res.data)
                 for loc in local_licenses:
-                    if loc.get('license_key') not in remote_keys:
+                    if loc.get('license_key') and loc.get('license_key') not in remote_keys:
                         merged.append(loc)
+                _RUNTIME_LICENSES_CACHE = merged
                 return merged
         except Exception:
             pass
 
+    _RUNTIME_LICENSES_CACHE = local_licenses
     return local_licenses
 
 def _save_licenses(licenses):
-    try:
-        os.makedirs(os.path.dirname(_LICENSES_PATH), exist_ok=True)
-        with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
-            json.dump(licenses, f, indent=2, ensure_ascii=False)
-    except Exception as e:
-        logging.error("Error al guardar subscription_licenses.json: %s", e)
+    global _RUNTIME_LICENSES_CACHE
+    _RUNTIME_LICENSES_CACHE = list(licenses)
+    _save_licenses_disk_only(licenses)
 
     if supabase:
         try:
@@ -728,6 +749,37 @@ def admin_delete_pin(pin_id):
     return jsonify({
         "success": True,
         "message": "PIN de activación eliminado correctamente."
+    }), 200
+
+@app.route('/api/admin/pins/sync', methods=['POST'])
+def admin_sync_pins():
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    data = request.json or {}
+    incoming_pins = data.get('pins', [])
+    if not isinstance(incoming_pins, list) or len(incoming_pins) == 0:
+        return jsonify({"success": True, "pins": _load_licenses()}), 200
+
+    existing_licenses = _load_licenses()
+    existing_map = {lic.get('license_key'): lic for lic in existing_licenses if lic.get('license_key')}
+
+    added = 0
+    for pin in incoming_pins:
+        key = pin.get('license_key')
+        if key and key not in existing_map:
+            existing_licenses.append(pin)
+            existing_map[key] = pin
+            added += 1
+
+    if added > 0:
+        _save_licenses(existing_licenses)
+
+    return jsonify({
+        "success": True,
+        "synced_count": added,
+        "total_pins": len(existing_licenses)
     }), 200
 
 @app.route('/api/admin/licenses/create', methods=['POST'])

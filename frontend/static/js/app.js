@@ -574,6 +574,10 @@ let currentAdminTab = 'users';
 
 function switchAdminTab(tabName) {
     currentAdminTab = tabName;
+    try {
+        localStorage.setItem('vm_admin_active_tab', tabName);
+    } catch (e) {}
+
     const btnUsers = document.getElementById('tab-btn-admin-users');
     const btnPins = document.getElementById('tab-btn-admin-pins');
     const paneUsers = document.getElementById('admin-tab-pane-users');
@@ -942,6 +946,17 @@ function initSuperAdminView() {
                 showToast(`🔑 ${data.message}`, 'success');
                 modalCreatePin.classList.add('hidden', 'd-none');
                 modalCreatePin.style.display = 'none';
+
+                if (Array.isArray(data.created_pins) && data.created_pins.length > 0) {
+                    const existingKeys = new Set(allAdminPinsData.map(p => p.license_key));
+                    const newUnique = data.created_pins.filter(p => !existingKeys.has(p.license_key));
+                    allAdminPinsData = [...newUnique, ...allAdminPinsData];
+                    try {
+                        localStorage.setItem('vm_admin_pins_cache', JSON.stringify(allAdminPinsData));
+                    } catch (e) {}
+                    renderAdminPins();
+                }
+
                 fetchAdminPins(false);
             } catch (err) {
                 if (pinError) {
@@ -952,6 +967,27 @@ function initSuperAdminView() {
                 if (btnSubmit) btnSubmit.disabled = false;
             }
         });
+    }
+
+    // Precargar PINs desde cache local inmediato para evitar parpadeo
+    try {
+        const cachedPins = JSON.parse(localStorage.getItem('vm_admin_pins_cache') || '[]');
+        if (Array.isArray(cachedPins) && cachedPins.length > 0) {
+            allAdminPinsData = cachedPins;
+            const kpiTotal = document.getElementById('kpi-admin-total-pins');
+            const kpiAvailable = document.getElementById('kpi-admin-available-pins');
+            const kpiUsed = document.getElementById('kpi-admin-used-pins');
+            if (kpiTotal) kpiTotal.textContent = allAdminPinsData.length;
+            if (kpiAvailable) kpiAvailable.textContent = allAdminPinsData.filter(p => !p.is_used).length;
+            if (kpiUsed) kpiUsed.textContent = allAdminPinsData.filter(p => p.is_used).length;
+            renderAdminPins();
+        }
+    } catch (e) {}
+
+    // Restaurar subpestaña activa
+    const savedAdminTab = localStorage.getItem('vm_admin_active_tab');
+    if (savedAdminTab === 'pins') {
+        switchAdminTab('pins');
     }
 }
 
@@ -1272,7 +1308,18 @@ async function fetchAdminPins(showToastFeedback = false) {
     const tbody = document.getElementById('tbody-admin-pins');
     if (!tbody) return;
 
-    if (showToastFeedback) {
+    // Si no hay datos en memoria, intentar leer cache local primero para render inmediato
+    if (allAdminPinsData.length === 0) {
+        try {
+            const cached = JSON.parse(localStorage.getItem('vm_admin_pins_cache') || '[]');
+            if (Array.isArray(cached) && cached.length > 0) {
+                allAdminPinsData = cached;
+                renderAdminPins();
+            }
+        } catch (e) {}
+    }
+
+    if (showToastFeedback && allAdminPinsData.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="7" class="text-center py-5 text-muted">
@@ -1290,7 +1337,33 @@ async function fetchAdminPins(showToastFeedback = false) {
         const data = await res.json();
         if (!data.success) return;
 
-        allAdminPinsData = data.pins || [];
+        let serverPins = Array.isArray(data.pins) ? data.pins : [];
+
+        // Auto-sincronización: Si el servidor retornó 0 pins (por reinicio en Render) pero tenemos PINs en cache local:
+        if (serverPins.length === 0 && allAdminPinsData.length > 0) {
+            try {
+                const syncRes = await fetch('/api/admin/pins/sync', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ pins: allAdminPinsData })
+                });
+                if (syncRes.ok) {
+                    const syncData = await syncRes.json();
+                    if (syncData.success && syncData.pins) {
+                        serverPins = syncData.pins;
+                    }
+                }
+            } catch (syncErr) {
+                console.warn('Error sincronizando PINs con el servidor:', syncErr);
+            }
+        }
+
+        if (serverPins.length > 0) {
+            allAdminPinsData = serverPins;
+            try {
+                localStorage.setItem('vm_admin_pins_cache', JSON.stringify(allAdminPinsData));
+            } catch (e) {}
+        }
 
         // Actualizar KPIs de PINs
         const stats = data.stats || {};
@@ -1298,9 +1371,13 @@ async function fetchAdminPins(showToastFeedback = false) {
         const kpiAvailable = document.getElementById('kpi-admin-available-pins');
         const kpiUsed = document.getElementById('kpi-admin-used-pins');
 
-        if (kpiTotal) kpiTotal.textContent = stats.total_pins || allAdminPinsData.length;
-        if (kpiAvailable) kpiAvailable.textContent = stats.available_pins || 0;
-        if (kpiUsed) kpiUsed.textContent = stats.used_pins || 0;
+        const totalCount = stats.total_pins ?? allAdminPinsData.length;
+        const availableCount = stats.available_pins ?? allAdminPinsData.filter(p => !p.is_used).length;
+        const usedCount = stats.used_pins ?? allAdminPinsData.filter(p => p.is_used).length;
+
+        if (kpiTotal) kpiTotal.textContent = totalCount;
+        if (kpiAvailable) kpiAvailable.textContent = availableCount;
+        if (kpiUsed) kpiUsed.textContent = usedCount;
 
         renderAdminPins();
 
@@ -1309,7 +1386,9 @@ async function fetchAdminPins(showToastFeedback = false) {
         }
     } catch (e) {
         console.error('Error al cargar PINs de SuperAdmin:', e);
-        if (tbody) {
+        if (allAdminPinsData.length > 0) {
+            renderAdminPins();
+        } else {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="7" class="text-center py-4 text-danger">
@@ -1496,6 +1575,11 @@ function deleteAdminPin(pinId, pinKey) {
                     return;
                 }
                 showToast(`🗑️ ${data.message}`, 'info');
+                allAdminPinsData = allAdminPinsData.filter(p => p.id !== pinId && p.license_key !== pinId && p.license_key !== pinKey);
+                try {
+                    localStorage.setItem('vm_admin_pins_cache', JSON.stringify(allAdminPinsData));
+                } catch (e) {}
+                renderAdminPins();
                 fetchAdminPins(false);
             } catch (e) {
                 showToast('Error de conexión al eliminar PIN', 'error');
@@ -1797,7 +1881,8 @@ function navigateToView(targetId, updateHistory = true) {
     } else if (cleanId === 'subscription-view') {
         fetchSubscriptionStatus();
     } else if (cleanId === 'superadmin-view') {
-        fetchAdminUsers();
+        const savedTab = localStorage.getItem('vm_admin_active_tab') || 'users';
+        switchAdminTab(savedTab);
     }
 }
 
