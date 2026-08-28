@@ -747,20 +747,20 @@ function initSuperAdminView() {
         openCreateBtn.addEventListener('click', () => {
             if (formCreate) formCreate.reset();
             if (createError) createError.classList.add('d-none');
+            modalCreate.classList.remove('hidden', 'd-none');
             modalCreate.style.display = 'flex';
-            modalCreate.classList.remove('hidden');
         });
     }
     if (closeCreateBtn && modalCreate) {
         closeCreateBtn.addEventListener('click', () => {
+            modalCreate.classList.add('hidden', 'd-none');
             modalCreate.style.display = 'none';
-            modalCreate.classList.add('hidden');
         });
     }
     if (cancelCreateBtn && modalCreate) {
         cancelCreateBtn.addEventListener('click', () => {
+            modalCreate.classList.add('hidden', 'd-none');
             modalCreate.style.display = 'none';
-            modalCreate.classList.add('hidden');
         });
     }
 
@@ -808,8 +808,8 @@ function initSuperAdminView() {
                 }
 
                 showToast(`🎉 ${data.message}`, 'success');
+                modalCreate.classList.add('hidden', 'd-none');
                 modalCreate.style.display = 'none';
-                modalCreate.classList.add('hidden');
                 fetchAdminUsers(false);
             } catch (err) {
                 if (createError) {
@@ -825,14 +825,14 @@ function initSuperAdminView() {
     // Modal Gestionar Usuario (Centrado y Reactivo)
     if (closeManageBtn && modalManage) {
         closeManageBtn.addEventListener('click', () => {
+            modalManage.classList.add('hidden', 'd-none');
             modalManage.style.display = 'none';
-            modalManage.classList.add('hidden');
         });
     }
     if (cancelManageBtn && modalManage) {
         cancelManageBtn.addEventListener('click', () => {
+            modalManage.classList.add('hidden', 'd-none');
             modalManage.style.display = 'none';
-            modalManage.classList.add('hidden');
         });
     }
 
@@ -870,8 +870,8 @@ function initSuperAdminView() {
                 }
 
                 showToast('✅ Cambios de usuario guardados correctamente.', 'success');
+                modalManage.classList.add('hidden', 'd-none');
                 modalManage.style.display = 'none';
-                modalManage.classList.add('hidden');
                 fetchAdminUsers(false);
             } catch (err) {
                 if (manageError) {
@@ -889,20 +889,20 @@ function initSuperAdminView() {
         openCreatePinBtn.addEventListener('click', () => {
             if (formCreatePin) formCreatePin.reset();
             if (pinError) pinError.classList.add('d-none');
+            modalCreatePin.classList.remove('hidden', 'd-none');
             modalCreatePin.style.display = 'flex';
-            modalCreatePin.classList.remove('hidden');
         });
     }
     if (closeCreatePinBtn && modalCreatePin) {
         closeCreatePinBtn.addEventListener('click', () => {
+            modalCreatePin.classList.add('hidden', 'd-none');
             modalCreatePin.style.display = 'none';
-            modalCreatePin.classList.add('hidden');
         });
     }
     if (cancelCreatePinBtn && modalCreatePin) {
         cancelCreatePinBtn.addEventListener('click', () => {
+            modalCreatePin.classList.add('hidden', 'd-none');
             modalCreatePin.style.display = 'none';
-            modalCreatePin.classList.add('hidden');
         });
     }
 
@@ -940,8 +940,8 @@ function initSuperAdminView() {
                 }
 
                 showToast(`🔑 ${data.message}`, 'success');
+                modalCreatePin.classList.add('hidden', 'd-none');
                 modalCreatePin.style.display = 'none';
-                modalCreatePin.classList.add('hidden');
                 fetchAdminPins(false);
             } catch (err) {
                 if (pinError) {
@@ -1551,8 +1551,8 @@ function openAdminManageUserModal(userId) {
     if (errorEl) errorEl.classList.add('d-none');
 
     if (modal) {
+        modal.classList.remove('hidden', 'd-none');
         modal.style.display = 'flex';
-        modal.classList.remove('hidden');
     }
 }
 
@@ -1562,8 +1562,8 @@ async function quickExtendDays(days) {
     await quickExtendUserDirect(userId, days);
     const modal = document.getElementById('modal-admin-manage-user');
     if (modal) {
+        modal.classList.add('hidden', 'd-none');
         modal.style.display = 'none';
-        modal.classList.add('hidden');
     }
 }
 
