@@ -189,26 +189,47 @@ def _save_users(users):
         return False
 
 def _load_licenses():
+    local_licenses = []
     if os.path.exists(_LICENSES_PATH):
         try:
             with open(_LICENSES_PATH, 'r', encoding='utf-8') as f:
-                licenses = json.load(f)
-                if isinstance(licenses, list):
-                    return licenses
+                data = json.load(f)
+                if isinstance(data, list):
+                    local_licenses = data
         except Exception as e:
             logging.warning("Error al leer subscription_licenses.json: %s", e)
-    _save_licenses([])
-    return []
+
+    if supabase:
+        try:
+            res = supabase.table('subscription_licenses').select('*').execute()
+            if res and res.data and len(res.data) > 0:
+                remote_keys = {item.get('license_key') for item in res.data if item.get('license_key')}
+                merged = list(res.data)
+                for loc in local_licenses:
+                    if loc.get('license_key') not in remote_keys:
+                        merged.append(loc)
+                return merged
+        except Exception:
+            pass
+
+    return local_licenses
 
 def _save_licenses(licenses):
     try:
         os.makedirs(os.path.dirname(_LICENSES_PATH), exist_ok=True)
         with open(_LICENSES_PATH, 'w', encoding='utf-8') as f:
             json.dump(licenses, f, indent=2, ensure_ascii=False)
-        return True
     except Exception as e:
         logging.error("Error al guardar subscription_licenses.json: %s", e)
-        return False
+
+    if supabase:
+        try:
+            for lic in licenses:
+                supabase.table('subscription_licenses').upsert(lic).execute()
+        except Exception:
+            pass
+
+    return True
 
 def _generate_auth_token(user_id, email, role="user"):
     payload = {
@@ -697,6 +718,13 @@ def admin_delete_pin(pin_id):
         return jsonify({"error": "PIN no encontrado"}), 404
 
     _save_licenses(licenses)
+
+    if supabase:
+        try:
+            supabase.table('subscription_licenses').delete().eq('id', pin_id).execute()
+        except Exception:
+            pass
+
     return jsonify({
         "success": True,
         "message": "PIN de activación eliminado correctamente."

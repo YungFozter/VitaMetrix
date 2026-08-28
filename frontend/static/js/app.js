@@ -1457,8 +1457,25 @@ function copyPinToClipboard(pinKey) {
 }
 
 function sharePinWhatsApp(pinKey, planName, note) {
-    const noteText = (note && note !== '—') ? ` (Ref: ${note})` : '';
-    const message = `Hola estimado(a) Dr(a). Aquí tiene su PIN de activación para VitaMetrix:\n\n🔑 *PIN:* ${pinKey}\n📦 *Plan:* ${planName}${noteText}\n\n👉 Para activarlo: Inicie sesión en VitaMetrix, diríjase al menú *"Mi Plan"* e ingrese este PIN en la sección *"Canjear Clave de Licencia"*.`;
+    const noteText = (note && note !== '—' && note.trim() !== '') ? `\n• *Detalle / Referencia:* ${note.trim()}` : '';
+    
+    let message = `Estimado(a) Dr(a).,\n\n`;
+    message += `¡Muchas gracias por confiar en *VitaMetrix* y adquirir su suscripción médica! Es un placer acompañarle en la evaluación y seguimiento clínico nutricional de sus pacientes.\n\n`;
+    message += `A continuación, le hacemos entrega de su PIN de activación oficial:\n\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━\n`;
+    message += `• *PIN de Licencia:* ${pinKey}\n`;
+    message += `• *Plan Adquirido:* ${planName}${noteText}\n`;
+    message += `• *Estado:* Listo para activación inmediata\n`;
+    message += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    message += `*Pasos sencillos para activar su cuenta:*\n`;
+    message += `1. Inicie sesión en su plataforma: https://vitametrix.onrender.com\n`;
+    message += `2. Diríjase a la sección *"Mi Plan"* en el menú lateral.\n`;
+    message += `3. En *"Canjear Clave de Licencia"*, ingrese su código PIN y presione *"Canjear"*.\n\n`;
+    message += `Su acceso a todas las herramientas avanzadas quedará habilitado al instante.\n\n`;
+    message += `Si requiere asistencia personalizada o soporte técnico, estamos a su total disposición.\n\n`;
+    message += `Atentamente,\n`;
+    message += `*Equipo de Soporte & Dirección Clínica VitaMetrix*`;
+
     const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
     window.open(waUrl, '_blank');
 }

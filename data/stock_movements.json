@@ -1,5 +1,73 @@
 [
   {
+    "id": "ced0e2b7-160b-4ddc-bdf5-5e8d58a5e2ba",
+    "stock_item_id": "bae6d4d8-2437-47a9-869e-0507a3569acf",
+    "item_name": "Insumo Kardex Test 1787917237764",
+    "type": "ADJUST",
+    "quantity": 8.0,
+    "previous_quantity": 25.0,
+    "new_quantity": 8.0,
+    "reason": "Auditoría física de inventario",
+    "created_at": "2026-08-28T11:40:40.546277+00:00"
+  },
+  {
+    "id": "83f553b1-6b1e-4079-b8ba-cbac7b7ac591",
+    "stock_item_id": "bae6d4d8-2437-47a9-869e-0507a3569acf",
+    "item_name": "Insumo Kardex Test 1787917237764",
+    "type": "OUT",
+    "quantity": 10.0,
+    "previous_quantity": 35.0,
+    "new_quantity": 25.0,
+    "reason": "Consumo en gabinete BIA",
+    "created_at": "2026-08-28T11:40:39.693895+00:00"
+  },
+  {
+    "id": "413585b4-192c-486a-8426-da5f6de6d2c3",
+    "stock_item_id": "bae6d4d8-2437-47a9-869e-0507a3569acf",
+    "item_name": "Insumo Kardex Test 1787917237764",
+    "type": "IN",
+    "quantity": 15.0,
+    "previous_quantity": 20.0,
+    "new_quantity": 35.0,
+    "reason": "Llegada de lote proveedor",
+    "created_at": "2026-08-28T11:40:38.844057+00:00"
+  },
+  {
+    "id": "bfabb82d-34ae-4d6d-b981-c0662ed430fc",
+    "stock_item_id": "2d044192-7f25-4b39-aafa-3d6b52db3f53",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE_CANCEL",
+    "quantity": 2.0,
+    "previous_quantity": 23.0,
+    "new_quantity": 25.0,
+    "reason": "Anulación de Venta REC-2026-0061",
+    "reference_id": "d84f38bd-0154-4cbb-8ee7-8b89851caae8",
+    "created_at": "2026-08-28T11:40:31.164257+00:00"
+  },
+  {
+    "id": "b8e7fc4e-609b-4310-8c82-e677698ec3ad",
+    "stock_item_id": "2d044192-7f25-4b39-aafa-3d6b52db3f53",
+    "item_name": "Proteína Whey E2E Test 1kg",
+    "type": "SALE",
+    "quantity": 2.0,
+    "previous_quantity": 25.0,
+    "new_quantity": 23.0,
+    "reason": "Venta REC-2026-0061 a Paciente E2E Prueba",
+    "reference_id": "d84f38bd-0154-4cbb-8ee7-8b89851caae8",
+    "created_at": "2026-08-28T11:40:30.292418+00:00"
+  },
+  {
+    "id": "40aca930-b0be-4c5a-b722-4ce7b4496d3e",
+    "stock_item_id": "9e762fad-471c-4b81-916e-593828aa374f",
+    "item_name": "Kit Electrodos Térmicos y Gel BIA E2E - Actualizado",
+    "type": "OUT",
+    "quantity": 5.0,
+    "previous_quantity": 40.0,
+    "new_quantity": 35.0,
+    "reason": "Uso en demostración clínica BIVA",
+    "created_at": "2026-08-28T11:40:28.381372+00:00"
+  },
+  {
     "id": "e5cc8682-4c39-4bdb-bcef-f1ef048751b8",
     "stock_item_id": "967c02b8-8d59-485a-9556-f6d7ab2569f4",
     "item_name": "Insumo Kardex Test 1787916685868",
