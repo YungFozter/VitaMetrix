@@ -164,38 +164,7 @@ _DEFAULT_INITIAL_USERS = [
     }
 ]
 
-_DEFAULT_INITIAL_LICENSES = [
-    {
-        "id": "lic-001",
-        "license_key": "VM-1M-PRO7-9B2F",
-        "duration_days": 30,
-        "plan_name": "Plan Pro Mensual (30 días)",
-        "is_used": False,
-        "used_by_user_id": None,
-        "used_at": None,
-        "created_at": "2026-08-20T10:00:00Z"
-    },
-    {
-        "id": "lic-002",
-        "license_key": "VM-1M-K4A8-11D9",
-        "duration_days": 30,
-        "plan_name": "Plan Pro Mensual (30 días)",
-        "is_used": False,
-        "used_by_user_id": None,
-        "used_at": None,
-        "created_at": "2026-08-20T10:00:00Z"
-    },
-    {
-        "id": "lic-003",
-        "license_key": "VM-1A-VITA-2026",
-        "duration_days": 365,
-        "plan_name": "Plan Anual Pro (365 días)",
-        "is_used": False,
-        "used_by_user_id": None,
-        "used_at": None,
-        "created_at": "2026-08-20T10:00:00Z"
-    }
-]
+_DEFAULT_INITIAL_LICENSES = []
 
 def _load_users():
     if os.path.exists(_USERS_PATH):
@@ -224,12 +193,12 @@ def _load_licenses():
         try:
             with open(_LICENSES_PATH, 'r', encoding='utf-8') as f:
                 licenses = json.load(f)
-                if isinstance(licenses, list) and len(licenses) > 0:
+                if isinstance(licenses, list):
                     return licenses
         except Exception as e:
             logging.warning("Error al leer subscription_licenses.json: %s", e)
-    _save_licenses(_DEFAULT_INITIAL_LICENSES)
-    return list(_DEFAULT_INITIAL_LICENSES)
+    _save_licenses([])
+    return []
 
 def _save_licenses(licenses):
     try:
