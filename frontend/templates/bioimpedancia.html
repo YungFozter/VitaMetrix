@@ -678,24 +678,121 @@
                             </div>
                         </section>
 
-                        <!-- CARD 10: Cintura -->
+                        <!-- CARD 10: Cintura & Visceral -->
                         <section class="bento-card bio-glass card-waist" style="grid-area: waist;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Cintura & Visceral</div>
-                            <div id="waist-na" class="card-na">Introduce circunferencia de cintura y/o grasa visceral.</div>
-                            <div id="waist-grid" style="display:none;">
-                                <div class="waist-track"><div class="bar-fill waist-bar" id="waist-bar" style="width:0%"></div><div class="waist-pin" id="waist-pin"></div></div>
-                                <div class="waist-readout"><span>Cintura</span><strong id="waist-val">--</strong><span class="unit">cm</span><span class="status-chip" id="waist-status">--</span></div>
-                                <div class="waist-visc" id="visc-status"></div>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="card-header m-0 p-0" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">
+                                    <i class="bi bi-rulers text-primary me-1"></i> Cintura & Nivel Visceral
+                                </div>
+                                <span class="badge rounded-pill text-xs fw-semibold px-2 py-0.5" id="waist-overall-badge">---</span>
+                            </div>
+                            
+                            <div id="waist-na" class="card-na">Introduce circunferencia de cintura y/o nivel de grasa visceral.</div>
+                            
+                            <div id="waist-grid" class="d-flex flex-column gap-2.5" style="display:none;">
+                                <!-- BLOQUE 1: PERÍMETRO DE CINTURA -->
+                                <div class="waist-sub-block p-2.5 rounded-3 border">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-secondary fw-semibold text-xs">Perímetro Abdominal</span>
+                                        <span class="status-chip text-xs fw-bold" id="waist-status">--</span>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-baseline gap-1.5 mb-1.5">
+                                        <strong class="display-font text-navy fs-3 fw-bold" id="waist-val">--</strong>
+                                        <span class="text-muted text-xs fw-semibold">cm</span>
+                                        <span class="text-secondary text-xs ms-auto" id="waist-ref-label" style="font-size: 0.7rem;">Corte OMS: &lt;88 cm</span>
+                                    </div>
+                                    
+                                    <!-- Barra medidora con indicador debajo del texto -->
+                                    <div class="waist-track-container">
+                                        <div class="waist-track">
+                                            <div class="waist-bar-zones">
+                                                <div class="waist-zone zone-normal" title="Rango Óptimo / Saludable"></div>
+                                                <div class="waist-zone zone-warning" title="Rango de Precaución"></div>
+                                                <div class="waist-zone zone-danger" title="Riesgo Aumentado"></div>
+                                            </div>
+                                            <div class="waist-pin" id="waist-pin" style="left: 0%;"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between text-muted" style="font-size: 0.68rem; margin-top: 4px;">
+                                            <span>50 cm</span>
+                                            <span>Saludable</span>
+                                            <span>Alerta</span>
+                                            <span>130 cm</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- BLOQUE 2: GRASA VISCERAL -->
+                                <div class="visc-sub-block p-2.5 rounded-3 border" id="visc-card-container">
+                                    <div class="d-flex align-items-center justify-content-between mb-1">
+                                        <span class="text-secondary fw-semibold text-xs">Grasa / Nivel Visceral</span>
+                                        <span class="badge rounded-pill text-xs fw-bold px-2 py-0.5" id="visc-badge">--</span>
+                                    </div>
+                                    <div class="d-flex align-items-baseline gap-1.5 mb-1.5">
+                                        <strong class="display-font text-navy fs-4 fw-bold" id="visc-val">--</strong>
+                                        <span class="text-muted text-xs fw-semibold" id="visc-unit-label">Nivel</span>
+                                        <span class="text-secondary text-xs ms-auto" id="visc-ref-label" style="font-size: 0.7rem;">Ref: 1 – 9 (Normal)</span>
+                                    </div>
+                                    <div class="text-secondary text-xs p-2 rounded-2 bg-white border" id="visc-status-text" style="font-size: 0.75rem; line-height: 1.35;">
+                                        Evaluación de depósito lipídico intraabdominal.
+                                    </div>
+                                </div>
                             </div>
                         </section>
 
                         <!-- CARD 11: BCC -->
                         <section class="bento-card bio-glass card-bcc" style="grid-area: bcc;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">BCC (Grasa vs Músculo)</div>
-                            <div id="bcc-na" class="card-na">Requiere SMM y masa grasa del dispositivo.</div>
-                            <div id="bcc-grid" style="display:none;">
-                                <div class="bcc-container mt-2">
-                                    <canvas id="bccCanvas" width="220" height="220" class="rounded-3xl" style="background: rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05); box-shadow: inset 0 1px 0 rgba(255,255,255,0.7); width:100%; max-width:300px; margin:0 auto; display:block;"></canvas>
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="card-header m-0 p-0" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">
+                                    <i class="bi bi-pie-chart-fill text-warning me-1"></i> Balance BCC (Grasa vs Músculo)
+                                </div>
+                                <span class="badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-primary-subtle text-primary" id="bcc-summary-badge">Matriz Somática</span>
+                            </div>
+                            
+                            <div id="bcc-na" class="card-na">Requiere masa muscular esquelética (SMM) y masa grasa del paciente.</div>
+                            
+                            <div id="bcc-grid" class="d-flex flex-column gap-2" style="display:none;">
+                                <!-- Valores clave de Músculo vs Grasa -->
+                                <div class="row g-2 text-center">
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light-subtle rounded-3 border">
+                                            <span class="text-muted text-xs d-block" style="font-size: 0.7rem;">Masa Muscular (SMM)</span>
+                                            <strong class="text-navy fs-5" id="bcc-muscle-val">--%</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-2 bg-light-subtle rounded-3 border">
+                                            <span class="text-muted text-xs d-block" style="font-size: 0.7rem;">Masa Grasa (FM)</span>
+                                            <strong class="text-navy fs-5" id="bcc-fat-val">--%</strong>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Contenedor del Gráfico BCC -->
+                                <div class="bcc-container position-relative" style="height: 220px;">
+                                    <canvas id="bccCanvas" width="240" height="220" class="rounded-3" style="background: rgba(255,255,255,0.7); border: 1px solid rgba(226,232,240,0.9); width:100%; height:100%; display:block;"></canvas>
+                                </div>
+
+                                <!-- Leyenda de los 4 cuadrantes -->
+                                <div class="bcc-quadrants-legend p-2 rounded-3 border bg-white" style="font-size: 0.7rem;">
+                                    <div class="fw-bold text-navy mb-1" style="font-size: 0.72rem;"><i class="bi bi-compass me-1 text-primary"></i> Cuadrantes de Composición:</div>
+                                    <div class="row g-1">
+                                        <div class="col-6"><span class="text-truncate d-block"><span class="badge bg-success-subtle text-success p-1 me-0.5">I</span> <strong>Atlético:</strong> +Músc / -Grasa</span></div>
+                                        <div class="col-6"><span class="text-truncate d-block"><span class="badge bg-primary-subtle text-primary p-1 me-0.5">II</span> <strong>Equilibrado:</strong> Normal</span></div>
+                                        <div class="col-6"><span class="text-truncate d-block"><span class="badge bg-warning-subtle text-warning p-1 me-0.5">III</span> <strong>Adiposo:</strong> +Grasa / Medio</span></div>
+                                        <div class="col-6"><span class="text-truncate d-block"><span class="badge bg-danger-subtle text-danger p-1 me-0.5">IV</span> <strong>Sarcopénico:</strong> -Músc / +Grasa</span></div>
+                                    </div>
+                                </div>
+
+                                <!-- Guía de Explicación Médica y Paciente -->
+                                <div class="p-2.5 rounded-3 border bg-light-subtle" id="bcc-clinical-guide-box" style="font-size: 0.75rem; line-height: 1.35;">
+                                    <div class="d-flex align-items-center gap-1.5 fw-bold text-navy mb-0.5">
+                                        <i class="bi bi-info-circle-fill text-info"></i>
+                                        <span id="bcc-diagnosis-title">Diagnóstico Somático: Equilibrado</span>
+                                    </div>
+                                    <p class="text-secondary mb-0" id="bcc-diagnosis-desc">
+                                        El paciente mantiene una relación balanceada entre masa magra activa y tejido adiposo.
+                                    </p>
                                 </div>
                             </div>
                         </section>

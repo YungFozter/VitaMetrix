@@ -2861,42 +2861,160 @@ function updateBioUI(data, inputs) {
         setChip(wStatus, hyd.alert ? ['Alerta', 'red'] : [hyd.status || 'Normal', 'green']);
     }
 
-    // CARD 10: Cintura & visceral
+    // CARD 10: Cintura & Visceral
     const vis = data.visceral;
-    if (vis && vis.available) {
+    const waistInput = inputs.waist;
+    const viscInput = inputs.visceral_fat != null ? inputs.visceral_fat : inputs.visceral;
+    const gender = (inputs.gender || 'male').toLowerCase();
+    const isFemale = gender === 'female';
+
+    if ((vis && vis.available) || (waistInput != null && waistInput !== '') || (viscInput != null && viscInput !== '')) {
         showGrid('waist-na', 'waist-grid');
-        const waist = inputs.waist;
+        
+        // 1. Perímetro de Cintura
         const wValEl = document.getElementById('waist-val');
         const wStatus = document.getElementById('waist-status');
-        if (waist != null && waist !== '') {
-            wValEl.textContent = waist;
+        const wRefLabel = document.getElementById('waist-ref-label');
+        const overallBadge = document.getElementById('waist-overall-badge');
+        
+        let hasWaistAlert = false;
+        if (waistInput != null && waistInput !== '') {
+            const waistNum = parseFloat(waistInput);
+            if (wValEl) wValEl.textContent = isNaN(waistNum) ? waistInput : waistNum.toFixed(1);
+            
             // Pin: escala 50–130 cm -> 0–100%
-            const pct = Math.max(0, Math.min(100, ((parseFloat(waist) - 50) / 80) * 100));
-            document.getElementById('waist-bar').style.width = `${pct}%`;
-            document.getElementById('waist-pin').style.left = `${pct}%`;
-            setChip(wStatus, vis.waist_risk === 'Alto' ? ['Alto', 'red'] : ['Normal', 'green']);
+            const pct = Math.max(0, Math.min(100, ((waistNum - 50) / 80) * 100));
+            const waistPin = document.getElementById('waist-pin');
+            if (waistPin) waistPin.style.left = `${pct}%`;
+
+            const cutoffWarn = isFemale ? 80 : 94;
+            const cutoffHigh = isFemale ? 88 : 102;
+            
+            if (wRefLabel) {
+                wRefLabel.textContent = isFemale 
+                    ? 'Corte OMS: <80 cm (Normal) / ≥88 cm (Riesgo)' 
+                    : 'Corte OMS: <94 cm (Normal) / ≥102 cm (Riesgo)';
+            }
+
+            if (waistNum >= cutoffHigh) {
+                hasWaistAlert = true;
+                setChip(wStatus, ['Riesgo Alto', 'red']);
+            } else if (waistNum >= cutoffWarn) {
+                setChip(wStatus, ['Límite / Alerta', 'yellow']);
+            } else {
+                setChip(wStatus, ['Rango Normal', 'green']);
+            }
         } else {
-            wValEl.textContent = '--';
-            wStatus.textContent = '--';
-            wStatus.className = 'status-chip muted';
+            if (wValEl) wValEl.textContent = '--';
+            if (wStatus) {
+                wStatus.textContent = 'No registrado';
+                wStatus.className = 'status-chip muted';
+            }
+            if (wRefLabel) wRefLabel.textContent = 'Sin medición';
         }
-        const viscEl = document.getElementById('visc-status');
-        if (vis.visceral_alert) {
-            viscEl.style.display = 'block';
-            viscEl.textContent = `⚠️ ${vis.status}`;
-        } else if (vis.status && vis.status !== 'No disponible') {
-            viscEl.style.display = 'block';
-            viscEl.textContent = vis.status;
+
+        // 2. Grasa Visceral
+        const viscValEl = document.getElementById('visc-val');
+        const viscBadge = document.getElementById('visc-badge');
+        const viscStatusText = document.getElementById('visc-status-text');
+
+        if (viscInput != null && viscInput !== '') {
+            const viscNum = parseFloat(viscInput);
+            if (viscValEl) viscValEl.textContent = isNaN(viscNum) ? viscInput : viscNum.toFixed(1);
+            
+            const isViscAlert = vis?.visceral_alert || (viscNum >= (isFemale ? 1.5 : 2.5) || viscNum >= 10);
+            
+            if (isViscAlert) {
+                if (viscBadge) {
+                    viscBadge.textContent = 'Nivel Aumentado';
+                    viscBadge.className = 'badge rounded-pill text-xs fw-bold px-2 py-0.5 bg-danger-subtle text-danger border border-danger border-opacity-25';
+                }
+                if (viscStatusText) {
+                    viscStatusText.innerHTML = `⚠️ <strong>Alerta Metabólica:</strong> Nivel visceral elevado (${viscNum}). Sugiere infiltración adiposa intraabdominal y mayor riesgo cardiometabólico.`;
+                }
+                hasWaistAlert = true;
+            } else {
+                if (viscBadge) {
+                    viscBadge.textContent = 'Nivel Saludable';
+                    viscBadge.className = 'badge rounded-pill text-xs fw-bold px-2 py-0.5 bg-success-subtle text-success border border-success border-opacity-25';
+                }
+                if (viscStatusText) {
+                    viscStatusText.innerHTML = `✅ <strong>Óptimo:</strong> Grasa visceral en rango fisiológico seguro. Baja carga lipídica periorgánica.`;
+                }
+            }
         } else {
-            viscEl.style.display = 'none';
+            if (viscValEl) viscValEl.textContent = '--';
+            if (viscBadge) {
+                viscBadge.textContent = 'Sin datos';
+                viscBadge.className = 'badge rounded-pill text-xs fw-normal px-2 py-0.5 bg-light text-muted border';
+            }
+            if (viscStatusText) {
+                viscStatusText.textContent = 'Introduce el nivel visceral del dispositivo para evaluar el tejido adiposo profundo.';
+            }
         }
+
+        // Overall Card Badge
+        if (overallBadge) {
+            if (hasWaistAlert) {
+                overallBadge.textContent = 'Alerta Metabólica';
+                overallBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-danger text-white shadow-2xs';
+            } else {
+                overallBadge.textContent = 'Riesgo Bajo / Óptimo';
+                overallBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-success text-white shadow-2xs';
+            }
+        }
+    } else {
+        const waistNa = document.getElementById('waist-na');
+        const waistGrid = document.getElementById('waist-grid');
+        if (waistNa) waistNa.style.display = 'block';
+        if (waistGrid) waistGrid.style.display = 'none';
     }
 
     // CARD 11: BCC
     const bcc = data.bcc;
     if (bcc && bcc.available) {
         showGrid('bcc-na', 'bcc-grid');
-        drawBCC(bcc.muscle_pct, bcc.fat_pct);
+        
+        const mPct = bcc.muscle_pct || 0;
+        const fPct = bcc.fat_pct || 0;
+        
+        const elM = document.getElementById('bcc-muscle-val');
+        const elF = document.getElementById('bcc-fat-val');
+        if (elM) elM.textContent = `${mPct.toFixed(1)}%`;
+        if (elF) elF.textContent = `${fPct.toFixed(1)}%`;
+
+        // Clasificación de Cuadrante para la explicación médica
+        const isMale = (inputs.gender || 'male').toLowerCase() !== 'female';
+        const normMuscleMin = isMale ? 37 : 29;
+        const normFatMax = isMale ? 22 : 28;
+
+        const summaryBadge = document.getElementById('bcc-summary-badge');
+        const diagTitle = document.getElementById('bcc-diagnosis-title');
+        const diagDesc = document.getElementById('bcc-diagnosis-desc');
+
+        if (mPct >= normMuscleMin && fPct <= normFatMax) {
+            // Cuadrante I: Atlético
+            if (summaryBadge) { summaryBadge.textContent = 'I. Atlético / Robusto'; summaryBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-success text-white'; }
+            if (diagTitle) diagTitle.textContent = 'Somatotipo I: Atlético / Protección Sarcopénica';
+            if (diagDesc) diagDesc.textContent = 'Alta reserva proteica y bajo porcentaje graso. Excelente fuerza muscular, tasa metabólica basal activa y óptima sensibilidad a la insulina.';
+        } else if (mPct >= (normMuscleMin - 3) && fPct <= (normFatMax + 3)) {
+            // Cuadrante II: Equilibrado
+            if (summaryBadge) { summaryBadge.textContent = 'II. Equilibrado / Normal'; summaryBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-primary text-white'; }
+            if (diagTitle) diagTitle.textContent = 'Somatotipo II: Composición Corporal Armónica';
+            if (diagDesc) diagDesc.textContent = 'Proporción equilibrada entre masa muscular y masa grasa. Cumple con los requerimientos somáticos funcionales para su grupo etario.';
+        } else if (fPct > normFatMax && mPct >= (normMuscleMin - 4)) {
+            // Cuadrante III: Predominio Adiposo
+            if (summaryBadge) { summaryBadge.textContent = 'III. Predominio Adiposo'; summaryBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-warning text-dark'; }
+            if (diagTitle) diagTitle.textContent = 'Somatotipo III: Sobrepeso / Adiposidad Aumentada';
+            if (diagDesc) diagDesc.textContent = 'Exceso relativo de tejido graso con masa muscular conservada. Se sugiere pauta de déficit energético moderado y estímulo de fuerza.';
+        } else {
+            // Cuadrante IV: Sarcopénico / Sarcopenia Obesa
+            if (summaryBadge) { summaryBadge.textContent = 'IV. Riesgo Sarcopénico'; summaryBadge.className = 'badge rounded-pill text-xs fw-semibold px-2 py-0.5 bg-danger text-white'; }
+            if (diagTitle) diagTitle.textContent = 'Somatotipo IV: Déficit Muscular / Riesgo de Sarcopenia';
+            if (diagDesc) diagDesc.textContent = 'Masa muscular esquelética por debajo de valores de referencia con relación grasa desfavorable. Priorizar intervención proteica y entrenamiento resistido.';
+        }
+
+        drawBCC(mPct, fPct, isMale);
     }
 }
 
@@ -4730,7 +4848,7 @@ function drawPhACurve(curves, patientAge, patientPhA) {
 }
 
 // --- 4d. GRÁFICO BCC (SCATTER PLOT MÚSCULO VS GRASA) ---
-function drawBCC(musclePct, fatPct) {
+function drawBCC(musclePct, fatPct, isMale = true) {
     const canvas = document.getElementById('bccCanvas');
     if (window.bccChartInstance) {
         window.bccChartInstance.destroy();
@@ -4738,17 +4856,28 @@ function drawBCC(musclePct, fatPct) {
     }
     if (!canvas || !window.Chart) return;
 
+    const mVal = parseFloat(musclePct) || 0;
+    const fVal = parseFloat(fatPct) || 0;
+
+    const minX = Math.max(10, Math.min(18, Math.floor(mVal - 6)));
+    const maxX = Math.max(54, Math.ceil(mVal + 6));
+    const minY = Math.max(5, Math.min(10, Math.floor(fVal - 6)));
+    const maxY = Math.max(48, Math.ceil(fVal + 6));
+
+    const refMuscle = isMale ? 37 : 30;
+    const refFat = isMale ? 20 : 26;
+
     window.bccChartInstance = new Chart(canvas, {
         type: 'scatter',
         data: {
             datasets: [{
-                label: 'Paciente',
-                data: [{ x: musclePct, y: fatPct }],
+                label: 'Paciente Evaluado',
+                data: [{ x: mVal, y: fVal }],
                 backgroundColor: '#1A2A4A',
-                borderColor: '#ffffff',
-                borderWidth: 2,
-                pointRadius: 8,
-                pointHoverRadius: 10
+                borderColor: '#00b4d8',
+                borderWidth: 3,
+                pointRadius: 9,
+                pointHoverRadius: 11
             }]
         },
         options: {
@@ -4757,39 +4886,77 @@ function drawBCC(musclePct, fatPct) {
             plugins: {
                 legend: { display: false },
                 tooltip: {
+                    backgroundColor: 'rgba(26, 42, 74, 0.95)',
+                    titleFont: { size: 12, weight: 'bold' },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
                     callbacks: {
-                        label: (ctx) => `Músculo: ${ctx.raw.x}%, Grasa: ${ctx.raw.y}%`
+                        label: (ctx) => `Paciente: ${ctx.raw.x.toFixed(1)}% Músculo | ${ctx.raw.y.toFixed(1)}% Grasa`
                     }
                 }
             },
             scales: {
                 x: {
-                    title: { display: true, text: 'Músculo (SMM) %', color: '#5a6f8c' },
-                    min: Math.max(0, musclePct - 20),
-                    max: musclePct + 20,
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    title: { display: true, text: 'Masa Muscular Esquelética (SMM) %', color: '#5a6f8c', font: { size: 10.5, weight: '600' } },
+                    min: minX,
+                    max: maxX,
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { callback: v => `${v}%`, font: { size: 9.5 } }
                 },
                 y: {
-                    title: { display: true, text: 'Grasa (FM) %', color: '#5a6f8c' },
-                    min: Math.max(0, fatPct - 20),
-                    max: fatPct + 20,
-                    grid: { color: 'rgba(0,0,0,0.05)' }
+                    title: { display: true, text: 'Masa Grasa Corporal (FM) %', color: '#5a6f8c', font: { size: 10.5, weight: '600' } },
+                    min: minY,
+                    max: maxY,
+                    grid: { color: 'rgba(226, 232, 240, 0.6)' },
+                    ticks: { callback: v => `${v}%`, font: { size: 9.5 } }
                 }
             }
         },
         plugins: [{
-            id: 'bccDiagonal',
+            id: 'bccQuadrantOverlay',
             beforeDraw: (chart) => {
                 const ctx = chart.ctx;
                 const xAxis = chart.scales.x;
                 const yAxis = chart.scales.y;
+
+                const midX = xAxis.getPixelForValue(refMuscle);
+                const midY = yAxis.getPixelForValue(refFat);
+
                 ctx.save();
-                ctx.strokeStyle = '#cd7f32';
-                ctx.lineWidth = 2;
+                // 1. Líneas divisorias de cuadrantes
+                ctx.strokeStyle = 'rgba(90, 111, 140, 0.35)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+
+                // Línea vertical (Músculo referencia)
                 ctx.beginPath();
-                ctx.moveTo(xAxis.getPixelForValue(xAxis.min), yAxis.getPixelForValue(yAxis.max));
-                ctx.lineTo(xAxis.getPixelForValue(xAxis.max), yAxis.getPixelForValue(yAxis.min));
+                ctx.moveTo(midX, yAxis.top);
+                ctx.lineTo(midX, yAxis.bottom);
                 ctx.stroke();
+
+                // Línea horizontal (Grasa referencia)
+                ctx.beginPath();
+                ctx.moveTo(xAxis.left, midY);
+                ctx.lineTo(xAxis.right, midY);
+                ctx.stroke();
+
+                // 2. Etiquetas de cuadrantes
+                ctx.setLineDash([]);
+                ctx.font = 'bold 8.5px Inter, sans-serif';
+
+                ctx.fillStyle = 'rgba(45, 122, 74, 0.85)';
+                ctx.fillText('I. ATLÉTICO', xAxis.right - 62, yAxis.bottom - 6);
+
+                ctx.fillStyle = 'rgba(0, 180, 216, 0.85)';
+                ctx.fillText('II. EQUILIBRADO', xAxis.left + 6, yAxis.bottom - 6);
+
+                ctx.fillStyle = 'rgba(202, 138, 4, 0.85)';
+                ctx.fillText('III. ADIPOSO', xAxis.right - 62, yAxis.top + 12);
+
+                ctx.fillStyle = 'rgba(239, 68, 68, 0.85)';
+                ctx.fillText('IV. SARCOPÉNICO', xAxis.left + 6, yAxis.top + 12);
+
                 ctx.restore();
             }
         }]
