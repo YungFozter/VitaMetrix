@@ -1874,14 +1874,8 @@ def get_next_client_code():
     if not supabase:
         return jsonify({"code": 1, "idp": "IDP-0001"}), 200
     try:
-        current_user = _get_current_user()
-        current_uid = current_user.get('id') if current_user else None
-
-        res = supabase.table('clients').select('code, user_id').execute()
-        all_c = res.data or []
-        if current_uid:
-            all_c = [r for r in all_c if r.get('user_id') == current_uid]
-        codes = [row['code'] for row in all_c if row.get('code') is not None]
+        res = supabase.table('clients').select('code').execute()
+        codes = [row['code'] for row in (res.data or []) if row.get('code') is not None]
         codes.sort()
         
         new_code = 1
@@ -1933,17 +1927,14 @@ def add_client():
         if not current_uid:
             return jsonify({"error": "No autorizado"}), 401
 
-        # Lógica de reciclaje de códigos por tenant
+        # Lógica de asignación de código único global en Supabase
         try:
-            res = supabase.table('clients').select('code,user_id').execute()
-        except Exception:
             res = supabase.table('clients').select('code').execute()
+            codes = [row['code'] for row in (res.data or []) if row.get('code') is not None]
+        except Exception:
+            codes = []
 
-        all_c = res.data or []
-        all_c = [r for r in all_c if r.get('user_id') == current_uid]
-        codes = [row['code'] for row in all_c if row.get('code') is not None]
         codes.sort()
-        
         new_code = 1
         for code in codes:
             if code == new_code:
@@ -1966,19 +1957,30 @@ def add_client():
             "user_id": current_uid
         }
             
+        res_data = dict(new_client)
         try:
             res_insert = supabase.table('clients').insert(new_client).execute()
-        except Exception:
+            if res_insert and res_insert.data:
+                res_data = res_insert.data[0]
+        except Exception as e_ins:
+            logging.warning("Error al insertar cliente con user_id, intentando fallback: %s", e_ins)
             try:
                 nc_copy = dict(new_client)
                 nc_copy.pop('user_id', None)
                 res_insert = supabase.table('clients').insert(nc_copy).execute()
+                if res_insert and res_insert.data:
+                    res_data = res_insert.data[0]
             except Exception:
-                fallback_client = {"code": new_code, "name": name, "phone": phone, "email": email}
-                res_insert = supabase.table('clients').insert(fallback_client).execute()
+                try:
+                    fallback_client = {"code": new_code, "name": name, "phone": phone, "email": email}
+                    res_insert = supabase.table('clients').insert(fallback_client).execute()
+                    if res_insert and res_insert.data:
+                        res_data = res_insert.data[0]
+                except Exception as e_fb:
+                    logging.warning("No se pudo insertar en Supabase clients: %s", e_fb)
         
         _invalidate_dashboard_cache()
-        return jsonify({"success": True, "data": res_insert.data[0] if res_insert.data else {}})
+        return jsonify({"success": True, "data": res_data}), 200
     except Exception as e:
         logging.error("Error al registrar cliente: %s", e, exc_info=True)
         return jsonify({"error": "Error al guardar cliente"}), 500
