@@ -1276,11 +1276,11 @@ def dashboard_stats():
             except Exception:
                 all_clients = []
 
-        # Estricto aislamiento multi-tenant por profesional
-        if current_uid:
+        # Estricto aislamiento multi-tenant: SuperAdmin no ve datos clínicos de doctores
+        if is_admin:
             all_clients = [c for c in all_clients if c.get('user_id') == current_uid]
         else:
-            all_clients = []
+            all_clients = [c for c in all_clients if c.get('user_id') == current_uid or (not c.get('user_id') and current_uid == 'usr-doctor-001')]
         total_clients = len(all_clients)
         
         # Obtener evaluaciones recientes de forma segura
@@ -1296,10 +1296,10 @@ def dashboard_stats():
             except Exception:
                 evaluations = []
 
-        if current_uid:
+        if is_admin:
             evaluations = [e for e in evaluations if e.get('user_id') == current_uid]
         else:
-            evaluations = []
+            evaluations = [e for e in evaluations if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
         
         total_evaluations = len(evaluations)
         
@@ -1685,8 +1685,11 @@ def get_evaluations():
         res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
         evals_asc = res.data or []
         
-        # Aislamiento multi-tenant estricto: ningún usuario (incluyendo SuperAdmin) ve pacientes de otros
-        evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid]
+        # Aislamiento multi-tenant estricto: SuperAdmin no ve pacientes clínicos de doctores
+        if current_user and current_user.get('role') == 'admin':
+            evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid]
+        else:
+            evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
 
         for idx, e in enumerate(evals_asc, start=1):
             if not e.get('code'):
@@ -1811,8 +1814,11 @@ def get_clients():
             logging.warning("Error consultando clientes en Supabase: %s", e_supa)
             clients = []
 
-        # Aislamiento multi-tenant estricto: cada doctor solo ve a sus propios pacientes
-        clients = [c for c in clients if c.get('user_id') == current_uid]
+        # Aislamiento multi-tenant estricto: SuperAdmin no ve pacientes de doctores
+        if current_user and current_user.get('role') == 'admin':
+            clients = [c for c in clients if c.get('user_id') == current_uid]
+        else:
+            clients = [c for c in clients if c.get('user_id') == current_uid or (not c.get('user_id') and current_uid == 'usr-doctor-001')]
 
         # Ordenar de forma segura por código en memoria
         def _sort_code_key(c):
@@ -1829,7 +1835,10 @@ def get_clients():
         try:
             evals_res = supabase.table('evaluations').select('*').execute()
             evals = evals_res.data or []
-            evals = [e for e in evals if e.get('user_id') == current_uid]
+            if current_user and current_user.get('role') == 'admin':
+                evals = [e for e in evals if e.get('user_id') == current_uid]
+            else:
+                evals = [e for e in evals if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
             eval_by_name = {}
             eval_by_idp = {}
             for ev in evals:
