@@ -159,19 +159,7 @@ _DEFAULT_INITIAL_USERS = [
 
 _DEFAULT_INITIAL_LICENSES = []
 
-def _load_users():
-    if os.path.exists(_USERS_PATH):
-        try:
-            with open(_USERS_PATH, 'r', encoding='utf-8') as f:
-                users = json.load(f)
-                if isinstance(users, list) and len(users) > 0:
-                    return users
-        except Exception as e:
-            logging.warning("Error al leer users.json: %s", e)
-    _save_users(_DEFAULT_INITIAL_USERS)
-    return list(_DEFAULT_INITIAL_USERS)
-
-def _save_users(users):
+def _save_users_disk_only(users):
     try:
         os.makedirs(os.path.dirname(_USERS_PATH), exist_ok=True)
         with open(_USERS_PATH, 'w', encoding='utf-8') as f:
@@ -180,6 +168,73 @@ def _save_users(users):
     except Exception as e:
         logging.error("Error al guardar users.json: %s", e)
         return False
+
+def _load_users():
+    # 1. Intentar cargar desde tabla users en Supabase
+    if supabase:
+        try:
+            res = supabase.table('users').select('*').execute()
+            if res and res.data and len(res.data) > 0:
+                _save_users_disk_only(res.data)
+                return list(res.data)
+        except Exception:
+            pass
+
+    # 2. Respaldo resiliente en almacén de Supabase (sobrevive a redeploys de Render)
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('*').eq('code', '__SYS_USERS_STORE__').execute()
+            if res and res.data and len(res.data) > 0:
+                notes = res.data[0].get('notes')
+                if notes:
+                    parsed = json.loads(notes)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        _save_users_disk_only(parsed)
+                        return parsed
+        except Exception as e:
+            logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
+
+    # 3. Disco local
+    if os.path.exists(_USERS_PATH):
+        try:
+            with open(_USERS_PATH, 'r', encoding='utf-8') as f:
+                users = json.load(f)
+                if isinstance(users, list) and len(users) > 0:
+                    return users
+        except Exception as e:
+            logging.warning("Error al leer users.json: %s", e)
+
+    _save_users(_DEFAULT_INITIAL_USERS)
+    return list(_DEFAULT_INITIAL_USERS)
+
+def _save_users(users):
+    _save_users_disk_only(users)
+    if supabase:
+        # Intento en tabla directa
+        try:
+            for u in users:
+                supabase.table('users').upsert(u).execute()
+        except Exception:
+            pass
+
+        # Respaldo garantizado en almacén persistente de Supabase
+        try:
+            backup_data = {
+                "code": "__SYS_USERS_STORE__",
+                "name": "System Users Store (Auto-Backup)",
+                "category": "__SYSTEM__",
+                "unit": "JSON",
+                "stock_quantity": len(users),
+                "notes": json.dumps(users, ensure_ascii=False)
+            }
+            check = supabase.table('stock_items').select('id').eq('code', '__SYS_USERS_STORE__').execute()
+            if check and check.data and len(check.data) > 0:
+                supabase.table('stock_items').update(backup_data).eq('code', '__SYS_USERS_STORE__').execute()
+            else:
+                supabase.table('stock_items').insert(backup_data).execute()
+        except Exception as e:
+            logging.warning("Error al sincronizar usuarios en almacén persistente de Supabase: %s", e)
+    return True
 
 def _save_licenses_disk_only(licenses):
     try:
@@ -192,34 +247,69 @@ def _save_licenses_disk_only(licenses):
         return False
 
 def _load_licenses():
-    local_licenses = []
-    if os.path.exists(_LICENSES_PATH):
-        try:
-            with open(_LICENSES_PATH, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-                if isinstance(data, list):
-                    local_licenses = data
-        except Exception as e:
-            logging.warning("Error al leer subscription_licenses.json: %s", e)
-
+    # 1. Intentar cargar desde tabla directa subscription_licenses en Supabase
     if supabase:
         try:
-            res = supabase.table('subscription_licenses').select('*').execute()
-            if res and res.data is not None:
+            res = supabase.table('subscription_licenses').select('*').order('created_at', desc=True).execute()
+            if res and res.data and len(res.data) > 0:
+                _save_licenses_disk_only(res.data)
                 return list(res.data)
         except Exception:
             pass
 
-    return local_licenses
+    # 2. Respaldo resiliente en almacén de Supabase (sobrevive a redeploys de Render)
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('*').eq('code', '__SYS_LICENSES_STORE__').execute()
+            if res and res.data and len(res.data) > 0:
+                notes = res.data[0].get('notes')
+                if notes:
+                    parsed = json.loads(notes)
+                    if isinstance(parsed, list) and len(parsed) > 0:
+                        _save_licenses_disk_only(parsed)
+                        return parsed
+        except Exception as e:
+            logging.warning("Error al leer respaldo de licencias en Supabase: %s", e)
+
+    # 3. Disco local
+    if os.path.exists(_LICENSES_PATH):
+        try:
+            with open(_LICENSES_PATH, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                if isinstance(data, list) and len(data) > 0:
+                    return data
+        except Exception as e:
+            logging.warning("Error al leer subscription_licenses.json: %s", e)
+
+    return []
 
 def _save_licenses(licenses):
     _save_licenses_disk_only(licenses)
     if supabase:
+        # Intento en tabla dedicada
         try:
             for lic in licenses:
                 supabase.table('subscription_licenses').upsert(lic).execute()
         except Exception:
             pass
+
+        # Respaldo garantizado en almacén persistente de Supabase
+        try:
+            backup_data = {
+                "code": "__SYS_LICENSES_STORE__",
+                "name": "System Licenses Store (Auto-Backup)",
+                "category": "__SYSTEM__",
+                "unit": "JSON",
+                "stock_quantity": len(licenses),
+                "notes": json.dumps(licenses, ensure_ascii=False)
+            }
+            check = supabase.table('stock_items').select('id').eq('code', '__SYS_LICENSES_STORE__').execute()
+            if check and check.data and len(check.data) > 0:
+                supabase.table('stock_items').update(backup_data).eq('code', '__SYS_LICENSES_STORE__').execute()
+            else:
+                supabase.table('stock_items').insert(backup_data).execute()
+        except Exception as e:
+            logging.warning("Error al sincronizar licencias en almacén persistente de Supabase: %s", e)
     return True
 
 def _generate_auth_token(user_id, email, role="user"):
@@ -2227,14 +2317,20 @@ def get_stock_items():
             local_items.append(it_copy)
             _save_persisted_stock_items(local_items)
 
+    # Excluir registros de almacenamiento de sistema (backups resilientes)
+    clinical_items = [
+        it for it in combined_items 
+        if not (it.get('category') == '__SYSTEM__' or str(it.get('code', '')).startswith('__SYS_'))
+    ]
+
     # Filtrar por multi-tenant (si no es SuperAdmin)
     if current_uid and current_user.get('role') != 'admin':
-        filtered_items = [it for it in combined_items if it.get('user_id') == current_uid]
+        filtered_items = [it for it in clinical_items if it.get('user_id') == current_uid]
         if not filtered_items and (current_uid == 'usr-doctor-001' or current_user.get('email') == 'audrey@vitametrix.com'):
-            filtered_items = [it for it in combined_items if not it.get('user_id') or it.get('user_id') == 'usr-doctor-001']
+            filtered_items = [it for it in clinical_items if not it.get('user_id') or it.get('user_id') == 'usr-doctor-001']
         return jsonify(filtered_items)
 
-    return jsonify(combined_items)
+    return jsonify(clinical_items)
 
 def _generate_next_sku(raw_code=None):
     """
@@ -2265,7 +2361,7 @@ def _generate_next_sku(raw_code=None):
     existing_codes = set()
     for it in _load_persisted_stock_items():
         c = it.get('code')
-        if c:
+        if c and not str(c).startswith('__SYS_'):
             existing_codes.add(str(c).upper().strip())
     
     if supabase:
@@ -2273,7 +2369,7 @@ def _generate_next_sku(raw_code=None):
             res = supabase.table('stock_items').select('code').execute()
             for r in (res.data or []):
                 c = r.get('code')
-                if c:
+                if c and not str(c).startswith('__SYS_'):
                     existing_codes.add(str(c).upper().strip())
         except Exception:
             pass
