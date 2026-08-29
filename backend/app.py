@@ -1797,6 +1797,27 @@ def batch_delete_evaluations():
 
 # --- RUTAS DE CLIENTES ---
 
+_CLIENTS_USER_MAP_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "clients_users.json")
+
+def _load_clients_user_map():
+    if os.path.exists(_CLIENTS_USER_MAP_PATH):
+        try:
+            with open(_CLIENTS_USER_MAP_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_clients_user_map(m):
+    try:
+        os.makedirs(os.path.dirname(_CLIENTS_USER_MAP_PATH), exist_ok=True)
+        with open(_CLIENTS_USER_MAP_PATH, 'w', encoding='utf-8') as f:
+            json.dump(m, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+_CLIENTS_USER_MAP = _load_clients_user_map()
+
 @app.route('/api/clients', methods=['GET'])
 def get_clients():
     if not supabase:
@@ -1813,6 +1834,13 @@ def get_clients():
         except Exception as e_supa:
             logging.warning("Error consultando clientes en Supabase: %s", e_supa)
             clients = []
+
+        # Enriquecer con user_id desde el mapa de aislamiento
+        for c in clients:
+            if not c.get('user_id'):
+                c_uid = _CLIENTS_USER_MAP.get(str(c.get('id'))) or _CLIENTS_USER_MAP.get(str(c.get('idp'))) or _CLIENTS_USER_MAP.get(str(c.get('code')))
+                if c_uid:
+                    c['user_id'] = c_uid
 
         # Aislamiento multi-tenant estricto: SuperAdmin no ve pacientes de doctores
         if current_user and current_user.get('role') == 'admin':
@@ -1988,6 +2016,15 @@ def add_client():
                 except Exception as e_fb:
                     logging.warning("No se pudo insertar en Supabase clients: %s", e_fb)
         
+        # Registrar propiedad del cliente en el mapa
+        if res_data.get('id'):
+            _CLIENTS_USER_MAP[str(res_data.get('id'))] = current_uid
+        if res_data.get('idp'):
+            _CLIENTS_USER_MAP[str(res_data.get('idp'))] = current_uid
+        if res_data.get('code'):
+            _CLIENTS_USER_MAP[str(res_data.get('code'))] = current_uid
+        _save_clients_user_map(_CLIENTS_USER_MAP)
+
         _invalidate_dashboard_cache()
         return jsonify({"success": True, "data": res_data}), 200
     except Exception as e:
