@@ -1778,16 +1778,31 @@ def get_clients():
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
 
-        res = supabase.table('clients').select('*').order('code').execute()
-        clients = res.data or []
+        try:
+            res = supabase.table('clients').select('*').execute()
+            clients = res.data or []
+        except Exception as e_supa:
+            logging.warning("Error consultando clientes en Supabase: %s", e_supa)
+            clients = []
 
         # Aislamiento multi-tenant
         if current_uid and current_user.get('role') != 'admin':
             clients = [c for c in clients if c.get('user_id') == current_uid or not c.get('user_id')]
 
+        # Ordenar de forma segura por código en memoria
+        def _sort_code_key(c):
+            cd = c.get('code')
+            if isinstance(cd, int):
+                return cd
+            if isinstance(cd, str) and cd.isdigit():
+                return int(cd)
+            return 999999
+
+        clients.sort(key=lambda x: (_sort_code_key(x), x.get('name') or ''))
+
         # Adjuntar resumen de última evaluación si existe
         try:
-            evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
+            evals_res = supabase.table('evaluations').select('*').execute()
             evals = evals_res.data or []
             if current_uid and current_user.get('role') != 'admin':
                 evals = [e for e in evals if e.get('user_id') == current_uid or not e.get('user_id')]
@@ -1822,10 +1837,10 @@ def get_clients():
         except Exception as e_ev:
             logging.error("Error al adjuntar evaluaciones a clientes: %s", e_ev)
 
-        return jsonify(clients)
+        return jsonify(clients), 200
     except Exception as e:
         logging.error("Error al obtener clientes: %s", e, exc_info=True)
-        return jsonify({"error": "Error al obtener clientes"}), 500
+        return jsonify([]), 200
 
 @app.route('/api/clients/next-idp', methods=['GET'])
 def get_next_client_idp():

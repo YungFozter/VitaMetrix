@@ -3700,21 +3700,30 @@ async function fetchClients() {
 
     try {
         const [resClients, resEvals] = await Promise.all([
-            fetch('/api/clients'),
-            (!allEvaluationsData || allEvaluationsData.length === 0) ? fetch('/api/evaluations') : Promise.resolve(null)
+            fetch('/api/clients', { headers: getAuthHeaders() }),
+            (!allEvaluationsData || allEvaluationsData.length === 0) ? fetch('/api/evaluations', { headers: getAuthHeaders() }) : Promise.resolve(null)
         ]);
 
-        allClientsData = await resClients.json();
+        if (resClients && resClients.ok) {
+            try {
+                allClientsData = await resClients.json();
+            } catch (e) {
+                allClientsData = [];
+            }
+        } else {
+            allClientsData = [];
+        }
+
         if (resEvals && resEvals.ok) {
             try {
                 allEvaluationsData = await resEvals.json();
             } catch (e) {}
         }
         
-        const count = (resClients.ok && Array.isArray(allClientsData)) ? allClientsData.length : 0;
+        const count = Array.isArray(allClientsData) ? allClientsData.length : 0;
         if (totalCountEl) totalCountEl.textContent = count;
 
-        if (!resClients.ok || !Array.isArray(allClientsData) || allClientsData.length === 0) {
+        if (!Array.isArray(allClientsData) || allClientsData.length === 0) {
             tbody.innerHTML = `
                 <tr>
                     <td colspan="5" class="text-center py-5">
