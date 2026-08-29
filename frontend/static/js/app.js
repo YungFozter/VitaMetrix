@@ -531,19 +531,23 @@ async function fetchSubscriptionStatus() {
             if (alertBanner) alertBanner.classList.add('d-none');
         } else {
             const isLifetime = sub.status === 'lifetime';
-            const isTrial = sub.status === 'trial';
-            const isExpired = sub.status === 'expired' || (sub.days_left || 0) <= 0;
+            const isNeverSubscribed = sub.status === 'no_subscription' || (!sub.expires_at && !isLifetime) || sub.plan_name === 'Sin Suscripción Anterior';
+            const isTrial = sub.status === 'trial' && !isNeverSubscribed;
+            const isExpired = (sub.status === 'expired' || (sub.days_left || 0) <= 0) && !isNeverSubscribed;
             const daysLeft = sub.days_left || 0;
 
             if (planTitle) {
                 if (isLifetime) planTitle.textContent = 'Plan Vitalicio / Lifetime ⭐';
+                else if (isNeverSubscribed) planTitle.textContent = 'Sin Suscripción Anterior';
                 else if (isExpired) planTitle.textContent = 'Plan Vencido';
                 else if (isTrial) planTitle.textContent = 'Plan de Prueba Gratuito (7 Días)';
                 else planTitle.textContent = sub.plan_name || 'Plan Pro Mensual';
             }
 
             if (planDesc) {
-                if (isExpired) {
+                if (isNeverSubscribed) {
+                    planDesc.textContent = 'Esta cuenta aún no ha activado una suscripción. Ingresa tu clave de activación (PIN) o comunícate por WhatsApp para habilitar todos los módulos clínicos de VitaMetrix.';
+                } else if (isExpired) {
                     planDesc.textContent = 'Tu suscripción ha caducado. Renueva tu licencia o canjea un PIN para continuar disfrutando de todas las herramientas clínicas.';
                 } else if (isTrial) {
                     planDesc.textContent = 'Disfruta de acceso completo a los módulos clínicos, stock y reportes de VitaMetrix durante tus 7 días de cortesía.';
@@ -555,6 +559,8 @@ async function fetchSubscriptionStatus() {
             if (daysText) {
                 if (isLifetime) {
                     daysText.innerHTML = '<span class="text-success fw-bold">Ilimitado</span>';
+                } else if (isNeverSubscribed) {
+                    daysText.innerHTML = '<span class="text-secondary fw-bold">0 días (Sin Suscripción Anterior)</span>';
                 } else if (isExpired) {
                     daysText.innerHTML = '<span class="text-danger fw-extrabold">0 días (Suscripción Vencida)</span>';
                 } else if (isTrial) {
@@ -567,6 +573,8 @@ async function fetchSubscriptionStatus() {
             if (expiryDate) {
                 if (isLifetime) {
                     expiryDate.textContent = 'Sin Vencimiento';
+                } else if (isNeverSubscribed) {
+                    expiryDate.textContent = 'Sin Suscripción Anterior';
                 } else if (sub.expires_at) {
                     try {
                         const d = new Date(sub.expires_at);
@@ -575,7 +583,7 @@ async function fetchSubscriptionStatus() {
                         expiryDate.textContent = sub.expires_at;
                     }
                 } else {
-                    expiryDate.textContent = 'Sin Vencimiento';
+                    expiryDate.textContent = 'Sin Suscripción Anterior';
                 }
             }
 
@@ -586,7 +594,7 @@ async function fetchSubscriptionStatus() {
                     percent = 100;
                     progressBar.style.width = '100%';
                     progressBar.style.background = 'linear-gradient(90deg, #10b981 0%, #059669 100%)';
-                } else if (isExpired || daysLeft <= 0) {
+                } else if (isNeverSubscribed || isExpired || daysLeft <= 0) {
                     percent = 0;
                     progressBar.style.width = '0%';
                     progressBar.style.background = '#ef4444';
@@ -610,6 +618,10 @@ async function fetchSubscriptionStatus() {
                     statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs bg-success text-white';
                     if (statusDot) statusDot.style.background = '#86efac';
                     if (statusPillText) statusPillText.textContent = '⭐ Activo Ilimitado';
+                } else if (isNeverSubscribed) {
+                    statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs bg-secondary text-white';
+                    if (statusDot) statusDot.style.background = '#cbd5e1';
+                    if (statusPillText) statusPillText.textContent = '⚪ Sin Suscripción Anterior';
                 } else if (isExpired) {
                     statusPill.className = 'badge px-3 py-1.5 rounded-pill fs-7 fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs bg-danger text-white';
                     if (statusDot) statusDot.style.background = '#fca5a5';
@@ -630,6 +642,9 @@ async function fetchSubscriptionStatus() {
                 if (isLifetime) {
                     watermarkIcon.className = 'bi bi-stars';
                     watermarkIcon.style.color = '#10b981';
+                } else if (isNeverSubscribed) {
+                    watermarkIcon.className = 'bi bi-shield-x';
+                    watermarkIcon.style.color = '#94a3b8';
                 } else if (isExpired) {
                     watermarkIcon.className = 'bi bi-shield-x';
                     watermarkIcon.style.color = '#ef4444';
@@ -644,7 +659,10 @@ async function fetchSubscriptionStatus() {
 
             // BANNER DE ALERTA RÁPIDA
             if (alertBanner) {
-                if (isExpired) {
+                if (isNeverSubscribed) {
+                    alertBanner.className = 'alert alert-secondary border py-2 px-3 mb-3 rounded-3 d-flex align-items-center justify-content-between gap-2 text-xs bg-light';
+                    if (alertMsg) alertMsg.innerHTML = '<strong>Primera vez en VitaMetrix:</strong> Ingresa un PIN de activación o canjea tu clave para comenzar.';
+                } else if (isExpired) {
                     alertBanner.className = 'alert alert-danger py-2 px-3 mb-3 rounded-3 d-flex align-items-center justify-content-between gap-2 text-xs';
                     if (alertMsg) alertMsg.innerHTML = '<strong>Suscripción Vencida:</strong> Renueva tu licencia o canjea un PIN para desbloquear el acceso.';
                 } else if (isTrial && daysLeft <= 2) {
@@ -659,7 +677,9 @@ async function fetchSubscriptionStatus() {
             }
 
             if (headerBadge) {
-                if (isExpired) {
+                if (isNeverSubscribed) {
+                    headerBadge.innerHTML = `<i class="bi bi-info-circle text-secondary me-1"></i> Estado: <strong class="text-secondary">Sin Suscripción Anterior</strong>`;
+                } else if (isExpired) {
                     headerBadge.innerHTML = `<i class="bi bi-exclamation-octagon-fill text-danger me-1"></i> Estado: <strong class="text-danger">Vencido (0 días)</strong>`;
                 } else if (isLifetime) {
                     headerBadge.innerHTML = `<i class="bi bi-stars text-success me-1"></i> Vigencia: <strong>Vitalicia</strong>`;
@@ -669,7 +689,7 @@ async function fetchSubscriptionStatus() {
             }
         }
 
-        if (userId) userId.textContent = (user.id || '').substring(0, 13) + '...';
+        if (userId) userId.textContent = user.id || '---';
         if (userName) userName.textContent = user.full_name || 'Profesional';
         if (userEmail) userEmail.textContent = user.email || '';
         if (clinicBadge) clinicBadge.textContent = user.clinic_name || 'Consultorio Médico';
@@ -1309,18 +1329,23 @@ function renderAdminUsers() {
     tbody.innerHTML = filtered.map(u => {
         const isAdmin = u.role === 'admin';
         const isLifetime = u.subscription_status === 'lifetime';
-        const isActive = u.subscription_status === 'active';
-        const isTrial = u.subscription_status === 'trial';
-        const isExpired = u.subscription_status === 'expired';
+        const isNeverSubscribed = u.subscription_status === 'no_subscription' || (!u.subscription_expires_at && !isAdmin && !isLifetime);
+        const isActive = u.subscription_status === 'active' && !isNeverSubscribed;
+        const isTrial = u.subscription_status === 'trial' && !isNeverSubscribed;
+        const isExpired = (u.subscription_status === 'expired' || (u.days_left || 0) <= 0) && !isNeverSubscribed;
 
         let badgeClass = 'bg-secondary text-white';
-        let badgeLabel = 'Vencido';
-        let progressClass = 'bg-danger';
+        let badgeLabel = '⚪ Sin Suscripción';
+        let progressClass = 'bg-secondary';
 
         if (isAdmin || isLifetime) {
             badgeClass = 'bg-purple text-white';
             badgeLabel = isAdmin ? '👑 SuperAdmin' : '⭐ Lifetime';
             progressClass = 'bg-purple';
+        } else if (isNeverSubscribed) {
+            badgeClass = 'bg-secondary text-white';
+            badgeLabel = '⚪ Sin Suscripción';
+            progressClass = 'bg-secondary';
         } else if (isActive) {
             badgeClass = 'bg-success text-white';
             badgeLabel = '🟢 Activo';
@@ -1336,8 +1361,8 @@ function renderAdminUsers() {
         }
 
         const days = u.days_left || 0;
-        const percent = (isAdmin || isLifetime) ? 100 : (days <= 0 || isExpired) ? 0 : Math.min(100, Math.max(0, Math.round((days / 30) * 100)));
-        const daysLabel = (isAdmin || isLifetime) ? 'Ilimitado' : (days > 0 ? `${days} día${days === 1 ? '' : 's'}` : '<span class="text-danger fw-bold">Vencido</span>');
+        const percent = (isAdmin || isLifetime) ? 100 : (days <= 0 || isExpired || isNeverSubscribed) ? 0 : Math.min(100, Math.max(0, Math.round((days / 30) * 100)));
+        const daysLabel = (isAdmin || isLifetime) ? 'Ilimitado' : isNeverSubscribed ? '<span class="text-secondary fw-semibold">Sin Suscripción</span>' : (days > 0 ? `${days} día${days === 1 ? '' : 's'}` : '<span class="text-danger fw-bold">Vencido</span>');
 
         // Formatear fechas
         let createdStr = '---';
@@ -1347,8 +1372,8 @@ function renderAdminUsers() {
             } catch (e) {}
         }
 
-        let expStr = 'Sin Vencimiento';
-        if (u.subscription_expires_at && !isAdmin && !isLifetime) {
+        let expStr = isNeverSubscribed ? 'Sin Suscripción Anterior' : 'Sin Vencimiento';
+        if (u.subscription_expires_at && !isAdmin && !isLifetime && !isNeverSubscribed) {
             try {
                 expStr = new Date(u.subscription_expires_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
             } catch (e) {}

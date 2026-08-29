@@ -149,11 +149,11 @@ _DEFAULT_INITIAL_USERS = [
         "clinic_name": "Centro Médico VitaMetrix",
         "phone": "+59171234567",
         "role": "user",
-        "subscription_status": "expired",
-        "subscription_plan": "Plan Vencido",
-        "subscription_expires_at": "2026-01-01T00:00:00Z",
-        "trial_started_at": "2026-01-01T00:00:00Z",
-        "created_at": "2026-01-01T00:00:00Z"
+        "subscription_status": "no_subscription",
+        "subscription_plan": "Sin Suscripción Anterior",
+        "subscription_expires_at": None,
+        "trial_started_at": None,
+        "created_at": "2026-08-28T00:00:00Z"
     }
 ]
 
@@ -287,7 +287,7 @@ def _get_current_user():
 
 def _calc_subscription_status(user):
     if not user:
-        return "expired", 0, None, "Plan Vencido"
+        return "no_subscription", 0, None, "Sin Suscripción Anterior"
 
     if user.get('role') == 'admin':
         return "lifetime", None, None, "Acceso Total SuperAdmin / Incaducable"
@@ -295,10 +295,17 @@ def _calc_subscription_status(user):
     if user.get('subscription_status') == 'lifetime':
         return "lifetime", None, None, user.get('subscription_plan', 'Plan Vitalicio Ilimitado')
 
+    # Cuenta sin suscripción previa
+    if user.get('subscription_status') in ('no_subscription', 'none', 'unsubscribed') or (user.get('subscription_status') == 'expired' and not user.get('subscription_expires_at')):
+        return "no_subscription", 0, None, "Sin Suscripción Anterior"
+
     expires_at_str = user.get('subscription_expires_at')
     plan_name = user.get('subscription_plan', 'Plan Pro Mensual')
+    
     if not expires_at_str:
-        return "trial", 7, (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(), plan_name
+        if user.get('subscription_status') == 'trial':
+            return "trial", 7, (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(), plan_name
+        return "no_subscription", 0, None, "Sin Suscripción Anterior"
 
     try:
         exp_dt = datetime.fromisoformat(expires_at_str.replace('Z', '+00:00'))
@@ -311,9 +318,12 @@ def _calc_subscription_status(user):
             status = "trial" if ("prueba" in plan_name.lower() or "trial" in plan_name.lower()) else "active"
             return status, days_left, exp_dt.isoformat(), plan_name
         else:
-            return "expired", 0, exp_dt.isoformat(), plan_name
+            # Si el usuario nunca canjeó un PIN ni tuvo suscripción real
+            if user.get('id') == 'usr-doctor-001' and user.get('subscription_status') in ('no_subscription', 'expired') and not user.get('last_redeemed_pin'):
+                return "no_subscription", 0, None, "Sin Suscripción Anterior"
+            return "expired", 0, exp_dt.isoformat(), plan_name or "Plan Vencido"
     except Exception:
-        return "expired", 0, None, plan_name
+        return "no_subscription", 0, None, plan_name or "Sin Suscripción Anterior"
 
 def _build_safe_user_dict(user):
     status, days_left, expires_at, plan_name = _calc_subscription_status(user)
