@@ -1,3 +1,17 @@
+// --- GUARD CONTRA ERRORES DE EXTENSIONES DEL NAVEGADOR (Ej. Google Translate / MutationObservers) ---
+window.addEventListener('error', (event) => {
+    if (event && event.message && (
+        event.message.includes('startTime') || 
+        event.message.includes('reportAllChanges') || 
+        event.message.includes('ResizeObserver loop') ||
+        (event.filename && event.filename.includes('chrome-extension://'))
+    )) {
+        event.stopImmediatePropagation();
+        event.preventDefault();
+        return true;
+    }
+});
+
 let clientsDataLoaded = false;
 let evalsDataLoaded = false;
 let stockDataLoaded = false;
