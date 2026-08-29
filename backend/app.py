@@ -2838,22 +2838,41 @@ _DEFAULT_STOCK_UNITS = [
 ]
 
 def _load_persisted_taxonomies():
+    cats = list(_DEFAULT_STOCK_CATEGORIES)
+    units = list(_DEFAULT_STOCK_UNITS)
     if os.path.exists(_TAXONOMIES_PATH):
         try:
             with open(_TAXONOMIES_PATH, 'r', encoding='utf-8') as f:
                 data = json.load(f)
-                cats = data.get('categories', _DEFAULT_STOCK_CATEGORIES)
+                raw_cats = data.get('categories', _DEFAULT_STOCK_CATEGORIES)
                 raw_units = data.get('units', _DEFAULT_STOCK_UNITS)
+                
+                clean_cats = []
+                if isinstance(raw_cats, list):
+                    for c in raw_cats:
+                        if isinstance(c, str) and c.strip():
+                            clean_cats.append({"name": c.strip(), "icon": "📦", "description": ""})
+                        elif isinstance(c, dict) and c.get('name'):
+                            clean_cats.append({
+                                "name": str(c.get('name')).strip(),
+                                "icon": str(c.get('icon') or '📦'),
+                                "description": str(c.get('description') or '')
+                            })
+                if clean_cats:
+                    cats = clean_cats
+
                 clean_units = []
-                for u in raw_units:
-                    if isinstance(u, str):
-                        clean_units.append({"name": u})
-                    elif isinstance(u, dict) and u.get('name'):
-                        clean_units.append({"name": u['name']})
-                return cats, (clean_units or list(_DEFAULT_STOCK_UNITS))
+                if isinstance(raw_units, list):
+                    for u in raw_units:
+                        if isinstance(u, str) and u.strip():
+                            clean_units.append({"name": u.strip()})
+                        elif isinstance(u, dict) and u.get('name'):
+                            clean_units.append({"name": str(u.get('name')).strip()})
+                if clean_units:
+                    units = clean_units
         except Exception as e:
             logging.warning("Error al leer stock_taxonomies.json: %s", e)
-    return list(_DEFAULT_STOCK_CATEGORIES), list(_DEFAULT_STOCK_UNITS)
+    return cats, units
 
 def _save_persisted_taxonomies(categories, units):
     try:
@@ -2867,65 +2886,89 @@ def _save_persisted_taxonomies(categories, units):
 
 @app.route('/api/stock/taxonomies', methods=['GET'])
 def get_stock_taxonomies():
-    persisted_cats, persisted_units = _load_persisted_taxonomies()
+    try:
+        persisted_cats, persisted_units = _load_persisted_taxonomies()
 
-    items = []
-    if supabase:
-        try:
-            res = supabase.table('stock_items').select('category, unit').execute()
-            if res.data is not None:
-                items = res.data
-        except Exception as e:
-            logging.warning("Error al consultar stock_items para taxonomías: %s", e)
-    if not items:
-        items = _LOCAL_STOCK_ITEMS
+        items = []
+        if supabase:
+            try:
+                res = supabase.table('stock_items').select('category, unit, code').execute()
+                if res and res.data is not None:
+                    items = res.data
+            except Exception as e:
+                logging.warning("Error al consultar stock_items para taxonomías en Supabase: %s", e)
+        if not items:
+            items = _load_persisted_stock_items()
 
-    cat_counts = {}
-    unit_counts = {}
-    for it in items:
-        c = (it.get('category') or 'Otros').strip()
-        u = (it.get('unit') or 'Unidad (u)').strip()
-        cat_counts[c] = cat_counts.get(c, 0) + 1
-        unit_counts[u] = unit_counts.get(u, 0) + 1
+        # Filtrar registros de sistema
+        items = [
+            it for it in items 
+            if isinstance(it, dict) and it.get('category') != '__SYSTEM__' and not str(it.get('code', '')).startswith('__SYS_')
+        ]
 
-    categories = []
-    seen_cats = set()
-    for cat in persisted_cats:
-        c_name = cat['name']
-        seen_cats.add(c_name.lower())
-        categories.append({
-            "name": c_name,
-            "icon": cat.get('icon', '📦'),
-            "description": cat.get('description', ''),
-            "count": cat_counts.get(c_name, 0)
-        })
+        cat_counts = {}
+        unit_counts = {}
+        for it in items:
+            c = (it.get('category') or 'Otros').strip()
+            u = (it.get('unit') or 'Unidad (u)').strip()
+            if c:
+                cat_counts[c] = cat_counts.get(c, 0) + 1
+            if u:
+                unit_counts[u] = unit_counts.get(u, 0) + 1
 
-    # Si hay categorías en items no registradas, incorporarlas
-    for c_name, count in cat_counts.items():
-        if c_name.lower() not in seen_cats:
-            new_cat = {
-                "name": c_name,
-                "icon": "📦",
-                "description": "Categoría personalizada",
-                "count": count
-            }
-            categories.append(new_cat)
-            persisted_cats.append(new_cat)
+        categories = []
+        seen_cats = set()
+        for cat in persisted_cats:
+            if isinstance(cat, dict) and cat.get('name'):
+                c_name = str(cat.get('name')).strip()
+                if c_name and c_name != '__SYSTEM__':
+                    seen_cats.add(c_name.lower())
+                    categories.append({
+                        "name": c_name,
+                        "icon": cat.get('icon', '📦'),
+                        "description": cat.get('description', ''),
+                        "count": cat_counts.get(c_name, 0)
+                    })
+
+        # Si hay categorías en items no registradas, incorporarlas
+        new_cats_added = False
+        for c_name, count in cat_counts.items():
+            if c_name and c_name != '__SYSTEM__' and c_name.lower() not in seen_cats:
+                new_cat = {
+                    "name": c_name,
+                    "icon": "📦",
+                    "description": "Categoría personalizada",
+                    "count": count
+                }
+                categories.append(new_cat)
+                persisted_cats.append(new_cat)
+                seen_cats.add(c_name.lower())
+                new_cats_added = True
+
+        if new_cats_added:
             _save_persisted_taxonomies(persisted_cats, persisted_units)
 
-    # Añadir conteo de uso a las unidades
-    units_with_counts = []
-    for u in persisted_units:
-        u_name = u['name']
-        units_with_counts.append({
-            "name": u_name,
-            "count": unit_counts.get(u_name, 0)
-        })
+        # Añadir conteo de uso a las unidades
+        units_with_counts = []
+        for u in persisted_units:
+            if isinstance(u, dict) and u.get('name'):
+                u_name = str(u.get('name')).strip()
+                if u_name:
+                    units_with_counts.append({
+                        "name": u_name,
+                        "count": unit_counts.get(u_name, 0)
+                    })
 
-    return jsonify({
-        "categories": categories,
-        "units": units_with_counts
-    })
+        return jsonify({
+            "categories": categories,
+            "units": units_with_counts
+        }), 200
+    except Exception as e:
+        logging.error("Error al obtener taxonomías de stock: %s", e, exc_info=True)
+        return jsonify({
+            "categories": list(_DEFAULT_STOCK_CATEGORIES),
+            "units": list(_DEFAULT_STOCK_UNITS)
+        }), 200
 
 @app.route('/api/stock/taxonomies/category', methods=['POST'])
 def add_stock_category():

@@ -8503,9 +8503,13 @@ function initStockTaxonomyModal() {
 
 async function fetchStockTaxonomies() {
     try {
-        const res = await fetch('/api/stock/taxonomies');
+        const res = await fetch('/api/stock/taxonomies', { headers: getAuthHeaders() });
         if (res.ok) {
-            stockTaxonomiesData = await res.json();
+            try {
+                stockTaxonomiesData = await res.json();
+            } catch (e) {
+                stockTaxonomiesData = { categories: [], units: [] };
+            }
             renderTaxonomyCategories();
             renderTaxonomyUnits();
             if (typeof updateStockCategoryOptions === 'function') {
