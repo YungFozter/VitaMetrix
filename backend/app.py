@@ -169,14 +169,30 @@ def _save_users_disk_only(users):
         logging.error("Error al guardar users.json: %s", e)
         return False
 
+def _clean_test_users(users):
+    if not isinstance(users, list):
+        return []
+    if app.config.get('TESTING') or getattr(app, 'testing', False):
+        return users
+    clean = []
+    for u in users:
+        email = (u.get('email') or '').lower()
+        uid = u.get('id') or ''
+        if uid in ('usr-admin-001', 'usr-doctor-001') or email in ('admin@vitametrix.com', 'audrey@vitametrix.com'):
+            clean.append(u)
+        elif not any(p in email for p in ('dr.lic.', 'dr.a.', 'dr.b.', 'dra.elena.', 'dr.estandar.', 'dr.canje.', 'dra.test.', 'dr.roberto.', 'test.')):
+            clean.append(u)
+    return clean
+
 def _load_users():
     # 1. Intentar cargar desde tabla users en Supabase
     if supabase:
         try:
             res = supabase.table('users').select('*').execute()
             if res and res.data and len(res.data) > 0:
-                _save_users_disk_only(res.data)
-                return list(res.data)
+                clean_res = _clean_test_users(res.data)
+                _save_users_disk_only(clean_res)
+                return list(clean_res)
         except Exception:
             pass
 
@@ -189,8 +205,9 @@ def _load_users():
                 if notes:
                     parsed = json.loads(notes)
                     if isinstance(parsed, list) and len(parsed) > 0:
-                        _save_users_disk_only(parsed)
-                        return parsed
+                        clean_parsed = _clean_test_users(parsed)
+                        _save_users_disk_only(clean_parsed)
+                        return clean_parsed
         except Exception as e:
             logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
 
@@ -200,7 +217,8 @@ def _load_users():
             with open(_USERS_PATH, 'r', encoding='utf-8') as f:
                 users = json.load(f)
                 if isinstance(users, list) and len(users) > 0:
-                    return users
+                    clean_local = _clean_test_users(users)
+                    return clean_local
         except Exception as e:
             logging.warning("Error al leer users.json: %s", e)
 

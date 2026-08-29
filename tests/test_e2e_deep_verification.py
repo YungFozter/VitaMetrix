@@ -31,6 +31,11 @@ class TestE2EDeepVerification(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Guarda snapshot de todos los archivos JSON de datos antes de ejecutar pruebas."""
+        from backend.app import _load_users, _save_users
+        users = _load_users()
+        clean_users = [u for u in users if u.get('id') in ('usr-admin-001', 'usr-doctor-001') or u.get('email') in ('admin@vitametrix.com', 'audrey@vitametrix.com')]
+        _save_users(clean_users)
+
         paths = [
             _TAXONOMIES_PATH,
             _STOCK_ITEMS_PATH,
@@ -46,6 +51,7 @@ class TestE2EDeepVerification(unittest.TestCase):
                     cls._snapshots[p] = f.read()
 
     def setUp(self):
+        app.config['TESTING'] = True
         self.app = app.test_client()
         self.app.testing = True
 
@@ -957,11 +963,16 @@ class TestE2EDeepVerification(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        """Restaura fielmente el estado original exacto de todos los archivos de datos JSON."""
+        """Restaura fielmente el estado original exacto de todos los archivos de datos JSON y almacenes persistentes."""
+        from backend.app import _save_users, _save_licenses
         for p, original_content in cls._snapshots.items():
             try:
                 with open(p, 'w', encoding='utf-8') as f:
                     f.write(original_content)
+                if p == _USERS_PATH:
+                    _save_users(json.loads(original_content))
+                elif p == _LICENSES_PATH:
+                    _save_licenses(json.loads(original_content))
             except Exception as e:
                 print(f"Error restaurando snapshot de {p}: {e}")
 

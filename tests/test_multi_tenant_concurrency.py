@@ -24,11 +24,14 @@ from app import app, _save_users, _save_licenses, _save_persisted_stock_items, _
 class TestMultiTenantConcurrency(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
+        app.config['TESTING'] = True
         cls.app = app
         cls.client = cls.app.test_client()
 
         # Tomar snapshots de estado previo
-        cls._orig_users = _load_users()
+        users = _load_users()
+        cls._orig_users = [u for u in users if u.get('id') in ('usr-admin-001', 'usr-doctor-001') or u.get('email') in ('admin@vitametrix.com', 'audrey@vitametrix.com')]
+        _save_users(cls._orig_users)
         cls._orig_licenses = _load_licenses()
         cls._orig_stock_items = _load_persisted_stock_items()
         cls._orig_stock_movs = _load_persisted_stock_movements()
