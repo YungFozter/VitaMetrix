@@ -1281,6 +1281,9 @@ def dashboard_stats():
         return jsonify(_EMPTY_DASHBOARD)
         
     try:
+        if not current_uid:
+            return jsonify(_EMPTY_DASHBOARD), 200
+
         # Contar clientes de forma segura ante esquemas que aún no tengan user_id
         all_clients = []
         try:
@@ -1293,6 +1296,13 @@ def dashboard_stats():
                 all_clients = clients_res.data or []
             except Exception:
                 all_clients = []
+
+        # Enriquecer con mapa de usuarios persistente
+        for c in all_clients:
+            if not c.get('user_id'):
+                c_uid = _CLIENTS_USER_MAP.get(str(c.get('id'))) or _CLIENTS_USER_MAP.get(str(c.get('idp'))) or _CLIENTS_USER_MAP.get(str(c.get('code')))
+                if c_uid:
+                    c['user_id'] = c_uid
 
         # Estricto aislamiento multi-tenant: SuperAdmin no ve datos clínicos de doctores
         if is_admin:

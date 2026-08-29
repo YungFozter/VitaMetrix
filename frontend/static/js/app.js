@@ -2365,7 +2365,7 @@ let populationChart = null;
 
 async function fetchDashboardStats() {
     try {
-        const response = await fetch('/api/dashboard-stats');
+        const response = await fetch('/api/dashboard-stats', { headers: getAuthHeaders() });
         if (response.ok) {
             const data = await response.json();
 
