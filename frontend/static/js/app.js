@@ -4973,38 +4973,208 @@ function initDemoDataInjector() {
     const btnDemo = document.getElementById('btn-fill-demo');
     if (!btnDemo) return;
 
+    const maleFirstNames = [
+        'Carlos', 'Alejandro', 'Mateo', 'Rodrigo', 'Sebastián', 'Gabriel', 'Lucas', 'Joaquín',
+        'Daniel', 'Felipe', 'Andrés', 'Diego', 'Nicolás', 'Martín', 'Esteban', 'Ignacio',
+        'Bruno', 'Leonardo', 'Mauricio', 'Fernando', 'Álvaro', 'Javier', 'Gonzalo', 'Emilio'
+    ];
+    const femaleFirstNames = [
+        'Sofía', 'Camila', 'Valentina', 'Isabella', 'Lucía', 'Mariana', 'Valeria', 'Elena',
+        'Catalina', 'Paula', 'Renata', 'Abril', 'Jimena', 'Victoria', 'Natalia', 'Gabriela',
+        'Daniela', 'Carolina', 'Andrea', 'Claudia', 'Florencia', 'Luciana', 'Micaela', 'Julieta'
+    ];
+    const lastNames = [
+        'Morales', 'Mendoza', 'Fernández', 'Vargas', 'Herrera', 'Rojas', 'Benítez', 'Navarro',
+        'Castro', 'Ortiz', 'Paredes', 'Salazar', 'Fuentes', 'Silva', 'Aguilar', 'Alarcón',
+        'Gómez', 'Ríos', 'Castillo', 'Espinoza', 'Torres', 'Guzmán', 'Ramos', 'Delgado',
+        'Medina', 'Romero', 'Miranda', 'Flores', 'Suárez', 'Cáceres', 'Justiniano', 'Mercado'
+    ];
+
+    // Perfiles arquetípicos para variar los resultados clínicos del vector BIA
+    const clinicalArchetypes = [
+        {
+            type: 'normopeso',
+            desc: 'Eutrófico / Saludable',
+            bmiMin: 20.5, bmiMax: 23.8,
+            ageMin: 22, ageMax: 45,
+            rMale: [490, 560], xcMale: [58, 70],
+            rFemale: [530, 610], xcFemale: [55, 68],
+            waistRatioMale: 0.44, waistRatioFemale: 0.43,
+            smmRatioMale: 0.46, smmRatioFemale: 0.38,
+            fatPctMale: 15, fatPctFemale: 23,
+            visceralMale: 1.1, visceralFemale: 1.0,
+            palList: ['1.55', '1.725']
+        },
+        {
+            type: 'atleta',
+            desc: 'Atlético / Alta Masa Muscular',
+            bmiMin: 23.0, bmiMax: 26.5,
+            ageMin: 20, ageMax: 36,
+            rMale: [430, 490], xcMale: [66, 78],
+            rFemale: [480, 540], xcFemale: [64, 76],
+            waistRatioMale: 0.42, waistRatioFemale: 0.40,
+            smmRatioMale: 0.52, smmRatioFemale: 0.44,
+            fatPctMale: 11, fatPctFemale: 17,
+            visceralMale: 1.0, visceralFemale: 1.0,
+            palList: ['1.725', '1.9']
+        },
+        {
+            type: 'sobrepeso',
+            desc: 'Sobrepeso / Adiposidad Moderada',
+            bmiMin: 26.5, bmiMax: 31.0,
+            ageMin: 28, ageMax: 58,
+            rMale: [460, 530], xcMale: [46, 56],
+            rFemale: [510, 590], xcFemale: [44, 54],
+            waistRatioMale: 0.53, waistRatioFemale: 0.52,
+            smmRatioMale: 0.39, smmRatioFemale: 0.31,
+            fatPctMale: 26, fatPctFemale: 34,
+            visceralMale: 1.6, visceralFemale: 1.4,
+            palList: ['1.2', '1.375']
+        },
+        {
+            type: 'adulto_mayor',
+            desc: 'Adulto Mayor / Sarcopenia Leve',
+            bmiMin: 21.0, bmiMax: 25.0,
+            ageMin: 60, ageMax: 76,
+            rMale: [550, 640], xcMale: [36, 47],
+            rFemale: [600, 710], xcFemale: [34, 45],
+            waistRatioMale: 0.50, waistRatioFemale: 0.49,
+            smmRatioMale: 0.36, smmRatioFemale: 0.28,
+            fatPctMale: 24, fatPctFemale: 33,
+            visceralMale: 1.4, visceralFemale: 1.3,
+            palList: ['1.2', '1.375']
+        },
+        {
+            type: 'joven_activo',
+            desc: 'Joven Dinámico / Estudiante',
+            bmiMin: 21.5, bmiMax: 24.5,
+            ageMin: 19, ageMax: 29,
+            rMale: [470, 530], xcMale: [60, 72],
+            rFemale: [510, 580], xcFemale: [58, 70],
+            waistRatioMale: 0.43, waistRatioFemale: 0.41,
+            smmRatioMale: 0.48, smmRatioFemale: 0.40,
+            fatPctMale: 14, fatPctFemale: 21,
+            visceralMale: 1.0, visceralFemale: 1.0,
+            palList: ['1.55', '1.725']
+        }
+    ];
+
+    const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+    const randRange = (min, max, decimals = 1) => {
+        const val = min + Math.random() * (max - min);
+        return Number(val.toFixed(decimals));
+    };
+
     btnDemo.addEventListener('click', (e) => {
         e.preventDefault();
 
-        // 1. Datos básicos
-        document.getElementById('input-idp').value = '104829';
-        document.getElementById('input-name').value = 'Dra. Sofía Alarcón';
-        document.getElementById('input-r').value = '532.4';
-        document.getElementById('input-xc').value = '57.8';
-        document.getElementById('input-weight').value = '66.4';
-        document.getElementById('input-height').value = '167';
-        document.getElementById('input-age').value = '29';
-        document.getElementById('input-gender').value = 'female';
-        document.getElementById('input-pal').value = '1.55';
-        document.getElementById('input-waist').value = '73.0';
+        // 1. Seleccionar género aleatorio
+        const isMale = Math.random() > 0.5;
+        const gender = isMale ? 'male' : 'female';
+        
+        // 2. Generar nombre de persona directo (Sin Dr. ni Dra.)
+        const firstName = isMale ? pick(maleFirstNames) : pick(femaleFirstNames);
+        const lastName1 = pick(lastNames);
+        let lastName2 = pick(lastNames);
+        while (lastName2 === lastName1) {
+            lastName2 = pick(lastNames);
+        }
+        const fullName = `${firstName} ${lastName1} ${lastName2}`;
 
-        // 2. Abrir datos del dispositivo y llenarlos
+        // 3. Seleccionar arquetipo clínico aleatorio
+        const arch = pick(clinicalArchetypes);
+
+        // 4. Medidas antropométricas realistas
+        const height = isMale ? randRange(166, 187, 0) : randRange(153, 173, 0);
+        const targetBmi = randRange(arch.bmiMin, arch.bmiMax, 1);
+        const hM = height / 100;
+        const weight = Number((targetBmi * (hM * hM)).toFixed(1));
+        const age = randRange(arch.ageMin, arch.ageMax, 0);
+        const waistRatio = isMale ? arch.waistRatioMale : arch.waistRatioFemale;
+        const waist = Number((height * waistRatio + randRange(-2, 2, 1)).toFixed(1));
+        const pal = pick(arch.palList);
+
+        // 5. Parámetros Bioeléctricos (R y Xc en 50 kHz)
+        const rRange = isMale ? arch.rMale : arch.rFemale;
+        const xcRange = isMale ? arch.xcMale : arch.xcFemale;
+        const r = randRange(rRange[0], rRange[1], 1);
+        const xc = randRange(xcRange[0], xcRange[1], 1);
+
+        // 6. IDP autoincremental o aleatorio
+        let idpVal = 'IDP-0001';
+        if (typeof getNextAvailableIDP === 'function') {
+            idpVal = getNextAvailableIDP();
+        } else {
+            idpVal = `IDP-${String(randRange(1001, 9999, 0)).padStart(4, '0')}`;
+        }
+
+        // Inyectar en campos básicos
+        const inputIdp = document.getElementById('input-idp');
+        const inputName = document.getElementById('input-name');
+        const inputR = document.getElementById('input-r');
+        const inputXc = document.getElementById('input-xc');
+        const inputWeight = document.getElementById('input-weight');
+        const inputHeight = document.getElementById('input-height');
+        const inputAge = document.getElementById('input-age');
+        const inputGender = document.getElementById('input-gender');
+        const inputPal = document.getElementById('input-pal');
+        const inputWaist = document.getElementById('input-waist');
+
+        if (inputIdp) inputIdp.value = idpVal;
+        if (inputName) inputName.value = fullName;
+        if (inputR) inputR.value = r.toFixed(1);
+        if (inputXc) inputXc.value = xc.toFixed(1);
+        if (inputWeight) inputWeight.value = weight.toFixed(1);
+        if (inputHeight) inputHeight.value = height.toString();
+        if (inputAge) inputAge.value = age.toString();
+        if (inputGender) inputGender.value = gender;
+        if (inputPal) inputPal.value = pal;
+        if (inputWaist) inputWaist.value = waist.toFixed(1);
+
+        // 7. Parámetros del dispositivo calculados consistentemente
         const details = document.querySelector('details.device-data');
         if (details) details.open = true;
 
-        document.getElementById('input-smm').value = '25.8';
-        document.getElementById('input-tbw').value = '37.4';
-        document.getElementById('input-ecw').value = '14.8';
-        document.getElementById('input-fat-mass').value = '15.6';
-        document.getElementById('input-visceral').value = '1.1';
-        document.getElementById('input-phase-dev').value = '6.2';
-        document.getElementById('input-seg-arm-r').value = '2.35';
-        document.getElementById('input-seg-arm-l').value = '2.30';
-        document.getElementById('input-seg-torso').value = '18.9';
-        document.getElementById('input-seg-leg-r').value = '6.5';
-        document.getElementById('input-seg-leg-l').value = '6.4';
+        const smmRatio = isMale ? arch.smmRatioMale : arch.smmRatioFemale;
+        const smm = Number((weight * smmRatio + randRange(-0.8, 0.8, 1)).toFixed(1));
+        const tbw = Number((weight * (isMale ? 0.58 : 0.51) + randRange(-1.2, 1.2, 1)).toFixed(1));
+        const ecw = Number((tbw * 0.39 + randRange(-0.4, 0.4, 1)).toFixed(1));
+        const fatPct = isMale ? arch.fatPctMale : arch.fatPctFemale;
+        const fatMass = Number((weight * (fatPct / 100) + randRange(-0.7, 0.7, 1)).toFixed(1));
+        const visceral = Number((arch.visceralMale + randRange(-0.1, 0.3, 1)).toFixed(1));
+        const phaseDev = Number((Math.atan2(xc, r) * (180 / Math.PI)).toFixed(1));
 
-        // 3. Destello de animación en los campos
+        const segArmR = Number((smm * 0.088).toFixed(2));
+        const segArmL = Number((smm * 0.086).toFixed(2));
+        const segTorso = Number((smm * 0.54).toFixed(1));
+        const segLegR = Number((smm * 0.243).toFixed(1));
+        const segLegL = Number((smm * 0.241).toFixed(1));
+
+        const elSmm = document.getElementById('input-smm');
+        const elTbw = document.getElementById('input-tbw');
+        const elEcw = document.getElementById('input-ecw');
+        const elFat = document.getElementById('input-fat-mass');
+        const elVisc = document.getElementById('input-visceral');
+        const elPhaseDev = document.getElementById('input-phase-dev');
+        const elArmR = document.getElementById('input-seg-arm-r');
+        const elArmL = document.getElementById('input-seg-arm-l');
+        const elTorso = document.getElementById('input-seg-torso');
+        const elLegR = document.getElementById('input-seg-leg-r');
+        const elLegL = document.getElementById('input-seg-leg-l');
+
+        if (elSmm) elSmm.value = smm.toFixed(1);
+        if (elTbw) elTbw.value = tbw.toFixed(1);
+        if (elEcw) elEcw.value = ecw.toFixed(1);
+        if (elFat) elFat.value = fatMass.toFixed(1);
+        if (elVisc) elVisc.value = Math.max(1.0, visceral).toFixed(1);
+        if (elPhaseDev) elPhaseDev.value = phaseDev.toFixed(1);
+        if (elArmR) elArmR.value = segArmR.toFixed(2);
+        if (elArmL) elArmL.value = segArmL.toFixed(2);
+        if (elTorso) elTorso.value = segTorso.toFixed(1);
+        if (elLegR) elLegR.value = segLegR.toFixed(1);
+        if (elLegL) elLegL.value = segLegL.toFixed(1);
+
+        // 8. Destello visual sutil en campos
         const allInputs = document.querySelectorAll('#bio-form input, #bio-form select');
         allInputs.forEach(input => {
             input.classList.remove('input-highlight-pulse');
@@ -5012,7 +5182,7 @@ function initDemoDataInjector() {
             input.classList.add('input-highlight-pulse');
         });
 
-        showToast('🧪 Caso de prueba cargado en el formulario', 'info');
+        showToast(`🧪 Caso generado: ${fullName} (${arch.desc})`, 'info');
     });
 }
 

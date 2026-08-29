@@ -13,6 +13,13 @@
     padding: 1.4rem 1.6rem;
     box-shadow: 0 18px 40px -16px rgba(0, 20, 40, 0.12);
     margin-bottom: 1.6rem;
+    transition: none !important;
+}
+
+.bio-form-horizontal:hover {
+    transform: none !important;
+    box-shadow: 0 18px 40px -16px rgba(0, 20, 40, 0.12) !important;
+    background: rgba(255, 255, 255, 0.78) !important;
 }
 
 .bio-form-head {
@@ -80,12 +87,13 @@
     box-shadow: 0 4px 15px -3px rgba(26, 42, 74, 0.04);
     display: flex;
     flex-direction: column;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    transition: none !important;
 }
 
 .bio-bento-card:hover {
-    border-color: rgba(0, 180, 216, 0.35);
-    box-shadow: 0 8px 24px -4px rgba(0, 180, 216, 0.08);
+    border-color: rgba(226, 232, 240, 0.95) !important;
+    box-shadow: 0 4px 15px -3px rgba(26, 42, 74, 0.04) !important;
+    transform: none !important;
 }
 
 .bio-bento-header {
@@ -465,13 +473,10 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.8);
-    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.4s ease;
 }
 .bio-glass:hover {
-    transform: translateY(-6px) scale(1.02);
-    box-shadow: 0 30px 60px -12px rgba(26, 42, 74, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 1);
-    background: rgba(255, 255, 255, 0.85);
+    transform: none;
+    background: rgba(255, 255, 255, 0.80);
 }
 
 /* RESPONSIVE BIA GRID */
