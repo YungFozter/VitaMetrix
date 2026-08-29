@@ -1461,12 +1461,18 @@ function renderAdminUsers() {
                 </td>
                 <td class="text-end pe-3">
                     <div class="btn-group btn-group-sm">
-                        <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 fw-semibold" onclick="quickExtendUserDirect('${u.id}', 30)" title="Extender 30 días de suscripción">+30d</button>
+                        <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 fw-semibold" onclick="quickExtendUserDirect('${u.id}', 30)" title="Extender +30 días de suscripción">+30d</button>
                         <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-secondary" onclick="openAdminManageUserModal('${u.id}')" title="Gestionar cuenta">
                             <i class="bi bi-gear-fill"></i>
                         </button>
                         ${!isAdmin ? `
-                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar usuario de la base de datos">
+                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-warning" onclick="deactivateUserSubscriptionDirect('${u.id}', '${escapeHtml(u.full_name)}')" title="Desactivar Suscripción (0 días / Vencida)">
+                                <i class="bi bi-pause-circle-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="removeUserSubscriptionDirect('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar Suscripción (Restablecer a 'Sin Suscripción Anterior')">
+                                <i class="bi bi-slash-circle-fill"></i>
+                            </button>
+                            <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-danger" onclick="deleteAdminUser('${u.id}', '${escapeHtml(u.full_name)}')" title="Eliminar usuario permanentemente de la base de datos">
                                 <i class="bi bi-trash"></i>
                             </button>
                         ` : ''}
@@ -1800,11 +1806,28 @@ function openAdminManageUserModal(userId) {
     }
 
     if (badgeEl) {
-        badgeEl.textContent = user.subscription_status === 'active' ? '🟢 Activo' : (user.subscription_status === 'trial' ? '🟡 Prueba' : (user.role === 'admin' ? '👑 Admin' : '🔴 Vencido'));
-        badgeEl.className = `badge ${user.subscription_status === 'active' ? 'bg-success text-white' : (user.subscription_status === 'trial' ? 'bg-warning text-dark' : 'bg-danger text-white')}`;
+        if (user.role === 'admin') {
+            badgeEl.textContent = '👑 SuperAdmin';
+            badgeEl.className = 'badge bg-purple text-white';
+        } else if (user.subscription_status === 'lifetime') {
+            badgeEl.textContent = '⭐ Lifetime';
+            badgeEl.className = 'badge bg-purple text-white';
+        } else if (user.subscription_status === 'active') {
+            badgeEl.textContent = '🟢 Activo';
+            badgeEl.className = 'badge bg-success text-white';
+        } else if (user.subscription_status === 'trial') {
+            badgeEl.textContent = '🟡 Prueba (7d)';
+            badgeEl.className = 'badge bg-warning text-dark';
+        } else if (user.subscription_status === 'no_subscription' || !user.subscription_expires_at) {
+            badgeEl.textContent = '⚪ Sin Suscripción';
+            badgeEl.className = 'badge bg-secondary text-white';
+        } else {
+            badgeEl.textContent = '🔴 Vencido';
+            badgeEl.className = 'badge bg-danger text-white';
+        }
     }
 
-    if (statusSelect) statusSelect.value = user.subscription_status || 'active';
+    if (statusSelect) statusSelect.value = user.subscription_status || (user.subscription_expires_at ? 'active' : 'no_subscription');
     if (roleSelect) roleSelect.value = user.role || 'user';
     if (planNameInput) planNameInput.value = user.subscription_plan || 'Plan Pro Mensual';
     if (errorEl) errorEl.classList.add('d-none');
@@ -1824,6 +1847,80 @@ async function quickExtendDays(days) {
         modal.classList.add('hidden', 'd-none');
         modal.style.display = 'none';
     }
+}
+
+function deactivateUserSubscriptionDirect(userId, userName) {
+    showConfirm(
+        'Desactivar Suscripción',
+        `¿Deseas <strong>desactivar la suscripción</strong> de <strong>${escapeHtml(userName)}</strong>?<br><span class="text-muted small">La cuenta quedará inmediatamente en 0 días (vencida). Podrá volver a activarse cuando se le asigne o canjee un nuevo PIN.</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/deactivate-subscription`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Error al desactivar suscripción', 'error');
+                    return;
+                }
+                showToast(`⏸️ ${data.message || 'Suscripción desactivada.'}`, 'warning');
+                fetchAdminUsers(false);
+            } catch (e) {
+                showToast('Error de conexión al desactivar suscripción', 'error');
+            }
+        },
+        { confirmText: 'Desactivar Suscripción', type: 'warning', icon: 'bi bi-pause-circle-fill' }
+    );
+}
+
+function removeUserSubscriptionDirect(userId, userName) {
+    showConfirm(
+        'Eliminar Suscripción',
+        `¿Deseas <strong>eliminar la suscripción</strong> de <strong>${escapeHtml(userName)}</strong>?<br><span class="text-muted small">La cuenta se restablecerá al estado 'Sin Suscripción Anterior' (como cuenta nueva).</span>`,
+        async () => {
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/remove-subscription`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.error || 'Error al eliminar suscripción', 'error');
+                    return;
+                }
+                showToast(`🗑️ ${data.message || 'Suscripción eliminada.'}`, 'info');
+                fetchAdminUsers(false);
+            } catch (e) {
+                showToast('Error de conexión al eliminar suscripción', 'error');
+            }
+        },
+        { confirmText: 'Eliminar Suscripción', type: 'danger', icon: 'bi bi-slash-circle-fill' }
+    );
+}
+
+function quickDeactivateCurrentModalUser() {
+    const userId = document.getElementById('admin-manage-user-id').value;
+    const user = allAdminUsersData.find(u => u.id === userId);
+    const userName = user ? user.full_name : 'Usuario';
+    const modal = document.getElementById('modal-admin-manage-user');
+    if (modal) {
+        modal.classList.add('hidden', 'd-none');
+        modal.style.display = 'none';
+    }
+    deactivateUserSubscriptionDirect(userId, userName);
+}
+
+function quickRemoveCurrentModalUserSubscription() {
+    const userId = document.getElementById('admin-manage-user-id').value;
+    const user = allAdminUsersData.find(u => u.id === userId);
+    const userName = user ? user.full_name : 'Usuario';
+    const modal = document.getElementById('modal-admin-manage-user');
+    if (modal) {
+        modal.classList.add('hidden', 'd-none');
+        modal.style.display = 'none';
+    }
+    removeUserSubscriptionDirect(userId, userName);
 }
 
 function deleteAdminUser(userId, userName) {

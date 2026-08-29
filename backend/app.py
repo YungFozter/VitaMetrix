@@ -1091,16 +1091,32 @@ def admin_set_user_status(user_id):
     if not target_user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    if new_status in ['active', 'trial', 'expired', 'lifetime']:
-        target_user['subscription_status'] = new_status
+    if new_status in ['active', 'trial', 'expired', 'lifetime', 'no_subscription', 'none']:
         if new_status == 'lifetime':
+            target_user['subscription_status'] = 'lifetime'
             target_user['subscription_expires_at'] = '2099-12-31T23:59:59Z'
-        elif new_status == 'active' and (not target_user.get('subscription_expires_at') or _calc_subscription_status(target_user)[0] == 'expired'):
-            target_user['subscription_expires_at'] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+            target_user['subscription_plan'] = new_plan or 'Plan Vitalicio Ilimitado'
+        elif new_status == 'active':
+            target_user['subscription_status'] = 'active'
+            if not target_user.get('subscription_expires_at') or _calc_subscription_status(target_user)[0] in ('expired', 'no_subscription'):
+                target_user['subscription_expires_at'] = (datetime.now(timezone.utc) + timedelta(days=30)).isoformat()
+            if new_plan:
+                target_user['subscription_plan'] = new_plan
+        elif new_status == 'trial':
+            target_user['subscription_status'] = 'trial'
+            target_user['subscription_expires_at'] = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+            target_user['subscription_plan'] = new_plan or 'Plan de Prueba (7 días)'
         elif new_status == 'expired':
+            target_user['subscription_status'] = 'expired'
             target_user['subscription_expires_at'] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+            target_user['subscription_plan'] = new_plan or 'Plan Vencido'
+        elif new_status in ('no_subscription', 'none'):
+            target_user['subscription_status'] = 'no_subscription'
+            target_user['subscription_expires_at'] = None
+            target_user['subscription_plan'] = 'Sin Suscripción Anterior'
+            target_user['last_redeemed_pin'] = None
 
-    if new_plan:
+    if new_plan and new_status not in ('no_subscription', 'none', 'expired'):
         target_user['subscription_plan'] = new_plan
     if new_role in ['user', 'admin']:
         target_user['role'] = new_role
@@ -1108,7 +1124,52 @@ def admin_set_user_status(user_id):
     _save_users(users)
     return jsonify({
         "success": True,
-        "message": f"Estado de usuario actualizado correctamente.",
+        "message": f"Estado de {target_user.get('full_name')} actualizado correctamente.",
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
+@app.route('/api/admin/users/<user_id>/deactivate-subscription', methods=['POST'])
+def admin_deactivate_user_subscription(user_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    target_user['subscription_status'] = 'expired'
+    target_user['subscription_expires_at'] = (datetime.now(timezone.utc) - timedelta(days=1)).isoformat()
+    target_user['subscription_plan'] = 'Plan Vencido'
+
+    _save_users(users)
+    return jsonify({
+        "success": True,
+        "message": f"Suscripción de {target_user.get('full_name')} desactivada (cuenta en 0 días / vencida).",
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
+@app.route('/api/admin/users/<user_id>/remove-subscription', methods=['POST'])
+def admin_remove_user_subscription(user_id):
+    caller, err = _require_admin()
+    if err:
+        return err
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    target_user['subscription_status'] = 'no_subscription'
+    target_user['subscription_expires_at'] = None
+    target_user['subscription_plan'] = 'Sin Suscripción Anterior'
+    target_user['last_redeemed_pin'] = None
+
+    _save_users(users)
+    return jsonify({
+        "success": True,
+        "message": f"Suscripción de {target_user.get('full_name')} eliminada (restablecido a 'Sin Suscripción Anterior').",
         "user": _build_safe_user_dict(target_user)
     }), 200
 
