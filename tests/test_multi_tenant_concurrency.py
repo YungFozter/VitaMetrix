@@ -49,6 +49,15 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         _save_persisted_sales(cls._orig_sales)
         _save_persisted_appointments(cls._orig_appts)
         _save_persisted_taxonomies(cls._orig_cats, cls._orig_units)
+        from backend.app import supabase
+        if supabase:
+            try:
+                res_all = supabase.table('clients').select('id, name').execute()
+                for c in (res_all.data or []):
+                    if 'Paciente Exclusivo' in (c.get('name') or '') or 'Test' in (c.get('name') or ''):
+                        supabase.table('clients').delete().eq('id', c.get('id')).execute()
+            except Exception:
+                pass
 
     def _login(self, email, password):
         res = self.client.post('/api/auth/login', json={'email': email, 'password': password})

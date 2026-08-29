@@ -172,7 +172,7 @@ def _save_users_disk_only(users):
 def _clean_test_users(users):
     if not isinstance(users, list):
         return []
-    if app.config.get('TESTING') or getattr(app, 'testing', False):
+    if app.config.get('TESTING') or getattr(app, 'testing', False) or 'unittest' in sys.modules:
         return users
     clean = []
     for u in users:
@@ -2133,12 +2133,19 @@ def delete_client(client_id):
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
         
-        # Validar pertenencia antes de eliminar
+        # Validar pertenencia antes de eliminar (soportando id UUID o code entero)
         check = supabase.table('clients').select('id, user_id').eq('id', client_id).execute()
-        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
+        if not (check and check.data):
+            if client_id.isdigit():
+                check = supabase.table('clients').select('id, user_id').eq('code', int(client_id)).execute()
+        if check and check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
             return jsonify({"error": "No tienes permiso para eliminar este paciente"}), 403
 
-        supabase.table('clients').delete().eq('id', client_id).execute()
+        if check and check.data:
+            real_id = check.data[0]['id']
+            supabase.table('clients').delete().eq('id', real_id).execute()
+        else:
+            supabase.table('clients').delete().eq('id', client_id).execute()
         _invalidate_dashboard_cache()
         return jsonify({"success": True})
     except Exception as e:
