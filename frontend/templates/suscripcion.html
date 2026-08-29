@@ -22,41 +22,91 @@
         <div class="row g-3 g-lg-4">
             <!-- 1. TARJETA DE ESTADO ACTUAL -->
             <div class="col-12 col-lg-7">
-                <div class="bento-card h-100 p-4 d-flex flex-column justify-content-between position-relative overflow-hidden" style="min-height: 280px;">
-                    <div class="position-absolute top-0 end-0 p-4 opacity-10 pointer-events-none">
-                        <i class="bi bi-shield-check" style="font-size: 8rem; color: #0284c7;"></i>
+                <div class="bento-card h-100 p-4 p-md-4.5 d-flex flex-column justify-content-between position-relative overflow-hidden shadow-sm" 
+                     id="sub-main-status-card"
+                     style="min-height: 310px; border-radius: 20px; background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border: 1px solid rgba(226, 232, 240, 0.9);">
+                    
+                    <!-- Marca de Agua Dinámica de Fondo -->
+                    <div class="position-absolute top-0 end-0 p-4 opacity-10 pointer-events-none" id="sub-watermark-icon-wrap" style="transform: translate(15%, -15%);">
+                        <i class="bi bi-shield-check" id="sub-watermark-icon" style="font-size: 9.5rem; color: #0284c7;"></i>
                     </div>
 
                     <div>
-                        <div class="d-flex align-items-center justify-content-between mb-3">
-                            <span class="text-xs uppercase fw-bold tracking-wider text-muted">ESTADO DE LA CUENTA</span>
-                            <span class="badge px-3 py-1.5 rounded-pill fs-7 fw-bold" id="sub-status-pill">
-                                🟢 Activo
+                        <!-- Header Superior de la Tarjeta con Pill de Estado Glow -->
+                        <div class="d-flex align-items-center justify-content-between gap-2 mb-3">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle" style="width: 28px; height: 28px; font-size: 0.85rem;">
+                                    <i class="bi bi-shield-lock-fill"></i>
+                                </span>
+                                <span class="text-xs uppercase fw-bold tracking-wider text-muted" style="letter-spacing: 0.8px;">ESTADO DE LA CUENTA</span>
+                            </div>
+                            <span class="badge px-3 py-1.5 rounded-pill fs-7 fw-bold d-inline-flex align-items-center gap-1.5 shadow-2xs" id="sub-status-pill" style="font-size: 0.78rem;">
+                                <span class="status-indicator-dot" id="sub-status-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #22c55e;"></span>
+                                <span id="sub-status-pill-text">🟢 Activo</span>
                             </span>
                         </div>
 
-                        <h4 class="fw-extrabold text-navy mb-1 display-font" id="sub-plan-title">Plan Pro Mensual</h4>
-                        <p class="text-muted small mb-4">Acceso completo a todos los módulos clínicos, stock y reportes de VitaMetrix.</p>
+                        <!-- Título del Plan y Descripción -->
+                        <h3 class="fw-extrabold text-navy mb-1 display-font" id="sub-plan-title" style="font-size: 1.65rem; letter-spacing: -0.5px;">Plan Pro Mensual</h3>
+                        <p class="text-muted small mb-3.5" id="sub-plan-desc" style="font-size: 0.84rem; line-height: 1.5;">
+                            Acceso completo a todos los módulos clínicos, cálculo bioeléctrico BIA, inventario de insumos e informes médicos de VitaMetrix.
+                        </p>
 
-                        <!-- Indicador de Días Restantes -->
-                        <div class="bg-light bg-opacity-70 rounded-3 p-3 border mb-3">
+                        <!-- Contenedor Bento Interno: Medidor de Tiempo y Barra de Progreso -->
+                        <div class="rounded-4 p-3.5 border mb-3 position-relative" id="sub-meter-box" style="background: #ffffff; border-color: rgba(226, 232, 240, 0.95) !important; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);">
                             <div class="d-flex align-items-center justify-content-between mb-2">
-                                <span class="fw-semibold text-secondary small">Tiempo Restante:</span>
-                                <span class="fw-bold text-navy fs-6" id="sub-days-text">30 días</span>
+                                <span class="fw-bold text-secondary text-xs uppercase" style="letter-spacing: 0.4px;">
+                                    <i class="bi bi-hourglass-split me-1 text-primary"></i> Tiempo Restante de Licencia:
+                                </span>
+                                <div class="d-inline-flex align-items-baseline gap-1">
+                                    <span class="fw-extrabold text-navy fs-5" id="sub-days-text">30 días</span>
+                                </div>
                             </div>
-                            <div class="progress" style="height: 8px; border-radius: 9999px; background-color: #e2e8f0;">
-                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" id="sub-progress-bar" role="progressbar" style="width: 100%; border-radius: 9999px;"></div>
+
+                            <!-- Barra de Progreso Ultra-Clean (0% exacta si está vencida / 0 días) -->
+                            <div class="progress" style="height: 9px; border-radius: 9999px; background-color: #f1f5f9; box-shadow: inset 0 1px 2px rgba(0,0,0,0.06); overflow: hidden;">
+                                <div class="progress-bar" id="sub-progress-bar" role="progressbar" style="width: 0%; border-radius: 9999px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
                             </div>
-                            <div class="d-flex justify-content-between text-muted mt-2" style="font-size: 0.75rem;">
-                                <span>Vence el: <strong class="text-navy" id="sub-expiry-date">--/--/----</strong></span>
-                                <span id="sub-account-id-label">ID Cuenta: <strong class="text-navy font-monospace" id="sub-user-id">---</strong></span>
+
+                            <!-- Metadatos de Vencimiento e ID de Cuenta -->
+                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 text-muted mt-2.5 pt-2 border-top" style="font-size: 0.76rem; border-color: #f1f5f9 !important;">
+                                <div class="d-flex align-items-center gap-1.5">
+                                    <i class="bi bi-calendar3 text-primary"></i>
+                                    <span>Vence el: <strong class="text-navy fw-bold" id="sub-expiry-date">--/--/----</strong></span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1.5" id="sub-account-id-label">
+                                    <i class="bi bi-fingerprint text-muted"></i>
+                                    <span>ID Cuenta: <strong class="text-navy font-monospace fw-bold" id="sub-user-id">---</strong></span>
+                                </div>
                             </div>
+                        </div>
+
+                        <!-- Banner de Alerta cuando está vencida / trial por vencer (Oculto por defecto) -->
+                        <div id="sub-renewal-alert-banner" class="alert alert-danger py-2 px-3 mb-3 rounded-3 d-none align-items-center justify-content-between gap-2 text-xs">
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-exclamation-octagon-fill text-danger fs-6 flex-shrink-0"></i>
+                                <span id="sub-renewal-alert-msg"><strong>Suscripción Vencida:</strong> Renueva tu licencia para continuar operando sin interrupciones.</span>
+                            </div>
+                            <a href="#form-redeem-license" class="btn btn-danger btn-sm py-1 px-2.5 rounded-2 fw-bold text-xs flex-shrink-0 shadow-none" onclick="document.getElementById('sub-license-input')?.focus()">
+                                <i class="bi bi-key-fill me-1"></i> Canjear PIN
+                            </a>
                         </div>
                     </div>
 
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-2 border-top">
-                        <span class="text-muted small"><i class="bi bi-person-circle me-1"></i> <strong id="sub-user-name">Profesional</strong> (<span id="sub-user-email">email@correo.com</span>)</span>
-                        <span class="badge bg-primary-subtle text-primary fw-semibold" id="sub-clinic-badge">Consultorio Médico</span>
+                    <!-- Footer del Profesional -->
+                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 pt-3 border-top mt-1" style="border-color: rgba(226, 232, 240, 0.8) !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; font-size: 0.95rem;">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                            <div>
+                                <strong class="text-navy d-block text-xs" id="sub-user-name">Profesional</strong>
+                                <span class="text-muted text-xs d-block" id="sub-user-email" style="font-size: 0.72rem;">email@correo.com</span>
+                            </div>
+                        </div>
+                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-3 py-1.5 rounded-pill fw-bold text-xs" id="sub-clinic-badge">
+                            Consultorio Médico
+                        </span>
                     </div>
                 </div>
             </div>
