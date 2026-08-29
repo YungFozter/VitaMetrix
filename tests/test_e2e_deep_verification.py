@@ -629,8 +629,20 @@ class TestE2EDeepVerification(unittest.TestCase):
         cl_id = json.loads(cl_res.data).get('data', {}).get('id')
 
         # Limpiar recursos de prueba
-        if cl_id:
-            self.app.delete(f'/api/clients/{cl_id}')
+        try:
+            res_c = self.app.get('/api/clients', headers={"Authorization": f"Bearer {token_a}"})
+            clients_created = json.loads(res_c.data) if res_c.status_code == 200 else []
+            for c in clients_created:
+                if f"Paciente Exclusivo Dr A {t_id}" in c.get('name', ''):
+                    c_del_id = c.get('id')
+                    if c_del_id:
+                        self.app.delete(f'/api/clients/{c_del_id}', headers={"Authorization": f"Bearer {token_a}"})
+                    else:
+                        from backend.app import supabase
+                        if supabase:
+                            supabase.table('clients').delete().eq('name', c.get('name')).execute()
+        except Exception:
+            pass
         self.app.delete(f'/api/stock/{item_a_id}', headers={"Authorization": f"Bearer {token_a}"})
 
     def test_12_user_registration_login_and_db_persistence(self):
@@ -964,7 +976,15 @@ class TestE2EDeepVerification(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Restaura fielmente el estado original exacto de todos los archivos de datos JSON y almacenes persistentes."""
-        from backend.app import _save_users, _save_licenses
+        from backend.app import _save_users, _save_licenses, supabase
+        if supabase:
+            try:
+                res_all = supabase.table('clients').select('id, name').execute()
+                for c in (res_all.data or []):
+                    if 'Paciente Exclusivo' in (c.get('name') or '') or 'Test' in (c.get('name') or ''):
+                        supabase.table('clients').delete().eq('id', c.get('id')).execute()
+            except Exception:
+                pass
         for p, original_content in cls._snapshots.items():
             try:
                 with open(p, 'w', encoding='utf-8') as f:

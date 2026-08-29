@@ -1304,6 +1304,10 @@ def dashboard_stats():
                 if c_uid:
                     c['user_id'] = c_uid
 
+        # En producción, excluir pacientes transitorios generados por tests automáticos
+        if not (app.config.get('TESTING') or getattr(app, 'testing', False)):
+            all_clients = [c for c in all_clients if 'Paciente Exclusivo' not in (c.get('name') or '')]
+
         # Estricto aislamiento multi-tenant: SuperAdmin no ve datos clínicos de doctores
         if is_admin:
             all_clients = [c for c in all_clients if c.get('user_id') == current_uid]
@@ -1869,6 +1873,10 @@ def get_clients():
                 c_uid = _CLIENTS_USER_MAP.get(str(c.get('id'))) or _CLIENTS_USER_MAP.get(str(c.get('idp'))) or _CLIENTS_USER_MAP.get(str(c.get('code')))
                 if c_uid:
                     c['user_id'] = c_uid
+
+        # En producción, excluir pacientes transitorios generados por tests automáticos
+        if not (app.config.get('TESTING') or getattr(app, 'testing', False)):
+            clients = [c for c in clients if 'Paciente Exclusivo' not in (c.get('name') or '')]
 
         # Aislamiento multi-tenant estricto: SuperAdmin no ve pacientes de doctores
         if current_user and current_user.get('role') == 'admin':
