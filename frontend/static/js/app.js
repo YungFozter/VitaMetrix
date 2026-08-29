@@ -5755,56 +5755,16 @@ function initCalendarNav() {
 
 async function fetchAppointmentsList() {
     try {
-        const res = await fetch('/api/appointments');
+        const res = await fetch('/api/appointments', { headers: getAuthHeaders() });
         if (res.ok) {
             const data = await res.json();
-            if (Array.isArray(data) && data.length > 0) {
-                clinicAppointments = data;
-            } else {
-                const todayStr = new Date().toISOString().split('T')[0];
-                const tomorrow = new Date();
-                tomorrow.setDate(tomorrow.getDate() + 1);
-                const tomorrowStr = tomorrow.toISOString().split('T')[0];
-
-                clinicAppointments = [
-                    {
-                        id: 'demo_1',
-                        patient_name: 'Dra. Sofía Alarcón',
-                        patient_phone: '+54 9 11 5544-2211',
-                        patient_idp: '104829',
-                        date: todayStr,
-                        time: '09:30',
-                        type: 'Control Trimestral',
-                        status: 'confirmed',
-                        notes: 'Ayuno de 2h, seguimiento deportivo'
-                    },
-                    {
-                        id: 'demo_2',
-                        patient_name: 'Carlos Mendoza',
-                        patient_phone: '+54 9 11 8899-3322',
-                        patient_idp: '104910',
-                        date: todayStr,
-                        time: '11:45',
-                        type: 'Evaluación Inicial BIA',
-                        status: 'pending',
-                        notes: 'Primera consulta BIA, hidratación normal'
-                    },
-                    {
-                        id: 'demo_3',
-                        patient_name: 'Valentina Ruiz',
-                        patient_phone: '+54 9 11 7722-1100',
-                        patient_idp: '105022',
-                        date: tomorrowStr,
-                        time: '16:00',
-                        type: 'Seguimiento Deportivo',
-                        status: 'confirmed',
-                        notes: 'Preparación competencia fitness'
-                    }
-                ];
-            }
+            clinicAppointments = Array.isArray(data) ? data : [];
+        } else {
+            clinicAppointments = [];
         }
     } catch (e) {
         console.error('Error fetching appointments:', e);
+        clinicAppointments = [];
     }
 }
 
