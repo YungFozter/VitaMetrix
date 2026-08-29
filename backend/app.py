@@ -60,12 +60,12 @@ def set_security_headers(response):
     response.headers['X-XSS-Protection'] = '1; mode=block'
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Content-Security-Policy'] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com; "
-        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com; "
-        "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; "
+        "default-src 'self' https: data: blob:; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://unpkg.com https://cdn.tailwindcss.com https://translate.google.com https://translate.googleapis.com https://www.gstatic.com; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://unpkg.com https://www.gstatic.com https://translate.googleapis.com; "
+        "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net https://www.gstatic.com; "
         "img-src 'self' data: blob: https:; "
-        "connect-src 'self' https: https://nominatim.openstreetmap.org; "
+        "connect-src 'self' https: https://nominatim.openstreetmap.org https://translate.googleapis.com; "
         "frame-src 'self' https://maps.google.com https://www.google.com https://*.google.com;"
     )
     return response

@@ -707,41 +707,61 @@ async function fetchSubscriptionStatus() {
 }
 
 function initSubscriptionView() {
+    const formRedeem = document.getElementById('form-redeem-license');
     const btnRedeem = document.getElementById('btn-redeem-license');
-    const inputLicense = document.getElementById('input-license-key');
 
-    if (btnRedeem && inputLicense) {
-        btnRedeem.addEventListener('click', async () => {
-            const key = inputLicense.value.trim();
-            if (!key) {
-                showToast('Por favor ingresa un PIN de activación válido', 'error');
+    const handleRedeem = async (e) => {
+        if (e) e.preventDefault();
+        const currentInput = document.getElementById('sub-license-input') || document.getElementById('input-license-key');
+        const key = currentInput ? currentInput.value.trim() : '';
+
+        if (!key) {
+            showToast('Por favor ingresa un PIN de activación válido', 'warning');
+            if (currentInput) currentInput.focus();
+            return;
+        }
+
+        if (btnRedeem) {
+            btnRedeem.disabled = true;
+            btnRedeem.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status"></span> Validando PIN...';
+        }
+
+        try {
+            const res = await fetch('/api/subscription/redeem', {
+                method: 'POST',
+                headers: getAuthHeaders(),
+                body: JSON.stringify({ license_key: key })
+            });
+            const data = await res.json();
+
+            if (!res.ok || !data.success) {
+                showToast(data.error || 'Error al canjear el PIN de activación', 'error');
                 return;
             }
 
-            if (btnRedeem) btnRedeem.disabled = true;
-
-            try {
-                const res = await fetch('/api/subscription/redeem', {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ license_key: key })
-                });
-                const data = await res.json();
-
-                if (!res.ok || !data.success) {
-                    showToast(data.error || 'Error al canjear el PIN', 'error');
-                    return;
-                }
-
-                showToast(data.message || '¡PIN de activación canjeado con éxito!', 'success');
-                if (inputLicense) inputLicense.value = '';
-                fetchSubscriptionStatus();
-            } catch (err) {
-                showToast('Error de conexión al canjear el PIN', 'error');
-            } finally {
-                if (btnRedeem) btnRedeem.disabled = false;
+            showToast(`🎉 ${data.message || '¡PIN de activación canjeado con éxito!'}`, 'success');
+            if (currentInput) currentInput.value = '';
+            
+            // Actualizar suscripción y datos del usuario en tiempo real
+            await fetchSubscriptionStatus();
+            if (typeof fetchCurrentUser === 'function') {
+                await fetchCurrentUser();
             }
-        });
+        } catch (err) {
+            console.error('Error al canjear PIN:', err);
+            showToast('Error de conexión al canjear el PIN', 'error');
+        } finally {
+            if (btnRedeem) {
+                btnRedeem.disabled = false;
+                btnRedeem.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Canjear y Activar Licencia';
+            }
+        }
+    };
+
+    if (formRedeem) {
+        formRedeem.addEventListener('submit', handleRedeem);
+    } else if (btnRedeem) {
+        btnRedeem.addEventListener('click', handleRedeem);
     }
 
     fetchSubscriptionStatus();
