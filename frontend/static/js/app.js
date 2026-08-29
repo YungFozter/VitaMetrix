@@ -321,6 +321,13 @@ function initAuthSystem() {
                 // Redirigir siempre al Dashboard al iniciar sesión para cualquier usuario
                 navigateToView('dashboard-view', true);
 
+                // Resetear memorias intermedias al cambiar de usuario
+                clientsDataLoaded = false;
+                evalsDataLoaded = false;
+                stockDataLoaded = false;
+                allEvaluationsData = [];
+                allClientsData = [];
+
                 if (data.user.role === 'admin') {
                     fetchAdminUsers(false);
                 } else {
@@ -328,16 +335,14 @@ function initAuthSystem() {
                     if (localStorage.getItem('vita_active_view') === 'superadmin-view') {
                         localStorage.setItem('vita_active_view', 'dashboard-view');
                     }
-                    // Refrescar vistas clínicas
-                    clientsDataLoaded = false;
-                    evalsDataLoaded = false;
-                    stockDataLoaded = false;
-                    fetchClients();
-                    fetchEvaluaciones();
-                    fetchStockItems();
-                    fetchDashboardStats();
-                    fetchSubscriptionStatus();
                 }
+
+                // Refrescar datos propios del usuario autenticado
+                fetchClients();
+                fetchEvaluaciones();
+                fetchStockItems();
+                fetchDashboardStats();
+                fetchSubscriptionStatus();
             } catch (err) {
                 if (loginError) {
                     loginError.textContent = 'Error de conexión con el servidor.';
@@ -433,6 +438,13 @@ function initAuthSystem() {
                     localStorage.removeItem('vm_auth_token');
                     sessionStorage.removeItem('vm_auth_token');
                     currentAuthUser = null;
+                    clientsDataLoaded = false;
+                    evalsDataLoaded = false;
+                    stockDataLoaded = false;
+                    allEvaluationsData = [];
+                    allClientsData = [];
+                    filterAndRenderEvaluaciones();
+                    renderClientsTable();
                     localStorage.setItem('vita_active_view', 'dashboard-view');
                     sessionStorage.setItem('vita_active_view', 'dashboard-view');
                     if (window.location.hash === '#superadmin-view') {
@@ -4398,9 +4410,10 @@ async function fetchEvaluaciones() {
     if (!tbody) return;
 
     try {
-        const res = await fetch('/api/evaluations');
+        const res = await fetch('/api/evaluations', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('Error al consultar servidor');
         allEvaluationsData = await res.json();
+        evalsDataLoaded = true;
         filterAndRenderEvaluaciones();
     } catch (err) {
         console.error(err);
@@ -4701,7 +4714,7 @@ async function openEvaluationDetailModal(evalId) {
     showToast('Cargando reporte de evaluación...', 'info');
 
     try {
-        const res = await fetch(`/api/evaluations/${evalId}`);
+        const res = await fetch(`/api/evaluations/${evalId}`, { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('No se pudo obtener la evaluación');
         const data = await res.json();
         selectedEvaluationData = data;
@@ -4760,7 +4773,7 @@ function deleteEvaluation(evalId) {
         '¿Estás seguro de que deseas eliminar este registro del historial clínico?',
         async () => {
             try {
-                const res = await fetch(`/api/evaluations/${evalId}`, { method: 'DELETE' });
+                const res = await fetch(`/api/evaluations/${evalId}`, { method: 'DELETE', headers: getAuthHeaders() });
                 const result = await res.json();
                 if (result.success) {
                     showToast('Evaluación eliminada correctamente', 'success');

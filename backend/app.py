@@ -1276,8 +1276,11 @@ def dashboard_stats():
             except Exception:
                 all_clients = []
 
-        if not is_admin and current_uid:
-            all_clients = [c for c in all_clients if c.get('user_id') == current_uid or not c.get('user_id') or c.get('user_id') == 'usr-doctor-001']
+        # Estricto aislamiento multi-tenant por profesional
+        if current_uid:
+            all_clients = [c for c in all_clients if c.get('user_id') == current_uid]
+        else:
+            all_clients = []
         total_clients = len(all_clients)
         
         # Obtener evaluaciones recientes de forma segura
@@ -1288,13 +1291,15 @@ def dashboard_stats():
         except Exception as ee:
             logging.warning("Consulta evaluations select(*) falló en dashboard_stats: %s", ee)
             try:
-                evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance').order('created_at', desc=True).limit(100).execute()
+                evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance,user_id').order('created_at', desc=True).limit(100).execute()
                 evaluations = evals_res.data or []
             except Exception:
                 evaluations = []
 
-        if not is_admin and current_uid:
-            evaluations = [e for e in evaluations if e.get('user_id') == current_uid or not e.get('user_id') or e.get('user_id') == 'usr-doctor-001']
+        if current_uid:
+            evaluations = [e for e in evaluations if e.get('user_id') == current_uid]
+        else:
+            evaluations = []
         
         total_evaluations = len(evaluations)
         
@@ -1674,13 +1679,14 @@ def get_evaluations():
     try:
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
+        if not current_uid:
+            return jsonify([]), 200
 
         res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
         evals_asc = res.data or []
         
-        # Aislamiento multi-tenant
-        if current_uid and current_user.get('role') != 'admin':
-            evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid or not e.get('user_id')]
+        # Aislamiento multi-tenant estricto: ningún usuario (incluyendo SuperAdmin) ve pacientes de otros
+        evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid]
 
         for idx, e in enumerate(evals_asc, start=1):
             if not e.get('code'):
@@ -1708,6 +1714,11 @@ def get_evaluation_by_id(eval_id):
             return jsonify({"error": "Evaluación no encontrada"}), 404
         
         raw_eval = res.data[0]
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+        if raw_eval.get('user_id') and current_uid and raw_eval.get('user_id') != current_uid:
+            return jsonify({"error": "No tienes permiso para ver esta evaluación clínica"}), 403
+
         payload = {
             "patient_idp": raw_eval.get('patient_idp'),
             "patient_name": raw_eval.get('patient_name'),
@@ -1743,6 +1754,14 @@ def delete_evaluation(eval_id):
     if not supabase:
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+        
+        # Validar pertenencia del registro antes de eliminar
+        check = supabase.table('evaluations').select('id, user_id').eq('id', eval_id).execute()
+        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
+            return jsonify({"error": "No tienes permiso para eliminar esta evaluación"}), 403
+
         supabase.table('evaluations').delete().eq('id', eval_id).execute()
         _invalidate_dashboard_cache()
         return jsonify({"success": True})
@@ -1755,13 +1774,18 @@ def batch_delete_evaluations():
     if not supabase:
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+        if not current_uid:
+            return jsonify({"error": "No autorizado"}), 401
+
         payload = request.get_json() or {}
         eval_ids = payload.get('ids', [])
         if not eval_ids or not isinstance(eval_ids, list):
             return jsonify({"error": "No se especificaron IDs válidos para eliminar"}), 400
 
-        # Eliminar registros en lote en Supabase
-        supabase.table('evaluations').delete().in_('id', eval_ids).execute()
+        # Eliminar solo aquellos registros que pertenezcan al usuario actual
+        supabase.table('evaluations').delete().in_('id', eval_ids).eq('user_id', current_uid).execute()
         _invalidate_dashboard_cache()
         return jsonify({"success": True, "deleted_count": len(eval_ids)})
     except Exception as e:
@@ -1777,6 +1801,8 @@ def get_clients():
     try:
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
+        if not current_uid:
+            return jsonify([]), 200
 
         try:
             res = supabase.table('clients').select('*').execute()
@@ -1785,9 +1811,8 @@ def get_clients():
             logging.warning("Error consultando clientes en Supabase: %s", e_supa)
             clients = []
 
-        # Aislamiento multi-tenant
-        if current_uid and current_user.get('role') != 'admin':
-            clients = [c for c in clients if c.get('user_id') == current_uid or not c.get('user_id')]
+        # Aislamiento multi-tenant estricto: cada doctor solo ve a sus propios pacientes
+        clients = [c for c in clients if c.get('user_id') == current_uid]
 
         # Ordenar de forma segura por código en memoria
         def _sort_code_key(c):
@@ -1800,12 +1825,11 @@ def get_clients():
 
         clients.sort(key=lambda x: (_sort_code_key(x), x.get('name') or ''))
 
-        # Adjuntar resumen de última evaluación si existe
+        # Adjuntar resumen de última evaluación perteneciente al mismo usuario
         try:
             evals_res = supabase.table('evaluations').select('*').execute()
             evals = evals_res.data or []
-            if current_uid and current_user.get('role') != 'admin':
-                evals = [e for e in evals if e.get('user_id') == current_uid or not e.get('user_id')]
+            evals = [e for e in evals if e.get('user_id') == current_uid]
             eval_by_name = {}
             eval_by_idp = {}
             for ev in evals:
@@ -1828,27 +1852,36 @@ def get_clients():
                         r = float(matched_ev.get('resistance') or 0)
                         xc = float(matched_ev.get('reactance') or 0)
                         biva = get_biva_interpretation(r, xc)
-                        matched_ev['phase_angle'] = biva.get('phase_angle', 0)
-                        matched_ev['cell_status'] = biva.get('cell_status', '')
+                        c['last_eval'] = {
+                            'code': matched_ev.get('code'),
+                            'date': matched_ev.get('created_at'),
+                            'phase_angle': biva.get('phase_angle'),
+                            'hydration': biva.get('hydration'),
+                            'cell_status': biva.get('cell_status')
+                        }
                     except Exception:
                         pass
-
-                c['last_evaluation'] = matched_ev
         except Exception as e_ev:
-            logging.error("Error al adjuntar evaluaciones a clientes: %s", e_ev)
+            logging.warning("Error asociando evaluaciones a clientes: %s", e_ev)
 
-        return jsonify(clients), 200
+        return jsonify(clients)
     except Exception as e:
         logging.error("Error al obtener clientes: %s", e, exc_info=True)
         return jsonify([]), 200
 
-@app.route('/api/clients/next-idp', methods=['GET'])
-def get_next_client_idp():
+@app.route('/api/clients/next-code', methods=['GET'])
+def get_next_client_code():
     if not supabase:
         return jsonify({"code": 1, "idp": "IDP-0001"}), 200
     try:
-        res = supabase.table('clients').select('code').execute()
-        codes = [row['code'] for row in (res.data or []) if row.get('code') is not None]
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+
+        res = supabase.table('clients').select('code, user_id').execute()
+        all_c = res.data or []
+        if current_uid:
+            all_c = [r for r in all_c if r.get('user_id') == current_uid]
+        codes = [row['code'] for row in all_c if row.get('code') is not None]
         codes.sort()
         
         new_code = 1
@@ -1897,6 +1930,8 @@ def add_client():
     try:
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
+        if not current_uid:
+            return jsonify({"error": "No autorizado"}), 401
 
         # Lógica de reciclaje de códigos por tenant
         try:
@@ -1905,8 +1940,7 @@ def add_client():
             res = supabase.table('clients').select('code').execute()
 
         all_c = res.data or []
-        if current_uid and current_user.get('role') != 'admin':
-            all_c = [r for r in all_c if r.get('user_id') == current_uid or not r.get('user_id')]
+        all_c = [r for r in all_c if r.get('user_id') == current_uid]
         codes = [row['code'] for row in all_c if row.get('code') is not None]
         codes.sort()
         
@@ -1928,15 +1962,13 @@ def add_client():
             "idp": idp,
             "age": age,
             "gender": gender,
-            "height": height
+            "height": height,
+            "user_id": current_uid
         }
-        if current_uid:
-            new_client["user_id"] = current_uid
             
         try:
             res_insert = supabase.table('clients').insert(new_client).execute()
         except Exception:
-            # Fallback en caso de que la tabla clients en Supabase no tenga user_id u otras columnas
             try:
                 nc_copy = dict(new_client)
                 nc_copy.pop('user_id', None)
@@ -1980,6 +2012,14 @@ def update_client(client_id):
         return jsonify({"error": "El nombre es obligatorio"}), 400
         
     try:
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+        
+        # Validar pertenencia antes de actualizar
+        check = supabase.table('clients').select('id, user_id').eq('id', client_id).execute()
+        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
+            return jsonify({"error": "No tienes permiso para modificar este paciente"}), 403
+
         updated_data = {
             "name": name,
             "phone": phone,
@@ -2006,6 +2046,14 @@ def delete_client(client_id):
     if not supabase:
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
+        current_user = _get_current_user()
+        current_uid = current_user.get('id') if current_user else None
+        
+        # Validar pertenencia antes de eliminar
+        check = supabase.table('clients').select('id, user_id').eq('id', client_id).execute()
+        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
+            return jsonify({"error": "No tienes permiso para eliminar este paciente"}), 403
+
         supabase.table('clients').delete().eq('id', client_id).execute()
         _invalidate_dashboard_cache()
         return jsonify({"success": True})
@@ -2044,10 +2092,12 @@ def get_appointments():
     current_uid = current_user.get('id') if current_user else None
     date_filter = request.args.get('date')
 
+    if not current_uid:
+        return jsonify([]), 200
+
     if not supabase:
         results = _load_persisted_appointments() or _LOCAL_APPOINTMENTS
-        if current_uid and current_user.get('role') != 'admin':
-            results = [a for a in results if a.get('user_id') == current_uid or not a.get('user_id')]
+        results = [a for a in results if a.get('user_id') == current_uid]
         if date_filter:
             results = [a for a in results if a.get('date') == date_filter]
         return jsonify(results), 200
@@ -2058,14 +2108,12 @@ def get_appointments():
             query = query.eq('date', date_filter)
         res = query.execute()
         results = res.data or []
-        if current_uid and current_user.get('role') != 'admin':
-            results = [a for a in results if a.get('user_id') == current_uid or not a.get('user_id')]
+        results = [a for a in results if a.get('user_id') == current_uid]
         return jsonify(results), 200
     except Exception as e:
         logging.warning("Tabla appointments no disponible en Supabase, usando almacenamiento local: %s", e)
         results = _load_persisted_appointments() or _LOCAL_APPOINTMENTS
-        if current_uid and current_user.get('role') != 'admin':
-            results = [a for a in results if a.get('user_id') == current_uid or not a.get('user_id')]
+        results = [a for a in results if a.get('user_id') == current_uid]
         if date_filter:
             results = [a for a in results if a.get('date') == date_filter]
         return jsonify(results), 200
