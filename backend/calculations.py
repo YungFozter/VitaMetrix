@@ -109,18 +109,21 @@ def calculate_scores(weight, height, phase_angle, smm=None, fat_mass=None, gende
 def analyze_hydration(tbw=None, ecw=None, weight=None):
     """
     Relación ECW/TBW = (ECW / TBW) * 100
+    ICW = TBW - ECW (Agua Intracelular)
     """
     if tbw is None or ecw is None or tbw <= 0:
         return {
             "available": False,
             "tbw": tbw,
             "ecw": ecw,
+            "icw": None,
             "ecw_tbw_ratio": None,
             "status": "No disponible",
             "alert": False
         }
 
     ratio = round((ecw / tbw) * 100, 1)
+    icw = round(max(tbw - ecw, 0.0), 1)
 
     if ratio < 39:
         status = "Hidratación intracelular óptima"
@@ -139,6 +142,7 @@ def analyze_hydration(tbw=None, ecw=None, weight=None):
         "available": True,
         "tbw": round(tbw, 1),
         "ecw": round(ecw, 1),
+        "icw": icw,
         "ecw_tbw_ratio": ratio,
         "status": status,
         "alert": alert

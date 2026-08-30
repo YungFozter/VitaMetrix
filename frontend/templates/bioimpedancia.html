@@ -666,15 +666,47 @@
 
                         <!-- CARD 9: Hídrico -->
                         <section class="bento-card bio-glass card-water" style="grid-area: water;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
-                                <span>Análisis Hídrico</span>
-                                <button type="button" class="field-info-btn" data-info-title="Análisis Hídrico (TBW / ECW)" data-info-desc="Distribución de agua total y extracelular para detectar deshidratación o retención de líquidos (edemas)." data-info-req="Agua Total (TBW) y Agua Extracelular (ECW) en Datos del dispositivo" data-focus-input="input-tbw" title="Ver requisitos">ℹ</button>
+                            <div class="card-header mb-2" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="bi bi-droplet-fill text-info me-1"></i> Análisis Hídrico</span>
+                                <button type="button" class="field-info-btn" data-info-title="Análisis Hídrico (TBW / ICW / ECW)" data-info-desc="Distribución de agua total, intracelular y extracelular para detectar deshidratación o retención de líquidos (edemas)." data-info-req="Agua Total (TBW) y Agua Extracelular (ECW) en Datos del dispositivo" data-focus-input="input-tbw" title="Ver requisitos">ℹ</button>
                             </div>
                             <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
-                            <div id="water-grid" style="display:none;">
-                                <div class="mini-metric"><span>TBW</span><strong id="water-tbw">--</strong><span class="unit">L</span></div>
-                                <div class="mini-metric"><span>ECW</span><strong id="water-ecw">--</strong><span class="unit">L</span></div>
-                                <div class="water-ratio"><span>ECW/TBW</span><strong id="water-ratio">--</strong><span class="status-chip" id="water-status">--</span></div>
+                            <div id="water-grid" class="d-flex flex-column gap-2.5" style="display:none;">
+                                <!-- MÉTRICAS DE COMPARTIMENTOS HÍDRICOS -->
+                                <div class="p-2.5 rounded-3 border bg-white shadow-xs">
+                                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
+                                        <div class="mini-metric text-center">
+                                            <span class="text-secondary text-xs d-block fw-semibold">TBW (Total)</span>
+                                            <strong id="water-tbw" class="display-font text-navy fs-5">--</strong> <span class="unit text-muted small">L</span>
+                                        </div>
+                                        <div class="mini-metric text-center border-start border-end px-3">
+                                            <span class="text-secondary text-xs d-block fw-semibold">ICW (Intracelular)</span>
+                                            <strong id="water-icw" class="display-font text-info fs-5">--</strong> <span class="unit text-muted small">L</span>
+                                        </div>
+                                        <div class="mini-metric text-center">
+                                            <span class="text-secondary text-xs d-block fw-semibold">ECW (Extracelular)</span>
+                                            <strong id="water-ecw" class="display-font text-primary fs-5">--</strong> <span class="unit text-muted small">L</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-flex align-items-center justify-content-between pt-1">
+                                        <div class="d-flex align-items-baseline gap-1.5">
+                                            <span class="text-secondary text-xs fw-bold">ECW / TBW:</span>
+                                            <strong id="water-ratio" class="display-font fs-4 text-navy fw-bold">--</strong>
+                                        </div>
+                                        <span class="status-chip text-xs fw-bold" id="water-status">--</span>
+                                    </div>
+                                </div>
+
+                                <!-- RECUADRO DE INTERPRETACIÓN CLÍNICA -->
+                                <div id="water-diag-box" class="p-2.5 rounded-3 border bg-white text-secondary text-xs" style="font-size: 0.75rem; line-height: 1.35;">
+                                    <div class="d-flex align-items-center gap-1.5 mb-1 fw-bold text-navy" id="water-diag-title">
+                                        <i class="bi bi-info-circle-fill text-info"></i> <span>Diagnóstico Hídrico</span>
+                                    </div>
+                                    <div id="water-diag-desc" class="text-secondary" style="font-size: 0.73rem;">
+                                        Evaluación de volemia y distribución de compartimentos líquidos.
+                                    </div>
+                                </div>
                             </div>
                         </section>
 

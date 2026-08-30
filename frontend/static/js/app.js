@@ -2955,11 +2955,49 @@ function updateBioUI(data, inputs) {
     const hyd = data.hydration;
     if (hyd && hyd.available) {
         showGrid('water-na', 'water-grid');
-        document.getElementById('water-tbw').textContent = hyd.tbw ?? '--';
-        document.getElementById('water-ecw').textContent = hyd.ecw ?? '--';
-        document.getElementById('water-ratio').textContent = hyd.ecw_tbw_ratio ? `${hyd.ecw_tbw_ratio}%` : '--';
+        const tbw = parseFloat(hyd.tbw) || 0;
+        const ecw = parseFloat(hyd.ecw) || 0;
+        const icwVal = hyd.icw != null ? hyd.icw : (tbw >= ecw && tbw > 0 ? (tbw - ecw).toFixed(1) : '--');
+
+        const elTbw = document.getElementById('water-tbw');
+        const elIcw = document.getElementById('water-icw');
+        const elEcw = document.getElementById('water-ecw');
+        const elRatio = document.getElementById('water-ratio');
+        if (elTbw) elTbw.textContent = hyd.tbw ?? '--';
+        if (elIcw) elIcw.textContent = icwVal;
+        if (elEcw) elEcw.textContent = hyd.ecw ?? '--';
+
+        const ratioVal = hyd.ecw_tbw_ratio != null ? hyd.ecw_tbw_ratio : (tbw > 0 ? ((ecw / tbw) * 100).toFixed(1) : null);
+        if (elRatio) elRatio.textContent = ratioVal != null ? `${ratioVal}%` : '--';
+
         const wStatus = document.getElementById('water-status');
         setChip(wStatus, hyd.alert ? ['Alerta', 'red'] : [hyd.status || 'Normal', 'green']);
+
+        // Actualizar Recuadro de Interpretación Clínica Hídrica
+        const diagTitle = document.getElementById('water-diag-title');
+        const diagDesc = document.getElementById('water-diag-desc');
+        const diagBox = document.getElementById('water-diag-box');
+
+        const ratioNum = ratioVal != null ? parseFloat(ratioVal) : 0;
+        if (diagTitle && diagDesc) {
+            if (ratioNum < 39.0) {
+                diagTitle.innerHTML = `<i class="bi bi-check-circle-fill text-success me-1"></i> <span class="text-success fw-bold">Hidratación Intracelular Óptima</span>`;
+                diagDesc.textContent = `Equilibrio hídrico en rango fisiológico ideal. Buen volumen de agua intracelular (ICW: ${icwVal} L) para la función metabólica y celular sin edemas.`;
+                if (diagBox) diagBox.className = 'p-2.5 rounded-3 border border-success-subtle bg-success-subtle/10 text-secondary text-xs';
+            } else if (ratioNum <= 42.0) {
+                diagTitle.innerHTML = `<i class="bi bi-info-circle-fill text-info me-1"></i> <span class="text-info fw-bold">Distribución Hídrica Saludable</span>`;
+                diagDesc.textContent = `Distribución de agua dentro de los parámetros esperados (ECW/TBW: ${ratioNum}%). Volemia celular e intersticial estables.`;
+                if (diagBox) diagBox.className = 'p-2.5 rounded-3 border border-info-subtle bg-info-subtle/10 text-secondary text-xs';
+            } else if (ratioNum <= 45.0) {
+                diagTitle.innerHTML = `<i class="bi bi-exclamation-triangle-fill text-warning me-1"></i> <span class="text-warning-emphasis fw-bold">Sobrecarga Extracelular Leve</span>`;
+                diagDesc.textContent = `Ligera acumulación de líquido extracelular (ECW: ${hyd.ecw} L). Puede deberse a sobrecarga de sodio, fatiga muscular o retención hídrica transitoria.`;
+                if (diagBox) diagBox.className = 'p-2.5 rounded-3 border border-warning-subtle bg-warning-subtle/10 text-secondary text-xs';
+            } else {
+                diagTitle.innerHTML = `<i class="bi bi-exclamation-octagon-fill text-danger me-1"></i> <span class="text-danger fw-bold">Alerta de Edema / Retención Significativa</span>`;
+                diagDesc.textContent = `Proporción de líquido extracelular elevada (${ratioNum}%). Se sugiere evaluar inflamación sistémica, sobrecarga intersticial o edematización.`;
+                if (diagBox) diagBox.className = 'p-2.5 rounded-3 border border-danger-subtle bg-danger-subtle/10 text-secondary text-xs';
+            }
+        }
     }
 
     // CARD 10: Cintura & Visceral
