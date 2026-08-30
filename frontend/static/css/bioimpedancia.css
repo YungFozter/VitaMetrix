@@ -698,6 +698,13 @@
 }
 
 @media print {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        height: 100% !important;
+        background: #ffffff !important;
+    }
+
     body > * {
         display: none !important;
     }
@@ -709,6 +716,7 @@
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
@@ -722,11 +730,11 @@
 
     .bia-printable-sheet {
         width: 100% !important;
-        height: 281mm !important;
-        min-height: 281mm !important;
-        max-height: 281mm !important;
+        height: 100vh !important;
+        min-height: 100vh !important;
+        max-height: 100vh !important;
         box-sizing: border-box !important;
-        padding: 2mm 3mm !important;
+        padding: 5mm 8mm !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
@@ -734,10 +742,14 @@
         break-after: page !important;
         page-break-inside: avoid !important;
         overflow: hidden !important;
+        background: #ffffff !important;
     }
 
     .sheet-body {
         flex: 1 1 auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important;
     }
 
     .sheet-footer {
@@ -754,7 +766,6 @@
     }
 
     @page {
-        size: A4 portrait;
-        margin: 5mm 8mm;
+        margin: 0;
     }
 }
