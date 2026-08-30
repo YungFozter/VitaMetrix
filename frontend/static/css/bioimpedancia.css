@@ -308,23 +308,145 @@
 .fat-bar { background: #b94a4a; }
 
 /* CARD 3: BIVA */
-.biva-container { display: flex; align-items: center; gap: 1.5rem; }
+.biva-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    width: 100%;
+    flex-grow: 1;
+}
+
+.biva-canvas-wrap {
+    width: 100%;
+    max-width: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 #bivaCanvas {
     background: rgba(255, 255, 255, 0.4);
-    border-radius: 20px;
+    border-radius: 24px;
     border: 1px solid rgba(0, 0, 0, 0.05);
-    width: 180px; height: 180px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    aspect-ratio: 1 / 1;
 }
-.biva-stats { font-size: 0.9rem; line-height: 2; color: #2a3a52; }
-.biva-stats strong { color: #1A2A4A; font-weight: 700; }
+
+.biva-stats {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.8rem;
+    text-align: center;
+}
+
+.biva-stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.biva-stat-label {
+    color: #5a6f8c;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.biva-stat-val {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.biva-stat-val strong {
+    font-size: 1.8rem;
+    color: #1A2A4A;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.biva-stat-unit {
+    color: #5a6f8c;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.biva-phase-box {
+    background: #E8EDF5;
+    padding: 0.6rem 1.2rem;
+    border-radius: 14px;
+    width: 100%;
+    max-width: 280px;
+    text-align: center;
+}
+
+.biva-phase-box .biva-stat-label {
+    color: #5a6f8c;
+    font-size: 0.85rem;
+}
+
+.biva-phase-box strong {
+    font-size: 1.6rem;
+    color: #2d7a4a;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.biva-phase-unit {
+    color: #2d7a4a;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
 .cell-status {
-    margin-top: 0.5rem; background: #e2f0e8; color: #1a5a3a;
-    padding: 0.3rem 0.8rem; border-radius: 30px; font-size: 0.8rem;
-    font-weight: 600; display: inline-block; transition: all 0.3s ease;
+    margin-top: 0.25rem;
+    background: #e2f0e8;
+    color: #1a5a3a;
+    padding: 0.4rem 1rem;
+    border-radius: 30px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    display: inline-block;
+    text-align: center;
+    transition: all 0.3s ease;
 }
+
 .cell-status:hover {
-    background: #cce4d6; transform: translateY(-2px);
+    background: #cce4d6;
+    transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(26, 90, 58, 0.15);
+}
+
+@media (min-width: 992px) {
+    .biva-container {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 2rem;
+    }
+    .biva-canvas-wrap {
+        flex: 0 0 58%;
+        max-width: 320px;
+    }
+    .biva-stats {
+        flex: 1;
+        align-items: flex-start;
+        text-align: left;
+    }
+    .biva-stat-item {
+        align-items: flex-start;
+    }
+    .biva-phase-box {
+        text-align: left;
+        max-width: 100%;
+    }
 }
 
 /* CARD 4: ENERGY */
