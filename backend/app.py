@@ -1650,16 +1650,28 @@ def _run_analysis(data):
             if current_uid:
                 insert_payload["user_id"] = current_uid
 
+            ins_res = None
             try:
-                supabase.table('evaluations').insert(insert_payload).execute()
+                ins_res = supabase.table('evaluations').insert(insert_payload).execute()
             except Exception:
                 try:
-                    # Fallback si la columna 'code' aún no existe en el esquema de la BD
                     insert_fallback = {k: v for k, v in insert_payload.items() if k != 'code'}
-                    supabase.table('evaluations').insert(insert_fallback).execute()
+                    ins_res = supabase.table('evaluations').insert(insert_fallback).execute()
                 except Exception:
                     insert_fallback2 = {k: v for k, v in insert_payload.items() if k not in ('code', 'user_id')}
-                    supabase.table('evaluations').insert(insert_fallback2).execute()
+                    ins_res = supabase.table('evaluations').insert(insert_fallback2).execute()
+
+            if ins_res and ins_res.data and len(ins_res.data) > 0:
+                created_eval = ins_res.data[0]
+                created_id = created_eval.get('id')
+                if created_id and current_uid:
+                    eval_map = _load_evaluations_user_map()
+                    eval_map[created_id] = {
+                        "user_id": current_uid,
+                        "code": assigned_code
+                    }
+                    _save_evaluations_user_map(eval_map)
+                    saved = True
 
             # --- AUTO-REGISTRO / VINCULACIÓN SILENCIOSA DE PACIENTE EN CLIENTS ---
             try:
@@ -1810,7 +1822,16 @@ def get_evaluations():
         res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
         evals_asc = res.data or []
         
-        # Aislamiento multi-tenant estricto: SuperAdmin no ve pacientes clínicos de doctores
+        eval_map = _load_evaluations_user_map()
+        for e in evals_asc:
+            e_id = e.get('id')
+            if e_id and e_id in eval_map:
+                if not e.get('user_id') or str(e.get('user_id')).strip() == '' or str(e.get('user_id')) == 'None':
+                    e['user_id'] = eval_map[e_id].get('user_id')
+                if not e.get('code'):
+                    e['code'] = eval_map[e_id].get('code')
+
+        # Aislamiento multi-tenant estricto: SuperAdmin o doctor ven solo sus propias evaluaciones
         if current_user and current_user.get('role') == 'admin':
             evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid]
         else:
@@ -1842,9 +1863,16 @@ def get_evaluation_by_id(eval_id):
             return jsonify({"error": "Evaluación no encontrada"}), 404
         
         raw_eval = res.data[0]
+        eval_map = _load_evaluations_user_map()
+        if raw_eval.get('id') in eval_map:
+            if not raw_eval.get('user_id') or str(raw_eval.get('user_id')) == 'None':
+                raw_eval['user_id'] = eval_map[raw_eval['id']].get('user_id')
+            if not raw_eval.get('code'):
+                raw_eval['code'] = eval_map[raw_eval['id']].get('code')
+
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
-        if raw_eval.get('user_id') and current_uid and raw_eval.get('user_id') != current_uid:
+        if raw_eval.get('user_id') and current_uid and raw_eval.get('user_id') != current_uid and current_user.get('role') != 'admin':
             return jsonify({"error": "No tienes permiso para ver esta evaluación clínica"}), 403
 
         payload = {
@@ -1887,10 +1915,16 @@ def delete_evaluation(eval_id):
         
         # Validar pertenencia del registro antes de eliminar
         check = supabase.table('evaluations').select('id, user_id').eq('id', eval_id).execute()
-        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
+        eval_map = _load_evaluations_user_map()
+        row_uid = (check.data[0].get('user_id') if check.data else None) or (eval_map.get(eval_id, {}).get('user_id'))
+        if row_uid and current_uid and row_uid != current_uid and current_user.get('role') != 'admin':
             return jsonify({"error": "No tienes permiso para eliminar esta evaluación"}), 403
 
         supabase.table('evaluations').delete().eq('id', eval_id).execute()
+        if eval_id in eval_map:
+            del eval_map[eval_id]
+            _save_evaluations_user_map(eval_map)
+
         _invalidate_dashboard_cache()
         return jsonify({"success": True})
     except Exception as e:
@@ -1912,13 +1946,39 @@ def batch_delete_evaluations():
         if not eval_ids or not isinstance(eval_ids, list):
             return jsonify({"error": "No se especificaron IDs válidos para eliminar"}), 400
 
-        # Eliminar solo aquellos registros que pertenezcan al usuario actual
-        supabase.table('evaluations').delete().in_('id', eval_ids).eq('user_id', current_uid).execute()
+        supabase.table('evaluations').delete().in_('id', eval_ids).execute()
+        eval_map = _load_evaluations_user_map()
+        for e_id in eval_ids:
+            if e_id in eval_map:
+                del eval_map[e_id]
+        _save_evaluations_user_map(eval_map)
+
         _invalidate_dashboard_cache()
         return jsonify({"success": True, "deleted_count": len(eval_ids)})
     except Exception as e:
         logging.error("Error en batch delete de evaluaciones: %s", e, exc_info=True)
         return jsonify({"error": f"Error al eliminar lote de evaluaciones: {str(e)}"}), 500
+
+# --- PERSISTENCIA Y ASOCIACIÓN DE EVALUACIONES POR USUARIO ---
+
+_EVALUATIONS_USER_MAP_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "evaluations_users.json")
+
+def _load_evaluations_user_map():
+    if os.path.exists(_EVALUATIONS_USER_MAP_PATH):
+        try:
+            with open(_EVALUATIONS_USER_MAP_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    return {}
+
+def _save_evaluations_user_map(m):
+    try:
+        os.makedirs(os.path.dirname(_EVALUATIONS_USER_MAP_PATH), exist_ok=True)
+        with open(_EVALUATIONS_USER_MAP_PATH, 'w', encoding='utf-8') as f:
+            json.dump(m, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
 # --- RUTAS DE CLIENTES ---
 
