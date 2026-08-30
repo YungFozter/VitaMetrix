@@ -203,6 +203,16 @@ function updateUIWithUserData(userData) {
         }
     }
 
+    if (userData && userData.user) {
+        const u = userData.user;
+        const uId = u.id || 'guest';
+        if (typeof u.phone === 'string') localStorage.setItem(`vm_pdf_phone_${uId}`, u.phone);
+        if (typeof u.professional_license === 'string') localStorage.setItem(`vm_pdf_mp_${uId}`, u.professional_license);
+        if (typeof u.clinic_logo_url === 'string') localStorage.setItem(`vm_pdf_logo_url_${uId}`, u.clinic_logo_url);
+        if (typeof u.pdf_disclaimer === 'string') localStorage.setItem(`vm_pdf_disclaimer_${uId}`, u.pdf_disclaimer);
+        if (typeof u.clinic_address === 'string') localStorage.setItem(`vm_clinic_address_${uId}`, u.clinic_address);
+    }
+
     // Actualizar nombre y título en Dropdown del perfil
     const dropProfileText = document.getElementById('dropdown-profile-text');
     const dropProfileIcon = document.getElementById('dropdown-profile-icon');
@@ -5450,11 +5460,12 @@ function updateUserProfileUI() {
     const user = currentAuthUser || {};
     const isAdmin = user.role === 'admin';
 
-    const name = user.full_name || localStorage.getItem('vm_user_name') || (isAdmin ? 'Administrador General' : 'Dra. Audrey');
-    const title = user.professional_title || localStorage.getItem('vm_user_title') || (isAdmin ? 'Director / Administrador de Plataforma' : 'Manager / Especialista BIA');
-    const clinic = user.clinic_name || localStorage.getItem('vm_clinic_name') || (isAdmin ? 'Sede Central VitaMetrix' : 'Centro Médico VitaMetrix');
-    const phone = user.phone || localStorage.getItem('vm_pdf_phone') || '+591 72125280';
-    const mp = localStorage.getItem('vm_pdf_mp') || 'MP: 45892 / MN: 1204';
+    const userId = user.id || 'guest';
+    const name = user.full_name || localStorage.getItem(`vm_user_name_${userId}`) || (isAdmin ? 'Administrador General' : '');
+    const title = user.professional_title || localStorage.getItem(`vm_user_title_${userId}`) || (isAdmin ? 'Director / Administrador de Plataforma' : '');
+    const clinic = user.clinic_name || localStorage.getItem(`vm_clinic_name_${userId}`) || (isAdmin ? 'Sede Central VitaMetrix' : '');
+    const phone = (user.phone !== undefined && user.phone !== null) ? user.phone : (localStorage.getItem(`vm_pdf_phone_${userId}`) || '');
+    const mp = (user.professional_license !== undefined && user.professional_license !== null) ? user.professional_license : (localStorage.getItem(`vm_pdf_mp_${userId}`) || '');
     
     // Topbar update
     const topName = document.getElementById('topbar-user-name');
@@ -6154,16 +6165,22 @@ function initConfiguracionView() {
         const userId = user.id || 'guest';
         const isAdmin = user.role === 'admin';
 
-        const name = user.full_name || localStorage.getItem(`vm_user_name_${userId}`) || '';
-        const title = user.professional_title || localStorage.getItem(`vm_user_title_${userId}`) || '';
-        const clinic = user.clinic_name || localStorage.getItem(`vm_clinic_name_${userId}`) || '';
-        const unit = user.unit_weight || localStorage.getItem(`vm_unit_weight_${userId}`) || 'kg';
-        const pha = user.pha_optimal || localStorage.getItem(`vm_pha_optimal_${userId}`) || '6.0';
-        const mp = user.professional_license || localStorage.getItem(`vm_pdf_mp_${userId}`) || '';
-        const phone = user.phone || localStorage.getItem(`vm_pdf_phone_${userId}`) || '';
-        const logoUrl = user.clinic_logo_url || localStorage.getItem(`vm_pdf_logo_url_${userId}`) || '';
-        const disclaimer = user.pdf_disclaimer || localStorage.getItem(`vm_pdf_disclaimer_${userId}`) || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
-        const address = user.clinic_address || localStorage.getItem(`vm_clinic_address_${userId}`) || '';
+        const getProp = (userVal, localKey, defaultVal = '') => {
+            if (userVal !== undefined && userVal !== null) return userVal;
+            const stored = localStorage.getItem(localKey);
+            return (stored !== null && stored !== undefined) ? stored : defaultVal;
+        };
+
+        const name = getProp(user.full_name, `vm_user_name_${userId}`);
+        const title = getProp(user.professional_title, `vm_user_title_${userId}`);
+        const clinic = getProp(user.clinic_name, `vm_clinic_name_${userId}`);
+        const unit = getProp(user.unit_weight, `vm_unit_weight_${userId}`, 'kg');
+        const pha = getProp(user.pha_optimal, `vm_pha_optimal_${userId}`, '6.0');
+        const mp = getProp(user.professional_license, `vm_pdf_mp_${userId}`);
+        const phone = getProp(user.phone, `vm_pdf_phone_${userId}`);
+        const logoUrl = getProp(user.clinic_logo_url, `vm_pdf_logo_url_${userId}`);
+        const disclaimer = getProp(user.pdf_disclaimer, `vm_pdf_disclaimer_${userId}`, 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.');
+        const address = getProp(user.clinic_address, `vm_clinic_address_${userId}`);
         const lat = localStorage.getItem(`vm_clinic_lat_${userId}`) || localStorage.getItem('vm_clinic_lat') || '-34.6037';
         const lng = localStorage.getItem(`vm_clinic_lng_${userId}`) || localStorage.getItem('vm_clinic_lng') || '-58.3816';
         const darkTheme = localStorage.getItem('vm_dark_theme') === 'true';
