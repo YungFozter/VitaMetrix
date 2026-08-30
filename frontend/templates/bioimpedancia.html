@@ -673,26 +673,35 @@
                             <div id="water-na" class="card-na">Introduce TBW y ECW del dispositivo.</div>
                             <div id="water-grid" class="d-flex flex-column gap-2.5" style="display:none;">
                                 <!-- MÉTRICAS DE COMPARTIMENTOS HÍDRICOS -->
-                                <div class="p-2.5 rounded-3 border bg-white shadow-xs">
-                                    <div class="d-flex align-items-center justify-content-between mb-2 pb-2 border-bottom">
-                                        <div class="mini-metric text-center">
-                                            <span class="text-secondary text-xs d-block fw-semibold">TBW (Total)</span>
-                                            <strong id="water-tbw" class="display-font text-navy fs-5">--</strong> <span class="unit text-muted small">L</span>
-                                        </div>
-                                        <div class="mini-metric text-center border-start border-end px-3">
-                                            <span class="text-secondary text-xs d-block fw-semibold">ICW (Intracelular)</span>
-                                            <strong id="water-icw" class="display-font text-info fs-5">--</strong> <span class="unit text-muted small">L</span>
-                                        </div>
-                                        <div class="mini-metric text-center">
-                                            <span class="text-secondary text-xs d-block fw-semibold">ECW (Extracelular)</span>
-                                            <strong id="water-ecw" class="display-font text-primary fs-5">--</strong> <span class="unit text-muted small">L</span>
+                                <div class="p-2.5 rounded-3 border bg-white shadow-xs overflow-hidden">
+                                    <!-- Fila 1: TBW (Agua Total) -->
+                                    <div class="d-flex align-items-center justify-content-between pb-2 border-bottom mb-2">
+                                        <span class="text-secondary text-xs fw-semibold">TBW (Agua Total):</span>
+                                        <div>
+                                            <strong id="water-tbw" class="display-font text-navy fs-5 fw-bold">--</strong>
+                                            <span class="unit text-muted small ms-0.5">L</span>
                                         </div>
                                     </div>
                                     
-                                    <div class="d-flex align-items-center justify-content-between pt-1">
-                                        <div class="d-flex align-items-baseline gap-1.5">
+                                    <!-- Fila 2: ICW vs ECW (2 Columnas con col-6 para cero desbordamiento) -->
+                                    <div class="row g-1 text-center pb-2 border-bottom mb-2">
+                                        <div class="col-6 border-end pe-2">
+                                            <span class="text-secondary d-block fw-semibold text-truncate" style="font-size: 0.68rem;">ICW (Intracelular)</span>
+                                            <strong id="water-icw" class="display-font text-info fs-5 fw-bold">--</strong>
+                                            <span class="unit text-muted" style="font-size: 0.7rem;">L</span>
+                                        </div>
+                                        <div class="col-6 ps-2">
+                                            <span class="text-secondary d-block fw-semibold text-truncate" style="font-size: 0.68rem;">ECW (Extracelular)</span>
+                                            <strong id="water-ecw" class="display-font text-primary fs-5 fw-bold">--</strong>
+                                            <span class="unit text-muted" style="font-size: 0.7rem;">L</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Fila 3: Ratio ECW/TBW y Estado -->
+                                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-1">
+                                        <div class="d-flex align-items-baseline gap-1">
                                             <span class="text-secondary text-xs fw-bold">ECW / TBW:</span>
-                                            <strong id="water-ratio" class="display-font fs-4 text-navy fw-bold">--</strong>
+                                            <strong id="water-ratio" class="display-font fs-5 text-navy fw-bold">--</strong>
                                         </div>
                                         <span class="status-chip text-xs fw-bold" id="water-status">--</span>
                                     </div>
