@@ -555,11 +555,30 @@
                             </div>
                         </section>
 
-                        <!-- CARD 5: Interpretación -->
+                        <!-- CARD 5: Interpretación & Recomendaciones Médicas -->
                         <section class="bento-card bio-glass card-interpretation" style="grid-area: interp;">
-                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600;">Interpretación Clínica</div>
-                            <div class="clinical-text mt-3" id="clinical-text">Ingrese los datos y haga clic en Analizar Composición.</div>
-                            <div class="hydration-tag mt-3" id="hydration-tag">--</div>
+                            <div class="card-header" style="text-transform: uppercase; letter-spacing: 0.8px; color: #5a6f8c; font-size: 0.75rem; font-weight: 600; display: flex; align-items: center; justify-content: space-between;">
+                                <span><i class="bi bi-file-earmark-medical-fill text-primary me-1"></i> Interpretación & Recomendaciones Médicas</span>
+                            </div>
+
+                            <!-- Diagnóstico Automatizado por Reglas Médicas -->
+                            <div class="p-2.5 rounded-3 border bg-white mt-2 shadow-xs" style="font-size: 0.78rem;">
+                                <div class="fw-bold text-navy mb-1" style="font-size: 0.74rem;"><i class="bi bi-cpu-fill text-info me-1"></i> Diagnóstico Automatizado BIA:</div>
+                                <div class="clinical-text text-secondary" id="clinical-text" style="font-size: 0.76rem; line-height: 1.4;">Ingrese los datos y haga clic en Analizar Composición.</div>
+                                <div class="badge rounded-pill bg-info-subtle text-info mt-2 px-2.5 py-1" id="hydration-tag">--</div>
+                            </div>
+
+                            <!-- Área Editable para el Profesional -->
+                            <div class="mt-3">
+                                <label class="form-label text-navy text-xs fw-bold text-uppercase mb-1 d-flex align-items-center justify-content-between" style="font-size: 0.74rem;">
+                                    <span><i class="bi bi-pencil-square text-primary me-1"></i> Observaciones & Plan del Profesional (Editable)</span>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill px-2 py-0.5" style="font-size: 0.64rem;">Impresión PDF</span>
+                                </label>
+                                <textarea id="doctor-notes-input" class="form-control shadow-none border rounded-3 p-2.5 text-navy" rows="4" placeholder="Escriba aquí sus observaciones personalizadas, prescripción nutricional, metas de hidratación o recomendaciones de actividad para el paciente..." style="font-size: 0.82rem; background: #ffffff; line-height: 1.45;"></textarea>
+                                <div class="form-text text-muted" style="font-size: 0.68rem;">
+                                    💡 Las notas anotadas en este recuadro se imprimirán textualmente en la sección "Interpretación & Recomendaciones Médicas" del reporte PDF.
+                                </div>
+                            </div>
                         </section>
 
                         <!-- CARD 6: Índices -->

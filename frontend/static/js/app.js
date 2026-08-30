@@ -2309,7 +2309,8 @@ function getBioFormPayload() {
         seg_arm_l: document.getElementById('input-seg-arm-l').value || null,
         seg_torso: document.getElementById('input-seg-torso').value || null,
         seg_leg_r: document.getElementById('input-seg-leg-r').value || null,
-        seg_leg_l: document.getElementById('input-seg-leg-l').value || null
+        seg_leg_l: document.getElementById('input-seg-leg-l').value || null,
+        doctor_notes: document.getElementById('doctor-notes-input') ? document.getElementById('doctor-notes-input').value.trim() : ''
     };
 }
 
@@ -2340,6 +2341,13 @@ function validateBioPayload(payload) {
 function initBioForm() {
     const form = document.getElementById('bio-form');
     if (!form) return;
+
+    const docNotesInput = document.getElementById('doctor-notes-input');
+    if (docNotesInput) {
+        docNotesInput.addEventListener('input', () => {
+            docNotesInput.dataset.autoFilled = 'false';
+        });
+    }
 
     // 1. ANALIZAR COMPOSICIÓN (Solo cálculo en memoria / UI, sin persistir en BD)
     form.addEventListener('submit', async (e) => {
@@ -2533,8 +2541,11 @@ function printBIAReport() {
     const palImgUrl = getCanvasImg('palGaugeCanvas');
 
     // CARD 5: Interpretación y Diagnóstico
-    const interpEl = document.getElementById('interp-card');
-    const interpText = interpEl ? interpEl.innerText.replace(/\n+/g, ' ').trim() : 'Evaluación médica sin observaciones adicionales.';
+    const docNotesInput = document.getElementById('doctor-notes-input');
+    const docNotesText = docNotesInput ? docNotesInput.value.trim() : '';
+    const interpEl = document.getElementById('clinical-text');
+    const defaultInterp = interpEl ? interpEl.innerText.replace(/\n+/g, ' ').trim() : 'Evaluación médica sin observaciones adicionales.';
+    const interpText = docNotesText || defaultInterp;
 
     // CARD 6: Índices Clínicos
     const bcmVal = getTxt('bcm-val');
@@ -3410,6 +3421,21 @@ function updateBioUI(data, inputs) {
     clinicalText.innerHTML = html;
     document.getElementById('hydration-tag').textContent = `💧 ${data.hydration_status}`;
     document.getElementById('cell-status').textContent = data.cell_status;
+
+    const docNotesInput = document.getElementById('doctor-notes-input');
+    if (docNotesInput) {
+        if (!docNotesInput.value || docNotesInput.value.trim() === '' || docNotesInput.dataset.autoFilled === 'true') {
+            const autoTemplate = `Análisis de Composición BIA:\n` +
+                `- Puntuación TRU Body Score: ${data.score}/100 (${data.rank}).\n` +
+                `- Ángulo de Fase: ${data.phase_angle}° (${data.cell_status}).\n` +
+                `- Masa Muscular Score: ${data.muscle_score} pts | Masa Grasa Score: ${data.fat_score} pts.\n\n` +
+                `Observaciones & Recomendaciones del Profesional:\n` +
+                `- Plan Nutricional: Mantener aporte proteico adecuado y balance calórico personalizado.\n` +
+                `- Hidratación & Actividad: Promover hidratación constante y hábitos de vida activa.`;
+            docNotesInput.value = autoTemplate;
+            docNotesInput.dataset.autoFilled = 'true';
+        }
+    }
 
     // 4. Dibujar el gráfico BIVA en Canvas (normalizado por altura)
     drawBIVAVector(inputs.resistance, inputs.reactance, inputs.height, inputs.gender);
