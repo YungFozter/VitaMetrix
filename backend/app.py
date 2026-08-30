@@ -450,6 +450,12 @@ def _build_safe_user_dict(user):
         "professional_title": user.get('professional_title', 'Nutricionista / Especialista BIA'),
         "clinic_name": user.get('clinic_name', 'Centro Médico VitaMetrix'),
         "phone": user.get('phone', ''),
+        "professional_license": user.get('professional_license', ''),
+        "clinic_logo_url": user.get('clinic_logo_url', ''),
+        "pdf_disclaimer": user.get('pdf_disclaimer', 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.'),
+        "clinic_address": user.get('clinic_address', ''),
+        "unit_weight": user.get('unit_weight', 'kg'),
+        "pha_optimal": user.get('pha_optimal', '6.0'),
         "role": user.get('role', 'user'),
         "subscription_status": status,
         "subscription_plan": plan_name,
@@ -637,29 +643,36 @@ def auth_update_profile():
     data = request.json or {}
     user_id = current_user.get('id')
 
-    full_name = _clean_str(data.get('full_name'), max_len=120)
-    professional_title = _clean_str(data.get('professional_title'), max_len=100)
-    clinic_name = _clean_str(data.get('clinic_name'), max_len=150)
-    phone = _clean_str(data.get('phone'), max_len=30)
-
     users = _load_users()
     target_user = next((u for u in users if u.get('id') == user_id), None)
     if not target_user:
         return jsonify({"error": "Usuario no encontrado"}), 404
 
-    if full_name:
-        target_user['full_name'] = full_name
-    if professional_title is not None:
-        target_user['professional_title'] = professional_title
-    if clinic_name is not None:
-        target_user['clinic_name'] = clinic_name
-    if phone is not None:
-        target_user['phone'] = phone
+    if 'full_name' in data and data['full_name']:
+        target_user['full_name'] = _clean_str(data.get('full_name'), max_len=120)
+    if 'professional_title' in data:
+        target_user['professional_title'] = _clean_str(data.get('professional_title'), max_len=100)
+    if 'clinic_name' in data:
+        target_user['clinic_name'] = _clean_str(data.get('clinic_name'), max_len=150)
+    if 'phone' in data:
+        target_user['phone'] = _clean_str(data.get('phone'), max_len=30)
+    if 'professional_license' in data or 'pdf_mp' in data:
+        target_user['professional_license'] = _clean_str(data.get('professional_license') or data.get('pdf_mp'), max_len=100)
+    if 'clinic_logo_url' in data or 'pdf_logo_url' in data:
+        target_user['clinic_logo_url'] = str(data.get('clinic_logo_url') or data.get('pdf_logo_url') or '')
+    if 'pdf_disclaimer' in data:
+        target_user['pdf_disclaimer'] = _clean_str(data.get('pdf_disclaimer'), max_len=500)
+    if 'clinic_address' in data:
+        target_user['clinic_address'] = _clean_str(data.get('clinic_address'), max_len=200)
+    if 'unit_weight' in data:
+        target_user['unit_weight'] = _clean_str(data.get('unit_weight'), max_len=10)
+    if 'pha_optimal' in data:
+        target_user['pha_optimal'] = _clean_str(data.get('pha_optimal'), max_len=10)
 
     _save_users(users)
     return jsonify({
         "success": True,
-        "message": "Perfil actualizado correctamente.",
+        "message": "Perfil y membrete PDF actualizado correctamente.",
         "user": _build_safe_user_dict(target_user)
     }), 200
 
