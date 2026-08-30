@@ -2456,6 +2456,7 @@ function printBIAReport() {
     const mp = user.professional_license || localStorage.getItem(`vm_pdf_mp_${userId}`) || '';
     const logoUrl = user.clinic_logo_url || localStorage.getItem(`vm_pdf_logo_url_${userId}`) || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinicName || docName)}&background=00b4d8&color=fff`;
     const disclaimer = user.pdf_disclaimer || localStorage.getItem(`vm_pdf_disclaimer_${userId}`) || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
+    const footerAddress = user.pdf_footer_address || localStorage.getItem(`vm_pdf_footer_address_${userId}`) || '';
 
     // Helpers
     const getTxt = (id) => {
@@ -2887,7 +2888,8 @@ function printBIAReport() {
 
             <!-- PIE DE PÁGINA Y FIRMA -->
             <div class="pt-2 border-top mt-3 d-flex justify-content-between align-items-end" style="font-size:0.72rem;">
-                <div style="max-width: 60%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.3;">
+                <div style="max-width: 64%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.35;">
+                    ${footerAddress ? `<div class="fw-bold text-navy mb-0.5" style="font-size: 0.68rem;">📍 ${footerAddress}</div>` : ''}
                     ${disclaimer}
                 </div>
                 <div class="text-center" style="width: 170px;">
@@ -6686,6 +6688,7 @@ function initConfiguracionView() {
         const phone = getProp(user.phone, `vm_pdf_phone_${userId}`);
         const logoUrl = getProp(user.clinic_logo_url, `vm_pdf_logo_url_${userId}`);
         const disclaimer = getProp(user.pdf_disclaimer, `vm_pdf_disclaimer_${userId}`, 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.');
+        const footerAddress = getProp(user.pdf_footer_address, `vm_pdf_footer_address_${userId}`);
         const address = getProp(user.clinic_address, `vm_clinic_address_${userId}`);
         const lat = localStorage.getItem(`vm_clinic_lat_${userId}`) || localStorage.getItem('vm_clinic_lat') || '-34.6037';
         const lng = localStorage.getItem(`vm_clinic_lng_${userId}`) || localStorage.getItem('vm_clinic_lng') || '-58.3816';
@@ -6714,6 +6717,7 @@ function initConfiguracionView() {
             };
         }
         setVal('cfg-pdf-disclaimer', disclaimer);
+        setVal('cfg-pdf-footer-address', footerAddress);
         setVal('cfg-clinic-address', address);
         setVal('cfg-clinic-lat', lat);
         setVal('cfg-clinic-lng', lng);
@@ -6743,6 +6747,7 @@ function initConfiguracionView() {
             const mp = getVal('cfg-pdf-mp');
             const logoUrl = getVal('cfg-pdf-logo-url');
             const disclaimer = getVal('cfg-pdf-disclaimer');
+            const footerAddress = getVal('cfg-pdf-footer-address');
             const address = getVal('cfg-clinic-address');
             const unit = document.getElementById('cfg-unit-weight') ? document.getElementById('cfg-unit-weight').value : 'kg';
             const pha = getVal('cfg-pha-optimal');
@@ -6754,6 +6759,7 @@ function initConfiguracionView() {
             localStorage.setItem(`vm_pdf_mp_${userId}`, mp);
             localStorage.setItem(`vm_pdf_logo_url_${userId}`, logoUrl);
             localStorage.setItem(`vm_pdf_disclaimer_${userId}`, disclaimer);
+            localStorage.setItem(`vm_pdf_footer_address_${userId}`, footerAddress);
             localStorage.setItem(`vm_clinic_address_${userId}`, address);
             localStorage.setItem(`vm_unit_weight_${userId}`, unit);
             localStorage.setItem(`vm_pha_optimal_${userId}`, pha);
@@ -6771,6 +6777,7 @@ function initConfiguracionView() {
                         professional_license: mp,
                         clinic_logo_url: logoUrl,
                         pdf_disclaimer: disclaimer,
+                        pdf_footer_address: footerAddress,
                         clinic_address: address,
                         unit_weight: unit,
                         pha_optimal: pha

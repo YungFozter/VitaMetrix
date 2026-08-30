@@ -453,6 +453,7 @@ def _build_safe_user_dict(user):
         "professional_license": user.get('professional_license', ''),
         "clinic_logo_url": user.get('clinic_logo_url', ''),
         "pdf_disclaimer": user.get('pdf_disclaimer', 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.'),
+        "pdf_footer_address": user.get('pdf_footer_address', ''),
         "clinic_address": user.get('clinic_address', ''),
         "unit_weight": user.get('unit_weight', 'kg'),
         "pha_optimal": user.get('pha_optimal', '6.0'),
@@ -662,6 +663,8 @@ def auth_update_profile():
         target_user['clinic_logo_url'] = str(data.get('clinic_logo_url') or data.get('pdf_logo_url') or '')
     if 'pdf_disclaimer' in data:
         target_user['pdf_disclaimer'] = _clean_str(data.get('pdf_disclaimer'), max_len=500)
+    if 'pdf_footer_address' in data:
+        target_user['pdf_footer_address'] = _clean_str(data.get('pdf_footer_address'), max_len=300)
     if 'clinic_address' in data:
         target_user['clinic_address'] = _clean_str(data.get('clinic_address'), max_len=200)
     if 'unit_weight' in data:
