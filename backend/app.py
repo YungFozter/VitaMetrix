@@ -426,9 +426,6 @@ def _calc_subscription_status(user):
             status = "trial" if ("prueba" in plan_name.lower() or "trial" in plan_name.lower()) else "active"
             return status, days_left, exp_dt.isoformat(), plan_name
         else:
-            # Si el usuario nunca canjeó un PIN ni tuvo suscripción real
-            if user.get('id') == 'usr-doctor-001' and user.get('subscription_status') in ('no_subscription', 'expired') and not user.get('last_redeemed_pin'):
-                return "no_subscription", 0, None, "Sin Suscripción Anterior"
             return "expired", 0, exp_dt.isoformat(), plan_name or "Plan Vencido"
     except Exception:
         return "no_subscription", 0, None, plan_name or "Sin Suscripción Anterior"
@@ -1083,8 +1080,8 @@ def admin_extend_user(user_id):
     target_user['subscription_status'] = 'active'
     if plan_name:
         target_user['subscription_plan'] = plan_name
-    elif not target_user.get('subscription_plan') or 'prueba' in target_user.get('subscription_plan', '').lower():
-        target_user['subscription_plan'] = f"Plan Pro ({days} días)"
+    elif not target_user.get('subscription_plan') or any(kw in target_user.get('subscription_plan', '').lower() for kw in ('prueba', 'vencid', 'sin suscripci', 'ningun')):
+        target_user['subscription_plan'] = 'Plan Pro Mensual (30 días)' if days == 30 else f"Plan Pro ({days} días)"
 
     _save_users(users)
     return jsonify({
