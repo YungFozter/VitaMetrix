@@ -6568,77 +6568,93 @@ function locateUserGPS() {
 }
 
 // Exportación CSV
-function exportEvaluationsToCSV() {
-    fetch('/api/evaluaciones')
-        .then(res => res.json())
-        .then(evals => {
-            if (!evals || evals.length === 0) {
-                showToast('⚠️ No hay evaluaciones en el historial para exportar.', 'info');
-                return;
-            }
+async function exportEvaluationsToCSV() {
+    try {
+        const res = await fetch('/api/evaluations', { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('Error de servidor');
+        const evals = await res.json();
+        
+        if (!Array.isArray(evals) || evals.length === 0) {
+            showToast('⚠️ No tienes ninguna evaluación clínica registrada para exportar.', 'info');
+            return;
+        }
 
-            const headers = ['ID', 'Código', 'Fecha', 'IDP', 'Paciente', 'Peso_kg', 'Altura_cm', 'R_ohm', 'Xc_ohm', 'TRU_Score', 'Angulo_Fase', 'Estado'];
-            const rows = evals.map(ev => [
-                ev.id || '',
-                ev.code || '',
-                ev.timestamp || '',
-                ev.idp || '',
-                `"${(ev.patient_name || '').replace(/"/g, '""')}"`,
-                ev.weight || '',
-                ev.height || '',
-                ev.r_ohm || '',
-                ev.xc_ohm || '',
-                ev.tru_score || '',
-                ev.phase_angle || '',
-                `"${(ev.cellular_status || '').replace(/"/g, '""')}"`
-            ]);
+        const headers = [
+            'ID', 'Código', 'Fecha', 'IDP / CI', 'Paciente', 'Edad', 'Sexo',
+            'Peso (kg)', 'Altura (cm)', 'R (ohm)', 'Xc (ohm)', 'Ángulo de Fase (°)',
+            'Puntuación TRU', 'Estado Celular'
+        ];
 
-            const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-            const encodedUri = encodeURI(csvContent);
-            const link = document.createElement('a');
-            link.setAttribute('href', encodedUri);
-            link.setAttribute('download', `VitaMetrix_Evaluaciones_${new Date().toISOString().split('T')[0]}.csv`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        const rows = evals.map(ev => [
+            ev.id || '',
+            ev.code || '',
+            ev.created_at || ev.timestamp || '',
+            ev.idp || ev.client_idp || '',
+            `"${(ev.patient_name || ev.client_name || '').replace(/"/g, '""')}"`,
+            ev.age || '',
+            ev.gender || '',
+            ev.weight || '',
+            ev.height || '',
+            ev.r_ohm || '',
+            ev.xc_ohm || '',
+            ev.phase_angle || '',
+            ev.tru_score || '',
+            `"${(ev.cellular_status || ev.status_description || '').replace(/"/g, '""')}"`
+        ]);
 
-            showToast('📊 Evaluaciones exportadas a CSV correctamente.', 'success');
-        })
-        .catch(() => {
-            showToast('⚠️ Error al consultar el historial para exportar.', 'error');
-        });
+        const csvContent = 'data:text/csv;charset=utf-8,\uFEFF' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement('a');
+        link.setAttribute('href', encodedUri);
+        link.setAttribute('download', `VitaMetrix_Evaluaciones_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        showToast('📊 Evaluaciones exportadas a CSV correctamente.', 'success');
+    } catch (e) {
+        showToast('⚠️ Error al consultar el historial para exportar.', 'error');
+    }
 }
 
 // Respaldo JSON
-function exportBackupJSON() {
-    fetch('/api/evaluaciones')
-        .then(res => res.json())
-        .then(evals => {
-            const backupData = {
-                app: 'VitaMetrix',
-                version: '2.0',
-                backup_date: new Date().toISOString(),
-                settings: {
-                    user_name: localStorage.getItem('vm_user_name') || 'Dra. Audrey',
-                    user_title: localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA',
-                    clinic_name: localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix',
-                    clinic_address: localStorage.getItem('vm_clinic_address') || '',
-                    clinic_lat: localStorage.getItem('vm_clinic_lat') || '',
-                    clinic_lng: localStorage.getItem('vm_clinic_lng') || ''
-                },
-                evaluaciones: evals
-            };
+async function exportBackupJSON() {
+    try {
+        const res = await fetch('/api/evaluations', { headers: getAuthHeaders() });
+        if (!res.ok) throw new Error('Error de servidor');
+        const evals = await res.json();
 
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `VitaMetrix_Backup_${new Date().toISOString().split('T')[0]}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+        if (!Array.isArray(evals) || evals.length === 0) {
+            showToast('⚠️ No tienes ninguna evaluación clínica registrada para respaldar.', 'info');
+            return;
+        }
 
-            showToast('📦 Respaldo JSON descargado con éxito.', 'success');
-        });
+        const user = currentAuthUser || {};
+        const backupData = {
+            app: 'VitaMetrix',
+            version: '2.0',
+            backup_date: new Date().toISOString(),
+            settings: {
+                user_id: user.id || '',
+                user_name: user.full_name || '',
+                user_title: user.professional_title || '',
+                clinic_name: user.clinic_name || ''
+            },
+            evaluaciones: evals
+        };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+        const downloadAnchor = document.createElement('a');
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", `VitaMetrix_Backup_${new Date().toISOString().split('T')[0]}.json`);
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+
+        showToast('📦 Respaldo JSON descargado con éxito.', 'success');
+    } catch (e) {
+        showToast('⚠️ Error al generar el respaldo JSON.', 'error');
+    }
 }
 
 // Restauración JSON
