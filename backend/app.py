@@ -2106,11 +2106,28 @@ def update_client(client_id):
     try:
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
+        is_admin = current_user and current_user.get('role') == 'admin'
         
         # Validar pertenencia antes de actualizar
-        check = supabase.table('clients').select('id, user_id').eq('id', client_id).execute()
-        if check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
-            return jsonify({"error": "No tienes permiso para modificar este paciente"}), 403
+        check = None
+        try:
+            check = supabase.table('clients').select('id, code, name').eq('id', client_id).execute()
+        except Exception:
+            pass
+
+        if not (check and check.data) and client_id.isdigit():
+            try:
+                check = supabase.table('clients').select('id, code, name').eq('code', int(client_id)).execute()
+            except Exception:
+                pass
+
+        if check and check.data:
+            client_row = check.data[0]
+            real_id = client_row.get('id')
+            c_code = str(client_row.get('code') or '')
+            c_uid = _CLIENTS_USER_MAP.get(str(real_id)) or _CLIENTS_USER_MAP.get(c_code)
+            if not is_admin and c_uid and current_uid and c_uid != current_uid:
+                return jsonify({"error": "No tienes permiso para modificar este paciente"}), 403
 
         updated_data = {
             "name": name,
@@ -2140,22 +2157,42 @@ def delete_client(client_id):
     try:
         current_user = _get_current_user()
         current_uid = current_user.get('id') if current_user else None
+        is_admin = current_user and current_user.get('role') == 'admin'
         
         # Validar pertenencia antes de eliminar (soportando id UUID o code entero)
-        check = supabase.table('clients').select('id, user_id').eq('id', client_id).execute()
-        if not (check and check.data):
-            if client_id.isdigit():
-                check = supabase.table('clients').select('id, user_id').eq('code', int(client_id)).execute()
-        if check and check.data and check.data[0].get('user_id') and current_uid and check.data[0].get('user_id') != current_uid:
-            return jsonify({"error": "No tienes permiso para eliminar este paciente"}), 403
+        check = None
+        try:
+            check = supabase.table('clients').select('id, code, name').eq('id', client_id).execute()
+        except Exception:
+            pass
+
+        if not (check and check.data) and client_id.isdigit():
+            try:
+                check = supabase.table('clients').select('id, code, name').eq('code', int(client_id)).execute()
+            except Exception:
+                pass
 
         if check and check.data:
-            real_id = check.data[0]['id']
+            client_row = check.data[0]
+            real_id = client_row.get('id')
+            c_code = str(client_row.get('code') or '')
+            c_uid = _CLIENTS_USER_MAP.get(str(real_id)) or _CLIENTS_USER_MAP.get(c_code)
+
+            # Si no es admin y el paciente pertenece a otro doctor, prohibir
+            if not is_admin and c_uid and current_uid and c_uid != current_uid:
+                return jsonify({"error": "No tienes permiso para eliminar este paciente"}), 403
+
             supabase.table('clients').delete().eq('id', real_id).execute()
+            if str(real_id) in _CLIENTS_USER_MAP:
+                del _CLIENTS_USER_MAP[str(real_id)]
+            if c_code in _CLIENTS_USER_MAP:
+                del _CLIENTS_USER_MAP[c_code]
+            _save_clients_user_map(_CLIENTS_USER_MAP)
         else:
             supabase.table('clients').delete().eq('id', client_id).execute()
+
         _invalidate_dashboard_cache()
-        return jsonify({"success": True})
+        return jsonify({"success": True}), 200
     except Exception as e:
         logging.error("Error al eliminar cliente: %s", e, exc_info=True)
         return jsonify({"error": "Error al eliminar cliente"}), 500
