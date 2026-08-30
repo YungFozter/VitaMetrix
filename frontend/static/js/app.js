@@ -6182,7 +6182,14 @@ function initConfiguracionView() {
         setVal('cfg-pdf-phone', phone);
         setVal('cfg-pdf-logo-url', logoUrl);
         const logoPreview = document.getElementById('cfg-logo-preview');
-        if (logoPreview) logoPreview.src = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'VitaMetrix')}&background=00b4d8&color=fff`;
+        const defaultLogo = `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || name || 'VitaMetrix')}&background=00b4d8&color=fff`;
+        if (logoPreview) {
+            logoPreview.src = logoUrl || defaultLogo;
+            logoPreview.onerror = function() {
+                this.onerror = null;
+                this.src = defaultLogo;
+            };
+        }
         setVal('cfg-pdf-disclaimer', disclaimer);
         setVal('cfg-clinic-address', address);
         setVal('cfg-clinic-lat', lat);

@@ -21,28 +21,34 @@
     "full_name": "Dra. Audrey",
     "professional_title": "Manager / Especialista BIA",
     "clinic_name": "Centro Médico VitaMetrix",
-    "phone": "+59171234567",
+    "phone": "+591 71111111",
     "role": "user",
     "subscription_status": "active",
     "subscription_plan": "Plan Pro Mensual (30 días)",
     "subscription_expires_at": "2026-09-29T01:41:49.914420+00:00",
     "trial_started_at": null,
     "created_at": "2026-08-28T00:00:00Z",
-    "last_redeemed_pin": null
+    "last_redeemed_pin": null,
+    "professional_license": "MP: 99999 / MN: 8888",
+    "clinic_logo_url": "https://audrey-logo.png",
+    "pdf_disclaimer": "Aviso de la Dra Audrey"
   },
   {
     "id": "usr-doctor-002",
     "email": "ianortizsandoval@gmail.com",
     "password_hash": "scrypt:32768:8:1$V9lwScNPDpiFFYdM$c040d12f151b5f6c51c166c51b3261c138e30686d45b1498510bced0083d2cbd1b42656d6a59b3d69f0af28e718c91ec22fadabd5ebe8ad1614344e24dc9b187",
     "full_name": "Ian Ortiz",
-    "professional_title": "Nutricionista",
-    "clinic_name": "AzPlus",
-    "phone": "",
+    "professional_title": "Nutricionista Clínico",
+    "clinic_name": "Consultorio AzPlus",
+    "phone": "+591 70000000",
     "role": "user",
     "subscription_status": "trial",
     "subscription_plan": "Plan de Prueba (7 días)",
     "subscription_expires_at": "2026-09-06T01:39:46.138131+00:00",
     "trial_started_at": "2026-08-30T01:39:46.138131+00:00",
-    "created_at": "2026-08-30T01:39:46.138131+00:00"
+    "created_at": "2026-08-30T01:39:46.138131+00:00",
+    "professional_license": "",
+    "clinic_logo_url": "",
+    "pdf_disclaimer": "Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento."
   }
 ]
