@@ -463,6 +463,23 @@ def _build_safe_user_dict(user):
         }
     }
 
+def _generate_next_user_id(role='user'):
+    users = _load_users()
+    prefix = 'usr-admin-' if role == 'admin' else 'usr-doctor-'
+    existing_nums = []
+    for u in users:
+        uid = str(u.get('id') or '')
+        if uid.startswith(prefix):
+            try:
+                num = int(uid.replace(prefix, ''))
+                existing_nums.append(num)
+            except ValueError:
+                pass
+    next_num = 1
+    while next_num in existing_nums:
+        next_num += 1
+    return f"{prefix}{next_num:03d}"
+
 # --- RUTAS DE AUTENTICACIÓN ---
 
 @app.route('/api/auth/register', methods=['POST'])
@@ -490,7 +507,7 @@ def auth_register():
     trial_expires = now_utc + timedelta(days=7)
 
     new_user = {
-        "id": str(uuid.uuid4()),
+        "id": _generate_next_user_id(role='user'),
         "email": email,
         "password_hash": generate_password_hash(password),
         "full_name": full_name,
@@ -1035,7 +1052,7 @@ def admin_create_user():
     expires_dt = now_utc + timedelta(days=duration_days)
 
     new_user = {
-        "id": str(uuid.uuid4()),
+        "id": _generate_next_user_id(role=role),
         "email": email,
         "password_hash": generate_password_hash(password),
         "full_name": full_name,

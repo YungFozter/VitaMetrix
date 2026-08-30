@@ -25,8 +25,24 @@
     "role": "user",
     "subscription_status": "active",
     "subscription_plan": "Plan Pro Mensual (30 días)",
-    "subscription_expires_at": "2026-09-29T00:40:55.133976+00:00",
+    "subscription_expires_at": "2026-09-29T01:41:49.914420+00:00",
     "trial_started_at": null,
-    "created_at": "2026-08-28T00:00:00Z"
+    "created_at": "2026-08-28T00:00:00Z",
+    "last_redeemed_pin": null
+  },
+  {
+    "id": "usr-doctor-002",
+    "email": "ianortizsandoval@gmail.com",
+    "password_hash": "scrypt:32768:8:1$V9lwScNPDpiFFYdM$c040d12f151b5f6c51c166c51b3261c138e30686d45b1498510bced0083d2cbd1b42656d6a59b3d69f0af28e718c91ec22fadabd5ebe8ad1614344e24dc9b187",
+    "full_name": "Ian Ortiz",
+    "professional_title": "Nutricionista",
+    "clinic_name": "AzPlus",
+    "phone": "",
+    "role": "user",
+    "subscription_status": "trial",
+    "subscription_plan": "Plan de Prueba (7 días)",
+    "subscription_expires_at": "2026-09-06T01:39:46.138131+00:00",
+    "trial_started_at": "2026-08-30T01:39:46.138131+00:00",
+    "created_at": "2026-08-30T01:39:46.138131+00:00"
   }
 ]
