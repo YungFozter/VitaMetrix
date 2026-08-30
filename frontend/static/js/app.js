@@ -2794,6 +2794,17 @@ function printBIAReport() {
                     </div>
                 </div>
             </div>
+
+            <!-- PIE DE PÁGINA 1 -->
+            <div class="pt-2 border-top mt-3 d-flex justify-content-between align-items-center" style="font-size:0.72rem;">
+                <div style="max-width: 75%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.35;">
+                    ${footerAddress ? `<div class="fw-bold text-navy mb-0.5" style="font-size: 0.68rem;">📍 ${footerAddress}</div>` : ''}
+                    ${disclaimer}
+                </div>
+                <div class="text-end text-muted" style="font-size: 0.68rem;">
+                    Página <strong>1</strong> de <strong>2</strong>
+                </div>
+            </div>
         </div>
 
         <div class="report-page-break"></div>
@@ -2891,6 +2902,7 @@ function printBIAReport() {
                 <div style="max-width: 64%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.35;">
                     ${footerAddress ? `<div class="fw-bold text-navy mb-0.5" style="font-size: 0.68rem;">📍 ${footerAddress}</div>` : ''}
                     ${disclaimer}
+                    <div class="text-muted mt-1" style="font-size: 0.62rem;">Página <strong>2</strong> de <strong>2</strong></div>
                 </div>
                 <div class="text-center" style="width: 170px;">
                     <div style="border-bottom: 1px solid #1A2A4A; height: 30px; margin-bottom: 3px;"></div>
