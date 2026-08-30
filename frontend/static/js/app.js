@@ -214,6 +214,9 @@ function updateUIWithUserData(userData) {
     }
 
     updateUserProfileUI();
+    if (typeof window.loadAllSettings === 'function') {
+        window.loadAllSettings();
+    }
 }
 
 function hideAuthModal() {
@@ -6147,23 +6150,27 @@ function initConfiguracionView() {
 
     // Cargar todos los ajustes persistentes
     const loadAllSettings = () => {
-        const name = localStorage.getItem('vm_user_name') || 'Dra. Audrey';
-        const title = localStorage.getItem('vm_user_title') || 'Manager / Especialista BIA';
-        const clinic = localStorage.getItem('vm_clinic_name') || 'Centro Médico VitaMetrix';
-        const unit = localStorage.getItem('vm_unit_weight') || 'kg';
-        const pha = localStorage.getItem('vm_pha_optimal') || '6.0';
-        const mp = localStorage.getItem('vm_pdf_mp') || 'MP: 45892 / MN: 1204';
-        const phone = localStorage.getItem('vm_pdf_phone') || '+54 9 11 4455-6677';
-        const logoUrl = localStorage.getItem('vm_pdf_logo_url') || 'https://ui-avatars.com/api/?name=VitaMetrix&background=00b4d8&color=fff';
-        const disclaimer = localStorage.getItem('vm_pdf_disclaimer') || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
-        const address = localStorage.getItem('vm_clinic_address') || 'Av. Libertador 2450, Piso 3, CABA';
-        const lat = localStorage.getItem('vm_clinic_lat') || '-34.6037';
-        const lng = localStorage.getItem('vm_clinic_lng') || '-58.3816';
+        const user = currentAuthUser || {};
+        const userId = user.id || 'guest';
+        const isAdmin = user.role === 'admin';
+
+        const name = user.full_name || localStorage.getItem(`vm_user_name_${userId}`) || localStorage.getItem('vm_user_name') || '';
+        const title = user.professional_title || localStorage.getItem(`vm_user_title_${userId}`) || localStorage.getItem('vm_user_title') || '';
+        const clinic = user.clinic_name || localStorage.getItem(`vm_clinic_name_${userId}`) || localStorage.getItem('vm_clinic_name') || '';
+        const unit = localStorage.getItem(`vm_unit_weight_${userId}`) || localStorage.getItem('vm_unit_weight') || 'kg';
+        const pha = localStorage.getItem(`vm_pha_optimal_${userId}`) || localStorage.getItem('vm_pha_optimal') || '6.0';
+        const mp = localStorage.getItem(`vm_pdf_mp_${userId}`) || localStorage.getItem('vm_pdf_mp') || '';
+        const phone = user.phone || localStorage.getItem(`vm_pdf_phone_${userId}`) || localStorage.getItem('vm_pdf_phone') || '';
+        const logoUrl = localStorage.getItem(`vm_pdf_logo_url_${userId}`) || localStorage.getItem('vm_pdf_logo_url') || '';
+        const disclaimer = localStorage.getItem(`vm_pdf_disclaimer_${userId}`) || localStorage.getItem('vm_pdf_disclaimer') || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
+        const address = localStorage.getItem(`vm_clinic_address_${userId}`) || localStorage.getItem('vm_clinic_address') || '';
+        const lat = localStorage.getItem(`vm_clinic_lat_${userId}`) || localStorage.getItem('vm_clinic_lat') || '-34.6037';
+        const lng = localStorage.getItem(`vm_clinic_lng_${userId}`) || localStorage.getItem('vm_clinic_lng') || '-58.3816';
         const darkTheme = localStorage.getItem('vm_dark_theme') === 'true';
 
         const setVal = (id, val) => {
             const el = document.getElementById(id);
-            if (el) el.value = val;
+            if (el) el.value = val || '';
         };
 
         setVal('cfg-user-name', name);
@@ -6175,7 +6182,7 @@ function initConfiguracionView() {
         setVal('cfg-pdf-phone', phone);
         setVal('cfg-pdf-logo-url', logoUrl);
         const logoPreview = document.getElementById('cfg-logo-preview');
-        if (logoPreview && logoUrl) logoPreview.src = logoUrl;
+        if (logoPreview) logoPreview.src = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'VitaMetrix')}&background=00b4d8&color=fff`;
         setVal('cfg-pdf-disclaimer', disclaimer);
         setVal('cfg-clinic-address', address);
         setVal('cfg-clinic-lat', lat);
@@ -6186,29 +6193,56 @@ function initConfiguracionView() {
             applyThemeMode(darkTheme);
         }
 
-        // Actualizar header UI y perfil
         updateUserProfileUI();
     };
 
+    window.loadAllSettings = loadAllSettings;
     loadAllSettings();
 
     // Guardar todos los cambios
     if (btnSave) {
-        btnSave.addEventListener('click', () => {
+        btnSave.addEventListener('click', async () => {
             const getVal = (id) => document.getElementById(id) ? document.getElementById(id).value.trim() : '';
+            const user = currentAuthUser || {};
+            const userId = user.id || 'guest';
 
-            localStorage.setItem('vm_user_name', getVal('cfg-user-name'));
-            localStorage.setItem('vm_user_title', getVal('cfg-user-title'));
-            localStorage.setItem('vm_clinic_name', getVal('cfg-clinic-name'));
-            localStorage.setItem('vm_unit_weight', document.getElementById('cfg-unit-weight') ? document.getElementById('cfg-unit-weight').value : 'kg');
-            localStorage.setItem('vm_pha_optimal', getVal('cfg-pha-optimal'));
-            localStorage.setItem('vm_pdf_mp', getVal('cfg-pdf-mp'));
-            localStorage.setItem('vm_pdf_phone', getVal('cfg-pdf-phone'));
-            localStorage.setItem('vm_pdf_logo_url', getVal('cfg-pdf-logo-url'));
-            localStorage.setItem('vm_pdf_disclaimer', getVal('cfg-pdf-disclaimer'));
-            localStorage.setItem('vm_clinic_address', getVal('cfg-clinic-address'));
-            localStorage.setItem('vm_clinic_lat', getVal('cfg-clinic-lat'));
-            localStorage.setItem('vm_clinic_lng', getVal('cfg-clinic-lng'));
+            const name = getVal('cfg-user-name');
+            const title = getVal('cfg-user-title');
+            const clinic = getVal('cfg-clinic-name');
+            const phone = getVal('cfg-pdf-phone');
+
+            localStorage.setItem(`vm_user_name_${userId}`, name);
+            localStorage.setItem(`vm_user_title_${userId}`, title);
+            localStorage.setItem(`vm_clinic_name_${userId}`, clinic);
+            localStorage.setItem(`vm_pdf_phone_${userId}`, phone);
+            localStorage.setItem(`vm_unit_weight_${userId}`, document.getElementById('cfg-unit-weight') ? document.getElementById('cfg-unit-weight').value : 'kg');
+            localStorage.setItem(`vm_pha_optimal_${userId}`, getVal('cfg-pha-optimal'));
+            localStorage.setItem(`vm_pdf_mp_${userId}`, getVal('cfg-pdf-mp'));
+            localStorage.setItem(`vm_pdf_logo_url_${userId}`, getVal('cfg-pdf-logo-url'));
+            localStorage.setItem(`vm_pdf_disclaimer_${userId}`, getVal('cfg-pdf-disclaimer'));
+            localStorage.setItem(`vm_clinic_address_${userId}`, getVal('cfg-clinic-address'));
+            localStorage.setItem(`vm_clinic_lat_${userId}`, getVal('cfg-clinic-lat'));
+            localStorage.setItem(`vm_clinic_lng_${userId}`, getVal('cfg-clinic-lng'));
+
+            // Actualizar también en el servidor para que la sesión del usuario persista globalmente
+            try {
+                const res = await fetch('/api/auth/profile', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({
+                        full_name: name,
+                        professional_title: title,
+                        clinic_name: clinic,
+                        phone: phone
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.user) {
+                    currentAuthUser = data.user;
+                }
+            } catch (e) {
+                console.warn('No se pudo guardar el perfil en el servidor:', e);
+            }
 
             loadAllSettings();
             showToast('💾 Toda la configuración del sistema ha sido guardada correctamente.', 'success');

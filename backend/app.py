@@ -628,6 +628,41 @@ def auth_me():
         "user": _build_safe_user_dict(target_user)
     }), 200
 
+@app.route('/api/auth/profile', methods=['PUT', 'POST'])
+def auth_update_profile():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    data = request.json or {}
+    user_id = current_user.get('id')
+
+    full_name = _clean_str(data.get('full_name'), max_len=120)
+    professional_title = _clean_str(data.get('professional_title'), max_len=100)
+    clinic_name = _clean_str(data.get('clinic_name'), max_len=150)
+    phone = _clean_str(data.get('phone'), max_len=30)
+
+    users = _load_users()
+    target_user = next((u for u in users if u.get('id') == user_id), None)
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado"}), 404
+
+    if full_name:
+        target_user['full_name'] = full_name
+    if professional_title is not None:
+        target_user['professional_title'] = professional_title
+    if clinic_name is not None:
+        target_user['clinic_name'] = clinic_name
+    if phone is not None:
+        target_user['phone'] = phone
+
+    _save_users(users)
+    return jsonify({
+        "success": True,
+        "message": "Perfil actualizado correctamente.",
+        "user": _build_safe_user_dict(target_user)
+    }), 200
+
 @app.route('/api/auth/logout', methods=['POST'])
 def auth_logout():
     return jsonify({"success": True, "message": "Sesión cerrada correctamente"})
