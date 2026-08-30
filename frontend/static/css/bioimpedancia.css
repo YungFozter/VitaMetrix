@@ -720,6 +720,31 @@
         visibility: visible !important;
     }
 
+    .bia-printable-sheet {
+        width: 100% !important;
+        height: 281mm !important;
+        min-height: 281mm !important;
+        max-height: 281mm !important;
+        box-sizing: border-box !important;
+        padding: 2mm 3mm !important;
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: space-between !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        overflow: hidden !important;
+    }
+
+    .sheet-body {
+        flex: 1 1 auto !important;
+    }
+
+    .sheet-footer {
+        flex: 0 0 auto !important;
+        margin-top: auto !important;
+    }
+
     .report-page-break {
         page-break-after: always !important;
         break-after: page !important;
@@ -730,6 +755,6 @@
 
     @page {
         size: A4 portrait;
-        margin: 8mm 10mm;
+        margin: 5mm 8mm;
     }
 }
