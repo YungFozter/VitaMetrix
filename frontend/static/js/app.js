@@ -2434,6 +2434,193 @@ function initBioForm() {
             }
         });
     }
+
+    // 3. REPORTE PDF (Imprimir informe clínico completo de Bioimpedancia)
+    const btnPrintReport = document.getElementById('btn-print-report');
+    if (btnPrintReport) {
+        btnPrintReport.addEventListener('click', printBIAReport);
+    }
+}
+
+// Imprimir o guardar reporte clínico de Bioimpedancia en PDF
+function printBIAReport() {
+    const user = currentAuthUser || {};
+    const isAdmin = user.role === 'admin';
+    const userId = user.id || 'guest';
+
+    // 1. Datos del Profesional y Membrete
+    const docName = user.full_name || localStorage.getItem(`vm_user_name_${userId}`) || (isAdmin ? 'Administrador General' : 'Dra. Audrey');
+    const docTitle = user.professional_title || localStorage.getItem(`vm_user_title_${userId}`) || (isAdmin ? 'Director / Administrador de Plataforma' : 'Especialista BIA');
+    const clinicName = user.clinic_name || localStorage.getItem(`vm_clinic_name_${userId}`) || (isAdmin ? 'Sede Central VitaMetrix' : 'Centro Médico VitaMetrix');
+    const phone = user.phone || localStorage.getItem(`vm_pdf_phone_${userId}`) || '';
+    const mp = user.professional_license || localStorage.getItem(`vm_pdf_mp_${userId}`) || '';
+    const logoUrl = user.clinic_logo_url || localStorage.getItem(`vm_pdf_logo_url_${userId}`) || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinicName || docName)}&background=00b4d8&color=fff`;
+    const disclaimer = user.pdf_disclaimer || localStorage.getItem(`vm_pdf_disclaimer_${userId}`) || 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.';
+
+    // 2. Datos del Paciente
+    const getTxt = (id) => {
+        const el = document.getElementById(id);
+        if (!el) return '--';
+        const val = el.value !== undefined ? el.value : el.textContent;
+        return (val && val.trim() !== '') ? val.trim() : '--';
+    };
+
+    const patientName = getTxt('input-name') !== '--' ? getTxt('input-name') : 'Paciente General';
+    const patientIdp = getTxt('input-idp') !== '--' ? getTxt('input-idp') : 'N/A';
+    const age = getTxt('input-age');
+    const genderSel = document.getElementById('input-gender');
+    const genderText = genderSel ? (genderSel.value === 'female' ? 'Femenino' : 'Masculino') : 'Masculino';
+    const weight = getTxt('input-weight');
+    const height = getTxt('input-height');
+    
+    let bmiVal = '--';
+    const wNum = parseFloat(weight);
+    const hNum = parseFloat(height);
+    if (wNum > 0 && hNum > 0) {
+        bmiVal = (wNum / ((hNum / 100) ** 2)).toFixed(1);
+    }
+
+    // 3. Resultados y Métricas Clínicas
+    const truScore = getTxt('tru-score-val');
+    const truStatus = getTxt('tru-status-chip');
+    const smm = getTxt('smm-val');
+    const fm = getTxt('fat-mass-val');
+    const fmPct = getTxt('body-fat-val');
+    const ree = getTxt('ree-value');
+    const tee = getTxt('tee-value');
+    const pal = getTxt('pal-value');
+
+    // BIVA & Hídrico
+    const rVal = getTxt('res-value');
+    const xcVal = getTxt('xc-value');
+    const phaVal = getTxt('phase-value');
+    const cellStatus = getTxt('cell-status');
+
+    const tbw = getTxt('water-tbw');
+    const icw = getTxt('water-icw');
+    const ecw = getTxt('water-ecw');
+    const ratio = getTxt('water-ratio');
+
+    const waist = getTxt('waist-val');
+    const visc = getTxt('visc-val');
+    const waterDiag = getTxt('water-diag-desc');
+
+    // 4. Captura de la imagen BIVA del canvas
+    const bivaCanvas = document.getElementById('bivaCanvas');
+    const bivaImgUrl = (bivaCanvas && bivaCanvas.width > 0) ? bivaCanvas.toDataURL('image/png') : '';
+
+    const todayStr = new Date().toLocaleDateString('es-ES', {
+        year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+
+    // 5. Construir elemento imprimible dedicado
+    let reportContainer = document.getElementById('bia-printable-report');
+    if (!reportContainer) {
+        reportContainer = document.createElement('div');
+        reportContainer.id = 'bia-printable-report';
+        document.body.appendChild(reportContainer);
+    }
+
+    reportContainer.innerHTML = `
+        <div class="bia-printable-sheet p-4" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
+            <!-- CABECERA MEMBRETE -->
+            <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom border-2">
+                <div class="d-flex align-items-center gap-3">
+                    <img src="${logoUrl}" alt="Logo" style="max-height: 55px; max-width: 140px; object-fit: contain;">
+                    <div>
+                        <h2 class="m-0 fw-bold text-navy fs-4">${clinicName}</h2>
+                        <div class="text-secondary small fw-semibold">${docName} — ${docTitle}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">${mp ? 'Matrícula: ' + mp + ' | ' : ''}${phone ? 'Tel: ' + phone : ''}</div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-primary px-3 py-1 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Informe Clínico BIA</span>
+                    <div class="text-muted text-xs mt-1">Fecha: ${todayStr}</div>
+                </div>
+            </div>
+
+            <!-- FICHA PACIENTE -->
+            <div class="p-2.5 rounded-3 bg-light mb-3 border" style="font-size:0.8rem;">
+                <div class="row g-2">
+                    <div class="col-4"><strong>Paciente:</strong> ${patientName}</div>
+                    <div class="col-3"><strong>IDP / CI:</strong> ${patientIdp}</div>
+                    <div class="col-2"><strong>Edad:</strong> ${age} años</div>
+                    <div class="col-3"><strong>Sexo:</strong> ${genderText}</div>
+                    <div class="col-4"><strong>Peso:</strong> ${weight} kg</div>
+                    <div class="col-3"><strong>Talla:</strong> ${height} cm</div>
+                    <div class="col-5"><strong>IMC:</strong> ${bmiVal} kg/m²</div>
+                </div>
+            </div>
+
+            <!-- BLOQUE TRU SCORE & MASAS -->
+            <div class="row g-3 mb-3">
+                <div class="col-4">
+                    <div class="border rounded-3 p-3 text-center bg-white h-100 d-flex flex-column justify-content-center">
+                        <div class="text-uppercase text-muted fw-bold mb-1" style="font-size:0.7rem;">Puntuación Salud Celular</div>
+                        <div class="fs-1 fw-extrabold text-primary" style="font-size:2.4rem;">${truScore}</div>
+                        <div class="badge bg-success-subtle text-success fw-bold mt-1">${truStatus}</div>
+                    </div>
+                </div>
+                <div class="col-8">
+                    <div class="border rounded-3 p-3 bg-white h-100">
+                        <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">Composición Corporal & Metabolismo</div>
+                        <div class="row g-2" style="font-size:0.78rem;">
+                            <div class="col-6">Masa Muscular (SMM): <strong>${smm} kg</strong></div>
+                            <div class="col-6">Masa Grasa Total (FM): <strong>${fm} kg (${fmPct}%)</strong></div>
+                            <div class="col-6">Gasto en Reposo (REE): <strong>${ree} kcal/día</strong></div>
+                            <div class="col-6">Gasto Total (TEE): <strong>${tee} kcal/día</strong></div>
+                            <div class="col-6">Perímetro Abdominal: <strong>${waist} cm</strong></div>
+                            <div class="col-6">Grasa Visceral: <strong>Nivel ${visc} (PAL: ${pal})</strong></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BIVA GRAPH & ANÁLISIS HÍDRICO -->
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="border rounded-3 p-3 bg-white text-center h-100">
+                        <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">Análisis Vectorial BIVA</div>
+                        ${bivaImgUrl ? `<img src="${bivaImgUrl}" style="max-width: 210px; width: 100%; height: auto;" class="my-1 rounded-2">` : ''}
+                        <div class="text-xs text-secondary mt-1">R: <strong>${rVal} Ω</strong> | Xc: <strong>${xcVal} Ω</strong> | PhA: <strong>${phaVal}°</strong></div>
+                        <div class="badge bg-success-subtle text-success text-xs fw-bold mt-1">${cellStatus}</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="border rounded-3 p-3 bg-white h-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">Análisis Hídrico (TBW / ICW / ECW)</div>
+                            <div class="row g-2" style="font-size:0.78rem;">
+                                <div class="col-6">Agua Total (TBW): <strong>${tbw} L</strong></div>
+                                <div class="col-6">Intracelular (ICW): <strong>${icw} L</strong></div>
+                                <div class="col-6">Extracelular (ECW): <strong>${ecw} L</strong></div>
+                                <div class="col-6">ECW / TBW Ratio: <strong>${ratio}</strong></div>
+                            </div>
+                        </div>
+                        <div class="p-2 rounded-2 bg-light border text-xs text-secondary mt-2" style="font-size:0.72rem;">
+                            <strong>Interpretación:</strong> ${waterDiag}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PIE DE PÁGINA Y FIRMA -->
+            <div class="pt-3 border-top mt-4 d-flex justify-content-between align-items-end" style="font-size:0.75rem;">
+                <div style="max-width: 60%; color: #5a6f8c; font-size: 0.68rem; line-height: 1.35;">
+                    ${disclaimer}
+                </div>
+                <div class="text-center" style="width: 190px;">
+                    <div style="border-bottom: 1px solid #1A2A4A; height: 35px; margin-bottom: 4px;"></div>
+                    <div class="fw-bold text-navy" style="font-size: 0.75rem;">${docName}</div>
+                    <div class="text-muted" style="font-size: 0.68rem;">Firma y Sello del Profesional</div>
+                </div>
+            </div>
+        </div>
+    `;
+
+    setTimeout(() => {
+        window.print();
+    }, 150);
 }
 
 let populationChart = null;

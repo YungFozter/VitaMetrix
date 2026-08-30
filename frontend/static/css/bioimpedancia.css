@@ -689,3 +689,39 @@
     }
     .form-fields { grid-template-columns: 1fr 1fr; }
 }
+
+/* ==========================================================================
+   ESTILOS DE IMPRESIÓN DEL INFORME CLÍNICO BIA (@media print)
+   ========================================================================== */
+#bia-printable-report {
+    display: none;
+}
+
+@media print {
+    body > * {
+        display: none !important;
+    }
+
+    #bia-printable-report {
+        display: block !important;
+        visibility: visible !important;
+        position: absolute !important;
+        left: 0 !important;
+        top: 0 !important;
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        background: #ffffff !important;
+        color: #1A2A4A !important;
+        box-sizing: border-box !important;
+    }
+
+    #bia-printable-report * {
+        visibility: visible !important;
+    }
+
+    @page {
+        size: A4 portrait;
+        margin: 10mm;
+    }
+}
