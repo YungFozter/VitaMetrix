@@ -2564,9 +2564,13 @@ function printBIAReport() {
     const viscBadge = getTxt('visc-badge');
     const viscStatusText = getTxt('visc-status-text');
 
-    // CARD 11: Composición Esquelética / BCC
-    const boneMassVal = getTxt('bone-mass-val');
+    // CARD 11: Balance BCC (Grasa vs Músculo)
     const dryLeanVal = getTxt('dry-lean-val');
+    const bccBadge = getTxt('bcc-summary-badge') !== '--' ? getTxt('bcc-summary-badge') : 'Matriz Somática';
+    const bccMuscleVal = getTxt('bcc-muscle-val');
+    const bccFatVal = getTxt('bcc-fat-val');
+    const bccDiagTitle = getTxt('bcc-diagnosis-title') !== '--' ? getTxt('bcc-diagnosis-title') : 'Diagnóstico Somático';
+    const bccDiagDesc = getTxt('bcc-diagnosis-desc') !== '--' ? getTxt('bcc-diagnosis-desc') : 'El paciente mantiene una relación balanceada entre masa magra activa y tejido adiposo.';
     const bccImgUrl = getCanvasImg('bccCanvas');
 
     const todayStr = new Date().toLocaleDateString('es-ES', {
@@ -2871,21 +2875,62 @@ function printBIAReport() {
                     </div>
                 </div>
 
-                <!-- CARD 8 & CARD 11: PERCENTILES POBLACIONALES Y COMPOSICIÓN ESQUELÉTICA -->
+                <!-- CARD 8: PERCENTILES POBLACIONALES -->
                 <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
-                    <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">📈 Percentiles Poblacionales & Composición Esquelética (BCC)</div>
+                    <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">📈 Percentiles Poblacionales (SMM & PhA)</div>
                     <div class="row g-2 text-center">
-                        <div class="col-4 border-end">
+                        <div class="col-6 border-end">
                             <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Percentil SMM: <strong>${smmPctVal}</strong></span>
-                            ${smmCurveImg ? `<img src="${smmCurveImg}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva SMM</div>'}
+                            ${smmCurveImg ? `<img src="${smmCurveImg}" style="max-height:75px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva SMM</div>'}
                         </div>
-                        <div class="col-4 border-end">
+                        <div class="col-6">
                             <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Percentil PhA: <strong>${phPctVal}</strong></span>
-                            ${phaCurveImg ? `<img src="${phaCurveImg}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva PhA</div>'}
+                            ${phaCurveImg ? `<img src="${phaCurveImg}" style="max-height:75px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva PhA</div>'}
                         </div>
-                        <div class="col-4">
-                            <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Masa Ósea: <strong>${boneMassVal} kg</strong></span>
-                            ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">BCC Graph</div>'}
+                    </div>
+                </div>
+
+                <!-- CARD 11: BALANCE BCC (GRASA VS MÚSCULO) -->
+                <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                    <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
+                        <span>📊 Balance BCC (Grasa vs Músculo)</span>
+                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(0, 180, 216, 0.15); color: #0077b6; font-size: 0.64rem;">${bccBadge}</span>
+                    </div>
+                    
+                    <div class="row align-items-center g-2">
+                        <div class="col-5 text-center border-end">
+                            ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height: 110px; width: auto; max-width: 100%;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BCC Matrix</div>'}
+                        </div>
+                        <div class="col-7">
+                            <div class="row g-1 text-center mb-1">
+                                <div class="col-6">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block" style="font-size:0.6rem;">Masa Muscular (SMM)</span>
+                                        <strong class="text-navy" style="font-size:0.8rem;">${bccMuscleVal}</strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block" style="font-size:0.6rem;">Masa Grasa (FM)</span>
+                                        <strong class="text-navy" style="font-size:0.8rem;">${bccFatVal}</strong>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Cuadrantes Legend -->
+                            <div class="p-1 rounded border bg-light mb-1" style="font-size: 0.6rem;">
+                                <div class="row g-0.5">
+                                    <div class="col-6"><span class="badge bg-success-subtle text-success p-0.5 me-0.5" style="font-size:0.55rem;">I</span> <strong>Atlético:</strong> +Músc / -Grasa</div>
+                                    <div class="col-6"><span class="badge bg-primary-subtle text-primary p-0.5 me-0.5" style="font-size:0.55rem;">II</span> <strong>Equilibrado:</strong> Normal</div>
+                                    <div class="col-6"><span class="badge bg-warning-subtle text-warning p-0.5 me-0.5" style="font-size:0.55rem;">III</span> <strong>Adiposo:</strong> +Grasa / Medio</div>
+                                    <div class="col-6"><span class="badge bg-danger-subtle text-danger p-0.5 me-0.5" style="font-size:0.55rem;">IV</span> <strong>Sarcopénico:</strong> -Músc / +Grasa</div>
+                                </div>
+                            </div>
+
+                            <!-- Diagnóstico Box -->
+                            <div class="p-1.5 rounded border bg-info-subtle/20 border-info-subtle text-navy" style="font-size: 0.64rem; line-height: 1.3;">
+                                <strong>${bccDiagTitle}:</strong> ${bccDiagDesc}
+                            </div>
                         </div>
                     </div>
                 </div>
