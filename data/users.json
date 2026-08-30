@@ -49,6 +49,9 @@
     "created_at": "2026-08-30T01:39:46.138131+00:00",
     "professional_license": "",
     "clinic_logo_url": "",
-    "pdf_disclaimer": "Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento."
+    "pdf_disclaimer": "Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.",
+    "clinic_address": "Pampa de la Isla, Santa Cruz de la Sierra, Provincia Andrés Ibáñez",
+    "unit_weight": "kg",
+    "pha_optimal": "6.0"
   }
 ]
