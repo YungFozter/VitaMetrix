@@ -2809,8 +2809,6 @@ function printBIAReport() {
             </div>
         </div>
 
-        <div class="report-page-break"></div>
-
         <!-- ================= PÁGINA 2: HIDRATACIÓN, CINTURA, ÍNDICES, PERCENTILES Y DIAGNÓSTICO ================= -->
         <div class="bia-printable-sheet p-3" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
             <div class="sheet-body">
