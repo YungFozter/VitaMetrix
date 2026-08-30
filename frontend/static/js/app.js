@@ -1,14 +1,26 @@
-// --- GUARD CONTRA ERRORES DE EXTENSIONES DEL NAVEGADOR (Ej. Google Translate / MutationObservers) ---
+// --- GUARD CONTRA ERRORES DE EXTENSIONES DEL NAVEGADOR (Ej. Web Vitals / Chrome Extensions / Translators) ---
 window.addEventListener('error', (event) => {
-    if (event && event.message && (
-        event.message.includes('startTime') || 
-        event.message.includes('reportAllChanges') || 
-        event.message.includes('ResizeObserver loop') ||
-        (event.filename && event.filename.includes('chrome-extension://'))
-    )) {
-        event.stopImmediatePropagation();
-        event.preventDefault();
+    const msg = event?.message || (typeof event === 'string' ? event : '');
+    const src = event?.filename || '';
+    if (
+        msg.includes('startTime') || 
+        msg.includes('reportAllChanges') || 
+        msg.includes('ResizeObserver') ||
+        src.includes('chrome-extension://') ||
+        src.includes('moz-extension://') ||
+        src.includes('<anonymous>')
+    ) {
+        event.stopImmediatePropagation?.();
+        event.preventDefault?.();
         return true;
+    }
+}, true);
+
+window.addEventListener('unhandledrejection', (event) => {
+    const reason = event?.reason?.message || String(event?.reason || '');
+    if (reason.includes('startTime') || reason.includes('reportAllChanges')) {
+        event.stopImmediatePropagation?.();
+        event.preventDefault?.();
     }
 });
 

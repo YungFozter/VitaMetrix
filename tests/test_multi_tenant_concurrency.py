@@ -86,16 +86,26 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         pin_data = json.loads(res_pin.data)
         created_pins = pin_data.get('pins', [])
         self.assertEqual(len(created_pins), 2)
-        pin_for_audrey = created_pins[0]['license_key']
+        pin_for_tenant1 = created_pins[0]['license_key']
 
-        # 2. Login Dra. Audrey (Tenant 1)
-        audrey_token, audrey_user = self._login('audrey@vitametrix.com', 'Doctora2026!')
-        audrey_headers = {'Authorization': f'Bearer {audrey_token}'}
-        self.assertEqual(audrey_user.get('role'), 'user')
+        # 2. Registro y Login de la Dra. Carla (Tenant 1 aislado)
+        tenant1_email = f"dr.carla.{t_id}@clinicauno.com"
+        res_reg1 = self.client.post('/api/auth/register', json={
+            'email': tenant1_email,
+            'password': 'PasswordCarla2026!',
+            'full_name': f'Dra. Carla {t_id}',
+            'professional_title': 'Especialista BIA',
+            'clinic_name': 'Clínica Uno'
+        })
+        self.assertEqual(res_reg1.status_code, 201)
 
-        # Dra. Audrey registra un insumo propio
-        res_stk1 = self.client.post('/api/stock', headers=audrey_headers, json={
-            'name': f'Electrodos Audrey {t_id}',
+        tenant1_token, tenant1_user = self._login(tenant1_email, 'PasswordCarla2026!')
+        tenant1_headers = {'Authorization': f'Bearer {tenant1_token}'}
+        self.assertEqual(tenant1_user.get('role'), 'user')
+
+        # Dra. Carla registra un insumo propio
+        res_stk1 = self.client.post('/api/stock', headers=tenant1_headers, json={
+            'name': f'Electrodos Carla {t_id}',
             'category': 'Insumos BIA',
             'unit': 'Caja (c/50)',
             'stock_quantity': 25.0,
@@ -105,9 +115,9 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         self.assertEqual(res_stk1.status_code, 201)
         stk1_id = json.loads(res_stk1.data)['data']['id']
 
-        # Dra. Audrey registra una cita
-        res_apt1 = self.client.post('/api/appointments', headers=audrey_headers, json={
-            'patient_name': f'Paciente Audrey {t_id}',
+        # Dra. Carla registra una cita
+        res_apt1 = self.client.post('/api/appointments', headers=tenant1_headers, json={
+            'patient_name': f'Paciente Carla {t_id}',
             'patient_phone': '71234567',
             'date': '2026-09-01',
             'time': '10:00',
@@ -115,18 +125,18 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         })
         self.assertEqual(res_apt1.status_code, 201)
 
-        # Dra. Audrey realiza una venta en POS
-        res_sale1 = self.client.post('/api/sales', headers=audrey_headers, json={
-            'patient_name': f'Paciente Audrey {t_id}',
+        # Dra. Carla realiza una venta en POS
+        res_sale1 = self.client.post('/api/sales', headers=tenant1_headers, json={
+            'patient_name': f'Paciente Carla {t_id}',
             'items': [{'id': stk1_id, 'quantity': 2.0}],
             'payment_method': 'Efectivo',
             'discount': 0
         })
         self.assertIn(res_sale1.status_code, (200, 201))
 
-        # Dra. Audrey canjea el PIN generado por SuperAdmin
-        res_redeem = self.client.post('/api/subscription/redeem', headers=audrey_headers, json={
-            'pin_key': pin_for_audrey
+        # Dra. Carla canjea el PIN generado por SuperAdmin
+        res_redeem = self.client.post('/api/subscription/redeem', headers=tenant1_headers, json={
+            'pin_key': pin_for_tenant1
         })
         self.assertEqual(res_redeem.status_code, 200)
         self.assertTrue(json.loads(res_redeem.data).get('success'))
@@ -147,23 +157,23 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         self.assertEqual(roberto_user.get('subscription_status'), 'trial')
 
         # 4. Verificación de Aislamiento Estricto para el Dr. Roberto:
-        # 4.1 Insumos: Dr. Roberto NO debe ver "Electrodos Audrey"
+        # 4.1 Insumos: Dr. Roberto NO debe ver "Electrodos Carla"
         res_rob_stock = self.client.get('/api/stock', headers=roberto_headers)
         self.assertEqual(res_rob_stock.status_code, 200)
         rob_stock_items = json.loads(res_rob_stock.data)
-        self.assertFalse(any(it.get('id') == stk1_id for it in rob_stock_items), "Fuga de datos: Dr. Roberto ve insumos de Dra. Audrey")
+        self.assertFalse(any(it.get('id') == stk1_id for it in rob_stock_items), "Fuga de datos: Dr. Roberto ve insumos de Dra. Carla")
 
-        # 4.2 Citas: Dr. Roberto NO debe ver la cita de Dra. Audrey
+        # 4.2 Citas: Dr. Roberto NO debe ver la cita de Dra. Carla
         res_rob_apts = self.client.get('/api/appointments', headers=roberto_headers)
         self.assertEqual(res_rob_apts.status_code, 200)
         rob_apts = json.loads(res_rob_apts.data)
-        self.assertFalse(any(f'Paciente Audrey {t_id}' in a.get('patient_name', '') for a in rob_apts), "Fuga de datos: Dr. Roberto ve citas de Dra. Audrey")
+        self.assertFalse(any(f'Paciente Carla {t_id}' in a.get('patient_name', '') for a in rob_apts), "Fuga de datos: Dr. Roberto ve citas de Dra. Carla")
 
-        # 4.3 Ventas: Dr. Roberto NO debe ver la venta de Dra. Audrey
+        # 4.3 Ventas: Dr. Roberto NO debe ver la venta de Dra. Carla
         res_rob_sales = self.client.get('/api/sales', headers=roberto_headers)
         self.assertEqual(res_rob_sales.status_code, 200)
         rob_sales = json.loads(res_rob_sales.data)
-        self.assertFalse(any(f'Paciente Audrey {t_id}' in s.get('patient_name', '') for s in rob_sales), "Fuga de datos: Dr. Roberto ve ventas de Dra. Audrey")
+        self.assertFalse(any(f'Paciente Carla {t_id}' in s.get('patient_name', '') for s in rob_sales), "Fuga de datos: Dr. Roberto ve ventas de Dra. Carla")
 
         # 5. Dr. Roberto crea su propio insumo y venta
         res_stk2 = self.client.post('/api/stock', headers=roberto_headers, json={
@@ -177,10 +187,10 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         self.assertEqual(res_stk2.status_code, 201)
         stk2_id = json.loads(res_stk2.data)['data']['id']
 
-        # 6. Dra. Audrey NO debe ver "Termómetro Roberto"
-        res_aud_stock = self.client.get('/api/stock', headers=audrey_headers)
-        aud_items = json.loads(res_aud_stock.data)
-        self.assertFalse(any(it.get('id') == stk2_id for it in aud_items), "Fuga de datos: Dra. Audrey ve insumos del Dr. Roberto")
+        # 6. Dra. Carla NO debe ver "Termómetro Roberto"
+        res_carla_stock = self.client.get('/api/stock', headers=tenant1_headers)
+        carla_items = json.loads(res_carla_stock.data)
+        self.assertFalse(any(it.get('id') == stk2_id for it in carla_items), "Fuga de datos: Dra. Carla ve insumos del Dr. Roberto")
 
         # 7. SuperAdmin verifica visibilidad global de la plataforma
         res_admin_users = self.client.get('/api/admin/users', headers=admin_headers)
@@ -193,10 +203,10 @@ class TestMultiTenantConcurrency(unittest.TestCase):
         res_admin_pins = self.client.get('/api/admin/pins', headers=admin_headers)
         self.assertEqual(res_admin_pins.status_code, 200)
         pins_list = json.loads(res_admin_pins.data).get('pins', [])
-        audrey_used_pin = next((p for p in pins_list if p['license_key'] == pin_for_audrey), None)
-        self.assertIsNotNone(audrey_used_pin)
-        self.assertTrue(audrey_used_pin['is_used'])
-        self.assertEqual(audrey_used_pin['used_by_email'], 'audrey@vitametrix.com')
+        tenant1_used_pin = next((p for p in pins_list if p['license_key'] == pin_for_tenant1), None)
+        self.assertIsNotNone(tenant1_used_pin)
+        self.assertTrue(tenant1_used_pin['is_used'])
+        self.assertEqual(tenant1_used_pin['used_by_email'], tenant1_email)
 
 if __name__ == '__main__':
     unittest.main()
