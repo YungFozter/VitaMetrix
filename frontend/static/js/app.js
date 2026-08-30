@@ -91,6 +91,43 @@ function getAuthHeaders() {
     return headers;
 }
 
+function isCurrentSubscriptionActive() {
+    if (!currentAuthUser) return true;
+    if (currentAuthUser.role === 'admin') return true;
+    const sub = currentAuthUser.subscription || {};
+    const status = sub.status || currentAuthUser.subscription_status;
+    const days = typeof sub.days_left === 'number' ? sub.days_left : 0;
+    if (status === 'lifetime') return true;
+    if (status === 'active' || status === 'trial') {
+        return days > 0;
+    }
+    return false;
+}
+
+function openRedeemPinModal() {
+    const subTab = document.querySelector('[data-target="subscription-view"]');
+    if (subTab) {
+        subTab.click();
+    } else if (typeof navigateToView === 'function') {
+        navigateToView('subscription-view');
+    }
+    setTimeout(() => {
+        const pinInput = document.getElementById('input-redeem-pin-key') || document.getElementById('input-license-key');
+        if (pinInput) {
+            pinInput.focus();
+            pinInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    }, 200);
+}
+
+function requireActiveSubscription(actionName) {
+    if (isCurrentSubscriptionActive()) return true;
+    const actionText = actionName ? ` para ${actionName}` : '';
+    showToast(`⚠️ Tu suscripción ha caducado. Canjea un PIN${actionText}.`, 'warning');
+    openRedeemPinModal();
+    return false;
+}
+
 function updateUIWithUserData(userData) {
     if (!userData) return;
     currentAuthUser = userData;
@@ -129,26 +166,39 @@ function updateUIWithUserData(userData) {
         avatarEl.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(userData.full_name || 'Doctor')}&background=${isAdmin ? '6366f1' : '00b4d8'}&color=fff`;
     }
 
-    // Actualizar badge de suscripción en TopBar
+    // Actualizar banner y badge de suscripción en TopBar
+    const readOnlyBanner = document.getElementById('read-only-subscription-banner');
+    const isActiveSub = isCurrentSubscriptionActive();
+
+    if (readOnlyBanner) {
+        if (!isActiveSub && !isAdmin) {
+            readOnlyBanner.classList.remove('d-none');
+            readOnlyBanner.classList.add('d-flex');
+        } else {
+            readOnlyBanner.classList.add('d-none');
+            readOnlyBanner.classList.remove('d-flex');
+        }
+    }
+
     if (userData.subscription) {
         const sub = userData.subscription;
         if (subTextEl) {
             if (sub.status === 'lifetime' || isAdmin) {
                 subTextEl.textContent = '👑 SuperAdmin ⭐';
-            } else if (sub.status === 'active') {
+            } else if (sub.status === 'active' && isActiveSub) {
                 subTextEl.textContent = `Plan Pro (${sub.days_left}d)`;
-            } else if (sub.status === 'trial') {
+            } else if (sub.status === 'trial' && isActiveSub) {
                 subTextEl.textContent = `Prueba (${sub.days_left}d)`;
             } else {
-                subTextEl.textContent = 'Plan Vencido ⚠️';
+                subTextEl.textContent = '🔴 Suscripción Vencida (0d)';
             }
         }
         if (subBadgeEl) {
-            subBadgeEl.classList.remove('border-danger', 'border-success', 'border-warning');
-            if (sub.status === 'expired') {
+            subBadgeEl.classList.remove('border-danger', 'border-success', 'border-warning', 'bg-danger-subtle', 'bg-light');
+            if (!isActiveSub && !isAdmin) {
                 subBadgeEl.classList.add('border-danger', 'bg-danger-subtle');
             } else {
-                subBadgeEl.classList.add('border-success-subtle');
+                subBadgeEl.classList.add('border-success-subtle', 'bg-light');
             }
         }
     }

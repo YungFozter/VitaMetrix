@@ -430,6 +430,17 @@ def _calc_subscription_status(user):
     except Exception:
         return "no_subscription", 0, None, plan_name or "Sin Suscripción Anterior"
 
+def _is_subscription_active(user):
+    if not user:
+        return False
+    if user.get('role') == 'admin':
+        return True
+    status, days_left, expires_at, plan_name = _calc_subscription_status(user)
+    if status in ('active', 'trial', 'lifetime'):
+        if days_left is None or days_left > 0:
+            return True
+    return False
+
 def _build_safe_user_dict(user):
     status, days_left, expires_at, plan_name = _calc_subscription_status(user)
     return {
@@ -1697,6 +1708,12 @@ def _run_analysis(data):
 @app.route('/api/calculate', methods=['POST'])
 def calculate():
     """Endpoint legacy (compatibilidad). Delega en el núcleo unificado."""
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN o renueva tu plan para realizar nuevos análisis de Bioimpedancia.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     return jsonify(_run_analysis(data))
 
@@ -1704,6 +1721,12 @@ def calculate():
 @app.route('/api/dashboard-data', methods=['POST'])
 def dashboard_data():
     """Endpoint canónico del manual (Pagina2 Analyzer.md)."""
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN o renueva tu plan para realizar nuevos análisis de Bioimpedancia.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     return jsonify(_run_analysis(data))
 
@@ -2001,6 +2024,12 @@ def add_client():
         
     try:
         current_user = _get_current_user()
+        if not _is_subscription_active(current_user):
+            return jsonify({
+                "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para registrar nuevos pacientes.",
+                "subscription_expired": True
+            }), 403
+
         current_uid = current_user.get('id') if current_user else None
         if not current_uid:
             return jsonify({"error": "No autorizado"}), 401
@@ -2102,6 +2131,11 @@ def update_client(client_id):
         
     try:
         current_user = _get_current_user()
+        if not _is_subscription_active(current_user):
+            return jsonify({
+                "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para modificar la ficha de pacientes.",
+                "subscription_expired": True
+            }), 403
         current_uid = current_user.get('id') if current_user else None
         is_admin = current_user and current_user.get('role') == 'admin'
         
@@ -2153,6 +2187,11 @@ def delete_client(client_id):
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         current_user = _get_current_user()
+        if not _is_subscription_active(current_user):
+            return jsonify({
+                "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar pacientes.",
+                "subscription_expired": True
+            }), 403
         current_uid = current_user.get('id') if current_user else None
         is_admin = current_user and current_user.get('role') == 'admin'
         
@@ -2254,6 +2293,11 @@ def get_appointments():
 @app.route('/api/appointments', methods=['POST'])
 def create_appointment():
     current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para agendar citas.",
+            "subscription_expired": True
+        }), 403
     current_uid = current_user.get('id') if current_user else None
 
     data = request.json or {}
@@ -2306,6 +2350,12 @@ def create_appointment():
 
 @app.route('/api/appointments/<string:appt_id>', methods=['PUT'])
 def update_appointment(appt_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para modificar citas.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     updated = {
         "patient_name": _clean_str(data.get('patient_name')),
@@ -2338,6 +2388,12 @@ def update_appointment(appt_id):
 
 @app.route('/api/appointments/<string:appt_id>', methods=['DELETE'])
 def delete_appointment(appt_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar citas.",
+            "subscription_expired": True
+        }), 403
     if supabase:
         try:
             supabase.table('appointments').delete().eq('id', appt_id).execute()
@@ -2684,6 +2740,11 @@ def _ensure_category_and_unit_persisted(category_name, unit_name=None):
 @app.route('/api/stock', methods=['POST'])
 def create_stock_item():
     current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para registrar insumos.",
+            "subscription_expired": True
+        }), 403
     current_uid = current_user.get('id') if current_user else None
 
     data = request.json or {}
@@ -2760,6 +2821,12 @@ def create_stock_item():
 
 @app.route('/api/stock/<string:item_id>', methods=['PUT'])
 def update_stock_item(item_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para modificar insumos.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     updated = {}
 
@@ -2826,6 +2893,12 @@ def update_stock_item(item_id):
 
 @app.route('/api/stock/<string:item_id>', methods=['DELETE'])
 def delete_stock_item(item_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar insumos.",
+            "subscription_expired": True
+        }), 403
     if supabase:
         try:
             supabase.table('stock_items').delete().eq('id', item_id).execute()
@@ -2839,6 +2912,12 @@ def delete_stock_item(item_id):
 
 @app.route('/api/stock/bulk-delete', methods=['POST'])
 def bulk_delete_stock_items():
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar insumos.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     ids = data.get('ids', [])
     if not ids or not isinstance(ids, list):
@@ -2858,6 +2937,12 @@ def bulk_delete_stock_items():
 
 @app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
 def record_stock_movement(item_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para registrar movimientos de inventario.",
+            "subscription_expired": True
+        }), 403
     data = request.json or {}
     mov_type = (data.get('type') or 'IN').upper()
     if mov_type not in ['IN', 'OUT', 'ADJUST']:
@@ -3347,6 +3432,12 @@ def get_sales():
 
 @app.route('/api/sales', methods=['POST'])
 def create_sale():
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para procesar ventas en el POS.",
+            "subscription_expired": True
+        }), 403
     """
     Registra una nueva venta de productos/insumos:
     - Valida existencias en stock.
@@ -3560,6 +3651,12 @@ def get_sale_detail(sale_id):
 
 @app.route('/api/sales/<string:sale_id>', methods=['DELETE'])
 def cancel_sale(sale_id):
+    current_user = _get_current_user()
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para anular ventas.",
+            "subscription_expired": True
+        }), 403
     """
     Anula una venta y restituye automáticamente las cantidades al inventario.
     Registra el movimiento en Kardex (SALE_CANCEL).
