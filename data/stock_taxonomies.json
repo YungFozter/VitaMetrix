@@ -39,6 +39,26 @@
       "name": "Otros",
       "icon": "🏷️",
       "description": "Artículos varios no clasificados"
+    },
+    {
+      "name": "Equipos",
+      "icon": "📦",
+      "description": "Categoría personalizada"
+    },
+    {
+      "name": "Electrónica",
+      "icon": "📦",
+      "description": "Categoría personalizada"
+    },
+    {
+      "name": "TEST",
+      "icon": "📦",
+      "description": "Categoría personalizada"
+    },
+    {
+      "name": "&lt;svg onload=alert(2)&gt;",
+      "icon": "📦",
+      "description": "Categoría personalizada"
     }
   ],
   "units": [
@@ -86,6 +106,15 @@
     },
     {
       "name": "Kit Terapéutico (kit)"
+    },
+    {
+      "name": "&lt;script&gt;"
+    },
+    {
+      "name": "Caja (c/50)"
+    },
+    {
+      "name": "Vial Test (v)"
     }
   ]
 }
