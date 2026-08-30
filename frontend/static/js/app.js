@@ -2288,7 +2288,7 @@ function initBioForm() {
         try {
             const response = await fetch('/api/dashboard-data', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify(payload)
             });
 
@@ -2331,7 +2331,7 @@ function initBioForm() {
             try {
                 const response = await fetch('/api/dashboard-data', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify(payload)
                 });
 
@@ -4090,7 +4090,7 @@ function deleteClient(id) {
         '¿Estás seguro de que deseas eliminar este paciente del directorio? Su código será reasignado al próximo registro.',
         async () => {
             try {
-                const res = await fetch(`/api/clients/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/clients/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
                 const result = await res.json();
                 if (result.success) {
                     showToast('Paciente eliminado correctamente', 'success');
@@ -4274,7 +4274,7 @@ function initEvaluaciones() {
             try {
                 const res = await fetch('/api/evaluations/batch-delete', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ ids: Array.from(selectedEvaluationIds) })
                 });
                 const result = await res.json();
@@ -5998,7 +5998,7 @@ function initAppointmentModal() {
             try {
                 const res = await fetch('/api/appointments', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify(payload)
                 });
                 const result = await res.json();
@@ -6030,7 +6030,7 @@ function openNewAppointmentForDate(dateStr) {
 
 async function deleteAppointment(apptId) {
     try {
-        const res = await fetch(`/api/appointments/${apptId}`, { method: 'DELETE' });
+        const res = await fetch(`/api/appointments/${apptId}`, { method: 'DELETE', headers: getAuthHeaders() });
         const result = await res.json();
         if (result.success) {
             clinicAppointments = clinicAppointments.filter(a => a.id !== apptId);
@@ -6050,7 +6050,7 @@ async function populateClientsDatalist() {
     const datalist = document.getElementById('clients-datalist');
     if (!datalist) return;
     try {
-        const res = await fetch('/api/clients');
+        const res = await fetch('/api/clients', { headers: getAuthHeaders() });
         if (res.ok) {
             const clients = await res.json();
             if (Array.isArray(clients)) {
@@ -6988,7 +6988,7 @@ async function fetchStockItems() {
     if (!tbody) return;
 
     try {
-        const res = await fetch('/api/stock');
+        const res = await fetch('/api/stock', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
         allStockItems = await res.json();
 
@@ -7174,7 +7174,7 @@ async function updateStockKPIs(items) {
     // 4. Calcular Top 3 Más Vendidos
     if (topListEl) {
         try {
-            const res = await fetch('/api/sales');
+            const res = await fetch('/api/sales', { headers: getAuthHeaders() });
             if (res.ok) {
                 const sales = await res.json();
                 const productSalesMap = {};
@@ -7660,7 +7660,7 @@ function openBulkDeleteModal() {
         try {
             const res = await fetch('/api/stock/bulk-delete', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                 body: JSON.stringify({ ids: Array.from(stockSelectedIds) })
             });
             const result = await res.json();
@@ -7758,7 +7758,7 @@ function deleteStockItem(id, name) {
         `¿Estás seguro de eliminar <strong>"${safeName}"</strong> del catálogo e inventario?<br><small class="text-muted d-block mt-1">Esta acción removerá el ítem de las existencias y ventas activas.</small>`,
         async () => {
             try {
-                const res = await fetch(`/api/stock/${id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/stock/${id}`, { method: 'DELETE', headers: getAuthHeaders() });
                 if (res.ok) {
                     showToast('🗑️ Artículo eliminado del catálogo', 'success');
                     fetchStockItems();
@@ -8153,7 +8153,7 @@ async function handlePosCheckout() {
     try {
         const res = await fetch('/api/sales', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
             body: JSON.stringify(payload)
         });
         const result = await res.json();
@@ -8199,8 +8199,8 @@ async function fetchSalesHistory() {
 
     try {
         const [salesRes, statsRes] = await Promise.all([
-            fetch('/api/sales'),
-            fetch('/api/sales/stats')
+            fetch('/api/sales', { headers: getAuthHeaders() }),
+            fetch('/api/sales/stats', { headers: getAuthHeaders() })
         ]);
 
         if (salesRes.ok) {
@@ -8326,7 +8326,7 @@ function handleCancelSale(sale) {
         `¿Estás seguro de anular la venta <strong class="text-navy">${escapeHtml(sale.receipt_number)}</strong> por Bs. ${(sale.total || 0).toFixed(2)}? Las cantidades vendidas retornarán automáticamente al inventario.`,
         async () => {
             try {
-                const res = await fetch(`/api/sales/${sale.id}`, { method: 'DELETE' });
+                const res = await fetch(`/api/sales/${sale.id}`, { method: 'DELETE', headers: getAuthHeaders() });
                 const result = await res.json();
                 if (res.ok && result.success) {
                     showToast(`🚫 Venta ${sale.receipt_number} anulada y stock restituido`, 'success');
@@ -8472,7 +8472,7 @@ async function fetchKardexMovements() {
     if (!tbody) return;
 
     try {
-        const res = await fetch('/api/stock/movements');
+        const res = await fetch('/api/stock/movements', { headers: getAuthHeaders() });
         if (res.ok) {
             allStockMovements = await res.json();
             filterAndRenderKardex();
@@ -8611,7 +8611,7 @@ function initQuickStockAdjustModal() {
             try {
                 const res = await fetch(`/api/stock/${currentQuickAdjustItem.id}/movement`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
                         type: currentMovementType,
                         quantity: qty,
@@ -8723,7 +8723,7 @@ function initStockTaxonomyModal() {
             try {
                 const res = await fetch('/api/stock/taxonomies/category', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ name: catName, icon: '📦' })
                 });
                 const result = await res.json();
@@ -8755,7 +8755,7 @@ function initStockTaxonomyModal() {
             try {
                 const res = await fetch('/api/stock/taxonomies/unit', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ name: unitName })
                 });
                 const result = await res.json();

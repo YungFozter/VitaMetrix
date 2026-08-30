@@ -1631,7 +1631,11 @@ def _run_analysis(data):
                     if current_uid:
                         new_client_record["user_id"] = current_uid
                     try:
-                        supabase.table('clients').insert(new_client_record).execute()
+                        ins_res = supabase.table('clients').insert(new_client_record).execute()
+                        if ins_res and ins_res.data and current_uid:
+                            c_created_id = ins_res.data[0].get('id')
+                            if c_created_id:
+                                _CLIENTS_USER_MAP[str(c_created_id)] = current_uid
                     except Exception:
                         try:
                             nc_fallback = {k: v for k, v in new_client_record.items() if k != 'user_id'}
@@ -1639,6 +1643,10 @@ def _run_analysis(data):
                         except Exception:
                             fallback_c = {"code": new_c_code, "name": patient_name, "phone": None, "email": None}
                             supabase.table('clients').insert(fallback_c).execute()
+                    if current_uid:
+                        _CLIENTS_USER_MAP[str(new_c_code)] = current_uid
+                        _CLIENTS_USER_MAP[str(final_patient_idp)] = current_uid
+                        _save_clients_user_map(_CLIENTS_USER_MAP)
                 else:
                     update_fields = {}
                     if age and match_client.get('age') != age:
