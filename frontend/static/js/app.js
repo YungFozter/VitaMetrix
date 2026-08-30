@@ -2442,7 +2442,7 @@ function initBioForm() {
     }
 }
 
-// Imprimir o guardar reporte clínico de Bioimpedancia en PDF (100% Réplica de Cards en PDF Multi-Página)
+// Imprimir o guardar reporte clínico de Bioimpedancia en PDF (2 Páginas A4 Perfectamente Balanceadas y 100% Completas)
 function printBIAReport() {
     const user = currentAuthUser || {};
     const isAdmin = user.role === 'admin';
@@ -2499,7 +2499,6 @@ function printBIAReport() {
     const truPillarPhase = getTxt('tru-pillar-phase');
     const truPillarMuscle = getTxt('tru-pillar-muscle');
     const truPillarFat = getTxt('tru-pillar-fat');
-    const truSummaryDiag = getTxt('tru-summary-diag');
 
     // CARD 2: Muscle & Fat Balance
     const muscleScore = getTxt('muscle-score');
@@ -2580,27 +2579,27 @@ function printBIAReport() {
     }
 
     reportContainer.innerHTML = `
-        <!-- ================= PÁGINA 1: PACIENTE, TRU SCORE & COMPOSICIÓN ================= -->
-        <div class="bia-printable-sheet p-4" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
+        <!-- ================= PÁGINA 1: TRU SCORE, COMPOSICIÓN, ENERGÍA Y BIVA ================= -->
+        <div class="bia-printable-sheet p-3" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
             <!-- CABECERA MEMBRETE -->
-            <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom border-2">
-                <div class="d-flex align-items-center gap-3">
-                    <img src="${logoUrl}" alt="Logo" style="max-height: 55px; max-width: 140px; object-fit: contain;">
+            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom border-2">
+                <div class="d-flex align-items-center gap-2.5">
+                    <img src="${logoUrl}" alt="Logo" style="max-height: 48px; max-width: 130px; object-fit: contain;">
                     <div>
-                        <h2 class="m-0 fw-bold text-navy fs-4">${clinicName}</h2>
-                        <div class="text-secondary small fw-semibold">${docName} — ${docTitle}</div>
-                        <div class="text-muted" style="font-size:0.75rem;">${mp ? 'Matrícula: ' + mp + ' | ' : ''}${phone ? 'Tel: ' + phone : ''}</div>
+                        <h2 class="m-0 fw-bold text-navy fs-5" style="line-height: 1.1;">${clinicName}</h2>
+                        <div class="text-secondary small fw-semibold" style="font-size: 0.78rem;">${docName} — ${docTitle}</div>
+                        <div class="text-muted" style="font-size:0.7rem;">${mp ? 'Matrícula: ' + mp + ' | ' : ''}${phone ? 'Tel: ' + phone : ''}</div>
                     </div>
                 </div>
                 <div class="text-end">
-                    <span class="badge bg-primary px-3 py-1 text-uppercase fw-bold" style="letter-spacing: 0.5px;">Informe Clínico BIA (1/3)</span>
-                    <div class="text-muted text-xs mt-1">Fecha: ${todayStr}</div>
+                    <span class="badge bg-primary px-2.5 py-1 text-uppercase fw-bold" style="letter-spacing: 0.5px; font-size: 0.72rem;">Informe Clínico BIA (1/2)</span>
+                    <div class="text-muted text-xs mt-1" style="font-size: 0.7rem;">Fecha: ${todayStr}</div>
                 </div>
             </div>
 
             <!-- FICHA PACIENTE -->
-            <div class="p-3 rounded-3 bg-light mb-3 border" style="font-size:0.82rem;">
-                <div class="row g-2">
+            <div class="p-2 rounded-3 bg-light mb-2 border" style="font-size:0.78rem;">
+                <div class="row g-1.5">
                     <div class="col-4"><strong>Paciente:</strong> ${patientName}</div>
                     <div class="col-3"><strong>IDP / CI:</strong> ${patientIdp}</div>
                     <div class="col-2"><strong>Edad:</strong> ${age} años</div>
@@ -2611,199 +2610,174 @@ function printBIAReport() {
                 </div>
             </div>
 
-            <!-- CARD 1: TRU BODY SCORE (PUNTUACIÓN GLOBAL BIA) -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
-                    <span>🏆 TRU Body Score (Índice Clínico Global BIA)</span>
-                    <span class="badge bg-primary text-white fw-bold px-2.5 py-1" style="font-size:0.75rem;">${truStatus}</span>
+            <!-- CARD 1: PUNTUACIÓN SALUD CELULAR (TRU SCORE) -->
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
+                    <span>🏆 Puntuación Salud Celular (TRU Score)</span>
+                    <span class="badge bg-primary text-white fw-bold px-2 py-0.5" style="font-size:0.7rem;">${truStatus}</span>
                 </div>
-                <div class="row align-items-center g-3">
-                    <div class="col-5 border-end text-center">
+                <div class="row align-items-center g-2">
+                    <div class="col-4 text-center border-end">
                         <div class="d-flex align-items-baseline justify-content-center gap-1">
-                            <span class="fw-extrabold text-navy" style="font-size: 3.6rem; line-height: 1;">${globalScore}</span>
-                            <span class="text-muted fw-semibold" style="font-size: 1.1rem;">/ 100</span>
+                            <span class="fw-extrabold text-navy" style="font-size: 3rem; line-height: 1;">${globalScore}</span>
+                            <span class="text-muted fw-semibold" style="font-size: 0.95rem;">/ 100</span>
                         </div>
-                        <div class="mt-1 mb-2">
-                            <span class="badge bg-primary text-white fs-6 px-3 py-1 rounded-pill">${rankBadge}</span>
+                        <div class="mt-0.5 mb-1">
+                            <span class="badge bg-primary text-white text-xs px-2.5 py-0.5 rounded-pill">${rankBadge}</span>
                         </div>
-                        <div class="px-2">
-                            <div class="d-flex justify-content-between text-muted mb-1" style="font-size:0.68rem;">
+                        <div class="px-1">
+                            <div class="d-flex justify-content-between text-muted mb-0.5" style="font-size:0.64rem;">
                                 <span>Progreso al siguiente rango:</span>
                                 <strong>${truPctLabel}</strong>
                             </div>
-                            <div class="w-100 rounded-pill" style="height: 7px; background: #e2e8f0; overflow: hidden;">
+                            <div class="w-100 rounded-pill" style="height: 5px; background: #e2e8f0; overflow: hidden;">
                                 <div class="rounded-pill" style="height: 100%; width: ${truPctLabel}; background: linear-gradient(90deg, #718096 0%, #cd7f32 50%, #c0c0c0 75%, #eab308 100%);"></div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-7">
-                        <span class="text-muted text-xs fw-bold mb-2 d-block">PILARES DE INTEGRACIÓN BIA</span>
-                        <div class="d-flex flex-column gap-2 text-xs">
-                            <div class="p-2 rounded border bg-light d-flex justify-content-between align-items-center">
+                    <div class="col-8">
+                        <span class="text-muted text-xs fw-bold mb-1 d-block" style="font-size: 0.68rem;">PILARES DE INTEGRACIÓN BIA</span>
+                        <div class="d-flex flex-column gap-1 text-xs">
+                            <div class="p-1.5 rounded border bg-light d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                                 <div><strong class="text-navy">Integridad Celular</strong> <span class="text-muted small">(Ángulo de Fase)</span></div>
-                                <strong class="text-info fs-6">${truPillarPhase}</strong>
+                                <strong class="text-info">${truPillarPhase}</strong>
                             </div>
-                            <div class="p-2 rounded border bg-light d-flex justify-content-between align-items-center">
+                            <div class="p-1.5 rounded border bg-light d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                                 <div><strong class="text-navy">Densidad Magra</strong> <span class="text-muted small">(Muscle Score)</span></div>
-                                <strong class="text-success fs-6">${truPillarMuscle}</strong>
+                                <strong class="text-success">${truPillarMuscle}</strong>
                             </div>
-                            <div class="p-2 rounded border bg-light d-flex justify-content-between align-items-center">
+                            <div class="p-1.5 rounded border bg-light d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                                 <div><strong class="text-navy">Balance Adiposo</strong> <span class="text-muted small">(Fat Score)</span></div>
-                                <strong class="text-warning fs-6">${truPillarFat}</strong>
+                                <strong class="text-warning">${truPillarFat}</strong>
                             </div>
-                        </div>
-                        <div class="text-muted text-xs mt-2" style="font-size:0.7rem;">
-                            ℹ️ ${truSummaryDiag}
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- CARD 2: BALANCE MÚSCULO & GRASA -->
-            <div class="border rounded-3 p-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
+            <!-- CARD 2: COMPOSICIÓN CORPORAL (MUSCLE VS FAT SCORE) -->
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
                     <span>💪 Composición Corporal (Muscle vs Fat Score)</span>
-                    <span class="text-muted text-xs">Ratio MÚSCULO/GRASA: <strong class="text-navy">${muscleFatRatio}</strong> (${muscleFatRatioStatus})</span>
+                    <span class="text-muted text-xs" style="font-size: 0.7rem;">Ratio MÚSCULO/GRASA: <strong class="text-navy">${muscleFatRatio}</strong> (${muscleFatRatioStatus})</span>
                 </div>
-                <div class="row g-3">
-                    <!-- Muscle Score Card -->
+                <div class="row g-2">
                     <div class="col-6">
-                        <div class="p-3 rounded-3 border bg-light h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold text-navy text-xs">💪 Muscle Score</span>
-                                <span class="badge bg-success-subtle text-success fw-bold">${muscleScoreStatus}</span>
+                        <div class="p-2 rounded-3 border bg-light h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                <span class="fw-bold text-navy" style="font-size:0.72rem;">💪 Muscle Score</span>
+                                <span class="badge bg-success-subtle text-success fw-bold" style="font-size:0.65rem;">${muscleScoreStatus}</span>
                             </div>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <span class="fs-2 fw-extrabold text-success" style="line-height: 1;">${muscleScore}</span>
-                                <span class="text-muted text-xs">PTS</span>
+                            <div class="d-flex align-items-baseline gap-1">
+                                <span class="fs-4 fw-extrabold text-success" style="line-height: 1;">${muscleScore}</span>
+                                <span class="text-muted" style="font-size:0.65rem;">PTS</span>
                             </div>
-                            <div class="text-xs text-navy mt-1">Masa Muscular: <strong>${muscleMassReal} ${musclePctReal}</strong></div>
-                            <div class="w-100 rounded-pill mt-2" style="height: 5px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #10b981 70%, #059669 100%);"></div>
+                            <div class="text-navy mt-0.5" style="font-size:0.7rem;">Masa Muscular: <strong>${muscleMassReal} ${musclePctReal}</strong></div>
                         </div>
                     </div>
-
-                    <!-- Fat Score Card -->
                     <div class="col-6">
-                        <div class="p-3 rounded-3 border bg-light h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-1">
-                                <span class="fw-bold text-navy text-xs">⚡ Fat Score</span>
-                                <span class="badge bg-warning-subtle text-warning-emphasis fw-bold">${fatScoreStatus}</span>
+                        <div class="p-2 rounded-3 border bg-light h-100">
+                            <div class="d-flex justify-content-between align-items-center mb-0.5">
+                                <span class="fw-bold text-navy" style="font-size:0.72rem;">⚡ Fat Score</span>
+                                <span class="badge bg-warning-subtle text-warning-emphasis fw-bold" style="font-size:0.65rem;">${fatScoreStatus}</span>
                             </div>
-                            <div class="d-flex align-items-baseline gap-2">
-                                <span class="fs-2 fw-extrabold text-warning-emphasis" style="line-height: 1;">${fatScore}</span>
-                                <span class="text-muted text-xs">PTS</span>
+                            <div class="d-flex align-items-baseline gap-1">
+                                <span class="fs-4 fw-extrabold text-warning-emphasis" style="line-height: 1;">${fatScore}</span>
+                                <span class="text-muted" style="font-size:0.65rem;">PTS</span>
                             </div>
-                            <div class="text-xs text-navy mt-1">Masa Grasa Total: <strong>${fatMassReal} ${fatPctReal}</strong></div>
-                            <div class="w-100 rounded-pill mt-2" style="height: 5px; background: linear-gradient(90deg, #0284c7 0%, #10b981 35%, #f59e0b 70%, #ef4444 100%);"></div>
+                            <div class="text-navy mt-0.5" style="font-size:0.7rem;">Masa Grasa Total: <strong>${fatMassReal} ${fatPctReal}</strong></div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="report-page-break"></div>
-
-        <!-- ================= PÁGINA 2: ENERGÍA (PAL), BIVA VECTORIAL & ANÁLISIS HÍDRICO ================= -->
-        <div class="bia-printable-sheet p-4" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
-            <!-- CABECERA SECUNDARIA -->
-            <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
-                <div class="fw-bold text-navy small">${clinicName} — Informe Clínico BIA (2/3)</div>
-                <div class="text-muted text-xs">Paciente: <strong>${patientName}</strong> (${patientIdp}) | Fecha: ${todayStr}</div>
-            </div>
-
-            <!-- CARD 4: CONSUMO DE ENERGÍA REE / TEE & PAL GAUGE -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">🔥 Consumo de Energía — REE / TEE & Actividad Física (PAL)</div>
-                <div class="row align-items-center g-3">
+            <!-- CARD 4: CONSUMO DE ENERGÍA — REE / TEE & PAL GAUGE -->
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">🔥 Consumo de Energía — REE / TEE & Actividad Física (PAL)</div>
+                <div class="row align-items-center g-2">
                     <div class="col-6 border-end">
-                        <div class="p-2 rounded bg-light border mb-2">
-                            <span class="text-muted d-block text-xs">Consumo de energía en reposo (REE):</span>
-                            <strong class="fs-5 text-navy">${reeMj} MJ/día</strong> = <strong class="fs-5 text-navy">${ree} kcal/día</strong>
+                        <div class="p-1.5 rounded bg-light border mb-1" style="font-size: 0.72rem;">
+                            <span class="text-muted d-block" style="font-size:0.65rem;">Consumo de energía en reposo (REE):</span>
+                            <strong class="text-navy">${reeMj} MJ/día</strong> = <strong class="text-navy">${ree} kcal/día</strong>
                         </div>
-                        <div class="p-2 rounded bg-light border">
-                            <span class="text-muted d-block text-xs">Consumo de energía total (TEE):</span>
-                            <strong class="fs-5 text-primary">${teeMj} MJ/día</strong> = <strong class="fs-5 text-primary">${tee} kcal/día</strong>
+                        <div class="p-1.5 rounded bg-light border" style="font-size: 0.72rem;">
+                            <span class="text-muted d-block" style="font-size:0.65rem;">Consumo de energía total (TEE):</span>
+                            <strong class="text-primary">${teeMj} MJ/día</strong> = <strong class="text-primary">${tee} kcal/día</strong>
                         </div>
                     </div>
                     <div class="col-6 text-center">
-                        <span class="text-muted text-xs fw-bold d-block mb-1">NIVEL DE ACTIVIDAD FÍSICA (PAL)</span>
-                        <div class="fw-bold text-navy fs-4">${pal} <span class="badge bg-info-subtle text-info fw-bold text-xs ms-1">${palZone}</span></div>
-                        ${palImgUrl ? `<img src="${palImgUrl}" style="max-height:110px; width:auto;" class="mt-1">` : ''}
+                        <span class="text-muted text-xs fw-bold d-block mb-0.5" style="font-size: 0.68rem;">NIVEL DE ACTIVIDAD FÍSICA (PAL)</span>
+                        <div class="fw-bold text-navy fs-5">${pal} <span class="badge bg-info-subtle text-info fw-bold text-xs ms-1" style="font-size:0.65rem;">${palZone}</span></div>
+                        ${palImgUrl ? `<img src="${palImgUrl}" style="max-height:60px; width:auto;" class="mt-0.5">` : ''}
                     </div>
                 </div>
             </div>
 
-            <!-- CARD 3: ANÁLISIS VECTORIAL BIVA -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">📐 Análisis Vectorial (BIVA Graph)</div>
-                <div class="row align-items-center g-3">
+            <!-- CARD 3: ANÁLISIS VECTORIAL (BIVA GRAPH) -->
+            <div class="border rounded-3 p-2.5 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">📐 Análisis Vectorial (BIVA Graph)</div>
+                <div class="row align-items-center g-2">
                     <div class="col-5 text-center border-end">
-                        ${bivaImgUrl ? `<img src="${bivaImgUrl}" style="max-width: 220px; width: 100%; height: auto;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BIVA en evaluación</div>'}
+                        ${bivaImgUrl ? `<img src="${bivaImgUrl}" style="max-height: 125px; width: auto; max-width: 100%;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BIVA en evaluación</div>'}
                     </div>
                     <div class="col-7">
-                        <div class="row g-2 text-xs mb-2">
+                        <div class="row g-1 text-xs mb-1" style="font-size: 0.72rem;">
                             <div class="col-6">Resistencia (R): <strong>${rVal} Ω</strong></div>
                             <div class="col-6">Reactancia (Xc): <strong>${xcVal} Ω</strong></div>
-                            <div class="col-12">Ángulo de Fase (PhA): <strong class="fs-5 text-success">${phaVal}°</strong></div>
+                            <div class="col-12">Ángulo de Fase (PhA): <strong class="text-success fs-6">${phaVal}°</strong></div>
                         </div>
-                        <div class="p-2.5 rounded-2 bg-success-subtle/20 border border-success-subtle text-xs text-success-emphasis mt-2">
+                        <div class="p-1.5 rounded-2 bg-success-subtle/20 border border-success-subtle text-success-emphasis" style="font-size: 0.68rem;">
                             <strong>Salud Celular:</strong> ${cellStatus}
                         </div>
                     </div>
                 </div>
             </div>
-
-            <!-- CARD 9: ANÁLISIS HÍDRICO (TBW / ICW / ECW) -->
-            <div class="border rounded-3 p-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center">
-                    <span>💧 Análisis Hídrico (TBW / ICW / ECW)</span>
-                    <span class="badge bg-info-subtle text-info fw-bold">${waterStatus}</span>
-                </div>
-                <div class="row g-2 text-xs mb-2">
-                    <div class="col-3">Agua Total (TBW): <strong>${tbw} L</strong></div>
-                    <div class="col-3">Intracelular (ICW): <strong>${icw} L</strong></div>
-                    <div class="col-3">Extracelular (ECW): <strong>${ecw} L</strong></div>
-                    <div class="col-3">ECW / TBW Ratio: <strong>${ratio}</strong></div>
-                </div>
-                <div class="p-2.5 rounded-2 bg-light border text-xs text-secondary mt-2">
-                    <strong>Diagnóstico Hídrico:</strong> ${waterDiag}
-                </div>
-            </div>
         </div>
 
         <div class="report-page-break"></div>
 
-        <!-- ================= PÁGINA 3: CINTURA, ÍNDICES, PERCENTILES, BCC Y DIAGNÓSTICO INTEGRAL ================= -->
-        <div class="bia-printable-sheet p-4" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
+        <!-- ================= PÁGINA 2: HIDRATACIÓN, CINTURA, ÍNDICES, PERCENTILES Y DIAGNÓSTICO ================= -->
+        <div class="bia-printable-sheet p-3" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
             <!-- CABECERA SECUNDARIA -->
-            <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
-                <div class="fw-bold text-navy small">${clinicName} — Informe Clínico BIA (3/3)</div>
-                <div class="text-muted text-xs">Paciente: <strong>${patientName}</strong> (${patientIdp}) | Fecha: ${todayStr}</div>
+            <div class="d-flex justify-content-between align-items-center pb-2 mb-2 border-bottom">
+                <div class="fw-bold text-navy small">${clinicName} — Informe Clínico BIA (2/2)</div>
+                <div class="text-muted text-xs" style="font-size: 0.7rem;">Paciente: <strong>${patientName}</strong> (${patientIdp}) | Fecha: ${todayStr}</div>
             </div>
 
-            <!-- CARD 10: CINTURA & NIVEL VISCERAL -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">📏 Cintura & Nivel Visceral</div>
-                <div class="row g-3">
-                    <div class="col-6 border-end">
-                        <div class="d-flex justify-content-between align-items-center mb-1 text-xs">
-                            <span>Perímetro Abdominal: <strong class="fs-6 text-navy">${waist} cm</strong></span>
-                            <span class="badge bg-warning-subtle text-warning-emphasis fw-bold">${waistStatus}</span>
+            <!-- CARD 9 & CARD 10: HIDRACIÓN Y CINTURA / VISCERAL -->
+            <div class="row g-2 mb-2">
+                <!-- CARD 9: Análisis Hídrico -->
+                <div class="col-6">
+                    <div class="border rounded-3 p-2.5 bg-white h-100 shadow-xs d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                                <span>💧 Análisis Hídrico</span>
+                                <span class="badge bg-info-subtle text-info fw-bold" style="font-size:0.65rem;">${waterStatus}</span>
+                            </div>
+                            <div class="row g-1 text-xs" style="font-size: 0.7rem;">
+                                <div class="col-6">TBW: <strong>${tbw} L</strong></div>
+                                <div class="col-6">ICW: <strong>${icw} L</strong></div>
+                                <div class="col-6">ECW: <strong>${ecw} L</strong></div>
+                                <div class="col-6">ECW/TBW: <strong>${ratio}</strong></div>
+                            </div>
                         </div>
-                        <div class="w-100 rounded-pill mt-1" style="height: 6px; background: linear-gradient(90deg, #10b981 0%, #f59e0b 60%, #ef4444 100%);"></div>
-                        <div class="d-flex justify-content-between text-muted mt-1" style="font-size: 0.65rem;">
-                            <span>50 cm</span>
-                            <span>Saludable (&lt;88cm)</span>
-                            <span>Alerta</span>
-                            <span>130 cm</span>
+                        <div class="p-1.5 rounded-2 bg-light border text-secondary mt-1" style="font-size: 0.65rem;">
+                            <strong>Diagnóstico Hídrico:</strong> ${waterDiag}
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="d-flex justify-content-between align-items-center mb-1 text-xs">
-                            <span>Grasa Visceral: <strong class="fs-5 text-danger">Nivel ${visc}</strong></span>
-                            <span class="badge bg-danger-subtle text-danger fw-bold">${viscBadge}</span>
+                </div>
+
+                <!-- CARD 10: Cintura & Nivel Visceral -->
+                <div class="col-6">
+                    <div class="border rounded-3 p-2.5 bg-white h-100 shadow-xs d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">📏 Cintura & Nivel Visceral</div>
+                            <div class="row g-1 text-xs" style="font-size: 0.7rem;">
+                                <div class="col-12">Abdomen: <strong>${waist} cm</strong> <span class="badge bg-light text-dark border ms-1" style="font-size:0.62rem;">${waistStatus}</span></div>
+                                <div class="col-12">Visceral: <strong>Nivel ${visc}</strong> <span class="badge bg-light text-dark border ms-1" style="font-size:0.62rem;">${viscBadge}</span></div>
+                            </div>
                         </div>
-                        <div class="p-2 rounded bg-light border text-xs text-secondary" style="font-size: 0.72rem;">
+                        <div class="p-1.5 rounded-2 bg-light border text-secondary mt-1" style="font-size: 0.65rem;">
                             ${viscStatusText}
                         </div>
                     </div>
@@ -2811,12 +2785,12 @@ function printBIAReport() {
             </div>
 
             <!-- CARD 6: ÍNDICES CLÍNICOS & MASA CELULAR -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">🧬 Índices Clínicos & Masa Celular</div>
-                <div class="row g-2 text-xs">
-                    <div class="col-4">Masa Celular Corporal (BCM): <strong>${bcmVal} kg</strong></div>
-                    <div class="col-4">Índice Libre de Grasa (FFMI): <strong>${ffmiVal} kg/m²</strong></div>
-                    <div class="col-4">Índice Masa Grasa (FMI): <strong>${fmiVal} kg/m²</strong></div>
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">🧬 Índices Clínicos & Masa Celular</div>
+                <div class="row g-1.5 text-xs" style="font-size: 0.72rem;">
+                    <div class="col-4">Masa Celular (BCM): <strong>${bcmVal} kg</strong></div>
+                    <div class="col-4">Libre de Grasa (FFMI): <strong>${ffmiVal} kg/m²</strong></div>
+                    <div class="col-4">Masa Grasa (FMI): <strong>${fmiVal} kg/m²</strong></div>
                     <div class="col-4">Músculo Esquelético (SMI): <strong>${smiVal} kg/m²</strong></div>
                     <div class="col-4">Relación ECW / SMM: <strong>${ecwSmmVal}</strong></div>
                     <div class="col-4">Masa Magra Seca: <strong>${dryLeanVal} kg</strong></div>
@@ -2824,45 +2798,50 @@ function printBIAReport() {
             </div>
 
             <!-- CARD 8 & CARD 11: PERCENTILES POBLACIONALES Y COMPOSICIÓN ESQUELÉTICA -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">📈 Percentiles Poblacionales & Composición Esquelética (BCC)</div>
-                <div class="row g-3 text-center">
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom" style="font-size: 0.74rem;">📈 Percentiles Poblacionales & Composición Esquelética (BCC)</div>
+                <div class="row g-2 text-center">
                     <div class="col-4 border-end">
-                        <span class="text-secondary d-block fw-semibold mb-1" style="font-size:0.74rem;">Percentil Músculo (SMM): <strong>${smmPctVal}</strong></span>
-                        ${smmCurveImg ? `<img src="${smmCurveImg}" style="max-height:85px; width:100%; object-fit:contain;" class="rounded border p-1">` : '<div class="text-muted small">Curva SMM</div>'}
+                        <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Percentil SMM: <strong>${smmPctVal}</strong></span>
+                        ${smmCurveImg ? `<img src="${smmCurveImg}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva SMM</div>'}
                     </div>
                     <div class="col-4 border-end">
-                        <span class="text-secondary d-block fw-semibold mb-1" style="font-size:0.74rem;">Percentil Ángulo de Fase (PhA): <strong>${phPctVal}</strong></span>
-                        ${phaCurveImg ? `<img src="${phaCurveImg}" style="max-height:85px; width:100%; object-fit:contain;" class="rounded border p-1">` : '<div class="text-muted small">Curva PhA</div>'}
+                        <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Percentil PhA: <strong>${phPctVal}</strong></span>
+                        ${phaCurveImg ? `<img src="${phaCurveImg}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">Curva PhA</div>'}
                     </div>
                     <div class="col-4">
-                        <span class="text-secondary d-block fw-semibold mb-1" style="font-size:0.74rem;">Masa Ósea: <strong>${boneMassVal} kg</strong></span>
-                        ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height:85px; width:100%; object-fit:contain;" class="rounded border p-1">` : '<div class="text-muted small">BCC Graph</div>'}
+                        <span class="text-secondary d-block fw-semibold mb-0.5" style="font-size:0.68rem;">Masa Ósea: <strong>${boneMassVal} kg</strong></span>
+                        ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height:70px; width:100%; object-fit:contain;" class="rounded border p-0.5">` : '<div class="text-muted small">BCC Graph</div>'}
                     </div>
                 </div>
             </div>
 
             <!-- CARD 5: INTERPRETACIÓN Y RECOMENDACIONES MÉDICAS -->
-            <div class="border rounded-3 p-3 mb-3 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom">📋 Interpretación & Recomendaciones Clínicas</div>
-                <div class="p-3 rounded-2 bg-light border text-xs text-navy" style="line-height:1.45; font-size:0.76rem;">
+            <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
+                <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.74rem;">📋 Interpretación & Recomendaciones Médicas</div>
+                <div class="p-2 rounded-2 bg-light border text-navy" style="line-height:1.35; font-size:0.7rem;">
                     ${interpText}
                 </div>
             </div>
 
             <!-- PIE DE PÁGINA Y FIRMA -->
-            <div class="pt-3 border-top mt-4 d-flex justify-content-between align-items-end" style="font-size:0.75rem;">
-                <div style="max-width: 60%; color: #5a6f8c; font-size: 0.68rem; line-height: 1.35;">
+            <div class="pt-2 border-top mt-3 d-flex justify-content-between align-items-end" style="font-size:0.72rem;">
+                <div style="max-width: 60%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.3;">
                     ${disclaimer}
                 </div>
-                <div class="text-center" style="width: 190px;">
-                    <div style="border-bottom: 1px solid #1A2A4A; height: 35px; margin-bottom: 4px;"></div>
-                    <div class="fw-bold text-navy" style="font-size: 0.75rem;">${docName}</div>
-                    <div class="text-muted" style="font-size: 0.68rem;">Firma y Sello del Profesional</div>
+                <div class="text-center" style="width: 170px;">
+                    <div style="border-bottom: 1px solid #1A2A4A; height: 30px; margin-bottom: 3px;"></div>
+                    <div class="fw-bold text-navy" style="font-size: 0.72rem;">${docName}</div>
+                    <div class="text-muted" style="font-size: 0.64rem;">Firma y Sello del Profesional</div>
                 </div>
             </div>
         </div>
     `;
+
+    setTimeout(() => {
+        window.print();
+    }, 200);
+}
 
     setTimeout(() => {
         window.print();
