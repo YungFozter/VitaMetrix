@@ -2843,11 +2843,6 @@ function printBIAReport() {
     }, 200);
 }
 
-    setTimeout(() => {
-        window.print();
-    }, 250);
-}
-
 let populationChart = null;
 
 async function fetchDashboardStats() {
