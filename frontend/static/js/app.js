@@ -2513,6 +2513,7 @@ function printBIAReport() {
 
     const muscleFatRatio = getTxt('muscle-fat-ratio');
     const muscleFatRatioStatus = getTxt('muscle-fat-ratio-status');
+    const balanceDesc = getTxt('balance-desc') !== '--' ? getTxt('balance-desc') : 'Balance Normotrófico';
 
     // CARD 3: BIVA Vectorial
     const rVal = getTxt('res-value');
@@ -2655,38 +2656,98 @@ function printBIAReport() {
                 </div>
             </div>
 
-            <!-- CARD 2: COMPOSICIÓN CORPORAL (MUSCLE VS FAT SCORE) -->
+            <!-- CARD 2: COMPOSICIÓN CORPORAL (MUSCLE & FAT SCORE) -->
             <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
-                <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
-                    <span>💪 Composición Corporal (Muscle vs Fat Score)</span>
-                    <span class="text-muted text-xs" style="font-size: 0.7rem;">Ratio MÚSCULO/GRASA: <strong class="text-navy">${muscleFatRatio}</strong> (${muscleFatRatioStatus})</span>
+                <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem; letter-spacing: 0.5px;">
+                    <span>COMPOSICIÓN CORPORAL (MUSCLE & FAT SCORE)</span>
                 </div>
+                
                 <div class="row g-2">
+                    <!-- Muscle Score Box -->
                     <div class="col-6">
-                        <div class="p-2 rounded-3 border bg-light h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-0.5">
-                                <span class="fw-bold text-navy" style="font-size:0.72rem;">💪 Muscle Score</span>
-                                <span class="badge bg-success-subtle text-success fw-bold" style="font-size:0.65rem;">${muscleScoreStatus}</span>
+                        <div class="p-2 rounded-3 border bg-white h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-navy" style="font-size:0.75rem;">💪 Muscle Score</span>
+                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(245, 158, 11, 0.15); color: #d97706; font-size:0.64rem;">${muscleScoreStatus}</span>
+                                </div>
+                                
+                                <div class="d-flex align-items-center gap-2 my-1">
+                                    <!-- Donut Ring Gauge -->
+                                    <div style="width: 58px; height: 58px; border-radius: 50%; background: conic-gradient(#10b981 0% ${muscleScore}%, #e2e8f0 ${muscleScore}% 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <span style="font-size: 1.1rem; font-weight: 800; color: #1A2A4A; line-height: 1;">${muscleScore}</span>
+                                            <span style="font-size: 0.5rem; color: #718096; font-weight: 700; margin-top: -1px;">PTS</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size:0.62rem;">Masa Muscular:</span>
+                                        <div class="text-navy" style="font-size:0.78rem;"><strong>${muscleMassReal}</strong> <span class="text-muted" style="font-size:0.68rem;">(${musclePctReal})</span></div>
+                                        <span class="text-muted d-block mt-0.5" style="font-size:0.58rem;">Calidad y densidad celular</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-baseline gap-1">
-                                <span class="fs-4 fw-extrabold text-success" style="line-height: 1;">${muscleScore}</span>
-                                <span class="text-muted" style="font-size:0.65rem;">PTS</span>
+
+                            <div class="pt-1 mt-1 border-top">
+                                <div class="d-flex justify-content-between text-center text-muted mb-0.5" style="font-size: 0.58rem;">
+                                    <div>&lt;40<br><span style="font-size:0.54rem;">Bajo</span></div>
+                                    <div>40-60<br><span style="font-size:0.54rem;">Acep.</span></div>
+                                    <div class="fw-bold text-success">60-80<br><span style="font-size:0.54rem;">Óptimo</span></div>
+                                    <div>&gt;80<br><span style="font-size:0.54rem;">Exc.</span></div>
+                                </div>
+                                <div class="w-100 rounded-pill" style="height: 3.5px; background: linear-gradient(90deg, #ef4444 0%, #f59e0b 40%, #10b981 70%, #059669 100%);"></div>
                             </div>
-                            <div class="text-navy mt-0.5" style="font-size:0.7rem;">Masa Muscular: <strong>${muscleMassReal} ${musclePctReal}</strong></div>
                         </div>
                     </div>
+
+                    <!-- Fat Score Box -->
                     <div class="col-6">
-                        <div class="p-2 rounded-3 border bg-light h-100">
-                            <div class="d-flex justify-content-between align-items-center mb-0.5">
-                                <span class="fw-bold text-navy" style="font-size:0.72rem;">⚡ Fat Score</span>
-                                <span class="badge bg-warning-subtle text-warning-emphasis fw-bold" style="font-size:0.65rem;">${fatScoreStatus}</span>
+                        <div class="p-2 rounded-3 border bg-white h-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-navy" style="font-size:0.75rem;">⚡ Fat Score</span>
+                                    <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size:0.64rem;">${fatScoreStatus}</span>
+                                </div>
+                                
+                                <div class="d-flex align-items-center gap-2 my-1">
+                                    <!-- Donut Ring Gauge -->
+                                    <div style="width: 58px; height: 58px; border-radius: 50%; background: conic-gradient(#b91c1c 0% ${fatScore}%, #e2e8f0 ${fatScore}% 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                        <div style="width: 44px; height: 44px; border-radius: 50%; background: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                            <span style="font-size: 1.1rem; font-weight: 800; color: #1A2A4A; line-height: 1;">${fatScore}</span>
+                                            <span style="font-size: 0.5rem; color: #718096; font-weight: 700; margin-top: -1px;">PTS</span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div>
+                                        <span class="text-muted d-block" style="font-size:0.62rem;">Masa Grasa:</span>
+                                        <div class="text-navy" style="font-size:0.78rem;"><strong>${fatMassReal}</strong> <span class="text-muted" style="font-size:0.68rem;">(${fatPctReal})</span></div>
+                                        <span class="text-muted d-block mt-0.5" style="font-size:0.58rem;">Impacto metabólico adiposo</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="d-flex align-items-baseline gap-1">
-                                <span class="fs-4 fw-extrabold text-warning-emphasis" style="line-height: 1;">${fatScore}</span>
-                                <span class="text-muted" style="font-size:0.65rem;">PTS</span>
+
+                            <div class="pt-1 mt-1 border-top">
+                                <div class="d-flex justify-content-between text-center text-muted mb-0.5" style="font-size: 0.58rem;">
+                                    <div>&lt;20<br><span style="font-size:0.54rem;">Bajo</span></div>
+                                    <div class="fw-bold text-success">20-50<br><span style="font-size:0.54rem;">Saludable</span></div>
+                                    <div>50-70<br><span style="font-size:0.54rem;">Elev.</span></div>
+                                    <div>&gt;70<br><span style="font-size:0.54rem;">Exc.</span></div>
+                                </div>
+                                <div class="w-100 rounded-pill" style="height: 3.5px; background: linear-gradient(90deg, #0284c7 0%, #10b981 35%, #f59e0b 70%, #ef4444 100%);"></div>
                             </div>
-                            <div class="text-navy mt-0.5" style="font-size:0.7rem;">Masa Grasa Total: <strong>${fatMassReal} ${fatPctReal}</strong></div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Dashed Cyan Pill Box -->
+                <div class="mt-1.5 p-1.5 rounded-3 d-flex justify-content-between align-items-center" style="background: rgba(0, 180, 216, 0.04); border: 1.5px dashed #00b4d8; font-size: 0.7rem;">
+                    <div class="d-flex align-items-center gap-1.5">
+                        <span class="text-navy fw-semibold">⚖️ Ratio Músculo / Grasa: <strong class="text-navy ms-0.5">${muscleFatRatio}</strong></span>
+                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 0.62rem;">${muscleFatRatioStatus}</span>
+                    </div>
+                    <div class="text-navy">
+                        <span class="text-muted">Balance:</span> <strong style="color: #0077b6;">${balanceDesc}</strong>
                     </div>
                 </div>
             </div>
