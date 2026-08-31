@@ -2903,43 +2903,46 @@ function printBIAReport() {
 
                 <!-- CARD 11: BALANCE BCC (GRASA VS MÚSCULO) -->
                 <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
-                    <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
+                    <div class="fw-bold text-navy text-xs text-uppercase mb-2 pb-1 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.74rem;">
                         <span>📊 Balance BCC (Grasa vs Músculo)</span>
-                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(0, 180, 216, 0.15); color: #0077b6; font-size: 0.64rem;">${bccBadge}</span>
+                        <span class="badge rounded-pill fw-semibold px-2.5 py-1" style="background: rgba(0, 180, 216, 0.15); color: #0077b6; font-size: 0.66rem;">${bccBadge}</span>
                     </div>
                     
-                    <div class="row align-items-center g-2">
-                        <div class="col-5 text-center border-end">
-                            ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height: 110px; width: auto; max-width: 100%;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BCC Matrix</div>'}
+                    <div class="row align-items-center g-2.5">
+                        <div class="col-6 text-center border-end">
+                            ${bccImgUrl ? `<img src="${bccImgUrl}" style="max-height: 170px; width: 100%; object-fit: contain;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BCC Matrix</div>'}
                         </div>
-                        <div class="col-7">
-                            <div class="row g-1 text-center mb-1">
-                                <div class="col-6">
-                                    <div class="p-1 rounded bg-light border">
-                                        <span class="text-muted d-block" style="font-size:0.6rem;">Masa Muscular (SMM)</span>
-                                        <strong class="text-navy" style="font-size:0.8rem;">${bccMuscleVal}</strong>
+                        <div class="col-6 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="row g-1.5 text-center mb-2">
+                                    <div class="col-6">
+                                        <div class="p-1.5 rounded-3 bg-light border">
+                                            <span class="text-muted d-block" style="font-size:0.64rem;">Masa Muscular (SMM)</span>
+                                            <strong class="text-navy" style="font-size:0.92rem;">${bccMuscleVal}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="p-1.5 rounded-3 bg-light border">
+                                            <span class="text-muted d-block" style="font-size:0.64rem;">Masa Grasa (FM)</span>
+                                            <strong class="text-navy" style="font-size:0.92rem;">${bccFatVal}</strong>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="p-1 rounded bg-light border">
-                                        <span class="text-muted d-block" style="font-size:0.6rem;">Masa Grasa (FM)</span>
-                                        <strong class="text-navy" style="font-size:0.8rem;">${bccFatVal}</strong>
-                                    </div>
-                                </div>
-                            </div>
 
-                            <!-- Cuadrantes Legend -->
-                            <div class="p-1 rounded border bg-light mb-1" style="font-size: 0.6rem;">
-                                <div class="row g-0.5">
-                                    <div class="col-6"><span class="badge bg-success-subtle text-success p-0.5 me-0.5" style="font-size:0.55rem;">I</span> <strong>Atlético:</strong> +Músc / -Grasa</div>
-                                    <div class="col-6"><span class="badge bg-primary-subtle text-primary p-0.5 me-0.5" style="font-size:0.55rem;">II</span> <strong>Equilibrado:</strong> Normal</div>
-                                    <div class="col-6"><span class="badge bg-warning-subtle text-warning p-0.5 me-0.5" style="font-size:0.55rem;">III</span> <strong>Adiposo:</strong> +Grasa / Medio</div>
-                                    <div class="col-6"><span class="badge bg-danger-subtle text-danger p-0.5 me-0.5" style="font-size:0.55rem;">IV</span> <strong>Sarcopénico:</strong> -Músc / +Grasa</div>
+                                <!-- Cuadrantes Legend -->
+                                <div class="p-1.5 rounded-3 border bg-light mb-2" style="font-size: 0.65rem;">
+                                    <div class="fw-bold text-navy mb-1" style="font-size: 0.68rem;">Cuadrantes de Composición:</div>
+                                    <div class="row g-1">
+                                        <div class="col-6"><span class="badge bg-success-subtle text-success p-1 me-0.5" style="font-size:0.6rem;">I</span> <strong>Atlético:</strong> +Músc / -Grasa</div>
+                                        <div class="col-6"><span class="badge bg-primary-subtle text-primary p-1 me-0.5" style="font-size:0.6rem;">II</span> <strong>Equilibrado:</strong> Normal</div>
+                                        <div class="col-6"><span class="badge bg-warning-subtle text-warning p-1 me-0.5" style="font-size:0.6rem;">III</span> <strong>Adiposo:</strong> +Grasa / Medio</div>
+                                        <div class="col-6"><span class="badge bg-danger-subtle text-danger p-1 me-0.5" style="font-size:0.6rem;">IV</span> <strong>Sarcopénico:</strong> -Músc / +Grasa</div>
+                                    </div>
                                 </div>
                             </div>
 
                             <!-- Diagnóstico Box -->
-                            <div class="p-1.5 rounded border bg-info-subtle/20 border-info-subtle text-navy" style="font-size: 0.64rem; line-height: 1.3;">
+                            <div class="p-2 rounded-3 border bg-info-subtle/20 border-info-subtle text-navy" style="font-size: 0.68rem; line-height: 1.35;">
                                 <strong>${bccDiagTitle}:</strong> ${bccDiagDesc}
                             </div>
                         </div>
