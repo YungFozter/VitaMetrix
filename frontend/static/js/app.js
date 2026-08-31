@@ -2615,16 +2615,50 @@ function printBIAReport() {
                     </div>
                 </div>
 
-                <!-- FICHA PACIENTE -->
-                <div class="p-1.5 rounded-3 bg-light mb-1.5 border" style="font-size:0.74rem;">
-                    <div class="row g-1">
-                        <div class="col-4"><strong>Paciente:</strong> ${patientName}</div>
-                        <div class="col-3"><strong>IDP / CI:</strong> ${patientIdp}</div>
-                        <div class="col-2"><strong>Edad:</strong> ${age} años</div>
-                        <div class="col-3"><strong>Sexo:</strong> ${genderText}</div>
-                        <div class="col-4"><strong>Peso:</strong> ${weight} kg</div>
-                        <div class="col-3"><strong>Talla:</strong> ${height} cm</div>
-                        <div class="col-5"><strong>IMC:</strong> ${bmiVal} kg/m²</div>
+                <!-- FICHA PACIENTE MEJORADA -->
+                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs" style="border-left: 4px solid #0077b6 !important;">
+                    <div class="d-flex justify-content-between align-items-center mb-1 pb-0.5 border-bottom">
+                        <div class="d-flex align-items-center gap-1.5">
+                            <i class="bi bi-person-vcard-fill text-primary" style="font-size: 0.85rem;"></i>
+                            <span class="fw-bold text-navy text-xs text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.5px;">Ficha Clínica del Paciente</span>
+                        </div>
+                        <span class="badge rounded-pill bg-light text-navy border fw-semibold px-2 py-0.5" style="font-size: 0.62rem;">ID: ${patientIdp}</span>
+                    </div>
+
+                    <div class="row g-1.5 align-items-center" style="font-size: 0.72rem;">
+                        <!-- Nombre y Datos Biológicos -->
+                        <div class="col-5 border-end pe-2">
+                            <div class="fw-bold text-navy text-truncate" style="font-size: 0.85rem; line-height: 1.2;">${patientName}</div>
+                            <div class="text-secondary mt-0.5 d-flex align-items-center gap-1.5" style="font-size: 0.66rem;">
+                                <span><strong>Edad:</strong> ${age} años</span>
+                                <span>•</span>
+                                <span><strong>Sexo:</strong> ${genderText}</span>
+                            </div>
+                        </div>
+
+                        <!-- Antropometría: Peso, Talla, IMC -->
+                        <div class="col-7">
+                            <div class="row g-1 text-center">
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block" style="font-size: 0.56rem; font-weight: 600;">PESO</span>
+                                        <strong class="text-navy" style="font-size: 0.76rem;">${weight} <span style="font-size:0.58rem; font-weight:normal;">kg</span></strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block" style="font-size: 0.56rem; font-weight: 600;">TALLA</span>
+                                        <strong class="text-navy" style="font-size: 0.76rem;">${height} <span style="font-size:0.58rem; font-weight:normal;">cm</span></strong>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="p-1 rounded bg-light border">
+                                        <span class="text-muted d-block" style="font-size: 0.56rem; font-weight: 600;">IMC</span>
+                                        <strong class="text-primary" style="font-size: 0.76rem;">${bmiVal} <span style="font-size:0.56rem; font-weight:normal;">kg/m²</span></strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

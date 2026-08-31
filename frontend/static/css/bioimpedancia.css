@@ -741,7 +741,7 @@
         min-height: 100vh !important;
         max-height: 100vh !important;
         box-sizing: border-box !important;
-        padding: 5mm 8mm !important;
+        padding: 10mm 9mm 6mm 9mm !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
