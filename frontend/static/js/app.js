@@ -2821,19 +2821,46 @@ function printBIAReport() {
 
                 <!-- CARD 3: ANÁLISIS VECTORIAL (BIVA GRAPH) -->
                 <div class="border rounded-3 p-2 mb-3.5 bg-white shadow-xs">
-                    <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">📐 Análisis Vectorial (BIVA Graph)</div>
-                    <div class="row align-items-center g-1.5">
-                        <div class="col-5 text-center border-end">
-                            ${bivaImgUrl ? `<img src="${bivaImgUrl}" style="max-height: 105px; width: auto; max-width: 100%;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BIVA en evaluación</div>'}
+                    <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-0.5 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
+                        <span>📐 Análisis Vectorial (BIVA Graph)</span>
+                        <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(0, 119, 182, 0.12); color: #0077b6; font-size: 0.62rem;">Resistencia vs Reactancia</span>
+                    </div>
+                    <div class="row align-items-center g-2">
+                        <!-- Columna Izquierda: Gráfico BIVA Ampliado -->
+                        <div class="col-6 text-center border-end d-flex align-items-center justify-content-center pe-2">
+                            ${bivaImgUrl ? `<img src="${bivaImgUrl}" style="max-height: 160px; width: 100%; object-fit: contain;" class="rounded-2 border p-1 bg-white">` : '<div class="text-muted small">Gráfico BIVA en evaluación</div>'}
                         </div>
-                        <div class="col-7">
-                            <div class="row g-1 text-xs mb-1" style="font-size: 0.68rem;">
-                                <div class="col-6">Resistencia (R): <strong>${rVal} Ω</strong></div>
-                                <div class="col-6">Reactancia (Xc): <strong>${xcVal} Ω</strong></div>
-                                <div class="col-12">Ángulo de Fase (PhA): <strong class="text-success fs-6">${phaVal}°</strong></div>
+
+                        <!-- Columna Derecha: Métricas y Diagnóstico Centrado Vertical/Horizontal -->
+                        <div class="col-6 d-flex flex-column justify-content-center h-100 ps-2">
+                            <!-- Métricas de Resistencia y Reactancia -->
+                            <div class="row g-1 text-center mb-1">
+                                <div class="col-6">
+                                    <div class="p-1 rounded-3 bg-light border d-flex flex-column align-items-center justify-content-center">
+                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.56rem; letter-spacing: 0.3px;">RESISTENCIA (R)</span>
+                                        <strong class="text-navy" style="font-size: 0.82rem; line-height: 1.2;">${rVal} <span style="font-size: 0.6rem; font-weight: normal;">Ω</span></strong>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="p-1 rounded-3 bg-light border d-flex flex-column align-items-center justify-content-center">
+                                        <span class="text-muted d-block fw-semibold" style="font-size: 0.56rem; letter-spacing: 0.3px;">REACTANCIA (Xc)</span>
+                                        <strong class="text-navy" style="font-size: 0.82rem; line-height: 1.2;">${xcVal} <span style="font-size: 0.6rem; font-weight: normal;">Ω</span></strong>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="p-1 rounded-2 bg-success-subtle/20 border border-success-subtle text-success-emphasis" style="font-size: 0.64rem;">
-                                <strong>Salud Celular:</strong> ${cellStatus}
+
+                            <!-- Destacado: Ángulo de Fase (PhA) -->
+                            <div class="p-1 rounded-3 border mb-1 text-center" style="background: rgba(16, 185, 129, 0.06); border-color: rgba(16, 185, 129, 0.3) !important;">
+                                <span class="text-muted d-block fw-bold text-uppercase" style="font-size: 0.56rem; color: #047857 !important;">Ángulo de Fase Bioeléctrico (PhA)</span>
+                                <div class="d-flex align-items-center justify-content-center gap-1 mt-0.5">
+                                    <strong class="text-success" style="font-size: 1.1rem; line-height: 1;">${phaVal}°</strong>
+                                </div>
+                            </div>
+
+                            <!-- Bloque de Diagnóstico Celular -->
+                            <div class="p-1 rounded-3 border bg-light text-navy text-center" style="font-size: 0.64rem; line-height: 1.3;">
+                                <span class="text-muted d-block fw-semibold" style="font-size: 0.56rem;">ESTADO DE SALUD CELULAR</span>
+                                <strong class="text-primary d-block" style="font-size: 0.7rem;">${cellStatus}</strong>
                             </div>
                         </div>
                     </div>
