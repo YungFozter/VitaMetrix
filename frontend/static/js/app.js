@@ -2616,7 +2616,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- FICHA PACIENTE MEJORADA -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs" style="border-left: 4px solid #0077b6 !important;">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs" style="border-left: 4px solid #0077b6 !important;">
                     <div class="d-flex justify-content-between align-items-center mb-1 pb-0.5 border-bottom">
                         <div class="d-flex align-items-center gap-1.5">
                             <i class="bi bi-person-vcard-fill text-primary" style="font-size: 0.85rem;"></i>
@@ -2663,7 +2663,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 1: PUNTUACIÓN SALUD CELULAR (TRU SCORE) -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                         <span>🏆 Puntuación Salud Celular (TRU Score)</span>
                         <span class="badge bg-primary text-white fw-bold px-2 py-0.5" style="font-size:0.66rem;">${truStatus}</span>
@@ -2708,7 +2708,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 2: COMPOSICIÓN CORPORAL (MUSCLE & FAT SCORE) -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.72rem; letter-spacing: 0.5px;">
                         <span>COMPOSICIÓN CORPORAL (MUSCLE & FAT SCORE)</span>
                     </div>
@@ -2798,7 +2798,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 4: CONSUMO DE ENERGÍA — REE / TEE & PAL GAUGE -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">🔥 Consumo de Energía — REE / TEE & Actividad Física (PAL)</div>
                     <div class="row align-items-center g-1.5">
                         <div class="col-6 border-end">
@@ -2820,7 +2820,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 3: ANÁLISIS VECTORIAL (BIVA GRAPH) -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">📐 Análisis Vectorial (BIVA Graph)</div>
                     <div class="row align-items-center g-1.5">
                         <div class="col-5 text-center border-end">
@@ -2840,7 +2840,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 9 & CARD 10: HIDRATACIÓN Y CINTURA / VISCERAL -->
-                <div class="row g-1.5 mb-1">
+                <div class="row g-1.5 mb-2.5">
                     <!-- CARD 9: Análisis Hídrico -->
                     <div class="col-6">
                         <div class="border rounded-3 p-2 bg-white h-100 shadow-xs d-flex flex-column justify-content-between">
@@ -2896,13 +2896,13 @@ function printBIAReport() {
         <div class="bia-printable-sheet p-3" style="background:#ffffff; color:#1A2A4A; font-family:'Inter', sans-serif;">
             <div class="sheet-body">
                 <!-- CABECERA SECUNDARIA -->
-                <div class="d-flex justify-content-between align-items-center pb-1.5 mb-1.5 border-bottom">
+                <div class="d-flex justify-content-between align-items-center pb-1.5 mb-2 border-bottom">
                     <div class="fw-bold text-navy small">${clinicName} — Informe Clínico BIA (2/2)</div>
                     <div class="text-muted text-xs" style="font-size: 0.68rem;">Paciente: <strong>${patientName}</strong> (${patientIdp}) | Fecha: ${todayStr}</div>
                 </div>
 
                 <!-- CARD 6: ÍNDICES CLÍNICOS & MASA CELULAR -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">🧬 Índices Clínicos & Masa Celular</div>
                     <div class="row g-1 text-xs" style="font-size: 0.68rem;">
                         <div class="col-4">Masa Celular (BCM): <strong>${bcmVal} kg</strong></div>
@@ -2915,7 +2915,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 8: PERCENTILES POBLACIONALES -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">📈 Percentiles Poblacionales (SMM & PhA)</div>
                     <div class="row g-1.5 text-center">
                         <div class="col-6 border-end">
@@ -2930,7 +2930,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 11: BALANCE BCC (GRASA VS MÚSCULO) -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1.5 pb-0.5 border-bottom d-flex justify-content-between align-items-center" style="font-size: 0.72rem;">
                         <span>📊 Balance BCC (Grasa vs Músculo)</span>
                         <span class="badge rounded-pill fw-semibold px-2 py-0.5" style="background: rgba(0, 180, 216, 0.15); color: #0077b6; font-size: 0.62rem;">${bccBadge}</span>
@@ -2978,7 +2978,7 @@ function printBIAReport() {
                 </div>
 
                 <!-- CARD 5: INTERPRETACIÓN Y RECOMENDACIONES MÉDICAS -->
-                <div class="border rounded-3 p-2 mb-1.5 bg-white shadow-xs">
+                <div class="border rounded-3 p-2 mb-2.5 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.72rem;">📋 Interpretación & Recomendaciones Médicas</div>
                     <div class="p-1.5 rounded-2 bg-light border text-navy" style="line-height: 1.35; font-size: 0.68rem; white-space: pre-wrap; word-break: break-word;">${interpText}</div>
                 </div>
