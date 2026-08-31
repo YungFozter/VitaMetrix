@@ -1391,24 +1391,8 @@ def dashboard_stats():
             all_clients = [c for c in all_clients if c.get('user_id') == current_uid or (not c.get('user_id') and current_uid == 'usr-doctor-001')]
         total_clients = len(all_clients)
         
-        # Obtener evaluaciones recientes de forma segura
-        evaluations = []
-        try:
-            evals_res = supabase.table('evaluations').select('*').order('created_at', desc=True).limit(100).execute()
-            evaluations = evals_res.data or []
-        except Exception as ee:
-            logging.warning("Consulta evaluations select(*) falló en dashboard_stats: %s", ee)
-            try:
-                evals_res = supabase.table('evaluations').select('id,patient_name,created_at,global_score,resistance,reactance,user_id').order('created_at', desc=True).limit(100).execute()
-                evaluations = evals_res.data or []
-            except Exception:
-                evaluations = []
-
-        if is_admin:
-            evaluations = [e for e in evaluations if e.get('user_id') == current_uid]
-        else:
-            evaluations = [e for e in evaluations if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
-        
+        # Obtener evaluaciones del usuario actual de forma aislada y persistente
+        evaluations = _get_all_evaluations_for_user(current_user)
         total_evaluations = len(evaluations)
         
         # Calcular promedio de TRU Score
@@ -1818,27 +1802,10 @@ def get_evaluations():
         return jsonify([]), 200
     try:
         current_user = _get_current_user()
-        current_uid = current_user.get('id') if current_user else None
-        if not current_uid:
+        if not current_user:
             return jsonify([]), 200
 
-        res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
-        evals_asc = res.data or []
-        
-        eval_map = _load_evaluations_user_map()
-        for e in evals_asc:
-            e_id = e.get('id')
-            if e_id and e_id in eval_map:
-                if not e.get('user_id') or str(e.get('user_id')).strip() == '' or str(e.get('user_id')) == 'None':
-                    e['user_id'] = eval_map[e_id].get('user_id')
-                if not e.get('code'):
-                    e['code'] = eval_map[e_id].get('code')
-
-        # Aislamiento multi-tenant estricto: SuperAdmin o doctor ven solo sus propias evaluaciones
-        if current_user and current_user.get('role') == 'admin':
-            evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid]
-        else:
-            evals_asc = [e for e in evals_asc if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
+        evals_asc = _get_all_evaluations_for_user(current_user)
 
         for idx, e in enumerate(evals_asc, start=1):
             if not e.get('code'):
@@ -1866,16 +1833,14 @@ def get_evaluation_by_id(eval_id):
             return jsonify({"error": "Evaluación no encontrada"}), 404
         
         raw_eval = res.data[0]
-        eval_map = _load_evaluations_user_map()
-        if raw_eval.get('id') in eval_map:
-            if not raw_eval.get('user_id') or str(raw_eval.get('user_id')) == 'None':
-                raw_eval['user_id'] = eval_map[raw_eval['id']].get('user_id')
-            if not raw_eval.get('code'):
-                raw_eval['code'] = eval_map[raw_eval['id']].get('code')
-
         current_user = _get_current_user()
-        current_uid = current_user.get('id') if current_user else None
-        if raw_eval.get('user_id') and current_uid and raw_eval.get('user_id') != current_uid and current_user.get('role') != 'admin':
+        if not current_user:
+            return jsonify({"error": "No autorizado"}), 401
+
+        user_evals = _get_all_evaluations_for_user(current_user)
+        user_eval_ids = [str(e.get('id')) for e in user_evals if e.get('id')]
+        
+        if str(eval_id) not in user_eval_ids and current_user.get('role') != 'admin':
             return jsonify({"error": "No tienes permiso para ver esta evaluación clínica"}), 403
 
         payload = {
@@ -1976,12 +1941,104 @@ def _load_evaluations_user_map():
     return {}
 
 def _save_evaluations_user_map(m):
+    global _EVALUATIONS_USER_MAP
+    _EVALUATIONS_USER_MAP = m
     try:
         os.makedirs(os.path.dirname(_EVALUATIONS_USER_MAP_PATH), exist_ok=True)
         with open(_EVALUATIONS_USER_MAP_PATH, 'w', encoding='utf-8') as f:
             json.dump(m, f, indent=2, ensure_ascii=False)
     except Exception:
         pass
+
+_EVALUATIONS_USER_MAP = _load_evaluations_user_map()
+
+def _get_all_evaluations_for_user(current_user):
+    if not supabase or not current_user:
+        return []
+    try:
+        current_uid = current_user.get('id')
+        if not current_uid:
+            return []
+
+        # 1. Obtener todas las evaluaciones almacenadas en Supabase
+        raw_evals = []
+        try:
+            evals_res = supabase.table('evaluations').select('*').order('created_at', desc=False).execute()
+            raw_evals = evals_res.data or []
+        except Exception as ee:
+            logging.warning("Error al consultar tabla evaluations en Supabase: %s", ee)
+
+        # 2. Cargar mapa de clientes en Supabase (idp -> user_id, name -> user_id)
+        clients_by_idp = {}
+        clients_by_name = {}
+        try:
+            cls_res = supabase.table('clients').select('idp, name, user_id').execute()
+            for c in (cls_res.data or []):
+                c_uid = c.get('user_id') or _CLIENTS_USER_MAP.get(str(c.get('id'))) or _CLIENTS_USER_MAP.get(str(c.get('idp')))
+                if c_uid:
+                    c_idp = (c.get('idp') or '').strip()
+                    c_name = (c.get('name') or '').strip().lower()
+                    if c_idp:
+                        clients_by_idp[c_idp] = str(c_uid)
+                    if c_name:
+                        clients_by_name[c_name] = str(c_uid)
+        except Exception as e_cls:
+            logging.warning("Error al cargar clientes para vinculación de evaluaciones: %s", e_cls)
+
+        # 3. Resolver user_id para cada evaluación
+        resolved_evals = []
+        for e in raw_evals:
+            e_id = str(e.get('id')) if e.get('id') else None
+            assigned_uid = e.get('user_id')
+
+            # Normalizar user_id si viene directo de Supabase
+            if assigned_uid and str(assigned_uid).strip() and str(assigned_uid) != 'None':
+                assigned_uid = str(assigned_uid).strip()
+            else:
+                assigned_uid = None
+
+            # Fallback 1: Mapa en memoria / disco de evaluaciones
+            if not assigned_uid and e_id and e_id in _EVALUATIONS_USER_MAP:
+                map_item = _EVALUATIONS_USER_MAP[e_id]
+                if isinstance(map_item, dict):
+                    assigned_uid = map_item.get('user_id')
+                elif isinstance(map_item, str):
+                    assigned_uid = map_item
+
+            # Fallback 2: Coincidencia por IDP del paciente en la tabla clients
+            p_idp = (e.get('patient_idp') or '').strip()
+            if not assigned_uid and p_idp:
+                if p_idp in clients_by_idp:
+                    assigned_uid = clients_by_idp[p_idp]
+                elif p_idp in _CLIENTS_USER_MAP:
+                    assigned_uid = _CLIENTS_USER_MAP[p_idp]
+
+            # Fallback 3: Coincidencia por Nombre del paciente en la tabla clients
+            p_name = (e.get('patient_name') or '').strip().lower()
+            if not assigned_uid and p_name:
+                if p_name in clients_by_name:
+                    assigned_uid = clients_by_name[p_name]
+                elif p_name in _CLIENTS_USER_MAP:
+                    assigned_uid = _CLIENTS_USER_MAP[p_name]
+
+            # Fallback 4: Retrocompatibilidad con usuario demo inicial si está huérfano
+            if not assigned_uid and current_uid == 'usr-doctor-001':
+                assigned_uid = 'usr-doctor-001'
+
+            e['user_id'] = assigned_uid
+            resolved_evals.append(e)
+
+        # 4. Aislamiento multi-tenant estricto por doctor / usuario
+        is_admin = (current_user.get('role') == 'admin')
+        if is_admin:
+            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-admin-001')]
+        else:
+            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid]
+
+        return filtered
+    except Exception as ex:
+        logging.error("Error crítico al recuperar evaluaciones del usuario: %s", ex, exc_info=True)
+        return []
 
 # --- RUTAS DE CLIENTES ---
 
