@@ -2953,17 +2953,14 @@ function printBIAReport() {
                 </div>
             </div>
 
-            <!-- PIE DE PÁGINA 2 Y FIRMA -->
-            <div class="sheet-footer pt-2 border-top mt-auto d-flex justify-content-between align-items-end" style="font-size:0.72rem;">
-                <div style="max-width: 64%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.35;">
+            <!-- PIE DE PÁGINA 2 -->
+            <div class="sheet-footer pt-2 border-top mt-auto d-flex justify-content-between align-items-center" style="font-size:0.72rem;">
+                <div style="max-width: 80%; color: #5a6f8c; font-size: 0.64rem; line-height: 1.35;">
                     ${footerAddress ? `<div class="fw-bold text-navy mb-0.5" style="font-size: 0.68rem;">📍 ${footerAddress}</div>` : ''}
                     ${disclaimer}
-                    <div class="text-muted mt-1" style="font-size: 0.62rem;">Página <strong>2</strong> de <strong>2</strong></div>
                 </div>
-                <div class="text-center" style="width: 170px;">
-                    <div style="border-bottom: 1px solid #1A2A4A; height: 30px; margin-bottom: 3px;"></div>
-                    <div class="fw-bold text-navy" style="font-size: 0.72rem;">${docName}</div>
-                    <div class="text-muted" style="font-size: 0.64rem;">Firma y Sello del Profesional</div>
+                <div class="text-end text-muted" style="font-size: 0.68rem;">
+                    Página <strong>2</strong> de <strong>2</strong>
                 </div>
             </div>
         </div>
