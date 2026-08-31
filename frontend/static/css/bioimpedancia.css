@@ -698,11 +698,17 @@
 }
 
 @media print {
+    @page {
+        size: auto;
+        margin: 6mm 8mm 12mm 8mm;
+    }
+
     html, body {
         margin: 0 !important;
         padding: 0 !important;
-        height: 100% !important;
         background: #ffffff !important;
+        color: #1A2A4A !important;
+        font-family: 'Inter', sans-serif !important;
     }
 
     body > * {
@@ -712,11 +718,10 @@
     #bia-printable-report {
         display: block !important;
         visibility: visible !important;
-        position: absolute !important;
+        position: relative !important;
         left: 0 !important;
         top: 0 !important;
         width: 100% !important;
-        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #ffffff !important;
@@ -728,49 +733,27 @@
         visibility: visible !important;
     }
 
-    .bia-printable-sheet {
-        width: 100% !important;
-        height: 100vh !important;
-        min-height: 100vh !important;
-        max-height: 100vh !important;
-        box-sizing: border-box !important;
-        padding: 5mm 8mm !important;
-        display: flex !important;
-        flex-direction: column !important;
-        justify-content: space-between !important;
-        page-break-after: always !important;
-        break-after: page !important;
+    .report-card-unit {
+        break-inside: avoid !important;
         page-break-inside: avoid !important;
-        overflow: hidden !important;
-        background: #ffffff !important;
+        margin-bottom: 2mm !important;
+        box-sizing: border-box !important;
     }
 
-    .bia-printable-sheet:last-child {
-        page-break-after: auto !important;
-        break-after: auto !important;
-    }
-
-    .sheet-body {
-        flex: 1 1 auto !important;
+    .report-footer-fixed {
+        position: fixed !important;
+        bottom: -8mm !important;
+        left: 0 !important;
+        right: 0 !important;
+        width: 100% !important;
+        height: 8mm !important;
         display: flex !important;
-        flex-direction: column !important;
-        justify-content: flex-start !important;
-    }
-
-    .sheet-footer {
-        flex: 0 0 auto !important;
-        margin-top: auto !important;
-    }
-
-    .report-page-break {
-        page-break-after: always !important;
-        break-after: page !important;
-        height: 0 !important;
-        margin: 0 !important;
-        border: none !important;
-    }
-
-    @page {
-        margin: 0;
+        justify-content: space-between !important;
+        align-items: center !important;
+        border-top: 1px solid #cbd5e1 !important;
+        padding-top: 1mm !important;
+        font-size: 0.68rem !important;
+        background: #ffffff !important;
+        z-index: 9999 !important;
     }
 }
