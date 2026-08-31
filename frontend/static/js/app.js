@@ -2544,7 +2544,7 @@ function printBIAReport() {
     const docNotesInput = document.getElementById('doctor-notes-input');
     const docNotesText = docNotesInput ? docNotesInput.value.trim() : '';
     const interpEl = document.getElementById('clinical-text');
-    const defaultInterp = interpEl ? interpEl.innerText.replace(/\n+/g, ' ').trim() : 'Evaluación médica sin observaciones adicionales.';
+    const defaultInterp = interpEl ? interpEl.innerText.trim() : 'Evaluación médica sin observaciones adicionales.';
     const interpText = docNotesText || defaultInterp;
 
     // CARD 6: Índices Clínicos
@@ -2949,9 +2949,7 @@ function printBIAReport() {
                 <!-- CARD 5: INTERPRETACIÓN Y RECOMENDACIONES MÉDICAS -->
                 <div class="border rounded-3 p-2.5 mb-2 bg-white shadow-xs">
                     <div class="fw-bold text-navy text-xs text-uppercase mb-1 pb-0.5 border-bottom" style="font-size: 0.74rem;">📋 Interpretación & Recomendaciones Médicas</div>
-                    <div class="p-2 rounded-2 bg-light border text-navy" style="line-height:1.35; font-size:0.7rem;">
-                        ${interpText}
-                    </div>
+                    <div class="p-2 rounded-2 bg-light border text-navy" style="line-height: 1.4; font-size: 0.7rem; white-space: pre-wrap; word-break: break-word;">${interpText}</div>
                 </div>
             </div>
 
