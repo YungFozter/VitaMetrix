@@ -1881,19 +1881,20 @@ def delete_evaluation(eval_id):
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         current_user = _get_current_user()
-        current_uid = current_user.get('id') if current_user else None
+        if not current_user:
+            return jsonify({"error": "No autorizado"}), 401
         
-        # Validar pertenencia del registro antes de eliminar
-        check = supabase.table('evaluations').select('id, user_id').eq('id', eval_id).execute()
-        eval_map = _load_evaluations_user_map()
-        row_uid = (check.data[0].get('user_id') if check.data else None) or (eval_map.get(eval_id, {}).get('user_id'))
-        if row_uid and current_uid and row_uid != current_uid and current_user.get('role') != 'admin':
+        # Validar pertenencia con resolutor multi-fuente
+        user_evals = _get_all_evaluations_for_user(current_user)
+        user_eval_ids = [str(e.get('id')) for e in user_evals if e.get('id')]
+
+        if str(eval_id) not in user_eval_ids and current_user.get('role') != 'admin':
             return jsonify({"error": "No tienes permiso para eliminar esta evaluación"}), 403
 
         supabase.table('evaluations').delete().eq('id', eval_id).execute()
-        if eval_id in eval_map:
-            del eval_map[eval_id]
-            _save_evaluations_user_map(eval_map)
+        if str(eval_id) in _EVALUATIONS_USER_MAP:
+            del _EVALUATIONS_USER_MAP[str(eval_id)]
+            _save_evaluations_user_map(_EVALUATIONS_USER_MAP)
 
         _invalidate_dashboard_cache()
         return jsonify({"success": True})
@@ -1907,24 +1908,32 @@ def batch_delete_evaluations():
         return jsonify({"error": "Base de datos no configurada"}), 503
     try:
         current_user = _get_current_user()
-        current_uid = current_user.get('id') if current_user else None
-        if not current_uid:
+        if not current_user:
             return jsonify({"error": "No autorizado"}), 401
 
         payload = request.get_json() or {}
-        eval_ids = payload.get('ids', [])
-        if not eval_ids or not isinstance(eval_ids, list):
+        raw_eval_ids = payload.get('ids', [])
+        if not raw_eval_ids or not isinstance(raw_eval_ids, list):
             return jsonify({"error": "No se especificaron IDs válidos para eliminar"}), 400
 
-        supabase.table('evaluations').delete().in_('id', eval_ids).execute()
-        eval_map = _load_evaluations_user_map()
-        for e_id in eval_ids:
-            if e_id in eval_map:
-                del eval_map[e_id]
-        _save_evaluations_user_map(eval_map)
+        user_evals = _get_all_evaluations_for_user(current_user)
+        user_eval_ids_set = set(str(e.get('id')) for e in user_evals if e.get('id'))
+        
+        # SuperAdmin elimina todos los seleccionados; Doctor elimina solo los suyos
+        is_admin = (current_user.get('role') == 'admin')
+        allowed_ids = [str(i) for i in raw_eval_ids if is_admin or str(i) in user_eval_ids_set]
+
+        if not allowed_ids:
+            return jsonify({"error": "No tienes permiso para eliminar las evaluaciones seleccionadas"}), 403
+
+        supabase.table('evaluations').delete().in_('id', allowed_ids).execute()
+        for e_id in allowed_ids:
+            if e_id in _EVALUATIONS_USER_MAP:
+                del _EVALUATIONS_USER_MAP[e_id]
+        _save_evaluations_user_map(_EVALUATIONS_USER_MAP)
 
         _invalidate_dashboard_cache()
-        return jsonify({"success": True, "deleted_count": len(eval_ids)})
+        return jsonify({"success": True, "deleted_count": len(allowed_ids)})
     except Exception as e:
         logging.error("Error en batch delete de evaluaciones: %s", e, exc_info=True)
         return jsonify({"error": f"Error al eliminar lote de evaluaciones: {str(e)}"}), 500
