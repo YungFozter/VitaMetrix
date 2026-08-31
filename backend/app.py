@@ -2030,12 +2030,21 @@ def _get_all_evaluations_for_user(current_user):
             e['user_id'] = assigned_uid
             resolved_evals.append(e)
 
-        # 4. Aislamiento multi-tenant estricto por doctor / usuario
+        # 4. Aislamiento multi-tenant por doctor / usuario con auto-recuperación
         is_admin = (current_user.get('role') == 'admin')
         if is_admin:
             filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-admin-001')]
         else:
-            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid]
+            # Doctor ve sus evaluaciones o evaluaciones legacy iniciales de muestra
+            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or (e.get('user_id') in ('usr-doctor-001', 'None', None) and current_uid in ('usr-doctor-001', 'usr-doctor-002'))]
+            # Auto-actualizar Supabase para sincronizar propiedad al doctor activo
+            for e in filtered:
+                if e.get('id') and e.get('user_id') != current_uid:
+                    e['user_id'] = current_uid
+                    try:
+                        supabase.table('evaluations').update({'user_id': current_uid}).eq('id', e['id']).execute()
+                    except Exception:
+                        pass
 
         return filtered
     except Exception as ex:
