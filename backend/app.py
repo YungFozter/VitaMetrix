@@ -1640,13 +1640,15 @@ def _run_analysis(data):
             ins_res = None
             try:
                 ins_res = supabase.table('evaluations').insert(insert_payload).execute()
-            except Exception:
+            except Exception as ex1:
+                logging.warning("Error al insertar evaluation en Supabase (payload completo): %s", ex1)
                 try:
-                    insert_fallback = {k: v for k, v in insert_payload.items() if k != 'code'}
-                    ins_res = supabase.table('evaluations').insert(insert_fallback).execute()
-                except Exception:
-                    insert_fallback2 = {k: v for k, v in insert_payload.items() if k not in ('code', 'user_id')}
-                    ins_res = supabase.table('evaluations').insert(insert_fallback2).execute()
+                    insert_fb1 = {k: v for k, v in insert_payload.items() if k != 'user_id'}
+                    ins_res = supabase.table('evaluations').insert(insert_fb1).execute()
+                except Exception as ex2:
+                    logging.warning("Error al insertar evaluation en Supabase (sin user_id): %s", ex2)
+                    insert_fb2 = {k: v for k, v in insert_payload.items() if k not in ('code', 'user_id')}
+                    ins_res = supabase.table('evaluations').insert(insert_fb2).execute()
 
             if ins_res and ins_res.data and len(ins_res.data) > 0:
                 created_eval = ins_res.data[0]
