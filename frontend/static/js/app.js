@@ -8070,6 +8070,18 @@ function filterAndRenderStock(resetPage = true) {
     renderStockTable();
 }
 
+function formatCleanExpiryDate(rawDate) {
+    if (!rawDate) return '';
+    let str = String(rawDate).trim();
+    if (str.includes(' ')) {
+        str = str.split(' ')[0];
+    }
+    if (str.includes('T')) {
+        str = str.split('T')[0];
+    }
+    return str;
+}
+
 function renderStockTable() {
     const tbody = document.getElementById('stock-tbody');
     if (!tbody) return;
@@ -8207,7 +8219,8 @@ function renderStockTable() {
         const tdExpiry = document.createElement('td');
         let expiryHtml = '<span class="text-muted small">--</span>';
         if (item.expiry_date) {
-            const expDate = new Date(item.expiry_date);
+            const cleanDateStr = formatCleanExpiryDate(item.expiry_date);
+            const expDate = new Date(cleanDateStr);
             const today = new Date();
             const daysLeft = Math.ceil((expDate - today) / (1000 * 60 * 60 * 24));
             let badgeExpClass = 'text-secondary';
@@ -8215,7 +8228,7 @@ function renderStockTable() {
             else if (daysLeft <= 30) badgeExpClass = 'text-warning fw-bold';
 
             expiryHtml = `
-                <div class="small ${badgeExpClass}"><i class="bi bi-calendar-event me-1"></i>${item.expiry_date}</div>
+                <div class="small ${badgeExpClass}"><i class="bi bi-calendar-event me-1"></i>${cleanDateStr}</div>
                 ${item.batch_number ? `<div class="text-muted small font-monospace" style="font-size: 0.7rem;">Lot: ${escapeHtml(item.batch_number)}</div>` : ''}
             `;
         } else if (item.batch_number) {
@@ -10296,7 +10309,7 @@ function initImportStockExcelModal() {
             if (hasCost) rowHtml += `<td class="text-end font-monospace text-muted text-nowrap px-3 py-2.5">Bs ${Number(item.cost_price || 0).toFixed(2)}</td>`;
             if (hasSale) rowHtml += `<td class="text-end font-monospace fw-bold text-navy text-nowrap px-3 py-2.5">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>`;
             if (hasBatch) rowHtml += `<td class="font-monospace small text-nowrap px-3 py-2.5">${escapeHtml(item.batch_number || '')}</td>`;
-            if (hasExpiry) rowHtml += `<td class="font-monospace small text-nowrap text-secondary px-3 py-2.5">${escapeHtml(item.expiry_date || '')}</td>`;
+            if (hasExpiry) rowHtml += `<td class="font-monospace small text-nowrap text-secondary px-3 py-2.5">${escapeHtml(formatCleanExpiryDate(item.expiry_date || ''))}</td>`;
             if (hasLoc) rowHtml += `<td class="small text-nowrap text-secondary px-3 py-2.5">${escapeHtml(item.location || '')}</td>`;
             if (hasSupplier) rowHtml += `<td class="small text-nowrap text-navy px-3 py-2.5">${escapeHtml(item.supplier || '')}</td>`;
             if (hasNotes) rowHtml += `<td class="small text-muted px-3 py-2.5">${escapeHtml(item.notes || '')}</td>`;

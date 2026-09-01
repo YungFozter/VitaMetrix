@@ -2736,6 +2736,16 @@ def _save_persisted_stock_movements(movements):
 _LOCAL_STOCK_ITEMS = _load_persisted_stock_items()
 _LOCAL_STOCK_MOVEMENTS = _load_persisted_stock_movements()
 
+def _clean_expiry_date(raw_val):
+    if not raw_val:
+        return ''
+    val_str = str(raw_val).strip()
+    if ' ' in val_str:
+        val_str = val_str.split(' ')[0]
+    if 'T' in val_str:
+        val_str = val_str.split('T')[0]
+    return _clean_str(val_str, max_len=20)
+
 def _safe_stock_float(val, default=0.0, min_val=None):
     if val is None:
         return default
@@ -3925,7 +3935,7 @@ def preview_stock_excel():
         sale_price = _safe_stock_float(_get_val(idx_sale), default=0.0, min_val=0.0)
 
         batch = _clean_str(_get_val(idx_batch), max_len=100)
-        expiry = _clean_str(_get_val(idx_expiry), max_len=30)
+        expiry = _clean_expiry_date(_get_val(idx_expiry))
         location = _clean_str(_get_val(idx_location), max_len=150)
         supplier = _clean_str(_get_val(idx_supplier), max_len=150)
         notes = _clean_str(_get_val(idx_notes), max_len=500)
@@ -4105,7 +4115,7 @@ def import_stock_excel():
             sale_price = _safe_stock_float(_get_val(idx_sale), default=0.0, min_val=0.0)
 
             batch = _clean_str(_get_val(idx_batch), max_len=100)
-            expiry = _clean_str(_get_val(idx_expiry), max_len=20)
+            expiry = _clean_expiry_date(_get_val(idx_expiry))
             location = _clean_str(_get_val(idx_location), max_len=150)
             supplier = _clean_str(_get_val(idx_supplier), max_len=150)
             notes = _clean_str(_get_val(idx_notes), max_len=500)
