@@ -2144,6 +2144,42 @@ def get_clients():
         else:
             clients = [c for c in clients if c.get('user_id') == current_uid or (not c.get('user_id') and current_uid == 'usr-doctor-001')]
 
+        # AUTO-SÍNTESIS: Extraer automáticamente pacientes únicos registrados desde Evaluaciones
+        try:
+            user_evals = _get_all_evaluations_for_user(current_user)
+            existing_names = set(_clean_str(c.get('name') or '', max_len=100).lower() for c in clients)
+            existing_idps = set(_clean_str(c.get('idp') or '', max_len=50) for c in clients if c.get('idp'))
+
+            for ev in user_evals:
+                ev_name = _clean_str(ev.get('patient_name') or '', max_len=100)
+                ev_idp = _clean_str(ev.get('patient_idp') or '', max_len=50)
+                ev_name_norm = ev_name.lower()
+
+                if ev_name and ev_name_norm not in existing_names and (not ev_idp or ev_idp not in existing_idps):
+                    code_num = 1
+                    if ev_idp and ev_idp.startswith("IDP-"):
+                        try:
+                            code_num = int(ev_idp.replace("IDP-", ""))
+                        except Exception:
+                            code_num = len(clients) + 1
+
+                    synth = {
+                        "id": f"synth-{ev.get('id')}",
+                        "code": code_num,
+                        "idp": ev_idp or f"IDP-{code_num:04d}",
+                        "name": ev_name,
+                        "age": ev.get('age'),
+                        "gender": ev.get('gender'),
+                        "height": ev.get('height'),
+                        "user_id": current_uid
+                    }
+                    clients.append(synth)
+                    existing_names.add(ev_name_norm)
+                    if ev_idp:
+                        existing_idps.add(ev_idp)
+        except Exception as ex_synth:
+            logging.warning("Error al auto-sintetizar pacientes desde evaluaciones: %s", ex_synth)
+
         # Ordenar de forma segura por código en memoria
         def _sort_code_key(c):
             cd = c.get('code')
@@ -2157,12 +2193,7 @@ def get_clients():
 
         # Adjuntar resumen de última evaluación perteneciente al mismo usuario
         try:
-            evals_res = supabase.table('evaluations').select('*').execute()
-            evals = evals_res.data or []
-            if current_user and current_user.get('role') == 'admin':
-                evals = [e for e in evals if e.get('user_id') == current_uid]
-            else:
-                evals = [e for e in evals if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-doctor-001')]
+            evals = _get_all_evaluations_for_user(current_user)
             eval_by_name = {}
             eval_by_idp = {}
             for ev in evals:
