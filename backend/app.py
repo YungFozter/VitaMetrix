@@ -3828,7 +3828,7 @@ def download_stock_excel_template():
                     cell.number_format = '#,##0'
                     cell.alignment = Alignment(horizontal="center", vertical="center")
                 elif c_idx in (7, 8):
-                    cell.number_format = 'Bs#,##0.00'
+                    cell.number_format = '#,##0.00'
                     cell.alignment = Alignment(horizontal="right", vertical="center")
 
         for col in ws.columns:
