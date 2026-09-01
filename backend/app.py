@@ -2940,9 +2940,19 @@ def get_stock_items():
 
     # Filtrar por multi-tenant (si no es SuperAdmin)
     if current_uid and current_user.get('role') != 'admin':
-        filtered_items = [it for it in clinical_items if it.get('user_id') == current_uid]
-        if not filtered_items and (current_uid == 'usr-doctor-001' or current_user.get('email') == 'audrey@vitametrix.com'):
-            filtered_items = [it for it in clinical_items if not it.get('user_id') or it.get('user_id') == 'usr-doctor-001']
+        filtered_items = []
+        for it in clinical_items:
+            it_uid = it.get('user_id')
+            if not it_uid:
+                it['user_id'] = current_uid
+                it_uid = current_uid
+                if supabase and it.get('id'):
+                    try:
+                        supabase.table('stock_items').update({'user_id': current_uid}).eq('id', it['id']).execute()
+                    except Exception:
+                        pass
+            if it_uid == current_uid:
+                filtered_items.append(it)
         return jsonify(filtered_items)
 
     return jsonify(clinical_items)
@@ -4272,7 +4282,7 @@ def import_stock_excel():
                         supabase.table('stock_items').insert(new_item).execute()
                     except Exception:
                         try:
-                            fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
+                            fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date']}
                             supabase.table('stock_items').insert(fallback_item).execute()
                         except Exception:
                             pass
