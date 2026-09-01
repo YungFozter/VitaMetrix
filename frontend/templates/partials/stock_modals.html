@@ -1,0 +1,431 @@
+<!-- MODAL 1: REGISTRO DE MOVIMIENTO DE STOCK (ENTRADA / SALIDA / CONSUMO) -->
+<div id="stock-movement-modal" class="modal-overlay hidden" style="display: none; z-index: 1055;">
+    <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 500px; width: 95%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center"
+                    style="width: 42px; height: 42px;">
+                    <i class="bi bi-arrow-left-right fs-5"></i>
+                </div>
+                <div>
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0" id="stock-mov-modal-title">Ajuste de Existencias</h4>
+                    <div class="text-muted small" id="stock-mov-modal-subtitle">Producto: --</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close shadow-none" id="stock-mov-modal-close" aria-label="Cerrar"></button>
+        </div>
+
+        <form id="stock-movement-form">
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Tipo de Movimiento</label>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-success flex-fill py-2 fw-semibold active stock-type-btn" data-type="IN">
+                        <i class="bi bi-box-arrow-in-down me-1"></i> ➕ Entrada (Compra)
+                    </button>
+                    <button type="button" class="btn btn-outline-danger flex-fill py-2 fw-semibold stock-type-btn" data-type="OUT">
+                        <i class="bi bi-box-arrow-up me-1"></i> ➖ Salida (Consumo)
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual</label>
+                    <input type="text" id="stock-mov-current-qty" class="form-control shadow-none font-monospace fw-bold bg-light" readonly value="0">
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Cantidad a Ajustar <span class="text-danger">*</span></label>
+                    <input type="number" id="stock-mov-qty" class="form-control shadow-none font-monospace fw-bold border-primary" placeholder="0" min="0.01" step="any" required>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Detalle del Movimiento</label>
+                <input type="text" id="stock-mov-reason" class="form-control shadow-none small" placeholder="Ej: Reposición mensual / Consumo en consulta...">
+            </div>
+
+            <div class="pt-3 border-top d-flex align-items-center justify-content-end gap-2">
+                <button type="button" id="stock-mov-btn-cancel" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                    Cancelar
+                </button>
+                <button type="submit" id="stock-mov-btn-save" class="btn btn-primary px-4 py-2 rounded-3 fw-bold text-white shadow-sm d-inline-flex align-items-center gap-1.5">
+                    <i class="bi bi-check2-circle"></i>
+                    <span>Confirmar Ajuste</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 2: HISTORIAL DE MOVIMIENTOS DE UN ÍTEM -->
+<div id="stock-history-modal" class="modal-overlay hidden" style="display: none; z-index: 1055;">
+    <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 580px; width: 95%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                    <i class="bi bi-clock-history fs-5"></i>
+                </div>
+                <div>
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0">Historial de Movimientos</h4>
+                    <div class="text-muted small" id="stock-hist-item-name">Producto: --</div>
+                </div>
+            </div>
+            <button type="button" class="btn-close shadow-none" id="stock-hist-modal-close" aria-label="Cerrar"></button>
+        </div>
+
+        <div id="stock-hist-list" class="d-flex flex-column gap-2" style="max-height: 320px; overflow-y: auto; padding-right: 4px;">
+            <!-- Movimientos inyectados dinámicamente -->
+        </div>
+
+        <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
+            <button type="button" id="stock-hist-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: GESTIÓN DE TAXONOMÍAS DE STOCK (CATEGORÍAS Y U/M) -->
+<div id="stock-taxonomy-modal" class="modal-overlay hidden" style="display: none; z-index: 1060;">
+    <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-4" style="max-width: 620px; width: 92%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="bg-primary-subtle text-primary rounded-circle p-2 d-inline-flex align-items-center justify-content-center" style="width: 38px; height: 38px;">
+                    <i class="bi bi-tags-fill fs-5"></i>
+                </div>
+                <div>
+                    <h4 class="display-font text-navy fw-bold fs-5 m-0">Catálogo de Categorías y Unidades</h4>
+                    <small class="text-muted" style="font-size: 0.76rem;">Configura las clasificaciones y presentaciones de tus productos</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close shadow-none" id="stock-tax-modal-close" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="stock-segmented-control" id="stock-tax-segmented-control" data-active="cats">
+            <div class="stock-segmented-slider"></div>
+            <button type="button" class="stock-segmented-btn active" id="tab-tax-cats-btn">
+                <i class="bi bi-folder2-open"></i> Categorías
+            </button>
+            <button type="button" class="stock-segmented-btn" id="tab-tax-units-btn">
+                <i class="bi bi-rulers"></i> Unidades de Medida
+            </button>
+        </div>
+
+        <div id="tab-tax-cats-content" class="stock-tab-panel">
+            <div class="p-3 bg-light rounded-3 border mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nueva Categoría</label>
+                <div class="input-group">
+                    <input type="text" id="new-cat-name" class="form-control shadow-none small" placeholder="Ej: Fórmulas Magistrales, Inyectables...">
+                    <button type="button" id="btn-add-cat" class="btn btn-primary btn-sm px-3 fw-semibold">
+                        <i class="bi bi-plus-lg me-1"></i> Agregar
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
+                <div class="text-muted small fw-bold text-uppercase">Categorías Activas</div>
+                <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
+                    <div class="input-group input-group-sm rounded-3 shadow-2xs">
+                        <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
+                        <input type="text" id="search-tax-cats" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Filtrar categorías...">
+                    </div>
+                </div>
+            </div>
+            <div id="stock-tax-cat-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 330px; overflow-y: auto; padding-right: 6px;"></div>
+        </div>
+
+        <div id="tab-tax-units-content" class="stock-tab-panel d-none">
+            <div class="p-3 bg-light rounded-3 border mb-3">
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad / Presentación <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <input type="text" id="new-unit-name" class="form-control shadow-none small" placeholder="Ej: Frasco, Caja, Cápsulas, Tubo, Gotero, ml, Unidad...">
+                    <button type="button" id="btn-add-unit" class="btn btn-primary btn-sm px-3 fw-semibold">
+                        <i class="bi bi-plus-lg me-1"></i> Agregar Unidad
+                    </button>
+                </div>
+            </div>
+
+            <div class="d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 mb-2.5">
+                <div class="text-muted small fw-bold text-uppercase">Unidades Registradas</div>
+                <div class="flex-grow-1 flex-sm-grow-0" style="min-width: 240px;">
+                    <div class="input-group input-group-sm rounded-3 shadow-2xs">
+                        <span class="input-group-text bg-white border-end-0 text-muted ps-3 pe-2"><i class="bi bi-search"></i></span>
+                        <input type="text" id="search-tax-units" class="form-control border-start-0 shadow-none ps-0 py-2" style="font-size: 0.9rem; height: 38px;" placeholder="Buscar unidad...">
+                    </div>
+                </div>
+            </div>
+
+            <div id="stock-tax-unit-list" class="d-flex flex-column gap-2 stock-custom-scrollbar" style="max-height: 330px; overflow-y: auto; padding-right: 6px;"></div>
+        </div>
+
+        <div class="pt-3 border-top d-flex align-items-center justify-content-end mt-3">
+            <button type="button" id="stock-tax-btn-close" class="btn btn-light border px-4 py-2 rounded-3 text-secondary fw-semibold">
+                Listo
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Personalizado Editar Unidad -->
+<div id="modal-edit-unit" class="modal-overlay hidden d-none" style="display: none; z-index: 1065;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                    <i class="bi bi-rulers"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-navy mb-0">Editar Unidad de Medida</h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">Actualiza el nombre de la unidad</small>
+                </div>
+            </div>
+            <button type="button" id="btn-close-edit-unit-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nombre de la Unidad <span class="text-danger">*</span></label>
+            <input type="text" id="edit-unit-modal-name-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Vial, Cápsula, Ampolla, Frasco...">
+            <input type="hidden" id="edit-unit-modal-old-name-hidden">
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+            <button type="button" id="btn-cancel-edit-unit-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirm-edit-unit-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <i class="bi bi-check-lg"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Personalizado Renombrar Categoría -->
+<div id="modal-rename-category" class="modal-overlay hidden d-none" style="display: none; z-index: 1065;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 38px; height: 38px; font-size: 1.1rem;">
+                    <i class="bi bi-pencil-square"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-navy mb-0">Renombrar Categoría</h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">Actualización en cascada</small>
+                </div>
+            </div>
+            <button type="button" id="btn-close-rename-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="mb-3">
+            <p class="text-secondary small mb-2.5">
+                Ingresa el nuevo nombre para <strong id="rename-modal-old-name-display" class="text-navy"></strong>.
+            </p>
+            <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Nuevo Nombre <span class="text-danger">*</span></label>
+            <input type="text" id="rename-modal-input" class="form-control rounded-3 py-2 px-3 shadow-none" placeholder="Ej: Insumos de Laboratorio">
+            <input type="hidden" id="rename-modal-old-name-hidden">
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+            <button type="button" id="btn-cancel-rename-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirm-rename-modal" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <i class="bi bi-check-lg"></i> Guardar Cambios
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Personalizado Confirmar Eliminación Taxonomía -->
+<div id="modal-confirm-delete-taxonomy" class="modal-overlay hidden d-none" style="display: none; z-index: 1070;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 440px; width: 90%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-3" style="width: 38px; height: 38px; font-size: 1.15rem;">
+                    <i class="bi bi-trash3-fill"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-navy mb-0" id="delete-tax-modal-title">Confirmar Eliminación</h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">Acción en el catálogo maestro</small>
+                </div>
+            </div>
+            <button type="button" id="btn-close-delete-tax-modal" class="btn-close shadow-none" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="mb-3">
+            <p class="text-secondary small mb-2" id="delete-tax-modal-message">
+                ¿Estás seguro de que deseas eliminar este elemento?
+            </p>
+            <div id="delete-tax-modal-warning" class="alert alert-warning py-2 px-3 small rounded-3 d-none mb-0" style="font-size: 0.8rem;">
+                <i class="bi bi-exclamation-triangle-fill me-1"></i> <span id="delete-tax-modal-warning-text"></span>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+            <button type="button" id="btn-cancel-delete-tax-modal" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirm-delete-tax-modal" class="btn btn-danger px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <i class="bi bi-trash3"></i> Sí, Eliminar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: AJUSTE RÁPIDO DE STOCK -->
+<div id="modal-quick-stock-adjust" class="modal-overlay hidden d-none" style="display: none; z-index: 1065;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-4" style="max-width: 480px; width: 92%;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center justify-content-center bg-primary-subtle text-primary rounded-3" style="width: 40px; height: 40px; font-size: 1.2rem;">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-navy mb-0">Ajuste Rápido de Stock</h6>
+                    <small class="text-muted" id="quick-adjust-item-name">Cargando...</small>
+                </div>
+            </div>
+            <button type="button" id="btn-close-quick-adjust" class="btn-close shadow-none" aria-label="Cerrar"></button>
+        </div>
+
+        <input type="hidden" id="quick-adjust-item-id">
+
+        <div class="mb-3">
+            <label class="form-label text-muted small fw-semibold text-uppercase mb-1.5">Tipo de Movimiento</label>
+            <div class="stock-adjust-type-grid mb-3">
+                <button type="button" class="adjust-type-btn active" data-type="IN">
+                    <i class="bi bi-box-arrow-in-down text-success"></i> Entrada (Compra/Lote)
+                </button>
+                <button type="button" class="adjust-type-btn" data-type="OUT">
+                    <i class="bi bi-box-arrow-up text-danger"></i> Salida (Uso/Merma)
+                </button>
+                <button type="button" class="adjust-type-btn" data-type="ADJUST">
+                    <i class="bi bi-sliders text-primary"></i> Ajuste Total
+                </button>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Stock Actual</label>
+                    <div class="form-control bg-light font-monospace fw-bold" id="quick-adjust-current-stock">0</div>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-semibold text-uppercase mb-1" id="quick-adjust-qty-label">Cantidad a Ingresar</label>
+                    <input type="number" id="quick-adjust-quantity" class="form-control shadow-none font-monospace fw-bold" placeholder="0" min="0.01" step="any">
+                </div>
+            </div>
+
+            <div>
+                <label class="form-label text-muted small fw-semibold text-uppercase mb-1">Motivo / Justificación</label>
+                <input type="text" id="quick-adjust-reason" class="form-control shadow-none small" placeholder="Ej: Compra de lote mensual, consumo en consulta...">
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
+            <button type="button" id="btn-cancel-quick-adjust" class="btn btn-light border px-3 py-2 rounded-3 text-secondary fw-semibold">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirm-quick-adjust" class="btn btn-primary px-4 py-2 rounded-3 fw-semibold d-inline-flex align-items-center gap-1.5 shadow-2xs">
+                <i class="bi bi-check-lg"></i> Registrar Movimiento
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: IMPORTACIÓN MASIVA DESDE EXCEL DE INSUMOS -->
+<div id="modal-import-stock-excel" class="modal-overlay hidden d-none" style="display: none; z-index: 1070;">
+    <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-3 p-sm-4" style="max-width: 1180px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; margin: auto;">
+        <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3 flex-shrink-0">
+            <div class="d-flex align-items-center gap-2.5">
+                <div class="d-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle flex-shrink-0" style="width: 42px; height: 42px; font-size: 1.3rem;">
+                    <i class="bi bi-file-earmark-excel-fill"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-navy mb-0 fs-6 fs-sm-5">Importar Insumos desde Excel</h5>
+                    <small class="text-muted d-none d-sm-inline-block" style="font-size: 0.76rem;">Carga masiva de catálogo mediante archivo `.xlsx` o `.csv`</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close shadow-none ms-2" id="btn-close-import-excel-modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body-scroll flex-grow-1 overflow-y-auto overflow-x-hidden custom-scrollbar pe-1 mb-2">
+            <div class="row g-2 g-sm-3 mb-3" id="excel-modal-top-section">
+                <div class="col-12 col-md-5">
+                    <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between gap-2">
+                        <div class="d-flex align-items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-primary fs-5 flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <span class="fw-semibold text-navy small d-block">¿No tienes la plantilla oficial?</span>
+                                <span class="text-muted small" style="font-size: 0.75rem;">Descarga el formato con los 13 campos de registro y datos de ejemplo</span>
+                            </div>
+                        </div>
+                        <a href="/static/Insumos_15_Ejemplo_VitaMetrix.xlsx" download="Plantilla_Importacion_Insumos_VitaMetrix.xlsx" id="btn-download-excel-template" class="btn btn-sm btn-outline-success fw-semibold text-nowrap w-100 d-inline-flex align-items-center justify-content-center gap-1 shadow-2xs mt-2 py-2">
+                            <i class="bi bi-download"></i> Descargar Plantilla (.xlsx)
+                        </a>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-7">
+                    <div class="border-2 border-dashed rounded-4 p-3 text-center bg-light bg-opacity-50 cursor-pointer hover-shadow transition-all position-relative h-100 d-flex align-items-center justify-content-center" id="excel-drop-zone" style="border-style: dashed !important; border-color: #cbd5e1 !important; min-height: 110px;">
+                        <input type="file" id="stock-excel-file-input" accept=".xlsx,.xls,.csv" class="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" style="z-index: 5;">
+                        <div class="py-1">
+                            <i class="bi bi-cloud-arrow-up-fill text-success fs-2"></i>
+                            <h6 class="fw-bold text-navy mt-1 mb-0 small" id="excel-file-label">Arrastra tu archivo Excel aquí o haz clic para examinar</h6>
+                            <p class="text-muted mb-0" style="font-size: 0.73rem;">Formatos soportados: <strong>.xlsx, .xls, .csv</strong> (Máx. 5MB)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="excel-import-status" class="alert alert-info py-2 px-3 small rounded-3 d-none mb-3" style="font-size: 0.8rem;">
+                <i class="bi bi-arrow-repeat spin me-1"></i> <span id="excel-import-status-text">Procesando archivo...</span>
+            </div>
+
+            <div id="excel-import-progress-wrap" class="d-none mb-3 p-3 bg-light rounded-3 border shadow-2xs">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="fw-bold text-navy small d-inline-flex align-items-center gap-2" id="excel-progress-title">
+                        <i class="bi bi-arrow-repeat spin text-primary fs-6"></i> <span id="excel-progress-step-text">Consolidando e importando productos a la nube...</span>
+                    </span>
+                    <span class="font-monospace fw-extrabold text-primary small" id="excel-progress-percent">0%</span>
+                </div>
+                <div class="progress" style="height: 9px; border-radius: 99px; background-color: #e2e8f0;">
+                    <div id="excel-progress-bar" class="progress-bar excel-progress-bar-animated rounded-pill transition-all" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <div id="excel-preview-container" class="d-none overflow-x-hidden">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
+                    <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-3 py-1.5 rounded-pill small fw-semibold" id="excel-preview-badge">
+                        <i class="bi bi-check-circle-fill me-1"></i> 0 insumos detectados
+                    </span>
+                    <small class="text-muted" style="font-size: 0.76rem;">Revisa la lista previa antes de confirmar la importación</small>
+                </div>
+                
+                <div class="table-responsive rounded-3 border stock-custom-scrollbar shadow-2xs" style="max-height: 420px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.83rem;">
+                        <thead class="table-light sticky-top" style="z-index: 2;">
+                            <tr>
+                                <th class="text-nowrap ps-3">CÓDIGO / SKU</th>
+                                <th class="text-nowrap" style="min-width: 200px;">PRODUCTO / INSUMO</th>
+                                <th class="text-nowrap">CATEGORÍA</th>
+                                <th class="text-nowrap">UNIDAD MEDIDA</th>
+                                <th class="text-center text-nowrap">STOCK</th>
+                                <th class="text-end text-nowrap">P. COSTO (BS)</th>
+                                <th class="text-end text-nowrap pe-3">PRECIO VENTA (BS)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="excel-preview-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex flex-column-reverse flex-sm-row align-items-center justify-content-end gap-2 pt-3 border-top flex-shrink-0">
+            <button type="button" id="btn-cancel-import-excel" class="btn btn-light border px-4 py-2.5 rounded-3 text-secondary fw-semibold w-100 w-sm-auto">
+                Cancelar
+            </button>
+            <button type="button" id="btn-confirm-import-excel" class="btn btn-success px-4 py-2.5 rounded-3 fw-semibold shadow-sm text-white d-inline-flex align-items-center justify-content-center gap-1.5 w-100 w-sm-auto" disabled>
+                <i class="bi bi-upload"></i> <span id="btn-confirm-import-text">Confirmar e Importar</span>
+            </button>
+        </div>
+    </div>
+</div>

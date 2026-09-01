@@ -1,0 +1,103 @@
+<!-- MODAL: COMPROBANTE / RECIBO DIGITAL CLÍNICO (PRINTABLE & WHATSAPP) -->
+<div id="modal-digital-receipt" class="modal-overlay hidden d-none" style="display: none; z-index: 1080;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 680px; width: 95%; margin: auto;">
+
+        <!-- Barra Superior de Acciones de Recibo -->
+        <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-success-subtle text-success border border-success-subtle fw-bold px-2.5 py-1">
+                    <i class="bi bi-check-circle-fill me-1"></i> Comprobante Oficial
+                </span>
+                <span class="text-muted small font-monospace fw-bold" id="receipt-modal-number">REC-2026-0000</span>
+            </div>
+            <div class="d-flex align-items-center gap-1.5">
+                <button type="button" id="btn-receipt-whatsapp" class="btn btn-sm btn-success fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Enviar por WhatsApp">
+                    <i class="bi bi-whatsapp"></i> <span class="d-none d-sm-inline">WhatsApp</span>
+                </button>
+                <button type="button" id="btn-receipt-print" class="btn btn-sm btn-outline-primary fw-semibold d-inline-flex align-items-center gap-1 shadow-2xs" title="Imprimir Recibo">
+                    <i class="bi bi-printer"></i> <span class="d-none d-sm-inline">Imprimir</span>
+                </button>
+                <button type="button" id="btn-close-receipt-modal" class="btn-close shadow-none ms-1" aria-label="Cerrar"></button>
+            </div>
+        </div>
+
+        <!-- Cuerpo del Recibo Imprimible -->
+        <div class="p-4 receipt-printable-body stock-custom-scrollbar" id="receipt-printable-content" style="max-height: 72vh; overflow-y: auto;">
+
+            <!-- Membrete Clínico -->
+            <div class="text-center pb-3 border-bottom mb-3">
+                <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                    <div class="brand-icon" style="width: 28px; height: 28px; font-size: 1rem; border-radius: 8px;">⚡</div>
+                    <h4 class="fw-extrabold text-navy mb-0 display-font" style="letter-spacing: -0.5px;">VitaMetrix</h4>
+                </div>
+                <div class="text-muted small fw-semibold" style="font-size: 0.78rem;">CLÍNICA DE NUTRICIÓN & BIOIMPEDANCIA BIVA</div>
+                <div class="text-muted" style="font-size: 0.72rem;">Santa Cruz de la Sierra, Bolivia • Especialista: Dra. Audrey</div>
+            </div>
+
+            <!-- Datos de la Transacción -->
+            <div class="row g-2 mb-3 text-secondary small" style="font-size: 0.8rem;">
+                <div class="col-6">
+                    <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Paciente / Cliente:</div>
+                    <div class="fw-bold text-navy text-truncate" id="receipt-patient-name">Carlos Rodríguez</div>
+                    <div class="text-muted" id="receipt-patient-idp" style="font-size: 0.72rem;">IDP: IDP-1002</div>
+                </div>
+                <div class="col-6 text-end">
+                    <div class="text-muted" style="font-size: 0.7rem; text-transform: uppercase; font-weight: 700;">Fecha & Hora:</div>
+                    <div class="fw-bold text-navy" id="receipt-datetime">25/08/2026 20:50</div>
+                    <div class="text-muted" id="receipt-payment-method-badge" style="font-size: 0.72rem;">Método: Transferencia / QR</div>
+                </div>
+            </div>
+
+            <!-- Tabla de Productos del Recibo -->
+            <div class="table-responsive rounded-3 border mb-3 overflow-x-hidden">
+                <table class="table table-hover align-middle mb-0 receipt-items-table" style="font-size: 0.84rem;">
+                    <thead class="table-light border-bottom">
+                        <tr class="text-muted small fw-bold text-uppercase">
+                            <th class="ps-3 py-2.5 text-nowrap">ÍTEM / CONCEPTO</th>
+                            <th class="text-center py-2.5 text-nowrap" style="width: 80px;">CANT.</th>
+                            <th class="text-end py-2.5 text-nowrap" style="width: 140px;">P. UNIT (BS)</th>
+                            <th class="text-end pe-3 py-2.5 text-nowrap" style="width: 150px;">SUBTOTAL (BS)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="receipt-items-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Totales y Resumen Financiero -->
+            <div class="pt-2 border-top mb-3">
+                <div class="d-flex justify-content-between text-muted small mb-1">
+                    <span>Subtotal:</span>
+                    <span class="font-monospace" id="receipt-subtotal-val">Bs. 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mb-1.5" id="receipt-discount-row">
+                    <span>Descuento Aplicado:</span>
+                    <span class="font-monospace text-danger" id="receipt-discount-val">-Bs. 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                    <span class="fw-extrabold text-navy fs-6">TOTAL CANCELADO:</span>
+                    <span class="fw-extrabold text-primary fs-5 font-monospace" id="receipt-total-val">Bs. 0.00</span>
+                </div>
+                <div class="d-flex justify-content-between text-muted small mt-1" id="receipt-cash-breakdown">
+                    <span style="font-size: 0.75rem;">Efectivo recibido: <strong class="font-monospace text-dark" id="receipt-amount-received">Bs. 0.00</strong></span>
+                    <span style="font-size: 0.75rem;">Cambio entregado: <strong class="font-monospace text-success" id="receipt-change-given">Bs. 0.00</strong></span>
+                </div>
+            </div>
+
+            <!-- Notas y Pie de Página -->
+            <div class="p-2.5 bg-light rounded-3 border text-muted mb-3" style="font-size: 0.72rem;">
+                <div class="fw-bold text-navy mb-0.5">Indicaciones Clínicas / Observaciones:</div>
+                <div id="receipt-notes-val">Gracias por su confianza. Siga las instrucciones nutricionales indicadas.</div>
+            </div>
+
+            <div class="text-center text-muted" style="font-size: 0.68rem;">
+                *** Comprobante digital generado por VitaMetrix BIA System ***
+            </div>
+        </div>
+
+        <div class="p-3 bg-light border-top d-flex justify-content-end">
+            <button type="button" id="btn-footer-close-receipt" class="btn btn-secondary px-4 py-2 rounded-3 fw-semibold">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
