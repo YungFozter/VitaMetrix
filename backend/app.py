@@ -3878,7 +3878,10 @@ def preview_stock_excel():
                 if r and any(str(cell).strip() for cell in r):
                     rows_raw.append([str(c).strip() for c in r])
         else:
-            import openpyxl
+            try:
+                import openpyxl
+            except ImportError:
+                return jsonify({"error": "La librería 'openpyxl' se está instalando en el servidor. Reintenta en 1 minuto o sube un archivo .csv"}), 500
             wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
             ws = wb.active
             for r in ws.iter_rows(values_only=True):
@@ -3996,7 +3999,10 @@ def import_stock_excel():
                 if r and any(str(cell).strip() for cell in r):
                     rows_raw.append([str(c).strip() for c in r])
         else:
-            import openpyxl
+            try:
+                import openpyxl
+            except ImportError:
+                return jsonify({"error": "La librería 'openpyxl' se está instalando en el servidor. Reintenta en 1 minuto o sube un archivo .csv"}), 500
             wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
             ws = wb.active
             for r in ws.iter_rows(values_only=True):
