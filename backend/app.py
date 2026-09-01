@@ -2810,7 +2810,7 @@ def _load_persisted_stock_items():
         try:
             with open(_STOCK_ITEMS_PATH, 'r', encoding='utf-8') as f:
                 items = json.load(f)
-                if isinstance(items, list) and len(items) > 0:
+                if isinstance(items, list):
                     return items
         except Exception as e:
             logging.warning("Error al leer stock_items.json: %s", e)
