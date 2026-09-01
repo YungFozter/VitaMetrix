@@ -7388,8 +7388,9 @@ function initStockModule() {
     // 6. Módulo de Kardex
     initKardexModule();
 
-    // 7. Modales de Taxonomías (Opción 1 sin familias), Ajuste Rápido y Recibo
+    // 7. Modales de Taxonomías, Importación Excel, Ajuste Rápido y Recibo
     initStockTaxonomyModal();
+    initImportStockExcelModal();
     initQuickStockAdjustModal();
     initDigitalReceiptModal();
     initStockFormCustomDropdowns();
@@ -10081,5 +10082,118 @@ function initStockFormCustomDropdowns() {
         }
         return Array.from(knownUnits.values());
     });
+}
+
+function initImportStockExcelModal() {
+    const modal = document.getElementById('modal-import-stock-excel');
+    const btnOpen = document.getElementById('btn-open-import-excel');
+    const btnClose = document.getElementById('btn-close-import-excel-modal');
+    const btnCancel = document.getElementById('btn-cancel-import-excel');
+    const btnDownloadTemplate = document.getElementById('btn-download-excel-template');
+    const fileInput = document.getElementById('stock-excel-file-input');
+    const fileLabel = document.getElementById('excel-file-label');
+    const btnConfirm = document.getElementById('btn-confirm-import-excel');
+    const statusAlert = document.getElementById('excel-import-status');
+    const statusText = document.getElementById('excel-import-status-text');
+
+    if (!modal) return;
+
+    let selectedFile = null;
+
+    const openModal = () => {
+        selectedFile = null;
+        if (fileInput) fileInput.value = '';
+        if (fileLabel) fileLabel.innerHTML = 'Arrastra tu archivo Excel aquí o haz clic para examinar';
+        if (btnConfirm) btnConfirm.disabled = true;
+        if (statusAlert) statusAlert.classList.add('d-none');
+        modal.classList.remove('d-none');
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    };
+
+    const closeModal = () => {
+        modal.classList.add('d-none');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        selectedFile = null;
+    };
+
+    if (btnOpen) btnOpen.addEventListener('click', openModal);
+    if (btnClose) btnClose.addEventListener('click', closeModal);
+    if (btnCancel) btnCancel.addEventListener('click', closeModal);
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    if (btnDownloadTemplate) {
+        btnDownloadTemplate.addEventListener('click', () => {
+            window.location.href = '/api/stock/excel-template';
+        });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                if (fileLabel) {
+                    fileLabel.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-file-earmark-excel me-1"></i> ${escapeHtml(selectedFile.name)}</span> <span class="text-muted">(${(selectedFile.size / 1024).toFixed(1)} KB)</span>`;
+                }
+                if (btnConfirm) btnConfirm.disabled = false;
+            }
+        });
+    }
+
+    if (btnConfirm) {
+        btnConfirm.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            btnConfirm.disabled = true;
+            if (statusAlert && statusText) {
+                statusAlert.classList.remove('d-none', 'alert-danger', 'alert-success');
+                statusAlert.classList.add('alert-info');
+                statusText.textContent = 'Procesando e importando insumos desde Excel...';
+            }
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            const token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
+            const customHeaders = {};
+            if (token) customHeaders['Authorization'] = `Bearer ${token}`;
+
+            try {
+                const res = await fetch('/api/stock/import-excel', {
+                    method: 'POST',
+                    headers: customHeaders,
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast(`✅ ${data.message || 'Importación completada'}`, 'success');
+                    closeModal();
+                    await fetchStockItems();
+                    await fetchStockTaxonomies();
+                } else {
+                    if (statusAlert && statusText) {
+                        statusAlert.classList.remove('alert-info');
+                        statusAlert.classList.add('alert-danger');
+                        statusText.textContent = data.error || 'Error al procesar el archivo Excel.';
+                    }
+                    showToast(data.error || 'Error al procesar archivo Excel.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                if (statusAlert && statusText) {
+                    statusAlert.classList.remove('alert-info');
+                    statusAlert.classList.add('alert-danger');
+                    statusText.textContent = 'Error de conexión al importar el archivo.';
+                }
+                showToast('Error de conexión con el servidor.', 'error');
+            } finally {
+                if (btnConfirm) btnConfirm.disabled = false;
+            }
+        });
+    }
 }
 

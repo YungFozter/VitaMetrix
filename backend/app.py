@@ -3717,6 +3717,301 @@ def rename_stock_category():
 
     return jsonify({"success": True, "updated_count": updated_count, "message": f"Categoría actualizada de '{old_name}' a '{new_name}'"})
 
+# --- IMPORTACIÓN MASIVA DESDE EXCEL DE INSUMOS ---
+
+@app.route('/api/stock/excel-template', methods=['GET'])
+def download_stock_excel_template():
+    import io
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+    from openpyxl.utils import get_column_letter
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Catálogo de Insumos"
+    ws.views.sheetView[0].showGridLines = True
+
+    # Encabezados exactos del registro de insumos
+    headers = [
+        "CÓDIGO / SKU",
+        "NOMBRE PRODUCTO / INSUMO*",
+        "CATEGORÍA",
+        "UNIDAD DE MEDIDA",
+        "CANTIDAD INICIAL (STOCK)*",
+        "STOCK MÍNIMO (ALERTA)",
+        "PRECIO COSTO (BS)",
+        "PRECIO VENTA / PVP (BS)",
+        "NÚMERO DE LOTE",
+        "FECHA DE VENCIMIENTO",
+        "UBICACIÓN EN CONSULTORIO",
+        "PROVEEDOR",
+        "NOTAS / POSOLOGÍA"
+    ]
+
+    header_fill = PatternFill(start_color="107C41", end_color="107C41", fill_type="solid")
+    header_font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    thin_border = Border(
+        left=Side(style='thin', color='D9D9D9'),
+        right=Side(style='thin', color='D9D9D9'),
+        top=Side(style='thin', color='D9D9D9'),
+        bottom=Side(style='thin', color='D9D9D9')
+    )
+
+    ws.append(headers)
+    ws.row_dimensions[1].height = 28
+
+    for col_num, h_text in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col_num)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = header_alignment
+        cell.border = thin_border
+
+    sample_rows = [
+        [
+            "SKU-001",
+            "Electrodos BIA Desechables (Pack x100)",
+            "Insumos BIA",
+            "Caja x100",
+            10,
+            5,
+            120.00,
+            180.00,
+            "LOT-2026-A",
+            "2027-12-31",
+            "Vitrina 1, Estante B",
+            "BioMedical Import S.R.L.",
+            "Usar exclusivamente en bioimpedancias tetrapolares"
+        ],
+        [
+            "SKU-002",
+            "Gel Conductor BIA Hipoalergénico 250ml",
+            "Insumos BIA",
+            "Frasco",
+            15,
+            3,
+            25.00,
+            45.00,
+            "GEL-8890",
+            "2028-06-30",
+            "Vitrina 1, Estante A",
+            "DermoSalud Bolivia",
+            "Conservar en lugar fresco"
+        ],
+        [
+            "",
+            "Proteína Whey Isolate 100% (Bote 900g Vainilla)",
+            "Suplementos Nutricionales",
+            "Bote 900g",
+            20,
+            5,
+            280.00,
+            350.00,
+            "WHEY-2026-09",
+            "2027-09-15",
+            "Estante Suplementos",
+            "NutriFit Express",
+            "Se mezcla 1 scoop (30g) en 250ml de agua"
+        ]
+    ]
+
+    row_font = Font(name="Arial", size=9.5)
+    row_alignment = Alignment(vertical="center")
+
+    for r_idx, row_data in enumerate(sample_rows, 2):
+        ws.append(row_data)
+        ws.row_dimensions[r_idx].height = 22
+        for c_idx in range(1, len(row_data) + 1):
+            cell = ws.cell(row=r_idx, column=c_idx)
+            cell.font = row_font
+            cell.alignment = row_alignment
+            cell.border = thin_border
+            if c_idx in (5, 6):
+                cell.number_format = '#,##0'
+                cell.alignment = Alignment(horizontal="center", vertical="center")
+            elif c_idx in (7, 8):
+                cell.number_format = 'Bs#,##0.00'
+                cell.alignment = Alignment(horizontal="right", vertical="center")
+
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = get_column_letter(col[0].column)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+
+    output = io.BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    return send_file(
+        output,
+        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        as_attachment=True,
+        download_name="Plantilla_Importacion_Insumos_VitaMetrix.xlsx"
+    )
+
+@app.route('/api/stock/import-excel', methods=['POST'])
+def import_stock_excel():
+    import io
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+    if not _is_subscription_active(current_user):
+        return jsonify({
+            "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para importar insumos.",
+            "subscription_expired": True
+        }), 403
+    
+    current_uid = current_user.get('id')
+    if 'file' not in request.files:
+        return jsonify({"error": "No se seleccionó ningún archivo para importar"}), 400
+
+    file = request.files['file']
+    filename = (file.filename or '').lower()
+    if not filename or not (filename.endswith('.xlsx') or filename.endswith('.xls') or filename.endswith('.csv')):
+        return jsonify({"error": "Formato no soportado. Debes subir un archivo Excel (.xlsx, .xls) o CSV (.csv)"}), 400
+
+    rows_raw = []
+    file_bytes = file.read()
+
+    try:
+        if filename.endswith('.csv'):
+            import csv
+            file_str = file_bytes.decode('utf-8-sig', errors='ignore')
+            reader = csv.reader(io.StringIO(file_str))
+            for r in reader:
+                if r and any(str(cell).strip() for cell in r):
+                    rows_raw.append([str(c).strip() for c in r])
+        else:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+            ws = wb.active
+            for r in ws.iter_rows(values_only=True):
+                if r and any(cell is not None and str(cell).strip() != '' for cell in r):
+                    rows_raw.append([str(c).strip() if c is not None else '' for c in r])
+    except Exception as ex_read:
+        logging.error("Error al leer archivo Excel/CSV de importación: %s", ex_read)
+        return jsonify({"error": f"No se pudo leer el archivo: {str(ex_read)}"}), 400
+
+    if not rows_raw or len(rows_raw) < 2:
+        return jsonify({"error": "El archivo está vacío o no contiene filas de datos"}), 400
+
+    header_row = [str(h).strip().lower() for h in rows_raw[0]]
+    
+    def _find_col_idx(aliases):
+        for idx, h in enumerate(header_row):
+            h_norm = h.replace('*', '').replace('(', '').replace(')', '').strip()
+            for alias in aliases:
+                if alias in h_norm or h_norm in alias:
+                    return idx
+        return -1
+
+    idx_code = _find_col_idx(['codigo', 'sku', 'code'])
+    idx_name = _find_col_idx(['nombre', 'producto', 'insumo'])
+    idx_cat = _find_col_idx(['categoria', 'categoría', 'category'])
+    idx_unit = _find_col_idx(['unidad', 'medida', 'unit'])
+    idx_qty = _find_col_idx(['cantidad', 'stock', 'existencia', 'cantidad inicial'])
+    idx_min = _find_col_idx(['minimo', 'mínimo', 'alerta'])
+    idx_cost = _find_col_idx(['costo', 'cost_price'])
+    idx_sale = _find_col_idx(['venta', 'pvp', 'sale_price'])
+    idx_batch = _find_col_idx(['lote', 'batch'])
+    idx_expiry = _find_col_idx(['vencimiento', 'expiry'])
+    idx_location = _find_col_idx(['ubicacion', 'ubicación', 'location'])
+    idx_supplier = _find_col_idx(['proveedor', 'supplier'])
+    idx_notes = _find_col_idx(['notas', 'posologia', 'posología', 'notes'])
+
+    if idx_name == -1:
+        idx_name = 1 if len(header_row) > 1 else 0
+
+    if idx_qty == -1:
+        idx_qty = 4 if len(header_row) > 4 else 2
+
+    imported_count = 0
+    errors_list = []
+
+    for r_num, row_data in enumerate(rows_raw[1:], start=2):
+        try:
+            def _get_val(col_idx):
+                if col_idx >= 0 and col_idx < len(row_data):
+                    val = str(row_data[col_idx]).strip()
+                    if val.lower() in ('none', 'null', 'nan', ''):
+                        return ''
+                    return val
+                return ''
+
+            name = _clean_str(_get_val(idx_name), max_len=150)
+            if not name or name.lower().startswith('ej:') or name.lower().startswith('código'):
+                continue
+
+            raw_code = _clean_str(_get_val(idx_code), max_len=50)
+            code = _generate_next_sku(raw_code, current_uid=current_uid)
+
+            cat_val = _clean_str(_get_val(idx_cat), max_len=80)
+            if not cat_val or cat_val.lower() in ('sin categoría', 'todas', 'all', ''):
+                cat_val = 'Sin Categoría'
+
+            unit_val = _clean_str(_get_val(idx_unit), max_len=30) or 'Unidad (u)'
+
+            qty = _safe_stock_float(_get_val(idx_qty), default=0.0, min_val=0.0)
+            min_qty = _safe_stock_float(_get_val(idx_min), default=5.0, min_val=0.0)
+            cost_price = _safe_stock_float(_get_val(idx_cost), default=0.0, min_val=0.0)
+            sale_price = _safe_stock_float(_get_val(idx_sale), default=0.0, min_val=0.0)
+
+            batch = _clean_str(_get_val(idx_batch), max_len=100)
+            expiry = _clean_str(_get_val(idx_expiry), max_len=20)
+            location = _clean_str(_get_val(idx_location), max_len=150)
+            supplier = _clean_str(_get_val(idx_supplier), max_len=150)
+            notes = _clean_str(_get_val(idx_notes), max_len=500)
+
+            item_id = str(uuid.uuid4())
+            new_item = {
+                "id": item_id,
+                "user_id": current_uid,
+                "code": code,
+                "name": name,
+                "category": cat_val,
+                "unit": unit_val,
+                "stock_quantity": qty,
+                "min_stock": min_qty,
+                "cost_price": cost_price,
+                "sale_price": sale_price,
+                "supplier": supplier,
+                "location": location,
+                "batch_number": batch,
+                "expiry_date": expiry,
+                "notes": notes,
+                "status": _calc_item_status(qty, min_qty),
+                "created_at": datetime.now(timezone.utc).isoformat()
+            }
+
+            _ensure_category_and_unit_persisted(cat_val, unit_val)
+
+            if supabase:
+                try:
+                    supabase.table('stock_items').insert(new_item).execute()
+                except Exception:
+                    try:
+                        fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
+                        supabase.table('stock_items').insert(fallback_item).execute()
+                    except Exception:
+                        pass
+
+            _LOCAL_STOCK_ITEMS.insert(0, new_item)
+            imported_count += 1
+        except Exception as e_row:
+            errors_list.append(f"Fila {r_num}: {str(e_row)}")
+
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    _invalidate_dashboard_cache()
+
+    return jsonify({
+        "success": True,
+        "imported_count": imported_count,
+        "errors": errors_list,
+        "message": f"Se importaron {imported_count} insumos correctamente al inventario."
+    }), 201
+
 # --- MÓDULO DE VENTAS (POS CLÍNICO & COMPROBANTES) ---
 
 _SALES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "sales.json")
