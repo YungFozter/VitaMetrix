@@ -23,6 +23,7 @@ from services.helpers import (
     _save_persisted_stock_movements,
     _load_persisted_taxonomies,
     _save_persisted_taxonomies,
+    _now_bolivia,
     _supabase_insert_stock_item,
     _supabase_update_stock_item,
     _supabase_insert_stock_movement,
@@ -152,8 +153,8 @@ def create_stock_item():
         "expiry_date": expiry_date,
         "notes": notes,
         "status": _calc_item_status(stock_qty, min_stock),
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "created_at": _now_bolivia().isoformat(),
+        "updated_at": _now_bolivia().isoformat()
     }
 
     _LOCAL_STOCK_ITEMS.insert(0, new_item)
@@ -170,7 +171,7 @@ def create_stock_item():
             "previous_stock": 0.0,
             "new_stock": stock_qty,
             "reason": "Inventario Inicial al registrar insumo",
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": _now_bolivia().isoformat()
         }
         _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
         _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
@@ -238,7 +239,7 @@ def update_stock_item(item_id):
         updated['notes'] = _clean_str(data.get('notes'), max_len=500)
 
     updated['user_id'] = current_uid
-    updated['updated_at'] = datetime.now(timezone.utc).isoformat()
+    updated['updated_at'] = _now_bolivia().isoformat()
 
     _ensure_category_and_unit_persisted(updated.get('category'), updated.get('unit'))
 
@@ -376,7 +377,7 @@ def adjust_stock_item(item_id):
         "user_id": current_uid,
         "stock_quantity": new_qty,
         "status": _calc_item_status(new_qty, target_item.get('min_stock', 5)),
-        "updated_at": datetime.now(timezone.utc).isoformat()
+        "updated_at": _now_bolivia().isoformat()
     }
 
     for it in _LOCAL_STOCK_ITEMS:
@@ -395,7 +396,7 @@ def adjust_stock_item(item_id):
         "previous_stock": current_qty,
         "new_stock": new_qty,
         "reason": reason,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": _now_bolivia().isoformat()
     }
     _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
     _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
@@ -853,7 +854,7 @@ def import_stock_excel():
                     "expiry_date": expiry or existing.get('expiry_date', None),
                     "notes": notes or existing.get('notes', ''),
                     "status": _calc_item_status(new_qty, min_qty),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+                    "updated_at": _now_bolivia().isoformat()
                 }
 
                 for it in _LOCAL_STOCK_ITEMS:
@@ -873,7 +874,7 @@ def import_stock_excel():
                         "previous_stock": prev_qty,
                         "new_stock": new_qty,
                         "reason": "Reabastecimiento por importación Excel/CSV",
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": _now_bolivia().isoformat()
                     }
                     _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
                     _supabase_insert_stock_movement(m_item)
@@ -900,8 +901,8 @@ def import_stock_excel():
                     "expiry_date": expiry,
                     "notes": notes,
                     "status": _calc_item_status(qty, min_qty),
-                    "created_at": datetime.now(timezone.utc).isoformat(),
-                    "updated_at": datetime.now(timezone.utc).isoformat()
+                    "created_at": _now_bolivia().isoformat(),
+                    "updated_at": _now_bolivia().isoformat()
                 }
 
                 _LOCAL_STOCK_ITEMS.insert(0, new_item)
@@ -917,7 +918,7 @@ def import_stock_excel():
                         "previous_stock": 0.0,
                         "new_stock": qty,
                         "reason": "Stock inicial por importación Excel/CSV",
-                        "created_at": datetime.now(timezone.utc).isoformat()
+                        "created_at": _now_bolivia().isoformat()
                     }
                     _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
                     _supabase_insert_stock_movement(m_item)

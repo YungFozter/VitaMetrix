@@ -21,7 +21,8 @@ from services.helpers import (
     _LOCAL_STOCK_ITEMS,
     _LOCAL_STOCK_MOVEMENTS,
     _load_persisted_sales,
-    _save_persisted_sales
+    _save_persisted_sales,
+    _now_bolivia
 )
 
 sales_bp = Blueprint('sales_bp', __name__)
@@ -136,7 +137,7 @@ def create_sale():
         "change_given": change_given,
         "status": "COMPLETED",
         "notes": _clean_str(data.get('notes'), max_len=500),
-        "created_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": _now_bolivia().isoformat(),
         "sale_items": processed_items
     }
 
@@ -152,7 +153,7 @@ def create_sale():
                 "user_id": current_uid,
                 "stock_quantity": new_q,
                 "status": _calc_item_status(new_q, target_item.get('min_stock', 5)),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": _now_bolivia().isoformat()
             }
             for it in _LOCAL_STOCK_ITEMS:
                 if str(it.get('id')) == str(s_id):
@@ -170,7 +171,7 @@ def create_sale():
                 "new_stock": new_q,
                 "reason": f"Venta registrada en Recibo #{receipt_number}",
                 "reference_id": sale_id,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": _now_bolivia().isoformat()
             }
             _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
             _supabase_insert_stock_movement(m_item)
@@ -271,7 +272,7 @@ def cancel_sale(sale_id):
         return jsonify({"error": "Esta venta ya se encuentra anulada."}), 400
 
     target_sale['status'] = 'CANCELLED'
-    target_sale['updated_at'] = datetime.now(timezone.utc).isoformat()
+    target_sale['updated_at'] = _now_bolivia().isoformat()
     _save_persisted_sales(_LOCAL_SALES)
 
     # Reintegrar stock y registrar Kardex
@@ -286,7 +287,7 @@ def cancel_sale(sale_id):
                 "user_id": current_uid,
                 "stock_quantity": new_q,
                 "status": _calc_item_status(new_q, stock_target.get('min_stock', 5)),
-                "updated_at": datetime.now(timezone.utc).isoformat()
+                "updated_at": _now_bolivia().isoformat()
             }
             for it in _LOCAL_STOCK_ITEMS:
                 if str(it.get('id')) == str(s_id):
@@ -304,7 +305,7 @@ def cancel_sale(sale_id):
                 "new_stock": new_q,
                 "reason": f"Devolución por anulación de Venta #{target_sale.get('receipt_number')}",
                 "reference_id": sale_id,
-                "created_at": datetime.now(timezone.utc).isoformat()
+                "created_at": _now_bolivia().isoformat()
             }
             _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
             _supabase_insert_stock_movement(m_item)

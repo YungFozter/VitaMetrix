@@ -11,7 +11,8 @@ from services.helpers import (
     _get_current_user,
     _is_subscription_active,
     _load_persisted_appointments,
-    _save_persisted_appointments
+    _save_persisted_appointments,
+    _now_bolivia
 )
 
 appointments_bp = Blueprint('appointments_bp', __name__)
@@ -83,7 +84,7 @@ def create_appointment():
         "type": _clean_str(data.get('type'), max_len=50) or "Evaluación Inicial BIA",
         "status": _clean_str(data.get('status'), max_len=20) or "confirmed",
         "notes": _clean_str(data.get('notes'), max_len=500),
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": _now_bolivia().isoformat()
     }
 
     _LOCAL_APPOINTMENTS.append(new_app)

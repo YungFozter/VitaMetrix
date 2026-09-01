@@ -13,7 +13,9 @@ from services.helpers import (
     _generate_auth_token,
     _load_licenses,
     _save_licenses,
-    _is_subscription_active
+    _is_subscription_active,
+    _now_bolivia,
+    BOLIVIA_TZ
 )
 
 auth_bp = Blueprint('auth_bp', __name__)
@@ -41,8 +43,8 @@ def auth_register():
             return jsonify({"error": "Este correo ya se encuentra registrado. Inicia sesión."}), 400
 
     new_id = _generate_next_user_id(role='user')
-    now_utc = datetime.now(timezone.utc)
-    trial_expires = now_utc + timedelta(days=7)
+    now_bolivia = _now_bolivia()
+    trial_expires = now_bolivia + timedelta(days=7)
 
     new_user = {
         "id": new_id,
@@ -56,9 +58,9 @@ def auth_register():
         "subscription_status": "trial",
         "subscription_plan": "Plan de Prueba Gratuita (7 días)",
         "subscription_expires_at": trial_expires.isoformat(),
-        "trial_started_at": now_utc.isoformat(),
-        "created_at": now_utc.isoformat(),
-        "updated_at": now_utc.isoformat()
+        "trial_started_at": now_bolivia.isoformat(),
+        "created_at": now_bolivia.isoformat(),
+        "updated_at": now_bolivia.isoformat()
     }
 
     users.append(new_user)
@@ -211,14 +213,15 @@ def redeem_subscription_pin():
     duration_days = int(found_license.get('duration_days', 30))
     plan_name = found_license.get('plan_name', f'Plan Pro ({duration_days} días)')
 
-    now_utc = datetime.now(timezone.utc)
+    now_bolivia = _now_bolivia()
     curr_expires = current_user.get('subscription_expires_at')
 
-    start_base = now_utc
+    start_base = now_bolivia
     if curr_expires:
         try:
-            exp_dt = datetime.fromisoformat(curr_expires.replace('Z', '+00:00'))
-            if exp_dt > now_utc:
+            exp_clean = curr_expires[:-1] + '+00:00' if curr_expires.endswith('Z') else curr_expires
+            exp_dt = datetime.fromisoformat(exp_clean).astimezone(BOLIVIA_TZ)
+            if exp_dt > now_bolivia:
                 start_base = exp_dt
         except Exception:
             pass
@@ -231,14 +234,14 @@ def redeem_subscription_pin():
             u['subscription_status'] = 'active'
             u['subscription_plan'] = plan_name
             u['subscription_expires_at'] = new_expires.isoformat()
-            u['updated_at'] = now_utc.isoformat()
+            u['updated_at'] = now_bolivia.isoformat()
             break
     _save_users(users)
 
     found_license['is_used'] = True
     found_license['used_by_user_id'] = current_user.get('id')
     found_license['used_by_email'] = current_user.get('email')
-    found_license['used_at'] = now_utc.isoformat()
+    found_license['used_at'] = now_bolivia.isoformat()
     _save_licenses(licenses)
 
     updated_user = _get_current_user()
@@ -285,8 +288,8 @@ def admin_create_user():
     if any(u.get('email', '').lower() == email.lower() for u in users):
         return jsonify({"error": "El correo ya se encuentra registrado"}), 400
 
-    now_utc = datetime.now(timezone.utc)
-    expires_at = (now_utc + timedelta(days=duration_days)).isoformat() if duration_days < 90000 else None
+    now_bolivia = _now_bolivia()
+    expires_at = (now_bolivia + timedelta(days=duration_days)).isoformat() if duration_days < 90000 else None
 
     new_user = {
         "id": _generate_next_user_id(users),
@@ -300,8 +303,8 @@ def admin_create_user():
         "subscription_status": "active" if duration_days > 0 else "expired",
         "subscription_plan": plan,
         "subscription_expires_at": expires_at,
-        "created_at": now_utc.isoformat(),
-        "updated_at": now_utc.isoformat()
+        "created_at": now_bolivia.isoformat(),
+        "updated_at": now_bolivia.isoformat()
     }
 
     users.append(new_user)
@@ -356,7 +359,7 @@ def admin_create_pin():
             "plan_name": f"Plan Pro ({duration_days} días)",
             "is_used": False,
             "note": note,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": _now_bolivia().isoformat()
         }
         licenses.append(lic)
         created_pins.append(lic)

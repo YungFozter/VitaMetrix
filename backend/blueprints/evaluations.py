@@ -14,7 +14,8 @@ from services.helpers import (
     _is_subscription_active,
     _invalidate_dashboard_cache,
     _load_persisted_evaluations,
-    _save_persisted_evaluations
+    _save_persisted_evaluations,
+    _now_bolivia
 )
 
 from calculations import (
@@ -236,7 +237,7 @@ def create_evaluation():
         "age": age,
         "gender": gender,
         "report": report,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": _now_bolivia().isoformat()
     }
 
     _LOCAL_EVALUATIONS.insert(0, new_eval)
@@ -476,7 +477,7 @@ def calculate_bia_api():
             "age": int(data.get('age') or 0),
             "gender": _normalize_gender(data.get('gender')),
             "report": report,
-            "created_at": datetime.now(timezone.utc).isoformat()
+            "created_at": _now_bolivia().isoformat()
         }
 
         global _LOCAL_EVALUATIONS

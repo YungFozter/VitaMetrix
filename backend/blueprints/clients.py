@@ -12,7 +12,8 @@ from services.helpers import (
     _is_subscription_active,
     _invalidate_dashboard_cache,
     _load_persisted_clients,
-    _save_persisted_clients
+    _save_persisted_clients,
+    _now_bolivia
 )
 
 clients_bp = Blueprint('clients_bp', __name__)
@@ -117,7 +118,7 @@ def create_client():
         "weight": weight,
         "height": height,
         "notes": notes,
-        "created_at": datetime.now(timezone.utc).isoformat()
+        "created_at": _now_bolivia().isoformat()
     }
 
     global _LOCAL_CLIENTS

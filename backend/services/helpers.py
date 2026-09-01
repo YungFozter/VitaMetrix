@@ -431,12 +431,15 @@ def _get_current_user():
             return u
     return users[0] if users else None
 
+BOLIVIA_TZ = timezone(timedelta(hours=-4))
+
+def _now_bolivia():
+    """Retorna la fecha y hora actual con la zona horaria oficial de Bolivia (UTC-04:00)"""
+    return datetime.now(BOLIVIA_TZ)
+
 def _is_subscription_active(user):
     if not user:
         return False
-    if user.get('role') == 'admin':
-        return True
-    
     status = user.get('subscription_status')
     if status == 'lifetime':
         return True
@@ -448,8 +451,8 @@ def _is_subscription_active(user):
     try:
         if expires_str.endswith('Z'):
             expires_str = expires_str[:-1] + '+00:00'
-        expires_dt = datetime.fromisoformat(expires_str)
-        now_dt = datetime.now(timezone.utc)
+        expires_dt = datetime.fromisoformat(expires_str).astimezone(BOLIVIA_TZ)
+        now_dt = _now_bolivia()
         return expires_dt > now_dt
     except Exception:
         return False
@@ -458,7 +461,7 @@ def _user_to_public_dict(user):
     if not user:
         return {}
 
-    now_utc = datetime.now(timezone.utc)
+    now_bolivia = _now_bolivia()
     expires_str = user.get('subscription_expires_at')
     days_left = 0
     expires_at = None
@@ -466,9 +469,9 @@ def _user_to_public_dict(user):
     if expires_str:
         try:
             exp_clean = expires_str[:-1] + '+00:00' if expires_str.endswith('Z') else expires_str
-            exp_dt = datetime.fromisoformat(exp_clean)
+            exp_dt = datetime.fromisoformat(exp_clean).astimezone(BOLIVIA_TZ)
             expires_at = exp_dt.isoformat()
-            delta = exp_dt - now_utc
+            delta = exp_dt - now_bolivia
             days_left = max(0, delta.days)
         except Exception:
             days_left = 0
@@ -478,36 +481,29 @@ def _user_to_public_dict(user):
     if role == 'admin' or status == 'lifetime':
         days_left = 99999
         status = 'lifetime'
-        plan_name = "Plan Ilimitado / Administrador"
-    elif days_left > 0:
-        status = 'active'
-        plan_name = user.get('subscription_plan', 'Plan Pro Mensual (30 días)')
-    else:
-        status = 'expired'
-        plan_name = "Suscripción Vencida (0 Días)"
 
     return {
         "id": user.get('id'),
         "email": user.get('email'),
         "full_name": user.get('full_name'),
-        "professional_title": user.get('professional_title', 'Nutricionista / Especialista BIA'),
-        "clinic_name": user.get('clinic_name', 'Centro Médico VitaMetrix'),
+        "professional_title": user.get('professional_title', 'Especialista BIA'),
+        "clinic_name": user.get('clinic_name', 'Mi Consultorio VitaMetrix'),
         "phone": user.get('phone', ''),
+        "role": role,
+        "subscription_status": status,
+        "subscription_plan": user.get('subscription_plan', 'Plan de Prueba Gratuita (7 días)'),
         "professional_license": user.get('professional_license', ''),
         "clinic_logo_url": user.get('clinic_logo_url', ''),
         "pdf_disclaimer": user.get('pdf_disclaimer', 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.'),
-        "pdf_footer_address": user.get('pdf_footer_address', ''),
         "clinic_address": user.get('clinic_address', ''),
+        "pdf_footer_address": user.get('pdf_footer_address', ''),
         "unit_weight": user.get('unit_weight', 'kg'),
         "pha_optimal": user.get('pha_optimal', '6.0'),
-        "role": role,
-        "subscription_status": status,
-        "subscription_plan": plan_name,
         "subscription": {
             "status": status,
             "days_left": days_left,
             "expires_at": expires_at,
-            "plan_name": plan_name,
+            "plan_name": user.get('subscription_plan', 'Plan de Prueba Gratuita (7 días)'),
             "whatsapp_contact": "+591 72125280",
             "whatsapp_phone_clean": "59172125280"
         }
