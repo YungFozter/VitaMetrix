@@ -19,31 +19,12 @@ from services.helpers import (
     _get_stock_item_by_id,
     _invalidate_dashboard_cache,
     _LOCAL_STOCK_ITEMS,
-    _LOCAL_STOCK_MOVEMENTS
+    _LOCAL_STOCK_MOVEMENTS,
+    _load_persisted_sales,
+    _save_persisted_sales
 )
 
 sales_bp = Blueprint('sales_bp', __name__)
-
-_SALES_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "sales.json")
-
-def _load_persisted_sales():
-    if os.path.exists(_SALES_PATH):
-        try:
-            with open(_SALES_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logging.warning("Error al leer sales.json: %s", e)
-    return []
-
-def _save_persisted_sales(sales):
-    try:
-        os.makedirs(os.path.dirname(_SALES_PATH), exist_ok=True)
-        with open(_SALES_PATH, 'w', encoding='utf-8') as f:
-            json.dump(sales, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        logging.error("Error al guardar sales.json: %s", e)
-        return False
 
 _LOCAL_SALES = _load_persisted_sales()
 

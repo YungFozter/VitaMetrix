@@ -9,31 +9,12 @@ from services.helpers import (
     supabase,
     _clean_str,
     _get_current_user,
-    _is_subscription_active
+    _is_subscription_active,
+    _load_persisted_appointments,
+    _save_persisted_appointments
 )
 
 appointments_bp = Blueprint('appointments_bp', __name__)
-
-_APPOINTMENTS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "appointments.json")
-
-def _load_persisted_appointments():
-    if os.path.exists(_APPOINTMENTS_PATH):
-        try:
-            with open(_APPOINTMENTS_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logging.warning("Error al leer appointments.json: %s", e)
-    return []
-
-def _save_persisted_appointments(apps):
-    try:
-        os.makedirs(os.path.dirname(_APPOINTMENTS_PATH), exist_ok=True)
-        with open(_APPOINTMENTS_PATH, 'w', encoding='utf-8') as f:
-            json.dump(apps, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        logging.error("Error al guardar appointments.json: %s", e)
-        return False
 
 _LOCAL_APPOINTMENTS = _load_persisted_appointments()
 

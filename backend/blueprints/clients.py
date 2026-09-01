@@ -10,31 +10,12 @@ from services.helpers import (
     _clean_str,
     _get_current_user,
     _is_subscription_active,
-    _invalidate_dashboard_cache
+    _invalidate_dashboard_cache,
+    _load_persisted_clients,
+    _save_persisted_clients
 )
 
 clients_bp = Blueprint('clients_bp', __name__)
-
-_CLIENTS_USERS_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "clients_users.json")
-
-def _load_persisted_clients():
-    if os.path.exists(_CLIENTS_USERS_PATH):
-        try:
-            with open(_CLIENTS_USERS_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
-        except Exception as e:
-            logging.warning("Error al leer clients_users.json: %s", e)
-    return []
-
-def _save_persisted_clients(clients):
-    try:
-        os.makedirs(os.path.dirname(_CLIENTS_USERS_PATH), exist_ok=True)
-        with open(_CLIENTS_USERS_PATH, 'w', encoding='utf-8') as f:
-            json.dump(clients, f, indent=2, ensure_ascii=False)
-        return True
-    except Exception as e:
-        logging.error("Error al guardar clients_users.json: %s", e)
-        return False
 
 _LOCAL_CLIENTS = _load_persisted_clients()
 

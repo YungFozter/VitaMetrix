@@ -42,7 +42,87 @@ _LICENSES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "subscripti
 _STOCK_ITEMS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_items.json")
 _STOCK_MOVEMENTS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_movements.json")
 _STOCK_TAXONOMIES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "stock_taxonomies.json")
+_CLIENTS_USERS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "clients_users.json")
+_EVALUATIONS_USERS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "evaluations_users.json")
+_APPOINTMENTS_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "appointments.json")
+_SALES_PATH = os.path.join(os.path.dirname(_BACKEND_DIR), "data", "sales.json")
 _JWT_SECRET = os.environ.get("JWT_SECRET", "vitametrix_master_security_jwt_secret_2026_super_key_bolivia")
+
+def _load_persisted_clients():
+    if os.path.exists(_CLIENTS_USERS_PATH):
+        try:
+            with open(_CLIENTS_USERS_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer clients_users.json: %s", e)
+    return []
+
+def _save_persisted_clients(clients):
+    try:
+        os.makedirs(os.path.dirname(_CLIENTS_USERS_PATH), exist_ok=True)
+        with open(_CLIENTS_USERS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(clients, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar clients_users.json: %s", e)
+        return False
+
+def _load_persisted_evaluations():
+    if os.path.exists(_EVALUATIONS_USERS_PATH):
+        try:
+            with open(_EVALUATIONS_USERS_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer evaluations_users.json: %s", e)
+    return []
+
+def _save_persisted_evaluations(evals):
+    try:
+        os.makedirs(os.path.dirname(_EVALUATIONS_USERS_PATH), exist_ok=True)
+        with open(_EVALUATIONS_USERS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(evals, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar evaluations_users.json: %s", e)
+        return False
+
+def _load_persisted_appointments():
+    if os.path.exists(_APPOINTMENTS_PATH):
+        try:
+            with open(_APPOINTMENTS_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer appointments.json: %s", e)
+    return []
+
+def _save_persisted_appointments(apps):
+    try:
+        os.makedirs(os.path.dirname(_APPOINTMENTS_PATH), exist_ok=True)
+        with open(_APPOINTMENTS_PATH, 'w', encoding='utf-8') as f:
+            json.dump(apps, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar appointments.json: %s", e)
+        return False
+
+def _load_persisted_sales():
+    if os.path.exists(_SALES_PATH):
+        try:
+            with open(_SALES_PATH, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning("Error al leer sales.json: %s", e)
+    return []
+
+def _save_persisted_sales(sales):
+    try:
+        os.makedirs(os.path.dirname(_SALES_PATH), exist_ok=True)
+        with open(_SALES_PATH, 'w', encoding='utf-8') as f:
+            json.dump(sales, f, indent=2, ensure_ascii=False)
+        return True
+    except Exception as e:
+        logging.error("Error al guardar sales.json: %s", e)
+        return False
 
 _EMPTY_DASHBOARD = {
     "total_clients": 0,
