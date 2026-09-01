@@ -2072,7 +2072,7 @@ def _get_all_evaluations_for_user(current_user):
             filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or (not e.get('user_id') and current_uid == 'usr-admin-001')]
         else:
             # Doctor ve sus evaluaciones o evaluaciones legacy iniciales de muestra
-            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or (e.get('user_id') in ('usr-doctor-001', 'None', None) and current_uid in ('usr-doctor-001', 'usr-doctor-002'))]
+            filtered = [e for e in resolved_evals if e.get('user_id') == current_uid or not e.get('user_id') or e.get('user_id') in ('usr-doctor-001', 'None', 'null', '')]
             # Auto-actualizar Supabase para sincronizar propiedad al doctor activo
             for e in filtered:
                 if e.get('id') and e.get('user_id') != current_uid:
@@ -2142,7 +2142,20 @@ def get_clients():
         if current_user and current_user.get('role') == 'admin':
             clients = [c for c in clients if c.get('user_id') == current_uid]
         else:
-            clients = [c for c in clients if c.get('user_id') == current_uid or (not c.get('user_id') and current_uid == 'usr-doctor-001')]
+            filtered_clients = []
+            for c in clients:
+                c_uid = c.get('user_id')
+                if not c_uid or c_uid in ('usr-doctor-001', 'None', 'null', ''):
+                    c['user_id'] = current_uid
+                    c_uid = current_uid
+                    if supabase and c.get('id'):
+                        try:
+                            supabase.table('clients').update({'user_id': current_uid}).eq('id', c['id']).execute()
+                        except Exception:
+                            pass
+                if c_uid == current_uid:
+                    filtered_clients.append(c)
+            clients = filtered_clients
 
         # AUTO-SÍNTESIS: Extraer automáticamente pacientes únicos registrados desde Evaluaciones
         try:
@@ -3001,7 +3014,7 @@ def _generate_next_sku(raw_code=None, current_uid=None):
         c = it.get('code')
         it_uid = it.get('user_id')
         if c and not str(c).startswith('__SYS_'):
-            if not current_uid or it_uid == current_uid or (not it_uid and current_uid == 'usr-doctor-001'):
+            if not current_uid or not it_uid or it_uid in ('usr-doctor-001', 'None', 'null', '') or it_uid == current_uid:
                 existing_codes.add(str(c).upper().strip())
     
     if supabase:
@@ -3011,7 +3024,7 @@ def _generate_next_sku(raw_code=None, current_uid=None):
                 c = r.get('code')
                 it_uid = r.get('user_id')
                 if c and not str(c).startswith('__SYS_'):
-                    if not current_uid or it_uid == current_uid or (not it_uid and current_uid == 'usr-doctor-001'):
+                    if not current_uid or not it_uid or it_uid in ('usr-doctor-001', 'None', 'null', '') or it_uid == current_uid:
                         existing_codes.add(str(c).upper().strip())
         except Exception:
             pass
@@ -3426,7 +3439,20 @@ def get_stock_movements():
             combined_movs.append(m)
 
     if current_uid and current_user.get('role') != 'admin':
-        combined_movs = [m for m in combined_movs if m.get('user_id') == current_uid or not m.get('user_id') or m.get('user_id') == 'usr-doctor-001']
+        filtered_movs = []
+        for m in combined_movs:
+            m_uid = m.get('user_id')
+            if not m_uid or m_uid in ('usr-doctor-001', 'None', 'null', ''):
+                m['user_id'] = current_uid
+                m_uid = current_uid
+                if supabase and m.get('id'):
+                    try:
+                        supabase.table('stock_movements').update({'user_id': current_uid}).eq('id', m['id']).execute()
+                    except Exception:
+                        pass
+            if m_uid == current_uid:
+                filtered_movs.append(m)
+        combined_movs = filtered_movs
 
     return jsonify(combined_movs[:100])
 
