@@ -2891,6 +2891,9 @@ def get_stock_items():
     current_user = _get_current_user()
     current_uid = current_user.get('id') if current_user else None
 
+    global _LOCAL_STOCK_ITEMS
+
+    # 1. Obtener registros remotos de Supabase
     remote_items = []
     if supabase:
         try:
@@ -2898,32 +2901,46 @@ def get_stock_items():
             if res.data is not None:
                 remote_items = res.data
         except Exception as e:
-            logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
+            logging.warning("No se pudo consultar Supabase stock_items: %s", e)
 
-    # Combinar registros locales y remotos dando PRECEDENCIA TOTAL A SUPABASE
-    remote_map = {str(it.get('id')): dict(it) for it in remote_items if it.get('id')}
-    local_items = _load_persisted_stock_items()
-    seen_ids = set()
-    combined_items = []
+    # 2. Consolidar memoria local, disco local y Supabase sin perder ningún registro
+    disk_items = _load_persisted_stock_items()
+    unified_map = {}
 
-    for r_id, r_item in remote_map.items():
-        seen_ids.add(r_id)
-        r_item['status'] = _calc_item_status(r_item.get('stock_quantity'), r_item.get('min_stock'))
-        combined_items.append(r_item)
+    # Fusionar memoria local activa
+    for it in _LOCAL_STOCK_ITEMS:
+        if it and it.get('id'):
+            unified_map[str(it.get('id'))] = dict(it)
 
-    for l_item in local_items:
-        l_id = str(l_item.get('id')) if l_item.get('id') else None
-        if l_id and l_id not in seen_ids:
-            seen_ids.add(l_id)
-            l_copy = dict(l_item)
-            l_copy['status'] = _calc_item_status(l_copy.get('stock_quantity'), l_copy.get('min_stock'))
-            combined_items.append(l_copy)
+    # Fusionar disco local
+    for it in disk_items:
+        if it and it.get('id'):
+            i_id = str(it.get('id'))
+            if i_id not in unified_map:
+                unified_map[i_id] = dict(it)
+            else:
+                unified_map[i_id].update({k: v for k, v in it.items() if v is not None and v != ''})
 
-    _save_persisted_stock_items(combined_items)
+    # Fusionar Supabase
+    for r_item in remote_items:
+        if r_item and r_item.get('id'):
+            r_id = str(r_item.get('id'))
+            if r_id not in unified_map:
+                unified_map[r_id] = dict(r_item)
+            else:
+                unified_map[r_id].update({k: v for k, v in r_item.items() if v is not None and v != ''})
 
-    # Excluir registros de almacenamiento de sistema (backups resilientes)
+    # Recalcular estatus y refrescar memoria/disco
+    all_combined = list(unified_map.values())
+    for item in all_combined:
+        item['status'] = _calc_item_status(item.get('stock_quantity'), item.get('min_stock'))
+
+    _LOCAL_STOCK_ITEMS = all_combined
+    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+
+    # Excluir registros de almacenamiento del sistema
     clinical_items = [
-        it for it in combined_items 
+        it for it in _LOCAL_STOCK_ITEMS 
         if not (it.get('category') == '__SYSTEM__' or str(it.get('code', '')).startswith('__SYS_'))
     ]
 
