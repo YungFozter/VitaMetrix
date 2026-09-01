@@ -5036,44 +5036,101 @@ function initEvaluaciones() {
     const btnOpenCalc = document.getElementById('btn-modal-open-calc');
     if (btnOpenCalc) {
         btnOpenCalc.addEventListener('click', () => {
-            if (!selectedEvaluationData || !selectedEvaluationData.raw_inputs) return;
-            const inp = selectedEvaluationData.raw_inputs;
+            if (!selectedEvaluationData) {
+                showToast('No hay datos de evaluación seleccionados', 'warning');
+                return;
+            }
+            const data = selectedEvaluationData;
+            const inp = data.raw_inputs || {};
+            const rep = data.report || {};
+            const inputsObj = rep.inputs || {};
 
-            // Fill basic form
-            document.getElementById('input-idp').value = inp.patient_idp || '';
-            document.getElementById('input-name').value = inp.patient_name || '';
-            document.getElementById('input-r').value = inp.resistance || '';
-            document.getElementById('input-xc').value = inp.reactance || '';
-            document.getElementById('input-weight').value = inp.weight || '';
-            document.getElementById('input-height').value = inp.height || '';
-            document.getElementById('input-age').value = inp.age || '';
-            if (inp.gender) document.getElementById('input-gender').value = inp.gender;
-            if (inp.pal) document.getElementById('input-pal').value = inp.pal;
-            if (inp.waist) document.getElementById('input-waist').value = inp.waist;
+            // 1. Ocultar modal de detalle de evaluación
+            const modal = document.getElementById('eval-detail-modal');
+            if (modal) modal.classList.add('hidden');
 
-            // Fill optional device form
+            // 2. Navegar a la vista de Calculadora de Bioimpedancia
+            if (typeof navigateToView === 'function') {
+                navigateToView('bio-view');
+            } else {
+                const bioNav = document.querySelector('[data-target="bio-view"]');
+                if (bioNav) bioNav.click();
+            }
+
+            // 3. Llenar campos principales del formulario BIA con fallback múltiple
+            const elIdp = document.getElementById('input-idp');
+            const elName = document.getElementById('input-name');
+            const elR = document.getElementById('input-r');
+            const elXc = document.getElementById('input-xc');
+            const elW = document.getElementById('input-weight');
+            const elH = document.getElementById('input-height');
+            const elAge = document.getElementById('input-age');
+            const elGender = document.getElementById('input-gender');
+            const elPal = document.getElementById('input-pal');
+            const elWaist = document.getElementById('input-waist');
+
+            const valIdp = data.patient_idp || data.idp || inp.patient_idp || '';
+            const valName = data.patient_name || data.name || inp.patient_name || '';
+            const valR = data.resistance || inp.resistance || inputsObj.resistance || '';
+            const valXc = data.reactance || inp.reactance || inputsObj.reactance || '';
+            const valW = data.weight || inp.weight || inputsObj.weight || '';
+            const valH = data.height || inp.height || inputsObj.height || '';
+            const valAge = data.age || inp.age || inputsObj.age || '';
+            const valGender = data.gender || inp.gender || inputsObj.gender || 'male';
+            const valPal = inp.pal || inputsObj.pal || 1.55;
+            const valWaist = inp.waist || inputsObj.waist || '';
+
+            if (elIdp && valIdp) elIdp.value = valIdp;
+            if (elName && valName) elName.value = valName;
+            if (elR && valR) elR.value = valR;
+            if (elXc && valXc) elXc.value = valXc;
+            if (elW && valW) elW.value = valW;
+            if (elH && valH) elH.value = valH;
+            if (elAge && valAge) elAge.value = valAge;
+            if (elGender && valGender) elGender.value = valGender;
+            if (elPal) elPal.value = valPal;
+            if (elWaist && valWaist) elWaist.value = valWaist;
+
+            // 4. Llenar datos opcionales / equipo si existen
             const details = document.querySelector('details.device-data');
-            if (details) details.open = true;
+            const bodyComp = rep.body_comp || {};
+            const biva = rep.biva || {};
 
-            if (inp.smm) document.getElementById('input-smm').value = inp.smm;
-            if (inp.tbw) document.getElementById('input-tbw').value = inp.tbw;
-            if (inp.ecw) document.getElementById('input-ecw').value = inp.ecw;
-            if (inp.fat_mass) document.getElementById('input-fat-mass').value = inp.fat_mass;
-            if (inp.visceral_fat) document.getElementById('input-visceral').value = inp.visceral_fat;
-            if (inp.phase_angle_dev) document.getElementById('input-phase-dev').value = inp.phase_angle_dev;
-            if (inp.seg_arm_r) document.getElementById('input-seg-arm-r').value = inp.seg_arm_r;
-            if (inp.seg_arm_l) document.getElementById('input-seg-arm-l').value = inp.seg_arm_l;
-            if (inp.seg_torso) document.getElementById('input-seg-torso').value = inp.seg_torso;
-            if (inp.seg_leg_r) document.getElementById('input-seg-leg-r').value = inp.seg_leg_r;
-            if (inp.seg_leg_l) document.getElementById('input-seg-leg-l').value = inp.seg_leg_l;
+            const valSmm = inp.smm || bodyComp.smm_kg || '';
+            const valFat = inp.fat_mass || bodyComp.fat_kg || '';
+            const valTbw = inp.tbw || bodyComp.tbw_l || '';
+            const valEcw = inp.ecw || bodyComp.ecw_l || '';
+            const valVisceral = inp.visceral_fat || bodyComp.visceral_level || '';
+            const valPhaDev = inp.phase_angle_dev || data.phase_angle || biva.phase_angle || '';
 
-            modal.classList.add('hidden');
+            if (details && (valSmm || valFat || valVisceral || valPhaDev)) {
+                details.open = true;
+            }
 
-            // Switch to bioimpedancia view
-            const bioNav = document.querySelector('[data-target="bio-view"]');
-            if (bioNav) bioNav.click();
+            if (document.getElementById('input-smm') && valSmm) document.getElementById('input-smm').value = valSmm;
+            if (document.getElementById('input-fat-mass') && valFat) document.getElementById('input-fat-mass').value = valFat;
+            if (document.getElementById('input-tbw') && valTbw) document.getElementById('input-tbw').value = valTbw;
+            if (document.getElementById('input-ecw') && valEcw) document.getElementById('input-ecw').value = valEcw;
+            if (document.getElementById('input-visceral') && valVisceral) document.getElementById('input-visceral').value = valVisceral;
+            if (document.getElementById('input-phase-dev') && valPhaDev) document.getElementById('input-phase-dev').value = valPhaDev;
 
-            showToast('Datos de la evaluación cargados en el formulario', 'info');
+            if (inp.seg_arm_r && document.getElementById('input-seg-arm-r')) document.getElementById('input-seg-arm-r').value = inp.seg_arm_r;
+            if (inp.seg_arm_l && document.getElementById('input-seg-arm-l')) document.getElementById('input-seg-arm-l').value = inp.seg_arm_l;
+            if (inp.seg_torso && document.getElementById('input-seg-torso')) document.getElementById('input-seg-torso').value = inp.seg_torso;
+            if (inp.seg_leg_r && document.getElementById('input-seg-leg-r')) document.getElementById('input-seg-leg-r').value = inp.seg_leg_r;
+            if (inp.seg_leg_l && document.getElementById('input-seg-leg-l')) document.getElementById('input-seg-leg-l').value = inp.seg_leg_l;
+
+            // 5. Recalcular automáticamente en la calculadora BIA
+            setTimeout(() => {
+                if (typeof calculateBIA === 'function') {
+                    calculateBIA();
+                } else {
+                    const btnCalc = document.getElementById('btn-calculate');
+                    if (btnCalc) btnCalc.click();
+                }
+            }, 50);
+
+            showToast('Evaluación cargada exitosamente en la calculadora BIA', 'success');
         });
     }
 
