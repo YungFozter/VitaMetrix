@@ -3756,134 +3756,106 @@ def rename_stock_category():
 @app.route('/api/stock/excel-template', methods=['GET'])
 def download_stock_excel_template():
     import io
-    import openpyxl
-    from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
-    from openpyxl.utils import get_column_letter
+    static_file_path = os.path.join(os.path.dirname(_BACKEND_DIR), "frontend", "static", "Insumos_15_Ejemplo_VitaMetrix.xlsx")
+    
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from openpyxl.utils import get_column_letter
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Catálogo de Insumos"
-    ws.views.sheetView[0].showGridLines = True
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Catálogo de Insumos"
+        ws.views.sheetView[0].showGridLines = True
 
-    # Encabezados exactos del registro de insumos
-    headers = [
-        "CÓDIGO / SKU",
-        "NOMBRE PRODUCTO / INSUMO*",
-        "CATEGORÍA",
-        "UNIDAD DE MEDIDA",
-        "CANTIDAD INICIAL (STOCK)*",
-        "STOCK MÍNIMO (ALERTA)",
-        "PRECIO COSTO (BS)",
-        "PRECIO VENTA / PVP (BS)",
-        "NÚMERO DE LOTE",
-        "FECHA DE VENCIMIENTO",
-        "UBICACIÓN EN CONSULTORIO",
-        "PROVEEDOR",
-        "NOTAS / POSOLOGÍA"
-    ]
-
-    header_fill = PatternFill(start_color="107C41", end_color="107C41", fill_type="solid")
-    header_font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
-    header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-    thin_border = Border(
-        left=Side(style='thin', color='D9D9D9'),
-        right=Side(style='thin', color='D9D9D9'),
-        top=Side(style='thin', color='D9D9D9'),
-        bottom=Side(style='thin', color='D9D9D9')
-    )
-
-    ws.append(headers)
-    ws.row_dimensions[1].height = 28
-
-    for col_num, h_text in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col_num)
-        cell.fill = header_fill
-        cell.font = header_font
-        cell.alignment = header_alignment
-        cell.border = thin_border
-
-    sample_rows = [
-        [
-            "SKU-001",
-            "Electrodos BIA Desechables (Pack x100)",
-            "Insumos BIA",
-            "Caja x100",
-            10,
-            5,
-            120.00,
-            180.00,
-            "LOT-2026-A",
-            "2027-12-31",
-            "Vitrina 1, Estante B",
-            "BioMedical Import S.R.L.",
-            "Usar exclusivamente en bioimpedancias tetrapolares"
-        ],
-        [
-            "SKU-002",
-            "Gel Conductor BIA Hipoalergénico 250ml",
-            "Insumos BIA",
-            "Frasco",
-            15,
-            3,
-            25.00,
-            45.00,
-            "GEL-8890",
-            "2028-06-30",
-            "Vitrina 1, Estante A",
-            "DermoSalud Bolivia",
-            "Conservar en lugar fresco"
-        ],
-        [
-            "",
-            "Proteína Whey Isolate 100% (Bote 900g Vainilla)",
-            "Suplementos Nutricionales",
-            "Bote 900g",
-            20,
-            5,
-            280.00,
-            350.00,
-            "WHEY-2026-09",
-            "2027-09-15",
-            "Estante Suplementos",
-            "NutriFit Express",
-            "Se mezcla 1 scoop (30g) en 250ml de agua"
+        headers = [
+            "SKU",
+            "Nombre Producto / Insumo*",
+            "Categoría",
+            "U. Medida",
+            "Stock*",
+            "St. Min",
+            "P. Costo",
+            "PVP",
+            "Lote",
+            "Vencimiento",
+            "Ubicación",
+            "Proveedor",
+            "Notas / Posología"
         ]
-    ]
 
-    row_font = Font(name="Arial", size=9.5)
-    row_alignment = Alignment(vertical="center")
+        header_fill = PatternFill(start_color="107C41", end_color="107C41", fill_type="solid")
+        header_font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+        header_alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
-    for r_idx, row_data in enumerate(sample_rows, 2):
-        ws.append(row_data)
-        ws.row_dimensions[r_idx].height = 22
-        for c_idx in range(1, len(row_data) + 1):
-            cell = ws.cell(row=r_idx, column=c_idx)
-            cell.font = row_font
-            cell.alignment = row_alignment
+        thin_border = Border(
+            left=Side(style='thin', color='D9D9D9'),
+            right=Side(style='thin', color='D9D9D9'),
+            top=Side(style='thin', color='D9D9D9'),
+            bottom=Side(style='thin', color='D9D9D9')
+        )
+
+        ws.append(headers)
+        ws.row_dimensions[1].height = 28
+
+        for col_num, h_text in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
             cell.border = thin_border
-            if c_idx in (5, 6):
-                cell.number_format = '#,##0'
-                cell.alignment = Alignment(horizontal="center", vertical="center")
-            elif c_idx in (7, 8):
-                cell.number_format = 'Bs#,##0.00'
-                cell.alignment = Alignment(horizontal="right", vertical="center")
 
-    for col in ws.columns:
-        max_len = max(len(str(cell.value or '')) for cell in col)
-        col_letter = get_column_letter(col[0].column)
-        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+        sample_rows = [
+            ["SKU-001", "Electrodos BIA Desechables (Pack x100)", "Insumos BIA", "Caja x100", 15, 5, 120.00, 180.00, "LOT-2026-A", "2027-12-31", "Vitrina 1, Estante B", "BioMedical Import S.R.L.", "Usar exclusivamente en bioimpedancias tetrapolares"],
+            ["SKU-002", "Gel Conductor BIA Hipoalergénico 250ml", "Insumos BIA", "Frasco", 20, 3, 25.00, 45.00, "GEL-8890", "2028-06-30", "Vitrina 1, Estante A", "DermoSalud Bolivia", "Conservar en lugar fresco"],
+            ["SKU-003", "Proteína Whey Isolate 100% (Bote 900g Vainilla)", "Suplementos Nutricionales", "Bote 900g", 12, 4, 280.00, 350.00, "WHEY-2026-09", "2027-09-15", "Estante Suplementos A", "NutriFit Express", "1 scoop (30g) aporta 25g de proteína pura"],
+            ["SKU-004", "Creatina Monohidratada Creapure 300g", "Suplementos Nutricionales", "Bote 300g", 18, 5, 160.00, 210.00, "CREA-102", "2028-03-20", "Estante Suplementos A", "NutriFit Express", "5g diarios en fase de carga o mantenimiento"],
+            ["SKU-005", "Multivitamínico Clínico Complejo B + ZINC", "Suplementos Nutricionales", "Caja x60", 25, 6, 85.00, 130.00, "VIT-2026-C", "2027-11-10", "Vitrina 2, Cajón B", "PharmaLife S.A.", "Tomar 1 cápsula junto al almuerzo"]
+        ]
 
-    output = io.BytesIO()
-    wb.save(output)
-    output.seek(0)
+        row_font = Font(name="Arial", size=9.5)
+        row_alignment = Alignment(vertical="center")
 
-    return send_file(
-        output,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        as_attachment=True,
-        download_name="Plantilla_Importacion_Insumos_VitaMetrix.xlsx"
-    )
+        for r_idx, row_data in enumerate(sample_rows, 2):
+            ws.append(row_data)
+            ws.row_dimensions[r_idx].height = 22
+            for c_idx in range(1, len(row_data) + 1):
+                cell = ws.cell(row=r_idx, column=c_idx)
+                cell.font = row_font
+                cell.alignment = row_alignment
+                cell.border = thin_border
+                if c_idx in (5, 6):
+                    cell.number_format = '#,##0'
+                    cell.alignment = Alignment(horizontal="center", vertical="center")
+                elif c_idx in (7, 8):
+                    cell.number_format = 'Bs#,##0.00'
+                    cell.alignment = Alignment(horizontal="right", vertical="center")
+
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        return send_file(
+            output,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name="Plantilla_Importacion_Insumos_VitaMetrix.xlsx"
+        )
+    except Exception as e_gen:
+        logging.warning("No se pudo generar plantilla Excel dinámicamente: %s. Enviando archivo estático de respaldo.", e_gen)
+        if os.path.exists(static_file_path):
+            return send_file(
+                static_file_path,
+                mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                as_attachment=True,
+                download_name="Plantilla_Importacion_Insumos_VitaMetrix.xlsx"
+            )
+        return jsonify({"error": "No se pudo generar la plantilla Excel"}), 500
 
 @app.route('/api/stock/preview-excel', methods=['POST'])
 def preview_stock_excel():

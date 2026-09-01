@@ -10141,7 +10141,12 @@ function initImportStockExcelModal() {
 
     if (btnDownloadTemplate) {
         btnDownloadTemplate.addEventListener('click', () => {
-            window.location.href = '/api/stock/excel-template';
+            const link = document.createElement('a');
+            link.href = '/api/stock/excel-template';
+            link.download = 'Plantilla_Importacion_Insumos_VitaMetrix.xlsx';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         });
     }
 
