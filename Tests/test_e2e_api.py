@@ -106,6 +106,9 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         res_adjust = self.client.post(f'/api/stock/{item_id}/adjust', data=json.dumps(adjust_data), headers=self.doctor_headers)
         self.assertEqual(res_adjust.status_code, 200)
 
+        # 5. Limpieza del ítem de prueba para no dejar residuos
+        self.client.delete(f'/api/stock/{item_id}', headers=self.doctor_headers)
+
     def test_06_stock_movements_endpoint(self):
         """Verifica la consulta global de movimientos de kardex"""
         response = self.client.get('/api/stock/movements', headers=self.doctor_headers)
@@ -136,6 +139,10 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         }
         res_create = self.client.post('/api/clients', data=json.dumps(new_client), headers=self.doctor_headers)
         self.assertEqual(res_create.status_code, 201)
+        created_client = json.loads(res_create.data)
+        client_id = created_client.get('id') or (created_client.get('client') or {}).get('id')
+        if client_id:
+            self.client.delete(f'/api/clients/{client_id}', headers=self.doctor_headers)
 
     def test_09_evaluations_list(self):
         """Verifica la consulta de evaluaciones clínicas"""
