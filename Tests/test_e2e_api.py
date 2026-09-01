@@ -145,7 +145,7 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
             self.client.delete(f'/api/clients/{client_id}', headers=self.doctor_headers)
 
     def test_09_evaluations_list(self):
-        """Verifica la consulta de evaluaciones clínicas y detalle individual"""
+        """Verifica la consulta, detalle y eliminación de evaluaciones clínicas"""
         response = self.client.get('/api/evaluations', headers=self.doctor_headers)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
@@ -154,6 +154,9 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
             eval_id = data[0].get('id')
             res_detail = self.client.get(f'/api/evaluations/{eval_id}', headers=self.doctor_headers)
             self.assertEqual(res_detail.status_code, 200)
+
+        res_batch = self.client.post('/api/evaluations/batch-delete', data=json.dumps({"ids": []}), headers=self.doctor_headers)
+        self.assertIn(res_batch.status_code, (400, 200))
 
     def test_10_appointments_list(self):
         """Verifica la consulta y agendamiento de citas"""

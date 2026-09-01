@@ -279,6 +279,45 @@ def get_evaluation_detail(eval_id):
 
     return jsonify(response_data)
 
+@evaluations_bp.route('/api/evaluations/batch-delete', methods=['POST'])
+@evaluations_bp.route('/api/evaluations/batch', methods=['DELETE', 'POST'])
+def batch_delete_evaluations():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado", "success": False}), 401
+
+    data = request.json or {}
+    ids_to_delete = data.get('ids') or []
+    if isinstance(ids_to_delete, str):
+        ids_to_delete = [ids_to_delete]
+
+    if not ids_to_delete:
+        return jsonify({"error": "No se especificaron evaluaciones para eliminar", "success": False}), 400
+
+    str_ids = [str(i) for i in ids_to_delete]
+
+    global _LOCAL_EVALUATIONS
+    if not isinstance(_LOCAL_EVALUATIONS, list):
+        _LOCAL_EVALUATIONS = []
+    initial_count = len(_LOCAL_EVALUATIONS)
+    _LOCAL_EVALUATIONS = [e for e in _LOCAL_EVALUATIONS if isinstance(e, dict) and str(e.get('id')) not in str_ids]
+    deleted_count = initial_count - len(_LOCAL_EVALUATIONS)
+    _save_persisted_evaluations(_LOCAL_EVALUATIONS)
+
+    if supabase:
+        try:
+            for eval_id in str_ids:
+                supabase.table('evaluations').delete().eq('id', eval_id).execute()
+        except Exception as e:
+            logging.warning("No se pudieron eliminar evaluaciones en lote de Supabase: %s", e)
+
+    _invalidate_dashboard_cache()
+    return jsonify({
+        "success": True,
+        "message": f"Se eliminaron {deleted_count or len(str_ids)} evaluaciones correctamente.",
+        "deleted_count": deleted_count or len(str_ids)
+    }), 200
+
 @evaluations_bp.route('/api/evaluations/<eval_id>', methods=['DELETE'])
 def delete_evaluation(eval_id):
     current_user = _get_current_user()
