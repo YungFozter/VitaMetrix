@@ -9909,11 +9909,17 @@ function showConfirmDeleteTaxonomyModal({ title, message, warningText, onConfirm
 
     pendingDeleteTaxonomyCallback = onConfirm;
     modal.classList.remove('d-none');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
 }
 
 function closeConfirmDeleteTaxonomyModal() {
     const modal = document.getElementById('modal-confirm-delete-taxonomy');
-    if (modal) modal.classList.add('d-none');
+    if (modal) {
+        modal.classList.add('d-none');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
     pendingDeleteTaxonomyCallback = null;
 }
 

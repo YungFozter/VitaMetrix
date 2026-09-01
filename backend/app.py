@@ -3565,17 +3565,28 @@ def add_stock_category():
 
     return jsonify({"success": True, "category": new_cat}), 201
 
-@app.route('/api/stock/taxonomies/category/<string:cat_name>', methods=['DELETE'])
+@app.route('/api/stock/taxonomies/category/<path:cat_name>', methods=['DELETE'])
 def delete_stock_category(cat_name):
-    cat_name = _clean_str(cat_name)
-    if not cat_name:
+    import html
+    raw_cat_name = _clean_str(cat_name)
+    decoded_cat_name = html.unescape(raw_cat_name).strip()
+    if not raw_cat_name and not decoded_cat_name:
         return jsonify({"error": "Nombre de categoría inválido"}), 400
 
     cats, units = _load_persisted_taxonomies()
-    filtered_cats = [c for c in cats if c['name'].lower() != cat_name.lower()]
+    
+    def _is_match(c):
+        c_n = str(c.get('name') or '').strip().lower()
+        c_un = html.unescape(c_n).strip()
+        r_n = raw_cat_name.lower()
+        d_n = decoded_cat_name.lower()
+        return c_n in (r_n, d_n) or c_un in (r_n, d_n)
+
+    filtered_cats = [c for c in cats if not _is_match(c)]
 
     if len(filtered_cats) == len(cats):
-        return jsonify({"error": f"Categoría '{cat_name}' no encontrada"}), 404
+        # Si no coincidió con la lista en memoria, eliminar por coincidencia de nombre exacto
+        filtered_cats = [c for c in cats if str(c.get('name') or '').strip().lower() != raw_cat_name.lower()]
 
     # Reasignar productos que tengan esta categoría a 'Otros' en Supabase y local
     if supabase:
@@ -3585,11 +3596,11 @@ def delete_stock_category(cat_name):
             logging.warning("Error reasignando categoría en Supabase al eliminar: %s", e)
 
     for item in _LOCAL_STOCK_ITEMS:
-        if (item.get('category') or '').strip().lower() == cat_name.lower():
+        if (item.get('category') or '').strip().lower() in (raw_cat_name.lower(), decoded_cat_name.lower()):
             item['category'] = 'Otros'
 
     _save_persisted_taxonomies(filtered_cats, units)
-    return jsonify({"success": True, "message": f"Categoría '{cat_name}' eliminada correctamente"})
+    return jsonify({"success": True, "message": f"Categoría eliminada correctamente"})
 
 @app.route('/api/stock/taxonomies/unit', methods=['POST'])
 def add_stock_unit():
@@ -3609,17 +3620,27 @@ def add_stock_unit():
 
     return jsonify({"success": True, "unit": new_unit}), 201
 
-@app.route('/api/stock/taxonomies/unit/<string:unit_name>', methods=['DELETE'])
+@app.route('/api/stock/taxonomies/unit/<path:unit_name>', methods=['DELETE'])
 def delete_stock_unit(unit_name):
-    unit_name = _clean_str(unit_name)
-    if not unit_name:
+    import html
+    raw_unit_name = _clean_str(unit_name)
+    decoded_unit_name = html.unescape(raw_unit_name).strip()
+    if not raw_unit_name and not decoded_unit_name:
         return jsonify({"error": "Nombre de unidad inválido"}), 400
 
     cats, units = _load_persisted_taxonomies()
-    filtered_units = [u for u in units if u['name'].lower() != unit_name.lower()]
+    
+    def _is_unit_match(u):
+        u_n = str(u.get('name') or '').strip().lower()
+        u_un = html.unescape(u_n).strip()
+        r_n = raw_unit_name.lower()
+        d_n = decoded_unit_name.lower()
+        return u_n in (r_n, d_n) or u_un in (r_n, d_n)
+
+    filtered_units = [u for u in units if not _is_unit_match(u)]
 
     if len(filtered_units) == len(units):
-        return jsonify({"error": f"Unidad '{unit_name}' no encontrada"}), 404
+        filtered_units = [u for u in units if str(u.get('name') or '').strip().lower() != raw_unit_name.lower()]
 
     _save_persisted_taxonomies(cats, filtered_units)
     return jsonify({"success": True, "message": f"Unidad '{unit_name}' eliminada correctamente"})
