@@ -741,6 +741,33 @@
                 <div id="excel-import-status" class="alert alert-info py-2 px-3 small rounded-3 d-none mt-3 mb-0" style="font-size: 0.8rem;">
                     <i class="bi bi-arrow-repeat spin me-1"></i> <span id="excel-import-status-text">Procesando archivo...</span>
                 </div>
+
+                <!-- VISTA PREVIA SCROLLEABLE DE INSUMOS DETECTADOS -->
+                <div id="excel-preview-container" class="d-none mt-3">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-2.5 py-1.5 rounded-pill small fw-semibold" id="excel-preview-badge">
+                            <i class="bi bi-check-circle-fill me-1"></i> 0 insumos detectados
+                        </span>
+                        <small class="text-muted" style="font-size: 0.76rem;">Revisa la lista antes de confirmar el guardado</small>
+                    </div>
+                    <div class="table-responsive rounded-3 border stock-custom-scrollbar" style="max-height: 260px; overflow-y: auto;">
+                        <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.82rem;">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th>CÓDIGO/SKU</th>
+                                    <th>PRODUCTO / INSUMO</th>
+                                    <th>CATEGORÍA</th>
+                                    <th>U/M</th>
+                                    <th class="text-center">STOCK</th>
+                                    <th class="text-end">PVP (BS)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="excel-preview-tbody">
+                                <!-- Inyectado dinámicamente -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <div class="d-flex align-items-center justify-content-end gap-2 pt-2 border-top">
@@ -748,7 +775,7 @@
                     Cancelar
                 </button>
                 <button type="button" id="btn-confirm-import-excel" class="btn btn-success px-4 py-2 rounded-3 fw-semibold shadow-sm text-white d-inline-flex align-items-center gap-1.5" disabled>
-                    <i class="bi bi-upload"></i> Procesar e Importar
+                    <i class="bi bi-upload"></i> <span id="btn-confirm-import-text">Confirmar e Importar</span>
                 </button>
             </div>
         </div>

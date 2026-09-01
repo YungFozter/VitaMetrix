@@ -3851,6 +3851,118 @@ def download_stock_excel_template():
         download_name="Plantilla_Importacion_Insumos_VitaMetrix.xlsx"
     )
 
+@app.route('/api/stock/preview-excel', methods=['POST'])
+def preview_stock_excel():
+    import io
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+    
+    if 'file' not in request.files:
+        return jsonify({"error": "No se seleccionó ningún archivo para analizar"}), 400
+
+    file = request.files['file']
+    filename = (file.filename or '').lower()
+    if not filename or not (filename.endswith('.xlsx') or filename.endswith('.xls') or filename.endswith('.csv')):
+        return jsonify({"error": "Formato no soportado. Debes subir un archivo Excel (.xlsx, .xls) o CSV (.csv)"}), 400
+
+    rows_raw = []
+    file_bytes = file.read()
+
+    try:
+        if filename.endswith('.csv'):
+            import csv
+            file_str = file_bytes.decode('utf-8-sig', errors='ignore')
+            reader = csv.reader(io.StringIO(file_str))
+            for r in reader:
+                if r and any(str(cell).strip() for cell in r):
+                    rows_raw.append([str(c).strip() for c in r])
+        else:
+            import openpyxl
+            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+            ws = wb.active
+            for r in ws.iter_rows(values_only=True):
+                if r and any(cell is not None and str(cell).strip() != '' for cell in r):
+                    rows_raw.append([str(c).strip() if c is not None else '' for c in r])
+    except Exception as ex_read:
+        return jsonify({"error": f"No se pudo analizar el archivo: {str(ex_read)}"}), 400
+
+    if not rows_raw or len(rows_raw) < 2:
+        return jsonify({"error": "El archivo está vacío o no contiene filas de datos"}), 400
+
+    header_row = [str(h).strip().lower() for h in rows_raw[0]]
+    
+    def _find_col_idx(aliases):
+        for idx, h in enumerate(header_row):
+            h_norm = h.replace('*', '').replace('(', '').replace(')', '').strip()
+            for alias in aliases:
+                if alias in h_norm or h_norm in alias:
+                    return idx
+        return -1
+
+    idx_code = _find_col_idx(['codigo', 'sku', 'code'])
+    idx_name = _find_col_idx(['nombre', 'producto', 'insumo'])
+    idx_cat = _find_col_idx(['categoria', 'categoría', 'category'])
+    idx_unit = _find_col_idx(['unidad', 'medida', 'unit'])
+    idx_qty = _find_col_idx(['cantidad', 'stock', 'existencia', 'cantidad inicial'])
+    idx_min = _find_col_idx(['minimo', 'mínimo', 'alerta'])
+    idx_cost = _find_col_idx(['costo', 'cost_price'])
+    idx_sale = _find_col_idx(['venta', 'pvp', 'sale_price'])
+
+    if idx_name == -1:
+        idx_name = 1 if len(header_row) > 1 else 0
+    if idx_qty == -1:
+        idx_qty = 4 if len(header_row) > 4 else 2
+
+    preview_items = []
+    temp_sku_counter = 1
+
+    for r_num, row_data in enumerate(rows_raw[1:], start=2):
+        def _get_val(col_idx):
+            if col_idx >= 0 and col_idx < len(row_data):
+                val = str(row_data[col_idx]).strip()
+                if val.lower() in ('none', 'null', 'nan', ''):
+                    return ''
+                return val
+            return ''
+
+        name = _clean_str(_get_val(idx_name), max_len=150)
+        if not name or name.lower().startswith('ej:') or name.lower().startswith('código'):
+            continue
+
+        raw_code = _clean_str(_get_val(idx_code), max_len=50)
+        if raw_code:
+            code = raw_code.upper()
+        else:
+            code = f"SKU-{temp_sku_counter:03d} (Auto)"
+            temp_sku_counter += 1
+
+        cat_val = _clean_str(_get_val(idx_cat), max_len=80) or 'Sin Categoría'
+        unit_val = _clean_str(_get_val(idx_unit), max_len=30) or 'Unidad (u)'
+        qty = _safe_stock_float(_get_val(idx_qty), default=0.0, min_val=0.0)
+        min_qty = _safe_stock_float(_get_val(idx_min), default=5.0, min_val=0.0)
+        cost_price = _safe_stock_float(_get_val(idx_cost), default=0.0, min_val=0.0)
+        sale_price = _safe_stock_float(_get_val(idx_sale), default=0.0, min_val=0.0)
+
+        preview_items.append({
+            "row_num": r_num,
+            "code": code,
+            "name": name,
+            "category": cat_val,
+            "unit": unit_val,
+            "stock_quantity": qty,
+            "min_stock": min_qty,
+            "cost_price": cost_price,
+            "sale_price": sale_price,
+            "valid": True
+        })
+
+    return jsonify({
+        "success": True,
+        "total_count": len(preview_items),
+        "items": preview_items
+    }), 200
+
 @app.route('/api/stock/import-excel', methods=['POST'])
 def import_stock_excel():
     import io

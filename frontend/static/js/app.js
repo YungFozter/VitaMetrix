@@ -10093,19 +10093,33 @@ function initImportStockExcelModal() {
     const fileInput = document.getElementById('stock-excel-file-input');
     const fileLabel = document.getElementById('excel-file-label');
     const btnConfirm = document.getElementById('btn-confirm-import-excel');
+    const btnConfirmText = document.getElementById('btn-confirm-import-text');
     const statusAlert = document.getElementById('excel-import-status');
     const statusText = document.getElementById('excel-import-status-text');
+
+    const previewContainer = document.getElementById('excel-preview-container');
+    const previewBadge = document.getElementById('excel-preview-badge');
+    const previewTbody = document.getElementById('excel-preview-tbody');
 
     if (!modal) return;
 
     let selectedFile = null;
+    let previewItemsData = [];
 
-    const openModal = () => {
+    const resetModalState = () => {
         selectedFile = null;
+        previewItemsData = [];
         if (fileInput) fileInput.value = '';
         if (fileLabel) fileLabel.innerHTML = 'Arrastra tu archivo Excel aquí o haz clic para examinar';
         if (btnConfirm) btnConfirm.disabled = true;
+        if (btnConfirmText) btnConfirmText.textContent = 'Confirmar e Importar';
         if (statusAlert) statusAlert.classList.add('d-none');
+        if (previewContainer) previewContainer.classList.add('d-none');
+        if (previewTbody) previewTbody.innerHTML = '';
+    };
+
+    const openModal = () => {
+        resetModalState();
         modal.classList.remove('d-none');
         modal.classList.remove('hidden');
         modal.style.display = 'flex';
@@ -10115,7 +10129,7 @@ function initImportStockExcelModal() {
         modal.classList.add('d-none');
         modal.classList.add('hidden');
         modal.style.display = 'none';
-        selectedFile = null;
+        resetModalState();
     };
 
     if (btnOpen) btnOpen.addEventListener('click', openModal);
@@ -10131,14 +10145,92 @@ function initImportStockExcelModal() {
         });
     }
 
+    const loadExcelPreview = async (file) => {
+        if (!file) return;
+
+        if (statusAlert && statusText) {
+            statusAlert.classList.remove('d-none', 'alert-danger', 'alert-success');
+            statusAlert.classList.add('alert-info');
+            statusText.textContent = 'Analizando y extrayendo vista previa del archivo...';
+        }
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        const token = localStorage.getItem('vm_auth_token') || sessionStorage.getItem('vm_auth_token');
+        const customHeaders = {};
+        if (token) customHeaders['Authorization'] = `Bearer ${token}`;
+
+        try {
+            const res = await fetch('/api/stock/preview-excel', {
+                method: 'POST',
+                headers: customHeaders,
+                body: formData
+            });
+
+            const data = await res.json();
+            if (res.ok && data.success && Array.isArray(data.items)) {
+                previewItemsData = data.items;
+                renderPreviewTable(previewItemsData);
+                if (statusAlert) statusAlert.classList.add('d-none');
+                if (btnConfirm) btnConfirm.disabled = (previewItemsData.length === 0);
+            } else {
+                if (statusAlert && statusText) {
+                    statusAlert.classList.remove('alert-info');
+                    statusAlert.classList.add('alert-danger');
+                    statusText.textContent = data.error || 'No se pudieron extraer datos del archivo Excel.';
+                }
+            }
+        } catch (err) {
+            console.error(err);
+            if (statusAlert && statusText) {
+                statusAlert.classList.remove('alert-info');
+                statusAlert.classList.add('alert-danger');
+                statusText.textContent = 'Error de conexión al generar vista previa.';
+            }
+        }
+    };
+
+    const renderPreviewTable = (items) => {
+        if (!previewContainer || !previewTbody) return;
+
+        if (!items || items.length === 0) {
+            previewContainer.classList.add('d-none');
+            return;
+        }
+
+        if (previewBadge) {
+            previewBadge.innerHTML = `<i class="bi bi-check-circle-fill me-1"></i> ${items.length} insumos detectados`;
+        }
+        if (btnConfirmText) {
+            btnConfirmText.textContent = `Confirmar e Importar (${items.length})`;
+        }
+
+        previewTbody.replaceChildren();
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="font-monospace text-navy fw-semibold">${escapeHtml(item.code || '')}</td>
+                <td class="fw-bold text-navy">${escapeHtml(item.name || '')}</td>
+                <td><span class="badge bg-light text-secondary border small">${escapeHtml(item.category || 'Sin Categoría')}</span></td>
+                <td><span class="badge bg-light text-secondary border small">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>
+                <td class="text-center font-monospace fw-bold text-success">${item.stock_quantity ?? 0}</td>
+                <td class="text-end font-monospace">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>
+            `;
+            previewTbody.appendChild(tr);
+        });
+
+        previewContainer.classList.remove('d-none');
+    };
+
     if (fileInput) {
-        fileInput.addEventListener('change', (e) => {
+        fileInput.addEventListener('change', async (e) => {
             if (e.target.files && e.target.files.length > 0) {
                 selectedFile = e.target.files[0];
                 if (fileLabel) {
                     fileLabel.innerHTML = `<span class="text-success fw-bold"><i class="bi bi-file-earmark-excel me-1"></i> ${escapeHtml(selectedFile.name)}</span> <span class="text-muted">(${(selectedFile.size / 1024).toFixed(1)} KB)</span>`;
                 }
-                if (btnConfirm) btnConfirm.disabled = false;
+                await loadExcelPreview(selectedFile);
             }
         });
     }
@@ -10151,7 +10243,7 @@ function initImportStockExcelModal() {
             if (statusAlert && statusText) {
                 statusAlert.classList.remove('d-none', 'alert-danger', 'alert-success');
                 statusAlert.classList.add('alert-info');
-                statusText.textContent = 'Procesando e importando insumos desde Excel...';
+                statusText.textContent = 'Guardando insumos en el inventario...';
             }
 
             const formData = new FormData();
