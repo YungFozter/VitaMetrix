@@ -10210,12 +10210,13 @@ function initImportStockExcelModal() {
         items.forEach(item => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td class="font-monospace text-navy fw-semibold">${escapeHtml(item.code || '')}</td>
-                <td class="fw-bold text-navy">${escapeHtml(item.name || '')}</td>
-                <td><span class="badge bg-light text-secondary border small">${escapeHtml(item.category || 'Sin Categoría')}</span></td>
-                <td><span class="badge bg-light text-secondary border small">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>
-                <td class="text-center font-monospace fw-bold text-success">${item.stock_quantity ?? 0}</td>
-                <td class="text-end font-monospace">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>
+                <td class="font-monospace text-navy fw-semibold text-nowrap ps-3">${escapeHtml(item.code || '')}</td>
+                <td class="fw-bold text-navy" style="min-width: 190px;">${escapeHtml(item.name || '')}</td>
+                <td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.category || 'Sin Categoría')}</span></td>
+                <td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>
+                <td class="text-center font-monospace fw-bold text-success text-nowrap">${item.stock_quantity ?? 0}</td>
+                <td class="text-end font-monospace text-muted text-nowrap">Bs ${Number(item.cost_price || 0).toFixed(2)}</td>
+                <td class="text-end font-monospace fw-bold text-navy text-nowrap pe-3">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>
             `;
             previewTbody.appendChild(tr);
         });
