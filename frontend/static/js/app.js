@@ -7352,21 +7352,16 @@ function importBackupJSON(e) {
 }
 
 // --- 7. STOCK CONTROL & INVENTARIO CLÍNICO Y VENTAS (POS) ---
-let allStockItems = [];
+// (Variables compartidas declaradas en stock.js: allStockItems, stockFilteredItems, stockCurrentPage, stockPageSize, stockSelectedIds, stockTaxonomiesData)
 let allStockMovements = [];
 let allSalesHistory = [];
 let posCart = [];
 let editingStockId = null;
 let currentQuickAdjustItem = null;
 let currentMovementType = 'IN';
-let stockTaxonomiesData = { categories: [], units: [] };
 let posSelectedPatient = null;
 let posSelectedPaymentMethod = 'Efectivo';
 let currentViewedReceipt = null;
-let stockCurrentPage = 1;
-let stockPageSize = 15;
-let stockSelectedIds = new Set();
-let stockFilteredItems = [];
 let stockMarginCalculationMode = 'cost';
 
 function initStockModule() {
