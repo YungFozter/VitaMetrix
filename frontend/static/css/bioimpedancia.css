@@ -738,10 +738,10 @@
     .bia-printable-sheet {
         width: 100% !important;
         height: 100vh !important;
-        min-height: 100vh !important;
+        min-height: 98vh !important;
         max-height: 100vh !important;
         box-sizing: border-box !important;
-        padding: 10mm 9mm 6mm 9mm !important;
+        padding: 5mm 8mm 3mm 8mm !important;
         display: flex !important;
         flex-direction: column !important;
         justify-content: space-between !important;
@@ -767,7 +767,7 @@
     .sheet-footer {
         flex: 0 0 auto !important;
         margin-top: auto !important;
-        padding-top: 1.5mm !important;
+        padding-top: 1mm !important;
         border-top: 1px solid #cbd5e1 !important;
     }
 }
