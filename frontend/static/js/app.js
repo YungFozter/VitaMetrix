@@ -8662,38 +8662,53 @@ function initPosPatientAutocomplete() {
         });
         dropdown.appendChild(optOccasional);
 
-        const clientsList = Array.isArray(allClients) ? allClients : [];
-        const filtered = clientsList.filter(c => !norm || normalizeText(c.name).includes(norm) || normalizeText(c.idp || c.code).includes(norm));
+        const clientsList = Array.isArray(allClientsData) ? allClientsData : [];
+        const filtered = clientsList.filter(c => !norm || normalizeText(c.name).includes(norm) || normalizeText(c.idp || c.code).includes(norm) || normalizeText(c.phone).includes(norm));
 
-        filtered.slice(0, 8).forEach(c => {
-            const item = document.createElement('div');
-            item.className = 'stock-dropdown-item';
-            item.innerHTML = `
-                <div>
-                    <div class="fw-bold text-navy">${escapeHtml(c.name)}</div>
-                    <div class="text-muted small" style="font-size: 0.72rem;">IDP: ${escapeHtml(c.idp || c.code || '--')} ${c.phone ? '• ' + escapeHtml(c.phone) : ''}</div>
-                </div>
-            `;
-            item.addEventListener('mousedown', (e) => {
-                e.preventDefault();
-                patientInput.value = c.name;
-                if (hiddenIdp) hiddenIdp.value = c.idp || c.code || '';
-                if (hiddenPhone) hiddenPhone.value = c.phone || '';
-                posSelectedPatient = { name: c.name, idp: c.idp || c.code || '', phone: c.phone || '' };
-                dropdown.classList.remove('show');
+        if (filtered.length === 0 && norm) {
+            const emptyItem = document.createElement('div');
+            emptyItem.className = 'stock-dropdown-item text-muted small fst-italic';
+            emptyItem.textContent = 'No se encontraron pacientes coincidentes';
+            dropdown.appendChild(emptyItem);
+        } else {
+            filtered.slice(0, 10).forEach(c => {
+                const item = document.createElement('div');
+                item.className = 'stock-dropdown-item';
+                item.innerHTML = `
+                    <div>
+                        <div class="fw-bold text-navy">${escapeHtml(c.name)}</div>
+                        <div class="text-muted small" style="font-size: 0.72rem;">IDP: ${escapeHtml(c.idp || c.code || '--')} ${c.phone ? '• ' + escapeHtml(c.phone) : ''}</div>
+                    </div>
+                `;
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    patientInput.value = c.name;
+                    if (hiddenIdp) hiddenIdp.value = c.idp || c.code || '';
+                    if (hiddenPhone) hiddenPhone.value = c.phone || '';
+                    posSelectedPatient = { name: c.name, idp: c.idp || c.code || '', phone: c.phone || '' };
+                    dropdown.classList.remove('show');
+                });
+                dropdown.appendChild(item);
             });
-            dropdown.appendChild(item);
-        });
+        }
+    };
+
+    const ensureClientsLoadedAndRender = async (val) => {
+        if (!allClientsData || allClientsData.length === 0) {
+            if (typeof fetchClients === 'function') {
+                try { await fetchClients(); } catch(e){}
+            }
+        }
+        renderPatients(val);
+        dropdown.classList.add('show');
     };
 
     patientInput.addEventListener('focus', () => {
-        renderPatients(patientInput.value);
-        dropdown.classList.add('show');
+        ensureClientsLoadedAndRender(patientInput.value);
     });
 
     patientInput.addEventListener('input', () => {
-        renderPatients(patientInput.value);
-        dropdown.classList.add('show');
+        ensureClientsLoadedAndRender(patientInput.value);
     });
 
     patientInput.addEventListener('blur', () => {
