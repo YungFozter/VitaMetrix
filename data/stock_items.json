@@ -1,5 +1,21 @@
 [
   {
+    "id": "a5e43c82-8ba6-46ce-9cff-3d5a5a32658d",
+    "user_id": "usr-doctor-002",
+    "code": "SKU-001",
+    "name": "Laptop HP OMEN 15",
+    "category": "Electrónica",
+    "unit": "Unidad (u)",
+    "stock_quantity": 7.0,
+    "min_stock": 5.0,
+    "cost_price": 3000.0,
+    "sale_price": 3500.0,
+    "supplier": "",
+    "location": "",
+    "notes": "",
+    "created_at": "2026-09-01T03:19:40.425627+00:00"
+  },
+  {
     "id": "stk-001",
     "code": "SKU-BIA-001",
     "name": "Electrodos BIA Desechables (Pack x100)",
