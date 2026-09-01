@@ -1868,7 +1868,7 @@
 
     <!-- MODAL: COMPROBANTE / RECIBO DIGITAL CLÍNICO (PRINTABLE & WHATSAPP) -->
     <div id="modal-digital-receipt" class="modal-overlay hidden d-none" style="display: none; z-index: 1080;">
-        <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 540px; width: 94%;">
+        <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 680px; width: 95%; margin: auto;">
 
             <!-- Barra Superior de Acciones de Recibo -->
             <div class="p-3 bg-light border-bottom d-flex align-items-center justify-content-between">
@@ -1896,7 +1896,7 @@
 
             <!-- Cuerpo del Recibo Imprimible -->
             <div class="p-4 receipt-printable-body stock-custom-scrollbar" id="receipt-printable-content"
-                style="max-height: 70vh; overflow-y: auto;">
+                style="max-height: 72vh; overflow-y: auto;">
 
                 <!-- Membrete Clínico -->
                 <div class="text-center pb-3 border-bottom mb-3">
@@ -1930,20 +1930,21 @@
                 </div>
 
                 <!-- Tabla de Productos del Recibo -->
-                <table class="table table-sm table-borderless align-middle mb-3 receipt-items-table"
-                    style="font-size: 0.82rem;">
-                    <thead style="border-bottom: 2px solid #e2e8f0;">
-                        <tr class="text-muted small fw-bold text-uppercase">
-                            <th class="ps-0">ÍTEM / CONCEPTO</th>
-                            <th class="text-center">CANT.</th>
-                            <th class="text-end">P. UNIT</th>
-                            <th class="text-end pe-0">SUBTOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody id="receipt-items-tbody">
-                        <!-- Inyectado dinámicamente -->
-                    </tbody>
-                </table>
+                <div class="table-responsive rounded-3 border mb-3 overflow-x-hidden">
+                    <table class="table table-hover align-middle mb-0 receipt-items-table" style="font-size: 0.84rem;">
+                        <thead class="table-light border-bottom">
+                            <tr class="text-muted small fw-bold text-uppercase">
+                                <th class="ps-3 py-2.5 text-nowrap">ÍTEM / CONCEPTO</th>
+                                <th class="text-center py-2.5 text-nowrap" style="width: 80px;">CANT.</th>
+                                <th class="text-end py-2.5 text-nowrap" style="width: 140px;">P. UNIT (BS)</th>
+                                <th class="text-end pe-3 py-2.5 text-nowrap" style="width: 150px;">SUBTOTAL (BS)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receipt-items-tbody">
+                            <!-- Inyectado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
 
                 <!-- Totales y Resumen Financiero -->
                 <div class="pt-2 border-top mb-3">
@@ -2309,7 +2310,7 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=56"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=187"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=188"></script>
 </body>
 
 </html>

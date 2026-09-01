@@ -9232,13 +9232,13 @@ function openDigitalReceiptModal(sale) {
     (sale.items || []).forEach(it => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td class="ps-0">
-                <div class="fw-semibold text-dark">${escapeHtml(it.name)}</div>
-                <div class="text-muted small" style="font-size: 0.7rem;">${escapeHtml(it.unit || 'u')}</div>
+            <td class="ps-3 py-2.5">
+                <div class="fw-bold text-navy">${escapeHtml(it.name)}</div>
+                <div class="text-muted small" style="font-size: 0.72rem;"><span class="badge bg-light text-secondary border px-2 py-0.5">${escapeHtml(it.unit || 'u')}</span></div>
             </td>
-            <td class="text-center font-monospace">${it.quantity}</td>
-            <td class="text-end font-monospace">Bs. ${(it.unit_price || 0).toFixed(2)}</td>
-            <td class="text-end pe-0 font-monospace fw-bold">Bs. ${(it.subtotal || 0).toFixed(2)}</td>
+            <td class="text-center font-monospace fw-bold text-navy py-2.5">${it.quantity}</td>
+            <td class="text-end font-monospace text-muted text-nowrap py-2.5">Bs. ${(it.unit_price || 0).toFixed(2)}</td>
+            <td class="text-end pe-3 font-monospace fw-bold text-navy text-nowrap py-2.5">Bs. ${(it.subtotal || 0).toFixed(2)}</td>
         `;
         itemsTbody.appendChild(tr);
     });
