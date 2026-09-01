@@ -2738,13 +2738,16 @@ _LOCAL_STOCK_MOVEMENTS = _load_persisted_stock_movements()
 
 def _clean_expiry_date(raw_val):
     if not raw_val:
-        return ''
+        return None
     val_str = str(raw_val).strip()
+    if val_str.lower() in ('none', 'null', 'nan', '', '--'):
+        return None
     if ' ' in val_str:
         val_str = val_str.split(' ')[0]
     if 'T' in val_str:
         val_str = val_str.split('T')[0]
-    return _clean_str(val_str, max_len=20)
+    val_clean = _clean_str(val_str, max_len=20)
+    return val_clean if val_clean else None
 
 def _safe_stock_float(val, default=0.0, min_val=None):
     if val is None:
@@ -2758,29 +2761,18 @@ def _safe_stock_float(val, default=0.0, min_val=None):
         return round(f, 2)
     
     s = str(val).strip()
-    if not s:
+    if not s or s.lower() in ('none', 'null', 'nan'):
         return default
     
-    # Limpiar símbolos de moneda y espacios
-    for prefix in ('bs', 'bs.', 'bs', '$', '€', 'usd', 'bob'):
-        if s.lower().startswith(prefix):
-            s = s[len(prefix):].strip()
-        if s.lower().endswith(prefix):
-            s = s[:-len(prefix)].strip()
-            
-    s = s.replace('Bs', '').replace('bs', '').replace('BS', '').replace('$', '').replace('€', '').strip()
+    s_clean = re.sub(r'[^0-9.,-]', '', s)
+    if not s_clean:
+        return default
+    
+    if ',' in s_clean and '.' in s_clean:
+        s_clean = s_clean.replace(',', '')
+    elif ',' in s_clean and '.' not in s_clean:
+        s_clean = s_clean.replace(',', '.')
 
-    # Formatos con miles y decimales (ej: 1.250,50 vs 1,250.50)
-    if '.' in s and ',' in s:
-        if s.rfind(',') > s.rfind('.'):
-            s = s.replace('.', '').replace(',', '.')
-        else:
-            s = s.replace(',', '')
-    elif ',' in s:
-        s = s.replace(',', '.')
-
-    # Sanitizar dígitos
-    s_clean = ''.join(ch for ch in s if ch.isdigit() or ch in ('.', '-'))
     try:
         f = float(s_clean)
         if math.isnan(f) or math.isinf(f):
@@ -2803,32 +2795,40 @@ def _calc_item_status(qty, min_qty):
 def _supabase_insert_stock_item(item_dict):
     if not supabase or not item_dict:
         return False
-    # Intento 1: Todos los campos
+
+    clean_dict = dict(item_dict)
+    if 'expiry_date' in clean_dict and (not clean_dict['expiry_date'] or str(clean_dict['expiry_date']).lower() in ('none', 'null', 'nan', '', '--')):
+        clean_dict['expiry_date'] = None
+
+    # Intento 1: Todos los campos desinfectados
     try:
-        res = supabase.table('stock_items').insert(item_dict).execute()
+        res = supabase.table('stock_items').insert(clean_dict).execute()
         if res and res.data:
             return True
     except Exception as e1:
         logging.warning("Supabase insert tier 1 fallo: %s", e1)
-    # Intento 2: Sin campos opcionales extendidos
+
+    # Intento 2: Sin la columna 'status' (por si la tabla Postgres no tiene status)
     try:
-        t2 = {k: v for k, v in item_dict.items() if k not in ['batch_number', 'expiry_date', 'notes', 'status', 'location', 'supplier']}
+        t2 = {k: v for k, v in clean_dict.items() if k != 'status'}
         res = supabase.table('stock_items').insert(t2).execute()
         if res and res.data:
             return True
     except Exception as e2:
         logging.warning("Supabase insert tier 2 fallo: %s", e2)
-    # Intento 3: Campos esenciales obligatorios
+
+    # Intento 3: Reintento sin expiry_date ni batch_number si el esquema Postgres difiere
     try:
-        t3 = {k: v for k, v in item_dict.items() if k in ['id', 'user_id', 'code', 'name', 'category', 'unit', 'stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'created_at']}
+        t3 = {k: v for k, v in clean_dict.items() if k not in ['status', 'expiry_date', 'batch_number']}
         res = supabase.table('stock_items').insert(t3).execute()
         if res and res.data:
             return True
     except Exception as e3:
         logging.warning("Supabase insert tier 3 fallo: %s", e3)
+
     # Intento 4: Mínimo indispensable
     try:
-        t4 = {k: v for k, v in item_dict.items() if k in ['id', 'code', 'name', 'category', 'unit', 'stock_quantity', 'cost_price', 'sale_price']}
+        t4 = {k: v for k, v in clean_dict.items() if k in ['id', 'user_id', 'code', 'name', 'category', 'unit', 'stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'created_at']}
         res = supabase.table('stock_items').insert(t4).execute()
         if res and res.data:
             return True
@@ -2839,24 +2839,31 @@ def _supabase_insert_stock_item(item_dict):
 def _supabase_update_stock_item(item_id, update_payload):
     if not supabase or not item_id or not update_payload:
         return False
-    # Intento 1: Payload completo
+
+    clean_payload = dict(update_payload)
+    if 'expiry_date' in clean_payload and (not clean_payload['expiry_date'] or str(clean_payload['expiry_date']).lower() in ('none', 'null', 'nan', '', '--')):
+        clean_payload['expiry_date'] = None
+
+    # Intento 1: Payload desinfectado completo
     try:
-        res = supabase.table('stock_items').update(update_payload).eq('id', item_id).execute()
+        res = supabase.table('stock_items').update(clean_payload).eq('id', item_id).execute()
         if res and res.data:
             return True
     except Exception as e1:
         logging.warning("Supabase update tier 1 fallo: %s", e1)
-    # Intento 2: Sin campos opcionales extendidos
+
+    # Intento 2: Sin columna 'status'
     try:
-        t2 = {k: v for k, v in update_payload.items() if k not in ['batch_number', 'expiry_date', 'notes', 'status', 'location', 'supplier']}
+        t2 = {k: v for k, v in clean_payload.items() if k != 'status'}
         res = supabase.table('stock_items').update(t2).eq('id', item_id).execute()
         if res and res.data:
             return True
     except Exception as e2:
         logging.warning("Supabase update tier 2 fallo: %s", e2)
+
     # Intento 3: Mínimo indispensable de actualización
     try:
-        t3 = {k: v for k, v in update_payload.items() if k in ['stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'user_id', 'updated_at']}
+        t3 = {k: v for k, v in clean_payload.items() if k in ['stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'user_id', 'updated_at']}
         res = supabase.table('stock_items').update(t3).eq('id', item_id).execute()
         if res and res.data:
             return True
