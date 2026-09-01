@@ -16,6 +16,8 @@ from services.helpers import (
     _save_persisted_evaluations
 )
 
+evaluations_bp = Blueprint('evaluations_bp', __name__)
+
 _LOCAL_EVALUATIONS = _load_persisted_evaluations()
 
 @evaluations_bp.route('/api/evaluations', methods=['GET'])
