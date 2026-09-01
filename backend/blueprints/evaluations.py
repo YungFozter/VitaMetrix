@@ -63,6 +63,27 @@ def compute_full_bia_analysis(data):
     f_score = scores.get('fat_score', 0)
     rank_str = scores.get('rank', 'HIERRO')
 
+    # Módulo BCC Matrix (Balance Grasa vs Músculo)
+    if smm is not None and smm > 0 and w > 0:
+        m_pct = round((smm / w) * 100.0, 1)
+    else:
+        m_pct = round(min(max(phase_angle * 7.0 + (5.0 if gender == 'male' else 0.0), 20.0), 55.0), 1)
+
+    if fat_mass is not None and fat_mass > 0 and w > 0:
+        f_pct = round((fat_mass / w) * 100.0, 1)
+    else:
+        h_m = (h / 100.0) if h > 0 else 1.70
+        bmi_val = (w / (h_m ** 2)) if h_m > 0 else 22.0
+        f_pct = round(min(max((bmi_val - 12.0) * (1.1 if gender == 'female' else 0.9), 5.0), 45.0), 1)
+
+    bcc_data = {
+        "available": True,
+        "muscle_pct": m_pct,
+        "fat_pct": f_pct,
+        "smm_kg": smm if smm else round(w * (m_pct / 100.0), 1),
+        "fat_kg": fat_mass if fat_mass else round(w * (f_pct / 100.0), 1)
+    }
+
     return {
         "score": g_score,
         "global_score": g_score,
@@ -78,6 +99,7 @@ def compute_full_bia_analysis(data):
         "hydration": hydration,
         "visceral": visceral,
         "energy": energy,
+        "bcc": bcc_data,
         "clinical_findings": findings,
         "body_comp": {
             "smm_kg": smm or 0,
