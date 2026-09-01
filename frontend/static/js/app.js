@@ -9357,7 +9357,11 @@ function initQuickStockAdjustModal() {
     const btnCancel = document.getElementById('btn-cancel-quick-adjust');
     const btnConfirm = document.getElementById('btn-confirm-quick-adjust');
 
-    const closeModal = () => modal.classList.add('d-none');
+    const closeModal = () => {
+        modal.classList.add('d-none');
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    };
 
     if (btnClose) btnClose.addEventListener('click', closeModal);
     if (btnCancel) btnCancel.addEventListener('click', closeModal);
@@ -9455,6 +9459,8 @@ function openQuickStockAdjustModal(item) {
     document.getElementById('quick-adjust-qty-label').textContent = 'Cantidad a Ingresar';
 
     modal.classList.remove('d-none');
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
 }
 
 // --- MODAL DE GESTIÓN DE TAXONOMÍAS (CATEGORÍAS Y U/M - OPCIÓN 1) ---
