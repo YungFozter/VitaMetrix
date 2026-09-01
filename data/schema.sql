@@ -182,11 +182,25 @@ ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.subscription_licenses ENABLE ROW LEVEL SECURITY;
 
--- Políticas de acceso anónimo/servicio para API backend
+-- Limpieza preventiva de políticas obsoletas o duplicadas
+DROP POLICY IF EXISTS "eval_delete" ON public.evaluations;
+DROP POLICY IF EXISTS "eval_insert" ON public.evaluations;
+DROP POLICY IF EXISTS "eval_update" ON public.evaluations;
+DROP POLICY IF EXISTS "Permitir acceso a users" ON public.users;
+DROP POLICY IF EXISTS "Permitir acceso a subscription_licenses" ON public.subscription_licenses;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a clientes" ON public.clients;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a evaluaciones" ON public.evaluations;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a citas" ON public.appointments;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a stock_items" ON public.stock_items;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a stock_movements" ON public.stock_movements;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a sales" ON public.sales;
+DROP POLICY IF EXISTS "Permitir acceso anonimo a sale_items" ON public.sale_items;
+
+-- Políticas de acceso para API backend (con RLS activo en Supabase)
 CREATE POLICY "Permitir acceso a users" ON public.users FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso a subscription_licenses" ON public.subscription_licenses FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a clientes" ON public.clients FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir acceso anonimo a evaluaciones" ON public.evaluaciones FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir acceso anonimo a evaluaciones" ON public.evaluations FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a citas" ON public.appointments FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a stock_items" ON public.stock_items FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a stock_movements" ON public.stock_movements FOR ALL USING (true) WITH CHECK (true);
