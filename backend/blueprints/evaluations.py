@@ -118,6 +118,89 @@ def create_evaluation():
     _invalidate_dashboard_cache()
     return jsonify({"success": True, "evaluation": new_eval}), 201
 
+@evaluations_bp.route('/api/evaluations/<eval_id>', methods=['GET'])
+def get_evaluation_detail(eval_id):
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    target_eval = None
+    if supabase:
+        try:
+            res = supabase.table('evaluations').select('*').eq('id', str(eval_id)).execute()
+            if res and res.data:
+                target_eval = res.data[0]
+        except Exception as e:
+            logging.warning("Error consultando evaluación en Supabase: %s", e)
+
+    if not target_eval:
+        local_evals = _load_persisted_evaluations()
+        for e in local_evals:
+            if isinstance(e, dict) and str(e.get('id')) == str(eval_id):
+                target_eval = e
+                break
+
+    if not target_eval:
+        return jsonify({"error": "Evaluación clínica no encontrada"}), 404
+
+    report = target_eval.get('report') or {}
+    scores_dict = report.get('scores') or {}
+    biva_dict = report.get('biva') or {}
+    body_dict = report.get('body_comp') or {}
+    meta_dict = report.get('meta') or {}
+
+    g_score = target_eval.get('global_score')
+    if g_score is None:
+        g_score = scores_dict.get('global_score', 0)
+
+    p_angle = target_eval.get('phase_angle')
+    if p_angle is None:
+        p_angle = biva_dict.get('phase_angle', 0)
+
+    cell_status = biva_dict.get('cell_status') or biva_dict.get('status') or "Óptimo"
+    rank_str = scores_dict.get('rank') or "Especial"
+    tee_val = meta_dict.get('tee_kcal') or report.get('tee_kcal') or 2000
+
+    raw_inputs = {
+        "weight": target_eval.get('weight') or report.get('inputs', {}).get('weight', '--'),
+        "height": target_eval.get('height') or report.get('inputs', {}).get('height', '--'),
+        "age": target_eval.get('age') or report.get('inputs', {}).get('age', '--'),
+        "gender": target_eval.get('gender') or report.get('inputs', {}).get('gender', 'male'),
+        "resistance": target_eval.get('resistance') or report.get('inputs', {}).get('resistance', '--'),
+        "reactance": target_eval.get('reactance') or report.get('inputs', {}).get('reactance', '--'),
+        "smm": body_dict.get('smm_kg') or report.get('smm_kg', '--'),
+        "fat_mass": body_dict.get('fat_kg') or report.get('fat_kg', '--'),
+        "visceral_fat": body_dict.get('visceral_level') or report.get('visceral_level', '--'),
+        "pal": report.get('pal') or 1.55
+    }
+
+    clinical_findings = report.get('clinical_findings') or [
+        f"Ángulo de fase: {p_angle}°",
+        f"Diagnóstico celular: {cell_status}",
+        f"Calificación TRU Score: {g_score} pts"
+    ]
+
+    response_data = {
+        "id": target_eval.get('id'),
+        "patient_name": target_eval.get('patient_name') or target_eval.get('name') or "Paciente",
+        "name": target_eval.get('patient_name') or target_eval.get('name') or "Paciente",
+        "patient_idp": target_eval.get('patient_idp') or target_eval.get('idp') or "--",
+        "idp": target_eval.get('patient_idp') or target_eval.get('idp') or "--",
+        "code": target_eval.get('code') or "EVAL",
+        "created_at": target_eval.get('created_at') or "",
+        "score": float(g_score or 0),
+        "global_score": float(g_score or 0),
+        "phase_angle": float(p_angle or 0),
+        "rank": rank_str,
+        "cell_status": cell_status,
+        "tee_kcal": tee_val,
+        "raw_inputs": raw_inputs,
+        "clinical_findings": clinical_findings,
+        "report": report
+    }
+
+    return jsonify(response_data)
+
 @evaluations_bp.route('/api/evaluations/<eval_id>', methods=['DELETE'])
 def delete_evaluation(eval_id):
     current_user = _get_current_user()
