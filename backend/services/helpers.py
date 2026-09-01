@@ -232,42 +232,51 @@ def _save_users_disk_only(users):
         return False
 
 def _load_users():
-    if supabase:
-        try:
-            res = supabase.table('users').select('*').execute()
-            if res and res.data and len(res.data) > 0:
-                clean_res = _clean_test_users(res.data)
-                _save_users_disk_only(clean_res)
-                return list(clean_res)
-        except Exception:
-            pass
-
-    if supabase:
-        try:
-            res = supabase.table('stock_items').select('*').eq('code', '__SYS_USERS_STORE__').execute()
-            if res and res.data and len(res.data) > 0:
-                notes = res.data[0].get('notes')
-                if notes:
-                    parsed = json.loads(notes)
-                    if isinstance(parsed, list) and len(parsed) > 0:
-                        clean_parsed = _clean_test_users(parsed)
-                        _save_users_disk_only(clean_parsed)
-                        return clean_parsed
-        except Exception as e:
-            logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
-
+    local_users = []
     if os.path.exists(_USERS_PATH):
         try:
             with open(_USERS_PATH, 'r', encoding='utf-8') as f:
-                users = json.load(f)
-                if isinstance(users, list) and len(users) > 0:
-                    clean_local = _clean_test_users(users)
-                    return clean_local
+                data = json.load(f)
+                if isinstance(data, list):
+                    local_users = data
         except Exception as e:
             logging.warning("Error al leer users.json: %s", e)
-    
-    _save_users_disk_only(_DEFAULT_INITIAL_USERS)
-    return list(_DEFAULT_INITIAL_USERS)
+
+    remote_users = []
+    if supabase:
+        try:
+            res = supabase.table('users').select('*').execute()
+            if res and res.data and isinstance(res.data, list):
+                remote_users = res.data
+        except Exception as e:
+            logging.warning("Error consultando usuarios en Supabase: %s", e)
+
+        if not remote_users:
+            try:
+                res_sys = supabase.table('stock_items').select('*').eq('code', '__SYS_USERS_STORE__').execute()
+                if res_sys and res_sys.data and len(res_sys.data) > 0:
+                    notes = res_sys.data[0].get('notes')
+                    if notes:
+                        parsed = json.loads(notes)
+                        if isinstance(parsed, list):
+                            remote_users = parsed
+            except Exception as e:
+                logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
+
+    user_map = {}
+    for u in local_users + remote_users:
+        if isinstance(u, dict) and u.get('email'):
+            email_key = str(u.get('email')).lower().strip()
+            if email_key not in user_map or (u.get('password_hash') and not user_map[email_key].get('password_hash')):
+                user_map[email_key] = u
+
+    all_users = list(user_map.values())
+    if not all_users:
+        all_users = list(_DEFAULT_INITIAL_USERS)
+
+    _save_users_disk_only(all_users)
+    return all_users
+
 
 def _save_users(users):
     users = _clean_test_users(users)
@@ -505,21 +514,7 @@ def _user_to_public_dict(user):
     }
 
 def _generate_next_user_id(role='user'):
-    users = _load_users()
-    prefix = 'usr-admin-' if role == 'admin' else 'usr-doctor-'
-    existing_nums = []
-    for u in users:
-        uid = str(u.get('id') or '')
-        if uid.startswith(prefix):
-            try:
-                num = int(uid.replace(prefix, ''))
-                existing_nums.append(num)
-            except ValueError:
-                pass
-    next_num = 1
-    while next_num in existing_nums:
-        next_num += 1
-    return f"{prefix}{next_num:03d}"
+    return str(uuid.uuid4())
 
 # --- PERSISTENCIA Y MOTOR DE INVENTARIO STOCK ---
 
