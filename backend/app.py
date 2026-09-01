@@ -1599,8 +1599,39 @@ def _run_analysis(data):
                             pass
             except Exception:
                 pass
-            existing_codes.sort()
+            # --- CÁLCULO SEGURO Y ÚNICO DE IDP Y CÓDIGO ---
+            existing_evals = []
+            try:
+                existing_evals_res = supabase.table('evaluations').select('patient_name, patient_idp').execute()
+                existing_evals = existing_evals_res.data or []
+            except Exception:
+                pass
 
+            name_to_idp_map = {}
+            used_idp_nums = set()
+            for ev in existing_evals:
+                pn = (ev.get('patient_name') or '').strip().lower()
+                pidp = (ev.get('patient_idp') or '').strip()
+                if pidp and pidp.startswith("IDP-"):
+                    try:
+                        num = int(pidp.replace("IDP-", ""))
+                        used_idp_nums.add(num)
+                    except Exception:
+                        pass
+                if pn and pidp and pidp not in ('Auto-asignado', 'Auto', '1234567'):
+                    if pn not in name_to_idp_map:
+                        name_to_idp_map[pn] = pidp
+
+            p_name_norm = (patient_name or '').strip().lower()
+            if p_name_norm in name_to_idp_map:
+                final_patient_idp = name_to_idp_map[p_name_norm]
+            elif patient_idp and patient_idp not in ('Auto-asignado', 'Auto', '1234567', 'IDP-0001'):
+                final_patient_idp = patient_idp
+            else:
+                next_idp_num = (max(used_idp_nums) + 1) if used_idp_nums else 1
+                final_patient_idp = f"IDP-{next_idp_num:04d}"
+
+            existing_codes.sort()
             next_num = 1
             for num in existing_codes:
                 if num == next_num:
@@ -1614,7 +1645,7 @@ def _run_analysis(data):
             current_uid = current_user.get('id') if current_user else None
 
             insert_payload = {
-                "patient_idp": patient_idp,
+                "patient_idp": final_patient_idp,
                 "patient_name": patient_name,
                 "resistance": r,
                 "reactance": xc,
@@ -1668,12 +1699,11 @@ def _run_analysis(data):
                 existing_clients = clients_res.data or []
                 
                 match_client = None
-                p_name_norm = (patient_name or '').strip().lower()
-                p_idp_norm = (patient_idp or '').strip()
+                p_idp_norm = (final_patient_idp or '').strip()
 
                 for cl in existing_clients:
                     c_name = (cl.get('name') or '').strip().lower()
-                    c_idp = (cl.get('idp') or '').strip()
+                    c_idp = (cl.get('idp') or cl.get('code') or '').strip()
                     if (p_idp_norm and c_idp == p_idp_norm) or (p_name_norm and c_name == p_name_norm):
                         match_client = cl
                         break
@@ -1689,13 +1719,10 @@ def _run_analysis(data):
                             new_c_code += 1
                         elif cc > new_c_code:
                             break
-                    
-                    final_patient_idp = patient_idp if (patient_idp and patient_idp not in ('Auto-asignado', 'Auto', '1234567')) else f"IDP-{new_c_code:04d}"
 
                     new_client_record = {
                         "code": new_c_code,
                         "name": patient_name,
-                        "idp": final_patient_idp,
                         "age": age,
                         "gender": gender_formatted,
                         "height": height,
