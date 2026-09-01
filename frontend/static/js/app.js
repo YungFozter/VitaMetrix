@@ -10340,7 +10340,8 @@ function initImportStockExcelModal() {
             btnConfirm.disabled = true;
             if (btnCancel) btnCancel.disabled = true;
 
-            btnConfirm.innerHTML = '<i class="bi bi-arrow-repeat spin me-1.5"></i> <span>Guardando insumos...</span>';
+            btnConfirm.classList.add('btn-saving-active');
+            btnConfirm.innerHTML = '<i class="bi bi-arrow-repeat spin me-2 fs-6"></i> <span>Guardando insumos...</span>';
 
             if (statusAlert) statusAlert.classList.add('d-none');
             if (progressWrap) progressWrap.classList.remove('d-none');

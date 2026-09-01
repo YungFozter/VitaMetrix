@@ -888,5 +888,26 @@ body.is-admin-session .admin-only-element {
     }
 }
 
+/* ==========================================================================
+   ANIMACIÓN GLOBAL DE GIRO Y CARGA CONTINUA (.spin)
+   ========================================================================== */
+@keyframes spinContinuousGlobal {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spin,
+.spin-continuous,
+.bi-arrow-repeat.spin,
+.bi-arrow-clockwise.spin {
+    display: inline-block !important;
+    animation: spinContinuousGlobal 0.75s linear infinite !important;
+    transform-origin: center center !important;
+}
+
 
 
