@@ -10140,14 +10140,8 @@ function initImportStockExcelModal() {
     });
 
     if (btnDownloadTemplate) {
-        btnDownloadTemplate.addEventListener('click', () => {
-            const link = document.createElement('a');
-            link.href = '/api/stock/excel-template';
-            link.download = 'Plantilla_Importacion_Insumos_VitaMetrix.xlsx';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        });
+        btnDownloadTemplate.setAttribute('href', '/static/Insumos_15_Ejemplo_VitaMetrix.xlsx');
+        btnDownloadTemplate.setAttribute('download', 'Plantilla_Importacion_Insumos_VitaMetrix.xlsx');
     }
 
     const loadExcelPreview = async (file) => {
