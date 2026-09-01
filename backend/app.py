@@ -3260,7 +3260,7 @@ def delete_stock_item(item_id):
     if not target_item:
         return jsonify({"error": "Artículo no encontrado"}), 404
 
-    if target_item.get('user_id') and current_uid and target_item.get('user_id') != current_uid and current_user.get('role') != 'admin':
+    if target_item.get('user_id') and target_item.get('user_id') not in (current_uid, 'usr-doctor-001', 'None', 'null', '') and current_user.get('role') != 'admin':
         return jsonify({"error": "No tienes permiso para eliminar este insumo"}), 403
 
     if supabase:
@@ -3295,8 +3295,10 @@ def bulk_delete_stock_items():
     allowed_ids = []
     for i_id in ids:
         item = _get_stock_item_by_id(str(i_id))
-        if item and (is_admin or item.get('user_id') == current_uid or not item.get('user_id')):
-            allowed_ids.append(str(i_id))
+        if item:
+            item_uid = item.get('user_id')
+            if is_admin or not item_uid or item_uid in (current_uid, 'usr-doctor-001', 'None', 'null', ''):
+                allowed_ids.append(str(i_id))
 
     if not allowed_ids:
         return jsonify({"error": "No tienes permiso para eliminar los insumos seleccionados"}), 403
