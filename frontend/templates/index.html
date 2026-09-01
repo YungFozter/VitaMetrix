@@ -1824,6 +1824,19 @@
                     <i class="bi bi-arrow-repeat spin me-1"></i> <span id="excel-import-status-text">Procesando archivo...</span>
                 </div>
 
+                <!-- Barra de Progreso Animada de Guardado -->
+                <div id="excel-import-progress-wrap" class="d-none mb-3 p-3 bg-light rounded-3 border shadow-2xs">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <span class="fw-bold text-navy small d-inline-flex align-items-center gap-2" id="excel-progress-title">
+                            <i class="bi bi-arrow-repeat spin text-primary fs-6"></i> <span id="excel-progress-step-text">Consolidando e importando productos a la nube...</span>
+                        </span>
+                        <span class="font-monospace fw-extrabold text-primary small" id="excel-progress-percent">0%</span>
+                    </div>
+                    <div class="progress" style="height: 9px; border-radius: 99px; background-color: #e2e8f0;">
+                        <div id="excel-progress-bar" class="progress-bar excel-progress-bar-animated rounded-pill transition-all" style="width: 0%;"></div>
+                    </div>
+                </div>
+
                 <!-- VISTA PREVIA SCROLLEABLE HORIZONTAL & VERTICAL DE INSUMOS -->
                 <div id="excel-preview-container" class="d-none overflow-x-hidden">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
@@ -2310,7 +2323,7 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=56"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=188"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=189"></script>
 </body>
 
 </html>

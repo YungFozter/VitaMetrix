@@ -10122,6 +10122,11 @@ function initImportStockExcelModal() {
     const previewBadge = document.getElementById('excel-preview-badge');
     const previewTbody = document.getElementById('excel-preview-tbody');
 
+    const progressWrap = document.getElementById('excel-import-progress-wrap');
+    const progressBar = document.getElementById('excel-progress-bar');
+    const progressPercent = document.getElementById('excel-progress-percent');
+    const progressStepText = document.getElementById('excel-progress-step-text');
+
     if (!modal) return;
 
     let selectedFile = null;
@@ -10132,9 +10137,15 @@ function initImportStockExcelModal() {
         previewItemsData = [];
         if (fileInput) fileInput.value = '';
         if (fileLabel) fileLabel.innerHTML = 'Arrastra tu archivo Excel aquí o haz clic para examinar';
-        if (btnConfirm) btnConfirm.disabled = true;
-        if (btnConfirmText) btnConfirmText.textContent = 'Confirmar e Importar';
+        if (btnConfirm) {
+            btnConfirm.disabled = true;
+            btnConfirm.innerHTML = '<i class="bi bi-upload"></i> <span id="btn-confirm-import-text">Confirmar e Importar</span>';
+        }
+        if (btnCancel) btnCancel.disabled = false;
         if (statusAlert) statusAlert.classList.add('d-none');
+        if (progressWrap) progressWrap.classList.add('d-none');
+        if (progressBar) progressBar.style.width = '0%';
+        if (progressPercent) progressPercent.textContent = '0%';
         if (previewContainer) previewContainer.classList.add('d-none');
         if (previewTbody) previewTbody.innerHTML = '';
     };
@@ -10314,11 +10325,36 @@ function initImportStockExcelModal() {
             if (!selectedFile) return;
 
             btnConfirm.disabled = true;
-            if (statusAlert && statusText) {
-                statusAlert.classList.remove('d-none', 'alert-danger', 'alert-success');
-                statusAlert.classList.add('alert-info');
-                statusText.textContent = 'Guardando insumos en el inventario...';
+            if (btnCancel) btnCancel.disabled = true;
+
+            btnConfirm.innerHTML = '<i class="bi bi-arrow-repeat spin me-1.5"></i> <span>Guardando insumos...</span>';
+
+            if (statusAlert) statusAlert.classList.add('d-none');
+            if (progressWrap) progressWrap.classList.remove('d-none');
+            if (progressBar) {
+                progressBar.style.width = '20%';
+                progressBar.classList.add('excel-progress-bar-animated');
+                progressBar.classList.remove('bg-success');
             }
+            if (progressPercent) progressPercent.textContent = '20%';
+            if (progressStepText) progressStepText.textContent = 'Validando catálogo y preparando consolidación de stock...';
+
+            const rows = previewTbody ? Array.from(previewTbody.querySelectorAll('tr')) : [];
+            let rIdx = 0;
+            const animInterval = setInterval(() => {
+                if (rIdx < rows.length) {
+                    rows[rIdx].classList.add('excel-row-saving');
+                    rIdx++;
+                    const currentPct = Math.min(85, Math.round(20 + (rIdx / Math.max(1, rows.length)) * 65));
+                    if (progressBar) progressBar.style.width = `${currentPct}%`;
+                    if (progressPercent) progressPercent.textContent = `${currentPct}%`;
+                    if (progressStepText && rIdx === Math.floor(rows.length / 2)) {
+                        progressStepText.textContent = 'Registrando Kardex y guardando en Supabase Cloud...';
+                    }
+                } else {
+                    clearInterval(animInterval);
+                }
+            }, Math.max(40, Math.floor(500 / Math.max(1, rows.length))));
 
             const formData = new FormData();
             formData.append('file', selectedFile);
@@ -10334,30 +10370,57 @@ function initImportStockExcelModal() {
                     body: formData
                 });
 
+                clearInterval(animInterval);
                 const data = await res.json();
+
                 if (res.ok && data.success) {
-                    showToast(`✅ ${data.message || 'Importación completada'}`, 'success');
-                    closeModal();
-                    await fetchStockItems();
-                    await fetchStockTaxonomies();
+                    if (progressBar) {
+                        progressBar.style.width = '100%';
+                        progressBar.classList.remove('excel-progress-bar-animated');
+                        progressBar.classList.add('bg-success');
+                    }
+                    if (progressPercent) progressPercent.textContent = '100%';
+                    if (progressStepText) {
+                        progressStepText.innerHTML = `✅ <strong class="text-success">${escapeHtml(data.message || '¡Importación guardada exitosamente!')}</strong>`;
+                    }
+
+                    rows.forEach(r => {
+                        r.classList.remove('excel-row-saving');
+                        r.classList.add('excel-row-saved');
+                    });
+
+                    showToast(`✅ ${data.message || 'Importación completada con éxito'}`, 'success');
+
+                    setTimeout(async () => {
+                        closeModal();
+                        await fetchStockItems();
+                        await fetchStockTaxonomies();
+                    }, 1100);
                 } else {
+                    if (progressWrap) progressWrap.classList.add('d-none');
                     if (statusAlert && statusText) {
-                        statusAlert.classList.remove('alert-info');
+                        statusAlert.classList.remove('d-none', 'alert-info');
                         statusAlert.classList.add('alert-danger');
                         statusText.textContent = data.error || 'Error al procesar el archivo Excel.';
                     }
                     showToast(data.error || 'Error al procesar archivo Excel.', 'error');
+                    btnConfirm.disabled = false;
+                    if (btnCancel) btnCancel.disabled = false;
+                    btnConfirm.innerHTML = '<i class="bi bi-upload"></i> <span id="btn-confirm-import-text">Reintentar Importación</span>';
                 }
             } catch (err) {
+                clearInterval(animInterval);
                 console.error(err);
+                if (progressWrap) progressWrap.classList.add('d-none');
                 if (statusAlert && statusText) {
-                    statusAlert.classList.remove('alert-info');
+                    statusAlert.classList.remove('d-none', 'alert-info');
                     statusAlert.classList.add('alert-danger');
                     statusText.textContent = 'Error de conexión al importar el archivo.';
                 }
                 showToast('Error de conexión con el servidor.', 'error');
-            } finally {
-                if (btnConfirm) btnConfirm.disabled = false;
+                btnConfirm.disabled = false;
+                if (btnCancel) btnCancel.disabled = false;
+                btnConfirm.innerHTML = '<i class="bi bi-upload"></i> <span id="btn-confirm-import-text">Reintentar Importación</span>';
             }
         });
     }

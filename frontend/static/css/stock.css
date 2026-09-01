@@ -1249,3 +1249,45 @@
     background: #0284c7;
     color: #ffffff;
 }
+
+/* ==========================================================================
+   ANIMACIONES DEL PROCESO DE GUARDADO E IMPORTACIÓN DE EXCEL
+   ========================================================================== */
+@keyframes excelRowSavePulse {
+    0% {
+        background-color: rgba(34, 197, 94, 0.05);
+        transform: scale(0.995);
+    }
+    50% {
+        background-color: rgba(34, 197, 94, 0.18);
+        transform: scale(1.003);
+    }
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+}
+
+@keyframes excelProgressBarSweep {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 100% 50%;
+    }
+}
+
+.excel-row-saving {
+    animation: excelRowSavePulse 0.65s ease-in-out forwards;
+}
+
+.excel-row-saved {
+    background-color: rgba(34, 197, 94, 0.06) !important;
+    transition: background-color 0.4s ease;
+}
+
+.excel-progress-bar-animated {
+    background: linear-gradient(90deg, #10b981, #3b82f6, #6366f1, #10b981) !important;
+    background-size: 200% 200% !important;
+    animation: excelProgressBarSweep 1.5s linear infinite !important;
+}
