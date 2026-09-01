@@ -96,7 +96,10 @@ def _load_persisted_evaluations():
                         if isinstance(v, list):
                             flattened.extend(v)
                         elif isinstance(v, dict):
-                            flattened.append(v)
+                            v_copy = dict(v)
+                            if 'id' not in v_copy or not v_copy['id']:
+                                v_copy['id'] = str(k)
+                            flattened.append(v_copy)
                     return flattened
         except Exception as e:
             logging.warning("Error al leer evaluations_users.json: %s", e)

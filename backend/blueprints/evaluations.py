@@ -291,16 +291,19 @@ def batch_delete_evaluations():
     if isinstance(ids_to_delete, str):
         ids_to_delete = [ids_to_delete]
 
-    if not ids_to_delete:
-        return jsonify({"error": "No se especificaron evaluaciones para eliminar", "success": False}), 400
+    str_ids = [str(i) for i in ids_to_delete if i and str(i) != 'undefined']
 
-    str_ids = [str(i) for i in ids_to_delete]
+    if not str_ids:
+        return jsonify({"error": "No se especificaron evaluaciones válidas para eliminar", "success": False}), 400
 
     global _LOCAL_EVALUATIONS
-    if not isinstance(_LOCAL_EVALUATIONS, list):
-        _LOCAL_EVALUATIONS = []
+    _LOCAL_EVALUATIONS = _load_persisted_evaluations()
+
     initial_count = len(_LOCAL_EVALUATIONS)
-    _LOCAL_EVALUATIONS = [e for e in _LOCAL_EVALUATIONS if isinstance(e, dict) and str(e.get('id')) not in str_ids]
+    _LOCAL_EVALUATIONS = [
+        e for e in _LOCAL_EVALUATIONS
+        if isinstance(e, dict) and str(e.get('id')) not in str_ids and str(e.get('code')) not in str_ids
+    ]
     deleted_count = initial_count - len(_LOCAL_EVALUATIONS)
     _save_persisted_evaluations(_LOCAL_EVALUATIONS)
 
@@ -308,6 +311,7 @@ def batch_delete_evaluations():
         try:
             for eval_id in str_ids:
                 supabase.table('evaluations').delete().eq('id', eval_id).execute()
+                supabase.table('evaluations').delete().eq('code', eval_id).execute()
         except Exception as e:
             logging.warning("No se pudieron eliminar evaluaciones en lote de Supabase: %s", e)
 
@@ -325,13 +329,21 @@ def delete_evaluation(eval_id):
         return jsonify({"error": "No autorizado"}), 401
 
     current_uid = current_user.get('id')
+    target_str = str(eval_id)
+
     global _LOCAL_EVALUATIONS
-    _LOCAL_EVALUATIONS = [e for e in _LOCAL_EVALUATIONS if str(e.get('id')) != str(eval_id)]
+    _LOCAL_EVALUATIONS = _load_persisted_evaluations()
+
+    _LOCAL_EVALUATIONS = [
+        e for e in _LOCAL_EVALUATIONS
+        if isinstance(e, dict) and str(e.get('id')) != target_str and str(e.get('code')) != target_str
+    ]
     _save_persisted_evaluations(_LOCAL_EVALUATIONS)
 
     if supabase:
         try:
-            supabase.table('evaluations').delete().eq('id', str(eval_id)).execute()
+            supabase.table('evaluations').delete().eq('id', target_str).execute()
+            supabase.table('evaluations').delete().eq('code', target_str).execute()
         except Exception as e:
             logging.warning("No se pudo borrar evaluación en Supabase: %s", e)
 

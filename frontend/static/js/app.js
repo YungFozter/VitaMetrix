@@ -5193,7 +5193,11 @@ async function fetchEvaluaciones() {
     try {
         const res = await fetch('/api/evaluations', { headers: getAuthHeaders() });
         if (!res.ok) throw new Error('Error al consultar servidor');
-        allEvaluationsData = await res.json();
+        const rawData = await res.json();
+        allEvaluationsData = (Array.isArray(rawData) ? rawData : []).map((e, idx) => {
+            if (!e.id) e.id = e.code || `eval-${idx}`;
+            return e;
+        });
         evalsDataLoaded = true;
         filterAndRenderEvaluaciones();
     } catch (err) {
