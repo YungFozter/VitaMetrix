@@ -2908,9 +2908,22 @@ def get_stock_items():
 
     return jsonify(clinical_items)
 
-def _generate_next_sku(raw_code=None):
+def _get_stock_item_by_id(item_id):
+    if supabase:
+        try:
+            res = supabase.table('stock_items').select('*').eq('id', str(item_id)).execute()
+            if res.data:
+                return res.data[0]
+        except Exception:
+            pass
+    for item in _LOCAL_STOCK_ITEMS:
+        if str(item.get('id')) == str(item_id):
+            return item
+    return None
+
+def _generate_next_sku(raw_code=None, current_uid=None):
     """
-    Genera o calcula el código SKU correlativo con relleno de huecos (gap filling / reciclaje).
+    Genera o calcula el código SKU correlativo por doctor con relleno de huecos (gap filling).
     """
     prefix = "SKU"
     desired_num = None
@@ -2933,20 +2946,24 @@ def _generate_next_sku(raw_code=None):
             elif 1 <= len(p_candidate) < 2:
                 prefix = (p_candidate + "X")[:2]
 
-    # Recopilar todos los códigos existentes (locales y remotos)
+    # Recopilar todos los códigos existentes del usuario actual
     existing_codes = set()
     for it in _load_persisted_stock_items():
         c = it.get('code')
+        it_uid = it.get('user_id')
         if c and not str(c).startswith('__SYS_'):
-            existing_codes.add(str(c).upper().strip())
+            if not current_uid or it_uid == current_uid or (not it_uid and current_uid == 'usr-doctor-001'):
+                existing_codes.add(str(c).upper().strip())
     
     if supabase:
         try:
-            res = supabase.table('stock_items').select('code').execute()
+            res = supabase.table('stock_items').select('code, user_id').execute()
             for r in (res.data or []):
                 c = r.get('code')
+                it_uid = r.get('user_id')
                 if c and not str(c).startswith('__SYS_'):
-                    existing_codes.add(str(c).upper().strip())
+                    if not current_uid or it_uid == current_uid or (not it_uid and current_uid == 'usr-doctor-001'):
+                        existing_codes.add(str(c).upper().strip())
         except Exception:
             pass
 
@@ -3017,7 +3034,7 @@ def create_stock_item():
 
     item_id = str(uuid.uuid4())
     raw_code = _clean_str(data.get('code'), max_len=50)
-    code = _generate_next_sku(raw_code)
+    code = _generate_next_sku(raw_code, current_uid=current_uid)
 
     category = _clean_str(data.get('category'), max_len=80)
     if not category or category.strip().lower() in ("", "all", "todas las categorías", "todas"):
@@ -3085,11 +3102,22 @@ def create_stock_item():
 @app.route('/api/stock/<string:item_id>', methods=['PUT'])
 def update_stock_item(item_id):
     current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
     if not _is_subscription_active(current_user):
         return jsonify({
             "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para modificar insumos.",
             "subscription_expired": True
         }), 403
+    
+    current_uid = current_user.get('id')
+    target_item = _get_stock_item_by_id(item_id)
+    if not target_item:
+        return jsonify({"error": "Artículo no encontrado"}), 404
+
+    if target_item.get('user_id') and current_uid and target_item.get('user_id') != current_uid and current_user.get('role') != 'admin':
+        return jsonify({"error": "No tienes permiso para modificar este insumo"}), 403
+
     data = request.json or {}
     updated = {}
 
@@ -3157,11 +3185,22 @@ def update_stock_item(item_id):
 @app.route('/api/stock/<string:item_id>', methods=['DELETE'])
 def delete_stock_item(item_id):
     current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
     if not _is_subscription_active(current_user):
         return jsonify({
             "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar insumos.",
             "subscription_expired": True
         }), 403
+
+    current_uid = current_user.get('id')
+    target_item = _get_stock_item_by_id(item_id)
+    if not target_item:
+        return jsonify({"error": "Artículo no encontrado"}), 404
+
+    if target_item.get('user_id') and current_uid and target_item.get('user_id') != current_uid and current_user.get('role') != 'admin':
+        return jsonify({"error": "No tienes permiso para eliminar este insumo"}), 403
+
     if supabase:
         try:
             supabase.table('stock_items').delete().eq('id', item_id).execute()
@@ -3176,6 +3215,8 @@ def delete_stock_item(item_id):
 @app.route('/api/stock/bulk-delete', methods=['POST'])
 def bulk_delete_stock_items():
     current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
     if not _is_subscription_active(current_user):
         return jsonify({
             "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para eliminar insumos.",
@@ -3186,7 +3227,19 @@ def bulk_delete_stock_items():
     if not ids or not isinstance(ids, list):
         return jsonify({"error": "Lista de IDs no válida o vacía"}), 400
 
-    id_set = set(str(i) for i in ids)
+    current_uid = current_user.get('id')
+    is_admin = (current_user.get('role') == 'admin')
+
+    allowed_ids = []
+    for i_id in ids:
+        item = _get_stock_item_by_id(str(i_id))
+        if item and (is_admin or item.get('user_id') == current_uid or not item.get('user_id')):
+            allowed_ids.append(str(i_id))
+
+    if not allowed_ids:
+        return jsonify({"error": "No tienes permiso para eliminar los insumos seleccionados"}), 403
+
+    id_set = set(allowed_ids)
     if supabase:
         try:
             supabase.table('stock_items').delete().in_('id', list(id_set)).execute()
@@ -3201,11 +3254,22 @@ def bulk_delete_stock_items():
 @app.route('/api/stock/<string:item_id>/movement', methods=['POST'])
 def record_stock_movement(item_id):
     current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
     if not _is_subscription_active(current_user):
         return jsonify({
             "error": "Tu suscripción ha vencido (0 días). Canjea un PIN para registrar movimientos de inventario.",
             "subscription_expired": True
         }), 403
+    current_uid = current_user.get('id')
+
+    target_item = _get_stock_item_by_id(item_id)
+    if not target_item:
+        return jsonify({"error": "Artículo no encontrado"}), 404
+
+    if target_item.get('user_id') and current_uid and target_item.get('user_id') != current_uid and current_user.get('role') != 'admin':
+        return jsonify({"error": "No tienes permiso para registrar movimientos en este insumo"}), 403
+
     data = request.json or {}
     mov_type = (data.get('type') or 'IN').upper()
     if mov_type not in ['IN', 'OUT', 'ADJUST']:
@@ -3216,25 +3280,6 @@ def record_stock_movement(item_id):
 
     if qty <= 0 and mov_type != 'ADJUST':
         return jsonify({"error": "La cantidad debe ser mayor a 0"}), 400
-
-    # Buscar ítem actual
-    target_item = None
-    if supabase:
-        try:
-            res = supabase.table('stock_items').select('*').eq('id', item_id).execute()
-            if res.data:
-                target_item = res.data[0]
-        except Exception as e:
-            logging.warning("Error al buscar ítem en Supabase: %s", e)
-
-    if not target_item:
-        for item in _LOCAL_STOCK_ITEMS:
-            if item.get('id') == item_id:
-                target_item = item
-                break
-
-    if not target_item:
-        return jsonify({"error": "Artículo no encontrado"}), 404
 
     current_qty = _safe_stock_float(target_item.get('stock_quantity'), 0.0)
     if mov_type == 'IN':
@@ -3248,6 +3293,7 @@ def record_stock_movement(item_id):
 
     mov_record = {
         "id": str(uuid.uuid4()),
+        "user_id": current_uid,
         "stock_item_id": item_id,
         "item_name": target_item.get('name'),
         "type": mov_type,
