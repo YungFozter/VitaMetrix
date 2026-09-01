@@ -111,8 +111,14 @@ def auth_login():
 def auth_me():
     user = _get_current_user()
     if not user:
-        return jsonify({"error": "No autorizado"}), 401
-    return jsonify(_user_to_public_dict(user))
+        return jsonify({"error": "No autorizado", "success": False}), 401
+    user_dict = _user_to_public_dict(user)
+    response_data = {
+        "success": True,
+        "user": user_dict
+    }
+    response_data.update(user_dict)
+    return jsonify(response_data)
 
 @auth_bp.route('/api/users/profile', methods=['PUT'])
 def update_user_profile():

@@ -553,13 +553,14 @@ async function fetchAuthMe() {
         const res = await fetch('/api/auth/me', { headers: getAuthHeaders() });
         if (res.ok) {
             const data = await res.json();
-            if (data.success && data.user) {
-                updateUIWithUserData(data.user);
+            const userObj = data.user || (data.id ? data : null);
+            if (userObj && data.success !== false) {
+                updateUIWithUserData(userObj);
                 hideAuthModal();
 
                 // Si el usuario no es admin pero la memoria/hash intentaba abrir superadmin-view, forzar dashboard
                 const activeView = localStorage.getItem('vita_active_view') || window.location.hash.replace(/^#/, '');
-                if (data.user.role !== 'admin' && (activeView === 'superadmin-view' || window.location.hash === '#superadmin-view')) {
+                if (userObj.role !== 'admin' && (activeView === 'superadmin-view' || window.location.hash === '#superadmin-view')) {
                     localStorage.setItem('vita_active_view', 'dashboard-view');
                     navigateToView('dashboard-view', true);
                 }
@@ -567,13 +568,15 @@ async function fetchAuthMe() {
             }
         }
 
-        // Token inválido o expirado
-        localStorage.removeItem('vm_auth_token');
-        sessionStorage.removeItem('vm_auth_token');
-        showAuthModal(true);
+        // Si el servidor responde explícitamente 401 Unauthorized (token realmente inválido)
+        if (res.status === 401) {
+            localStorage.removeItem('vm_auth_token');
+            sessionStorage.removeItem('vm_auth_token');
+            showAuthModal(true);
+        }
     } catch (e) {
-        console.warn('Sesión no autenticada o local:', e);
-        showAuthModal(true);
+        console.warn('Error de red al verificar sesión en despliegue:', e);
+        // Si hay una desconexión momentánea durante un redeploy, NO borrar el token de localStorage
     }
 }
 
