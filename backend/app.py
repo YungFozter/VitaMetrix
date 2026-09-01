@@ -2871,8 +2871,9 @@ def get_stock_items():
         except Exception as e:
             logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
 
-    # Combinar registros locales y remotos asegurando persistencia
+    # Combinar registros locales y remotos asegurando persistencia y user_id
     local_items = _load_persisted_stock_items()
+    local_map = {str(it.get('id')): it for it in local_items if it.get('id')}
     seen_ids = set()
     combined_items = []
 
@@ -2880,15 +2881,19 @@ def get_stock_items():
         it_copy = dict(it)
         it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
         if it_copy.get('id'):
-            seen_ids.add(it_copy.get('id'))
+            seen_ids.add(str(it_copy.get('id')))
         combined_items.append(it_copy)
 
     for it in remote_items:
-        if it.get('id') not in seen_ids:
-            it_copy = dict(it)
-            it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
-            if it_copy.get('id'):
-                seen_ids.add(it_copy.get('id'))
+        it_id = str(it.get('id')) if it.get('id') else None
+        it_copy = dict(it)
+        local_match = local_map.get(it_id) if it_id else None
+        if local_match and local_match.get('user_id') and not it_copy.get('user_id'):
+            it_copy['user_id'] = local_match.get('user_id')
+        it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
+
+        if it_id and it_id not in seen_ids:
+            seen_ids.add(it_id)
             combined_items.append(it_copy)
             local_items.append(it_copy)
             _save_persisted_stock_items(local_items)
