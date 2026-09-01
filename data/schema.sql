@@ -205,5 +205,22 @@ CREATE POLICY "Permitir acceso anonimo a citas" ON public.appointments FOR ALL U
 CREATE POLICY "Permitir acceso anonimo a stock_items" ON public.stock_items FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a stock_movements" ON public.stock_movements FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir acceso anonimo a sales" ON public.sales FOR ALL USING (true) WITH CHECK (true);
-CREATE POLICY "Permitir acceso anonimo a sale_items" ON public.sale_items FOR ALL USING (true) WITH CHECK (true);
+-- 13. USUARIO SUPERADMIN POR DEFECTO
+INSERT INTO public.users (
+    id, email, password_hash, full_name, professional_title, clinic_name, phone, role, subscription_status, subscription_plan, subscription_expires_at, trial_started_at, created_at
+) VALUES (
+    'a1b2c3d4-e5f6-7890-abcd-1234567890ab',
+    'admin@vitametrix.com',
+    'scrypt:32768:8:1$bzpjSyc951JPHK3B$f3c20af484775f2df2612cf620c2e406d46a708cda8ebf739d69d51abde2b08a46ee3dc3ed7178c5ef5bed182635d14ee5573374e2a29e3780d176044a44330a',
+    'Administrador General',
+    'Director / Administrador de Plataforma',
+    'Sede Central VitaMetrix',
+    '+59172125280',
+    'admin',
+    'lifetime',
+    'Plan Ilimitado / Administrador',
+    '2099-12-31 23:59:59+00',
+    NOW(),
+    NOW()
+) ON CONFLICT (email) DO NOTHING;
 
