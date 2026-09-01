@@ -10205,18 +10205,59 @@ function initImportStockExcelModal() {
             btnConfirmText.textContent = `Confirmar e Importar (${items.length})`;
         }
 
+        const hasCat = items.some(i => i.category && i.category !== 'Sin Categoría');
+        const hasUnit = items.some(i => i.unit && i.unit !== 'Unidad (u)');
+        const hasMin = items.some(i => typeof i.min_stock === 'number' && i.min_stock > 0);
+        const hasCost = items.some(i => typeof i.cost_price === 'number' && i.cost_price > 0);
+        const hasSale = items.some(i => typeof i.sale_price === 'number' && i.sale_price > 0);
+        const hasBatch = items.some(i => i.batch_number && i.batch_number.trim() !== '');
+        const hasExpiry = items.some(i => i.expiry_date && i.expiry_date.trim() !== '');
+        const hasLoc = items.some(i => i.location && i.location.trim() !== '');
+        const hasSupplier = items.some(i => i.supplier && i.supplier.trim() !== '');
+        const hasNotes = items.some(i => i.notes && i.notes.trim() !== '');
+
+        const tableElement = previewContainer.querySelector('table');
+        if (tableElement) {
+            let theadHtml = '<thead class="table-light sticky-top" style="z-index: 2;"><tr>';
+            theadHtml += '<th class="text-nowrap ps-3">SKU</th>';
+            theadHtml += '<th class="text-nowrap" style="min-width: 200px;">NOMBRE PRODUCTO / INSUMO</th>';
+            if (hasCat) theadHtml += '<th class="text-nowrap">CATEGORÍA</th>';
+            if (hasUnit) theadHtml += '<th class="text-nowrap">U. MEDIDA</th>';
+            theadHtml += '<th class="text-center text-nowrap">STOCK</th>';
+            if (hasMin) theadHtml += '<th class="text-center text-nowrap">ST. MIN</th>';
+            if (hasCost) theadHtml += '<th class="text-end text-nowrap">P. COSTO (BS)</th>';
+            if (hasSale) theadHtml += '<th class="text-end text-nowrap">PVP (BS)</th>';
+            if (hasBatch) theadHtml += '<th class="text-nowrap">LOTE</th>';
+            if (hasExpiry) theadHtml += '<th class="text-nowrap">VENCIMIENTO</th>';
+            if (hasLoc) theadHtml += '<th class="text-nowrap">UBICACIÓN</th>';
+            if (hasSupplier) theadHtml += '<th class="text-nowrap">PROVEEDOR</th>';
+            if (hasNotes) theadHtml += '<th class="text-nowrap pe-3">NOTAS</th>';
+            theadHtml += '</tr></thead>';
+
+            const existingThead = tableElement.querySelector('thead');
+            if (existingThead) {
+                existingThead.outerHTML = theadHtml;
+            }
+        }
+
         previewTbody.replaceChildren();
         items.forEach(item => {
             const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="font-monospace text-navy fw-semibold text-nowrap ps-3">${escapeHtml(item.code || '')}</td>
-                <td class="fw-bold text-navy" style="min-width: 190px;">${escapeHtml(item.name || '')}</td>
-                <td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.category || 'Sin Categoría')}</span></td>
-                <td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>
-                <td class="text-center font-monospace fw-bold text-success text-nowrap">${item.stock_quantity ?? 0}</td>
-                <td class="text-end font-monospace text-muted text-nowrap">Bs ${Number(item.cost_price || 0).toFixed(2)}</td>
-                <td class="text-end font-monospace fw-bold text-navy text-nowrap pe-3">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>
-            `;
+            let rowHtml = `<td class="font-monospace text-navy fw-semibold text-nowrap ps-3">${escapeHtml(item.code || '')}</td>`;
+            rowHtml += `<td class="fw-bold text-navy" style="min-width: 200px;">${escapeHtml(item.name || '')}</td>`;
+            if (hasCat) rowHtml += `<td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.category || 'Sin Categoría')}</span></td>`;
+            if (hasUnit) rowHtml += `<td class="text-nowrap"><span class="badge bg-light text-secondary border small">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>`;
+            rowHtml += `<td class="text-center font-monospace fw-bold text-success text-nowrap">${item.stock_quantity ?? 0}</td>`;
+            if (hasMin) rowHtml += `<td class="text-center font-monospace text-muted text-nowrap">${item.min_stock ?? 5}</td>`;
+            if (hasCost) rowHtml += `<td class="text-end font-monospace text-muted text-nowrap">Bs ${Number(item.cost_price || 0).toFixed(2)}</td>`;
+            if (hasSale) rowHtml += `<td class="text-end font-monospace fw-bold text-navy text-nowrap">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>`;
+            if (hasBatch) rowHtml += `<td class="font-monospace small text-nowrap">${escapeHtml(item.batch_number || '')}</td>`;
+            if (hasExpiry) rowHtml += `<td class="font-monospace small text-nowrap text-secondary">${escapeHtml(item.expiry_date || '')}</td>`;
+            if (hasLoc) rowHtml += `<td class="small text-nowrap text-secondary">${escapeHtml(item.location || '')}</td>`;
+            if (hasSupplier) rowHtml += `<td class="small text-nowrap text-navy">${escapeHtml(item.supplier || '')}</td>`;
+            if (hasNotes) rowHtml += `<td class="small text-muted pe-3">${escapeHtml(item.notes || '')}</td>`;
+
+            tr.innerHTML = rowHtml;
             previewTbody.appendChild(tr);
         });
 
