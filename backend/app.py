@@ -2838,8 +2838,42 @@ _LOCAL_STOCK_ITEMS = _load_persisted_stock_items()
 _LOCAL_STOCK_MOVEMENTS = _load_persisted_stock_movements()
 
 def _safe_stock_float(val, default=0.0, min_val=None):
-    try:
+    if val is None:
+        return default
+    if isinstance(val, (int, float)):
+        if math.isnan(val) or math.isinf(val):
+            return default
         f = float(val)
+        if min_val is not None:
+            f = max(min_val, f)
+        return round(f, 2)
+    
+    s = str(val).strip()
+    if not s:
+        return default
+    
+    # Limpiar símbolos de moneda y espacios
+    for prefix in ('bs', 'bs.', 'bs', '$', '€', 'usd', 'bob'):
+        if s.lower().startswith(prefix):
+            s = s[len(prefix):].strip()
+        if s.lower().endswith(prefix):
+            s = s[:-len(prefix)].strip()
+            
+    s = s.replace('Bs', '').replace('bs', '').replace('BS', '').replace('$', '').replace('€', '').strip()
+
+    # Formatos con miles y decimales (ej: 1.250,50 vs 1,250.50)
+    if '.' in s and ',' in s:
+        if s.rfind(',') > s.rfind('.'):
+            s = s.replace('.', '').replace(',', '.')
+        else:
+            s = s.replace(',', '')
+    elif ',' in s:
+        s = s.replace(',', '.')
+
+    # Sanitizar dígitos
+    s_clean = ''.join(ch for ch in s if ch.isdigit() or ch in ('.', '-'))
+    try:
+        f = float(s_clean)
         if math.isnan(f) or math.isinf(f):
             return default
         if min_val is not None:
@@ -3916,6 +3950,10 @@ def preview_stock_excel():
         idx_name = 1 if len(header_row) > 1 else 0
     if idx_qty == -1:
         idx_qty = 4 if len(header_row) > 4 else 2
+    if idx_cost == -1 and len(header_row) > 6:
+        idx_cost = 6
+    if idx_sale == -1 and len(header_row) > 7:
+        idx_sale = 7
 
     preview_items = []
     temp_sku_counter = 1
@@ -4044,6 +4082,12 @@ def import_stock_excel():
 
     if idx_qty == -1:
         idx_qty = 4 if len(header_row) > 4 else 2
+
+    if idx_cost == -1 and len(header_row) > 6:
+        idx_cost = 6
+
+    if idx_sale == -1 and len(header_row) > 7:
+        idx_sale = 7
 
     imported_count = 0
     errors_list = []

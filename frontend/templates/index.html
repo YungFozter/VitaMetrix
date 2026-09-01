@@ -1768,9 +1768,9 @@
         </div>
     </div>
 
-    <!-- MODAL: IMPORTACIÓN MASIVA DESDE EXCEL DE INSUMOS (RESPONSIVE HORIZONTAL MODAL) -->
+    <!-- MODAL: IMPORTACIÓN MASIVA DESDE EXCEL DE INSUMOS (RESPONSIVE HORIZONTAL WIDESCREEN MODAL) -->
     <div id="modal-import-stock-excel" class="modal-overlay hidden d-none" style="display: none; z-index: 1070;">
-        <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-3 p-sm-4" style="max-width: 920px; width: 94%; max-height: 92vh; display: flex; flex-direction: column; margin: auto;">
+        <div class="modal-card bg-white rounded-4 shadow-xl border-0 p-3 p-sm-4" style="max-width: 1180px; width: 95%; max-height: 90vh; display: flex; flex-direction: column; margin: auto;">
             
             <!-- Encabezado Modal -->
             <div class="d-flex align-items-center justify-content-between pb-3 border-bottom mb-3 flex-shrink-0">
@@ -1786,10 +1786,10 @@
                 <button type="button" class="btn-close shadow-none ms-2" id="btn-close-import-excel-modal" aria-label="Cerrar"></button>
             </div>
 
-            <!-- Cuerpo Modal con Scroll Interno si es muy alto -->
-            <div class="modal-body-scroll flex-grow-1 overflow-y-auto custom-scrollbar pe-1 mb-2">
+            <!-- Cuerpo Modal con Scroll Vertical Interno y Sin Scroll Horizontal Duplicado -->
+            <div class="modal-body-scroll flex-grow-1 overflow-y-auto overflow-x-hidden custom-scrollbar pe-1 mb-2">
                 <!-- Seccion Superior Horizontal (Plantilla + Drop Zone) -->
-                <div class="row g-2 g-sm-3 mb-3">
+                <div class="row g-2 g-sm-3 mb-3" id="excel-modal-top-section">
                     <!-- Tarjeta Descarga Plantilla -->
                     <div class="col-12 col-md-5">
                         <div class="p-3 bg-light rounded-3 border h-100 d-flex flex-column justify-content-between gap-2">
@@ -1825,7 +1825,7 @@
                 </div>
 
                 <!-- VISTA PREVIA SCROLLEABLE HORIZONTAL & VERTICAL DE INSUMOS -->
-                <div id="excel-preview-container" class="d-none">
+                <div id="excel-preview-container" class="d-none overflow-x-hidden">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2">
                         <span class="badge bg-success-subtle text-success border border-success border-opacity-25 px-3 py-1.5 rounded-pill small fw-semibold" id="excel-preview-badge">
                             <i class="bi bi-check-circle-fill me-1"></i> 0 insumos detectados
@@ -1833,7 +1833,7 @@
                         <small class="text-muted" style="font-size: 0.76rem;">Revisa la lista previa antes de confirmar la importación</small>
                     </div>
                     
-                    <div class="table-responsive rounded-3 border stock-custom-scrollbar shadow-2xs" style="max-height: 340px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <div class="table-responsive rounded-3 border stock-custom-scrollbar shadow-2xs" style="max-height: 420px; overflow-y: auto; overflow-x: auto; -webkit-overflow-scrolling: touch;">
                         <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.83rem;">
                             <thead class="table-light sticky-top" style="z-index: 2;">
                                 <tr>
@@ -2309,7 +2309,7 @@
     <!-- UI Enhancements (animaciones de entrada, counting, gauge sweep, helpers) -->
     <script src="{{ url_for('static', filename='js/ui-enhancements.js') }}?v=56"></script>
     <!-- JavaScript principal del proyecto -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=179"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=180"></script>
 </body>
 
 </html>
