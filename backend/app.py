@@ -3745,8 +3745,8 @@ def download_stock_excel_template():
             "U. Medida",
             "Stock*",
             "St. Min",
-            "P. Costo",
-            "PVP",
+            "P. Costo (Bs)",
+            "PVP (Bs)",
             "Lote",
             "Vencimiento",
             "Ubicación",
@@ -3916,21 +3916,29 @@ def preview_stock_excel():
     idx_code = _find_col_idx(['sku', 'codigo', 'código', 'code'])
     idx_name = _find_col_idx(['nombre producto / insumo', 'nombre producto', 'nombre insumo', 'nombre', 'producto', 'insumo'])
     idx_cat = _find_col_idx(['categoria', 'categoría', 'category'])
-    idx_unit = _find_col_idx(['u. medida', 'u.medida', 'unidad de medida', 'unidad', 'medida', 'unit'])
+    idx_unit = _find_col_idx(['u. medida', 'u.medida', 'u medida', 'unidad de medida', 'unidad', 'medida', 'unit'])
     idx_qty = _find_col_idx(['stock', 'cantidad inicial', 'cantidad', 'existencia', 'stock_quantity'])
-    idx_min = _find_col_idx(['st. min', 'st.min', 'stock minimo', 'stock mínimo', 'alerta', 'min_stock'])
-    idx_cost = _find_col_idx(['p. costo', 'p.costo', 'precio costo', 'costo', 'cost_price'])
+    idx_min = _find_col_idx(['st. min', 'st.min', 'st min', 'stock minimo', 'stock mínimo', 'alerta', 'min_stock'])
+    idx_cost = _find_col_idx(['p. costo', 'p.costo', 'p. coste', 'p.coste', 'precio costo', 'precio coste', 'costo', 'coste', 'cost_price'])
     idx_sale = _find_col_idx(['pvp', 'precio venta', 'venta', 'sale_price'])
     idx_batch = _find_col_idx(['lote', 'numero de lote', 'número de lote', 'batch'])
     idx_expiry = _find_col_idx(['vencimiento', 'fecha de vencimiento', 'expiry'])
     idx_location = _find_col_idx(['ubicacion', 'ubicación', 'ubicación en consultorio', 'location'])
     idx_supplier = _find_col_idx(['proveedor', 'supplier'])
-    idx_notes = _find_col_idx(['notas / posología', 'notas', 'posologia', 'posología', 'notes'])
+    idx_notes = _find_col_idx(['notas / posología', 'notas / posologia', 'notas', 'posologia', 'posología', 'notes'])
 
-    if idx_name == -1:
-        idx_name = 1 if len(header_row) > 1 else 0
-    if idx_qty == -1:
-        idx_qty = 4 if len(header_row) > 4 else 2
+    if idx_code == -1 and len(header_row) > 0:
+        idx_code = 0
+    if idx_name == -1 and len(header_row) > 1:
+        idx_name = 1
+    if idx_cat == -1 and len(header_row) > 2:
+        idx_cat = 2
+    if idx_unit == -1 and len(header_row) > 3:
+        idx_unit = 3
+    if idx_qty == -1 and len(header_row) > 4:
+        idx_qty = 4
+    if idx_min == -1 and len(header_row) > 5:
+        idx_min = 5
     if idx_cost == -1 and len(header_row) > 6:
         idx_cost = 6
     if idx_sale == -1 and len(header_row) > 7:
@@ -4080,41 +4088,41 @@ def import_stock_excel():
     idx_code = _find_col_idx(['sku', 'codigo', 'código', 'code'])
     idx_name = _find_col_idx(['nombre producto / insumo', 'nombre producto', 'nombre insumo', 'nombre', 'producto', 'insumo'])
     idx_cat = _find_col_idx(['categoria', 'categoría', 'category'])
-    idx_unit = _find_col_idx(['u. medida', 'u.medida', 'unidad de medida', 'unidad', 'medida', 'unit'])
+    idx_unit = _find_col_idx(['u. medida', 'u.medida', 'u medida', 'unidad de medida', 'unidad', 'medida', 'unit'])
     idx_qty = _find_col_idx(['stock', 'cantidad inicial', 'cantidad', 'existencia', 'stock_quantity'])
-    idx_min = _find_col_idx(['st. min', 'st.min', 'stock minimo', 'stock mínimo', 'alerta', 'min_stock'])
-    idx_cost = _find_col_idx(['p. costo', 'p.costo', 'precio costo', 'costo', 'cost_price'])
+    idx_min = _find_col_idx(['st. min', 'st.min', 'st min', 'stock minimo', 'stock mínimo', 'alerta', 'min_stock'])
+    idx_cost = _find_col_idx(['p. costo', 'p.costo', 'p. coste', 'p.coste', 'precio costo', 'precio coste', 'costo', 'coste', 'cost_price'])
     idx_sale = _find_col_idx(['pvp', 'precio venta', 'venta', 'sale_price'])
     idx_batch = _find_col_idx(['lote', 'numero de lote', 'número de lote', 'batch'])
     idx_expiry = _find_col_idx(['vencimiento', 'fecha de vencimiento', 'expiry'])
     idx_location = _find_col_idx(['ubicacion', 'ubicación', 'ubicación en consultorio', 'location'])
     idx_supplier = _find_col_idx(['proveedor', 'supplier'])
-    idx_notes = _find_col_idx(['notas / posología', 'notas', 'posologia', 'posología', 'notes'])
+    idx_notes = _find_col_idx(['notas / posología', 'notas / posologia', 'notas', 'posologia', 'posología', 'notes'])
 
-    if idx_name == -1:
-        idx_name = 1 if len(header_row) > 1 else 0
-
-    if idx_qty == -1:
-        idx_qty = 4 if len(header_row) > 4 else 2
-
+    if idx_code == -1 and len(header_row) > 0:
+        idx_code = 0
+    if idx_name == -1 and len(header_row) > 1:
+        idx_name = 1
+    if idx_cat == -1 and len(header_row) > 2:
+        idx_cat = 2
+    if idx_unit == -1 and len(header_row) > 3:
+        idx_unit = 3
+    if idx_qty == -1 and len(header_row) > 4:
+        idx_qty = 4
+    if idx_min == -1 and len(header_row) > 5:
+        idx_min = 5
     if idx_cost == -1 and len(header_row) > 6:
         idx_cost = 6
-
     if idx_sale == -1 and len(header_row) > 7:
         idx_sale = 7
-
     if idx_batch == -1 and len(header_row) > 8:
         idx_batch = 8
-
     if idx_expiry == -1 and len(header_row) > 9:
         idx_expiry = 9
-
     if idx_location == -1 and len(header_row) > 10:
         idx_location = 10
-
     if idx_supplier == -1 and len(header_row) > 11:
         idx_supplier = 11
-
     if idx_notes == -1 and len(header_row) > 12:
         idx_notes = 12
 
