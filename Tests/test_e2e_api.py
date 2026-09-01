@@ -158,6 +158,41 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         res_batch = self.client.post('/api/evaluations/batch-delete', data=json.dumps({"ids": []}), headers=self.doctor_headers)
         self.assertIn(res_batch.status_code, (400, 200))
 
+    def test_09b_evaluation_code_recycling(self):
+        """Verifica la generación secuencial y reciclaje de códigos EVA-XXX libre"""
+        eval_payload = {
+            "patient_name": "Test Code Recycling Patient",
+            "patient_idp": "IDP-TEST-REC",
+            "resistance": 550,
+            "reactance": 60,
+            "weight": 70,
+            "height": 170,
+            "age": 30,
+            "gender": "male",
+            "save": True
+        }
+        res1 = self.client.post('/api/dashboard-data', data=json.dumps(eval_payload), headers=self.doctor_headers)
+        self.assertEqual(res1.status_code, 201)
+        data1 = json.loads(res1.data)
+        eval1 = data1.get('evaluation', {})
+        code1 = eval1.get('code')
+        id1 = eval1.get('id')
+        self.assertTrue(code1 and code1.startswith('EVA-'))
+
+        if id1:
+            self.client.delete(f'/api/evaluations/{id1}', headers=self.doctor_headers)
+
+        res2 = self.client.post('/api/dashboard-data', data=json.dumps(eval_payload), headers=self.doctor_headers)
+        self.assertEqual(res2.status_code, 201)
+        data2 = json.loads(res2.data)
+        eval2 = data2.get('evaluation', {})
+        code2 = eval2.get('code')
+        id2 = eval2.get('id')
+        self.assertEqual(code1, code2)
+
+        if id2:
+            self.client.delete(f'/api/evaluations/{id2}', headers=self.doctor_headers)
+
     def test_10_appointments_list(self):
         """Verifica la consulta y agendamiento de citas"""
         response = self.client.get('/api/appointments', headers=self.doctor_headers)

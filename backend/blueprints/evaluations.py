@@ -2,6 +2,7 @@ import os
 import json
 import logging
 import uuid
+import re
 from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
 
@@ -29,6 +30,51 @@ from calculations import (
 evaluations_bp = Blueprint('evaluations_bp', __name__)
 
 _LOCAL_EVALUATIONS = _load_persisted_evaluations()
+
+def _get_next_available_eval_code(user_id=None):
+    """
+    Obtiene el próximo código reciclado secuencial de evaluación 'EVA-XXX' libre para el usuario/doctor.
+    Si existen EVA-001..EVA-015 y la #7 fue eliminada, retornará 'EVA-007'.
+    Si no hay huecos, retornará el siguiente secuencial 'EVA-016'.
+    """
+    evals = []
+    if supabase:
+        try:
+            query = supabase.table('evaluations').select('code, user_id')
+            if user_id:
+                query = query.eq('user_id', user_id)
+            res = query.execute()
+            if res and res.data:
+                evals = res.data
+        except Exception as e:
+            logging.warning("Error consultando códigos de evaluación en Supabase: %s", e)
+
+    if not evals:
+        local_evals = _load_persisted_evaluations()
+        if user_id:
+            evals = [e for e in local_evals if isinstance(e, dict) and (e.get('user_id') == user_id or not e.get('user_id'))]
+        else:
+            evals = local_evals
+
+    used_numbers = set()
+    for e in evals:
+        if not isinstance(e, dict):
+            continue
+        code = str(e.get('code') or '')
+        match = re.search(r'EVA-?(\d+)', code, re.IGNORECASE)
+        if match:
+            try:
+                num = int(match.group(1))
+                if num > 0:
+                    used_numbers.add(num)
+            except ValueError:
+                pass
+
+    next_num = 1
+    while next_num in used_numbers:
+        next_num += 1
+
+    return f"EVA-{next_num:03d}"
 
 def compute_full_bia_analysis(data):
     try:
@@ -180,7 +226,7 @@ def create_evaluation():
     new_eval = {
         "id": eval_id,
         "user_id": current_uid,
-        "code": f"EVAL-{int(datetime.now().timestamp())}",
+        "code": _get_next_available_eval_code(current_uid),
         "patient_name": _clean_str(data.get('patient_name'), max_len=100) or "Paciente sin registrar",
         "patient_idp": _clean_str(data.get('patient_idp'), max_len=50),
         "resistance": r,
@@ -399,7 +445,7 @@ def calculate_bia_api():
         new_eval = {
             "id": eval_id,
             "user_id": current_uid,
-            "code": f"EVAL-{int(datetime.now().timestamp())}",
+            "code": _get_next_available_eval_code(current_uid),
             "patient_name": p_name,
             "patient_idp": p_idp,
             "resistance": float(data.get('resistance') or 0),
