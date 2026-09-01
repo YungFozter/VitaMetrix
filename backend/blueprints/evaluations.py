@@ -290,34 +290,55 @@ def get_evaluation_detail(eval_id):
         return jsonify({"error": "Evaluación clínica no encontrada"}), 404
 
     report = target_eval.get('report') or {}
+
+    r = float(target_eval.get('resistance') or report.get('inputs', {}).get('resistance', 0))
+    xc = float(target_eval.get('reactance') or report.get('inputs', {}).get('reactance', 0))
+    w = float(target_eval.get('weight') or report.get('inputs', {}).get('weight', 0))
+    h = float(target_eval.get('height') or report.get('inputs', {}).get('height', 0))
+    age = int(target_eval.get('age') or report.get('inputs', {}).get('age', 0))
+    gender = target_eval.get('gender') or report.get('inputs', {}).get('gender', 'female')
+    smm = target_eval.get('smm') or report.get('body_comp', {}).get('smm_kg')
+    fat_mass = target_eval.get('fat_mass') or report.get('body_comp', {}).get('fat_kg')
+    visceral_fat = target_eval.get('visceral_fat') or report.get('body_comp', {}).get('visceral_level')
+    pal = target_eval.get('pal') or report.get('inputs', {}).get('pal', 1.55)
+
+    if not report or not report.get('global_score') or not report.get('phase_angle'):
+        computed = compute_full_bia_analysis({
+            "resistance": r,
+            "reactance": xc,
+            "weight": w,
+            "height": h,
+            "age": age,
+            "gender": gender,
+            "smm": smm,
+            "fat_mass": fat_mass,
+            "visceral_fat": visceral_fat,
+            "pal": pal
+        })
+        report.update(computed)
+
     scores_dict = report.get('scores') or {}
     biva_dict = report.get('biva') or {}
     body_dict = report.get('body_comp') or {}
     meta_dict = report.get('meta') or {}
 
-    g_score = target_eval.get('global_score')
-    if g_score is None:
-        g_score = scores_dict.get('global_score', 0)
-
-    p_angle = target_eval.get('phase_angle')
-    if p_angle is None:
-        p_angle = biva_dict.get('phase_angle', 0)
-
-    cell_status = biva_dict.get('cell_status') or biva_dict.get('status') or "Óptimo"
-    rank_str = scores_dict.get('rank') or "Especial"
-    tee_val = meta_dict.get('tee_kcal') or report.get('tee_kcal') or 2000
+    g_score = report.get('global_score') or report.get('score') or scores_dict.get('global_score', 0)
+    p_angle = report.get('phase_angle') or biva_dict.get('phase_angle', 0)
+    cell_status = report.get('cell_status') or biva_dict.get('cell_status') or "Óptimo"
+    rank_str = report.get('rank') or scores_dict.get('rank') or "HIERRO"
+    tee_val = report.get('tee_kcal') or meta_dict.get('tee_kcal') or 2000
 
     raw_inputs = {
-        "weight": target_eval.get('weight') or report.get('inputs', {}).get('weight', '--'),
-        "height": target_eval.get('height') or report.get('inputs', {}).get('height', '--'),
-        "age": target_eval.get('age') or report.get('inputs', {}).get('age', '--'),
-        "gender": target_eval.get('gender') or report.get('inputs', {}).get('gender', 'male'),
-        "resistance": target_eval.get('resistance') or report.get('inputs', {}).get('resistance', '--'),
-        "reactance": target_eval.get('reactance') or report.get('inputs', {}).get('reactance', '--'),
-        "smm": body_dict.get('smm_kg') or report.get('smm_kg', '--'),
-        "fat_mass": body_dict.get('fat_kg') or report.get('fat_kg', '--'),
-        "visceral_fat": body_dict.get('visceral_level') or report.get('visceral_level', '--'),
-        "pal": report.get('pal') or 1.55
+        "weight": w if w > 0 else '--',
+        "height": h if h > 0 else '--',
+        "age": age if age > 0 else '--',
+        "gender": gender or 'female',
+        "resistance": r if r > 0 else '--',
+        "reactance": xc if xc > 0 else '--',
+        "smm": smm or '--',
+        "fat_mass": fat_mass or '--',
+        "visceral_fat": visceral_fat or '--',
+        "pal": pal or 1.55
     }
 
     clinical_findings = report.get('clinical_findings') or [
@@ -332,7 +353,7 @@ def get_evaluation_detail(eval_id):
         "name": target_eval.get('patient_name') or target_eval.get('name') or "Paciente",
         "patient_idp": target_eval.get('patient_idp') or target_eval.get('idp') or "--",
         "idp": target_eval.get('patient_idp') or target_eval.get('idp') or "--",
-        "code": target_eval.get('code') or "EVAL",
+        "code": target_eval.get('code') or "EVA-001",
         "created_at": target_eval.get('created_at') or "",
         "score": float(g_score or 0),
         "global_score": float(g_score or 0),
