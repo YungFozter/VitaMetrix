@@ -39,7 +39,7 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         response = self.client.get('/api/auth/me', headers=self.doctor_headers)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        self.assertEqual(data.get('email'), 'audrey@vitametrix.com')
+        self.assertEqual(data.get('email'), 'admin@vitametrix.com')
 
     def test_03_subscription_status_endpoint(self):
         """Verifica el estado de suscripción del doctor"""

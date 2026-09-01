@@ -206,21 +206,6 @@ _DEFAULT_INITIAL_USERS = [
         "subscription_expires_at": "2099-12-31T23:59:59Z",
         "trial_started_at": "2026-01-01T00:00:00Z",
         "created_at": "2026-01-01T00:00:00Z"
-    },
-    {
-        "id": "usr-doctor-001",
-        "email": "audrey@vitametrix.com",
-        "password_hash": generate_password_hash("Doctora2026!"),
-        "full_name": "Dra. Audrey",
-        "professional_title": "Manager / Especialista BIA",
-        "clinic_name": "Centro Médico VitaMetrix",
-        "phone": "+59171234567",
-        "role": "user",
-        "subscription_status": "no_subscription",
-        "subscription_plan": "Sin Suscripción Anterior",
-        "subscription_expires_at": None,
-        "trial_started_at": None,
-        "created_at": "2026-08-28T00:00:00Z"
     }
 ]
 
@@ -231,13 +216,10 @@ def _clean_test_users(users):
         return []
     clean = []
     for u in users:
-        email = (u.get('email') or '').lower().strip()
-        uid = u.get('id') or ''
-        if uid in ('usr-admin-001', 'usr-doctor-001') or email in ('admin@vitametrix.com', 'audrey@vitametrix.com'):
-            clean.append(u)
-        elif not any(p in email for p in ('dr.lic.', 'dr.a.', 'dr.b.', 'dra.elena.', 'dr.estandar.', 'dr.canje.', 'dra.test.', 'dr.roberto.', 'test.')):
+        if isinstance(u, dict) and u.get('email'):
             clean.append(u)
     return clean
+
 
 def _save_users_disk_only(users):
     try:
