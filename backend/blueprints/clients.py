@@ -41,11 +41,27 @@ def list_clients():
     if not isinstance(clients, list):
         clients = []
 
+    user_email = (current_user.get('email') or '').strip().lower() if current_user else ''
+    user_name = (current_user.get('full_name') or current_user.get('name') or '').strip().lower() if current_user else ''
+
+    cleaned_clients = []
+    for c in clients:
+        if not isinstance(c, dict):
+            continue
+        c_email = (c.get('email') or '').strip().lower()
+        c_name = (c.get('name') or '').strip().lower()
+        
+        # Filtro de protección: Ignorar si coincide exactamente el correo del médico logueado
+        if user_email and c_email and c_email == user_email:
+            continue
+        if user_name and c_name and c_name == user_name and user_email and c_email == user_email:
+            continue
+
+        cleaned_clients.append(c)
+
     if current_uid and current_user.get('role') != 'admin':
         filtered = []
-        for c in clients:
-            if not isinstance(c, dict):
-                continue
+        for c in cleaned_clients:
             c_uid = c.get('user_id')
             if not c_uid or c_uid in ('usr-doctor-001', 'None', 'null', ''):
                 c['user_id'] = current_uid
@@ -54,7 +70,7 @@ def list_clients():
                 filtered.append(c)
         return jsonify(filtered)
 
-    return jsonify(clients)
+    return jsonify(cleaned_clients)
 
 @clients_bp.route('/api/clients', methods=['POST'])
 def create_client():
@@ -73,6 +89,11 @@ def create_client():
     name = _clean_str(data.get('name'), max_len=100)
     if not name:
         return jsonify({"error": "El nombre del paciente es obligatorio"}), 400
+
+    email = _clean_str(data.get('email'), max_len=100)
+    user_email = (current_user.get('email') or '').strip().lower()
+    if email and user_email and email.lower().strip() == user_email:
+        return jsonify({"error": "No puedes registrarte a ti mismo como paciente usando tu correo de usuario médico"}), 400
 
     phone = _clean_str(data.get('phone'), max_len=30)
     email = _clean_str(data.get('email'), max_len=100)
