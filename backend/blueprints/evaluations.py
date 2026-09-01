@@ -16,9 +16,87 @@ from services.helpers import (
     _save_persisted_evaluations
 )
 
+from calculations import (
+    calculate_phase_angle,
+    get_biva_interpretation,
+    calculate_scores,
+    analyze_hydration,
+    analyze_visceral_fat,
+    calculate_energy,
+    build_clinical_report
+)
+
 evaluations_bp = Blueprint('evaluations_bp', __name__)
 
 _LOCAL_EVALUATIONS = _load_persisted_evaluations()
+
+def compute_full_bia_analysis(data):
+    try:
+        r = float(data.get('resistance') or 0)
+        xc = float(data.get('reactance') or 0)
+        w = float(data.get('weight') or 0)
+        h = float(data.get('height') or 0)
+        age = int(data.get('age') or 0)
+        gender = _normalize_gender(data.get('gender'))
+    except (ValueError, TypeError):
+        r, xc, w, h, age, gender = 0, 0, 0, 0, 0, 'male'
+
+    pal = float(data.get('pal') or 1.55)
+    waist = float(data.get('waist') or 0) if data.get('waist') else None
+    smm = float(data.get('smm') or 0) if data.get('smm') else None
+    fat_mass = float(data.get('fat_mass') or 0) if data.get('fat_mass') else None
+    tbw = float(data.get('tbw') or 0) if data.get('tbw') else None
+    ecw = float(data.get('ecw') or 0) if data.get('ecw') else None
+    visceral_fat = float(data.get('visceral_fat') or 0) if data.get('visceral_fat') else None
+
+    phase_angle = calculate_phase_angle(r, xc)
+    biva = get_biva_interpretation(r, xc)
+    scores = calculate_scores(w, h, phase_angle, smm, fat_mass, gender)
+    hydration = analyze_hydration(tbw, ecw, w)
+    visceral = analyze_visceral_fat(waist, visceral_fat, gender)
+    energy = calculate_energy(w, h, age, gender, pal, smm, fat_mass)
+    ecw_ratio = hydration.get('ecw_tbw_ratio')
+    findings = build_clinical_report(biva, hydration, visceral, scores, phase_angle, ecw_ratio)
+
+    g_score = scores.get('score', 0)
+    m_score = scores.get('muscle_score', 0)
+    f_score = scores.get('fat_score', 0)
+    rank_str = scores.get('rank', 'HIERRO')
+
+    return {
+        "score": g_score,
+        "global_score": g_score,
+        "muscle_score": m_score,
+        "fat_score": f_score,
+        "rank": rank_str,
+        "ree_kcal": energy.get('ree_kcal', 1500),
+        "tee_kcal": energy.get('tee_kcal', 2000),
+        "phase_angle": phase_angle,
+        "cell_status": biva.get('cell_status', 'Normal'),
+        "biva": biva,
+        "scores": scores,
+        "hydration": hydration,
+        "visceral": visceral,
+        "energy": energy,
+        "clinical_findings": findings,
+        "body_comp": {
+            "smm_kg": smm or 0,
+            "fat_kg": fat_mass or 0,
+            "tbw_l": tbw or 0,
+            "ecw_l": ecw or 0,
+            "visceral_level": visceral_fat or 0
+        },
+        "inputs": {
+            "resistance": r,
+            "reactance": xc,
+            "weight": w,
+            "height": h,
+            "age": age,
+            "gender": gender,
+            "pal": pal,
+            "waist": waist
+        }
+    }
 
 @evaluations_bp.route('/api/evaluations', methods=['GET'])
 def list_evaluations():
@@ -221,21 +299,83 @@ def delete_evaluation(eval_id):
     _invalidate_dashboard_cache()
     return jsonify({"success": True, "message": "Evaluación eliminada correctamente."})
 
+@evaluations_bp.route('/api/dashboard-data', methods=['POST'])
 @evaluations_bp.route('/api/bia/calculate', methods=['POST'])
 def calculate_bia_api():
+    current_user = _get_current_user()
+    current_uid = current_user.get('id') if current_user else None
+
     data = request.json or {}
-    try:
-        r = float(data.get('resistance') or 0)
-        xc = float(data.get('reactance') or 0)
-        w = float(data.get('weight') or 0)
-        h = float(data.get('height') or 0)
-        age = int(data.get('age') or 0)
-        gender = _normalize_gender(data.get('gender'))
-    except (ValueError, TypeError):
-        return jsonify({"error": "Datos numéricos inválidos"}), 400
+    report = compute_full_bia_analysis(data)
 
-    if r <= 0 or xc <= 0 or w <= 0 or h <= 0 or age <= 0:
-        return jsonify({"error": "Resistencia, Reactancia, Peso, Talla y Edad deben ser mayores a 0"}), 400
+    should_save = data.get('save') is True
 
-    report = build_clinical_report(r, xc, h, w, age, gender)
-    return jsonify({"success": True, "report": report})
+    if should_save:
+        if not current_user:
+            return jsonify({"error": "No autorizado para guardar evaluación"}), 401
+        if not _is_subscription_active(current_user):
+            return jsonify({
+                "error": "Tu suscripción ha vencido. Canjea un PIN para guardar evaluaciones clínicas.",
+                "subscription_expired": True
+            }), 403
+
+        eval_id = str(uuid.uuid4())
+        p_name = _clean_str(data.get('patient_name') or data.get('name'), max_len=100) or "Paciente sin registrar"
+        p_idp = _clean_str(data.get('patient_idp') or data.get('idp'), max_len=50)
+
+        new_eval = {
+            "id": eval_id,
+            "user_id": current_uid,
+            "code": f"EVAL-{int(datetime.now().timestamp())}",
+            "patient_name": p_name,
+            "patient_idp": p_idp,
+            "resistance": float(data.get('resistance') or 0),
+            "reactance": float(data.get('reactance') or 0),
+            "weight": float(data.get('weight') or 0),
+            "height": float(data.get('height') or 0),
+            "age": int(data.get('age') or 0),
+            "gender": _normalize_gender(data.get('gender')),
+            "report": report,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+
+        global _LOCAL_EVALUATIONS
+        if not isinstance(_LOCAL_EVALUATIONS, list):
+            _LOCAL_EVALUATIONS = []
+        _LOCAL_EVALUATIONS.insert(0, new_eval)
+        _save_persisted_evaluations(_LOCAL_EVALUATIONS)
+
+        if supabase:
+            try:
+                supabase.table('evaluations').insert({
+                    "id": eval_id,
+                    "user_id": current_uid,
+                    "code": new_eval['code'],
+                    "patient_name": p_name,
+                    "patient_idp": p_idp,
+                    "resistance": new_eval['resistance'],
+                    "reactance": new_eval['reactance'],
+                    "weight": new_eval['weight'],
+                    "height": new_eval['height'],
+                    "age": new_eval['age'],
+                    "gender": new_eval['gender'],
+                    "created_at": new_eval['created_at']
+                }).execute()
+            except Exception as e:
+                logging.warning("No se pudo registrar evaluación en Supabase: %s", e)
+
+        _invalidate_dashboard_cache()
+        response_dict = {
+            "success": True,
+            "saved": True,
+            "evaluation": new_eval
+        }
+        response_dict.update(report)
+        return jsonify(response_dict), 201
+
+    response_dict = {
+        "success": True,
+        "saved": False
+    }
+    response_dict.update(report)
+    return jsonify(response_dict), 200
