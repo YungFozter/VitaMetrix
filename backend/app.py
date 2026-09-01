@@ -3903,29 +3903,29 @@ def _find_existing_stock_item(name, code=None, current_uid=None):
     norm_name = str(name).strip().lower() if name else ''
     norm_code = str(code).strip().upper() if code else ''
 
-    all_items = list(_LOCAL_STOCK_ITEMS)
+    active_items = []
     if supabase:
         try:
             res = supabase.table('stock_items').select('*').execute()
             if res.data:
-                supa_map = {str(x.get('id')): x for x in res.data if x.get('id')}
-                for item in all_items:
-                    if str(item.get('id')) in supa_map:
-                        item.update(supa_map[str(item.get('id'))])
-                existing_ids = set(str(x.get('id')) for x in all_items if x.get('id'))
-                for s_item in res.data:
-                    if str(s_item.get('id')) not in existing_ids:
-                        all_items.append(s_item)
+                active_items = res.data
         except Exception:
             pass
 
-    for item in all_items:
-        item_uid = item.get('user_id')
-        if not current_uid or not item_uid or item_uid == 'usr-doctor-001' or item_uid == current_uid:
-            it_name = str(item.get('name') or '').strip().lower()
-            it_code = str(item.get('code') or '').strip().upper()
-            if (norm_name and it_name == norm_name) or (norm_code and it_code == norm_code and not norm_code.startswith('SKU-AUTO')):
-                return item
+    if not active_items:
+        active_items = list(_LOCAL_STOCK_ITEMS)
+
+    # Filtrar insumos activos pertenecientes específicamente al doctor activo
+    if current_uid:
+        user_items = [it for it in active_items if it.get('user_id') == current_uid]
+    else:
+        user_items = active_items
+
+    for item in user_items:
+        it_name = str(item.get('name') or '').strip().lower()
+        it_code = str(item.get('code') or '').strip().upper()
+        if (norm_name and it_name == norm_name) or (norm_code and it_code == norm_code and not norm_code.startswith('SKU-AUTO')):
+            return item
     return None
 
 @app.route('/api/stock/preview-excel', methods=['POST'])
