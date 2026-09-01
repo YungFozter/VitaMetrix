@@ -3978,6 +3978,152 @@ def preview_stock_excel():
         supplier = _clean_str(_get_val(idx_supplier), max_len=150)
         notes = _clean_str(_get_val(idx_notes), max_len=500)
 
+def _find_existing_stock_item(name, code=None, current_uid=None):
+    if not name and not code:
+        return None
+    norm_name = str(name).strip().lower() if name else ''
+    norm_code = str(code).strip().upper() if code else ''
+
+    for item in _LOCAL_STOCK_ITEMS:
+        item_uid = item.get('user_id')
+        if not current_uid or item_uid == current_uid or (not item_uid and current_uid == 'usr-doctor-001'):
+            it_name = str(item.get('name') or '').strip().lower()
+            it_code = str(item.get('code') or '').strip().upper()
+            if (norm_name and it_name == norm_name) or (norm_code and it_code == norm_code and not norm_code.startswith('SKU-AUTO')):
+                return item
+    return None
+
+@app.route('/api/stock/preview-excel', methods=['POST'])
+def preview_stock_excel():
+    import io
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+    
+    current_uid = current_user.get('id')
+    if 'file' not in request.files:
+        return jsonify({"error": "No se seleccionó ningún archivo para analizar"}), 400
+
+    file = request.files['file']
+    filename = (file.filename or '').lower()
+    if not filename or not (filename.endswith('.xlsx') or filename.endswith('.xls') or filename.endswith('.csv')):
+        return jsonify({"error": "Formato no soportado. Debes subir un archivo Excel (.xlsx, .xls) o CSV (.csv)"}), 400
+
+    rows_raw = []
+    file_bytes = file.read()
+
+    try:
+        if filename.endswith('.csv'):
+            import csv
+            file_str = file_bytes.decode('utf-8-sig', errors='ignore')
+            reader = csv.reader(io.StringIO(file_str))
+            for r in reader:
+                if r and any(str(cell).strip() for cell in r):
+                    rows_raw.append([str(c).strip() for c in r])
+        else:
+            try:
+                import openpyxl
+            except ImportError:
+                return jsonify({"error": "La librería 'openpyxl' se está instalando en el servidor. Reintenta en 1 minuto o sube un archivo .csv"}), 500
+            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), data_only=True)
+            ws = wb.active
+            for r in ws.iter_rows(values_only=True):
+                if r and any(cell is not None and str(cell).strip() != '' for cell in r):
+                    rows_raw.append([str(c).strip() if c is not None else '' for c in r])
+    except Exception as ex_read:
+        return jsonify({"error": f"No se pudo analizar el archivo: {str(ex_read)}"}), 400
+
+    if not rows_raw or len(rows_raw) < 2:
+        return jsonify({"error": "El archivo está vacío o no contiene filas de datos"}), 400
+
+    header_row = [str(h).strip().lower() for h in rows_raw[0]]
+    
+    def _find_col_idx(aliases):
+        for idx, h in enumerate(header_row):
+            h_norm = h.replace('*', '').replace('(', '').replace(')', '').strip()
+            for alias in aliases:
+                if alias in h_norm or h_norm in alias:
+                    return idx
+        return -1
+
+    idx_code = _find_col_idx(['sku', 'codigo', 'código', 'code'])
+    idx_name = _find_col_idx(['nombre producto / insumo', 'nombre producto', 'nombre insumo', 'nombre', 'producto', 'insumo'])
+    idx_cat = _find_col_idx(['categoria', 'categoría', 'category'])
+    idx_unit = _find_col_idx(['u. medida', 'u.medida', 'unidad de medida', 'unidad', 'medida', 'unit'])
+    idx_qty = _find_col_idx(['stock', 'cantidad inicial', 'cantidad', 'existencia', 'stock_quantity'])
+    idx_min = _find_col_idx(['st. min', 'st.min', 'stock minimo', 'stock mínimo', 'alerta', 'min_stock'])
+    idx_cost = _find_col_idx(['p. costo', 'p.costo', 'precio costo', 'costo', 'cost_price'])
+    idx_sale = _find_col_idx(['pvp', 'precio venta', 'venta', 'sale_price'])
+    idx_batch = _find_col_idx(['lote', 'numero de lote', 'número de lote', 'batch'])
+    idx_expiry = _find_col_idx(['vencimiento', 'fecha de vencimiento', 'expiry'])
+    idx_location = _find_col_idx(['ubicacion', 'ubicación', 'ubicación en consultorio', 'location'])
+    idx_supplier = _find_col_idx(['proveedor', 'supplier'])
+    idx_notes = _find_col_idx(['notas / posología', 'notas', 'posologia', 'posología', 'notes'])
+
+    if idx_name == -1:
+        idx_name = 1 if len(header_row) > 1 else 0
+    if idx_qty == -1:
+        idx_qty = 4 if len(header_row) > 4 else 2
+    if idx_cost == -1 and len(header_row) > 6:
+        idx_cost = 6
+    if idx_sale == -1 and len(header_row) > 7:
+        idx_sale = 7
+    if idx_batch == -1 and len(header_row) > 8:
+        idx_batch = 8
+    if idx_expiry == -1 and len(header_row) > 9:
+        idx_expiry = 9
+    if idx_location == -1 and len(header_row) > 10:
+        idx_location = 10
+    if idx_supplier == -1 and len(header_row) > 11:
+        idx_supplier = 11
+    if idx_notes == -1 and len(header_row) > 12:
+        idx_notes = 12
+
+    preview_items = []
+    temp_sku_counter = 1
+
+    for r_num, row_data in enumerate(rows_raw[1:], start=2):
+        def _get_val(col_idx):
+            if col_idx >= 0 and col_idx < len(row_data):
+                val = str(row_data[col_idx]).strip()
+                if val.lower() in ('none', 'null', 'nan', ''):
+                    return ''
+                return val
+            return ''
+
+        name = _clean_str(_get_val(idx_name), max_len=150)
+        if not name or name.lower().startswith('ej:') or name.lower().startswith('código'):
+            continue
+
+        raw_code = _clean_str(_get_val(idx_code), max_len=50)
+        cat_val = _clean_str(_get_val(idx_cat), max_len=80) or 'Sin Categoría'
+        unit_val = _clean_str(_get_val(idx_unit), max_len=30) or 'Unidad (u)'
+        qty = _safe_stock_float(_get_val(idx_qty), default=0.0, min_val=0.0)
+        min_qty = _safe_stock_float(_get_val(idx_min), default=5.0, min_val=0.0)
+        cost_price = _safe_stock_float(_get_val(idx_cost), default=0.0, min_val=0.0)
+        sale_price = _safe_stock_float(_get_val(idx_sale), default=0.0, min_val=0.0)
+
+        batch = _clean_str(_get_val(idx_batch), max_len=100)
+        expiry = _clean_str(_get_val(idx_expiry), max_len=30)
+        location = _clean_str(_get_val(idx_location), max_len=150)
+        supplier = _clean_str(_get_val(idx_supplier), max_len=150)
+        notes = _clean_str(_get_val(idx_notes), max_len=500)
+
+        # Detectar si coincide con insumo existente por Nombre o SKU
+        existing_item = _find_existing_stock_item(name, code=raw_code, current_uid=current_uid)
+        is_reabastecimiento = bool(existing_item)
+        prev_stock = _safe_stock_float(existing_item.get('stock_quantity'), 0.0) if existing_item else 0.0
+        total_after = round(prev_stock + qty, 2) if is_reabastecimiento else qty
+
+        if existing_item:
+            code = existing_item.get('code') or (raw_code.upper() if raw_code else f"SKU-{temp_sku_counter:03d}")
+        else:
+            if raw_code:
+                code = raw_code.upper()
+            else:
+                code = f"SKU-{temp_sku_counter:03d} (Auto)"
+                temp_sku_counter += 1
+
         preview_items.append({
             "row_num": r_num,
             "code": code,
@@ -3985,6 +4131,9 @@ def preview_stock_excel():
             "category": cat_val,
             "unit": unit_val,
             "stock_quantity": qty,
+            "is_reabastecimiento": is_reabastecimiento,
+            "previous_stock": prev_stock,
+            "total_after_stock": total_after,
             "min_stock": min_qty,
             "cost_price": cost_price,
             "sale_price": sale_price,
@@ -4103,6 +4252,8 @@ def import_stock_excel():
         idx_notes = 12
 
     imported_count = 0
+    reabastecidos_count = 0
+    nuevos_count = 0
     errors_list = []
 
     for r_num, row_data in enumerate(rows_raw[1:], start=2):
@@ -4120,7 +4271,6 @@ def import_stock_excel():
                 continue
 
             raw_code = _clean_str(_get_val(idx_code), max_len=50)
-            code = _generate_next_sku(raw_code, current_uid=current_uid)
 
             cat_val = _clean_str(_get_val(idx_cat), max_len=80)
             if not cat_val or cat_val.lower() in ('sin categoría', 'todas', 'all', ''):
@@ -4139,52 +4289,152 @@ def import_stock_excel():
             supplier = _clean_str(_get_val(idx_supplier), max_len=150)
             notes = _clean_str(_get_val(idx_notes), max_len=500)
 
-            item_id = str(uuid.uuid4())
-            new_item = {
-                "id": item_id,
-                "user_id": current_uid,
-                "code": code,
-                "name": name,
-                "category": cat_val,
-                "unit": unit_val,
-                "stock_quantity": qty,
-                "min_stock": min_qty,
-                "cost_price": cost_price,
-                "sale_price": sale_price,
-                "supplier": supplier,
-                "location": location,
-                "batch_number": batch,
-                "expiry_date": expiry,
-                "notes": notes,
-                "status": _calc_item_status(qty, min_qty),
-                "created_at": datetime.now(timezone.utc).isoformat()
-            }
-
             _ensure_category_and_unit_persisted(cat_val, unit_val)
 
-            if supabase:
-                try:
-                    supabase.table('stock_items').insert(new_item).execute()
-                except Exception:
+            # Buscar si coincide con un producto existente por Nombre o por SKU
+            existing_item = _find_existing_stock_item(name, code=raw_code, current_uid=current_uid)
+
+            if existing_item:
+                # CONSOLIDACIÓN / REABASTECIMIENTO DE INSUMO EXISTENTE
+                prev_q = _safe_stock_float(existing_item.get('stock_quantity'), 0.0)
+                new_q = round(prev_q + qty, 2)
+                existing_item['stock_quantity'] = new_q
+                existing_item['status'] = _calc_item_status(new_q, existing_item.get('min_stock', min_qty))
+                existing_item['updated_at'] = datetime.now(timezone.utc).isoformat()
+
+                if cost_price > 0:
+                    existing_item['cost_price'] = cost_price
+                if sale_price > 0:
+                    existing_item['sale_price'] = sale_price
+                if min_qty > 0:
+                    existing_item['min_stock'] = min_qty
+                if cat_val and cat_val != 'Sin Categoría':
+                    existing_item['category'] = cat_val
+                if unit_val and unit_val != 'Unidad (u)':
+                    existing_item['unit'] = unit_val
+                if batch:
+                    existing_item['batch_number'] = batch
+                if expiry:
+                    existing_item['expiry_date'] = expiry
+                if location:
+                    existing_item['location'] = location
+                if supplier:
+                    existing_item['supplier'] = supplier
+                if notes:
+                    existing_item['notes'] = notes
+
+                if supabase:
                     try:
-                        fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
-                        supabase.table('stock_items').insert(fallback_item).execute()
+                        update_payload = {
+                            "stock_quantity": new_q,
+                            "status": existing_item['status'],
+                            "updated_at": existing_item['updated_at']
+                        }
+                        if cost_price > 0: update_payload["cost_price"] = cost_price
+                        if sale_price > 0: update_payload["sale_price"] = sale_price
+                        if batch: update_payload["batch_number"] = batch
+                        if expiry: update_payload["expiry_date"] = expiry
+                        if location: update_payload["location"] = location
+                        if supplier: update_payload["supplier"] = supplier
+                        if notes: update_payload["notes"] = notes
+
+                        supabase.table('stock_items').update(update_payload).eq('id', existing_item['id']).execute()
+                    except Exception as ex_sub:
+                        logging.warning("Error al actualizar insumo en Supabase: %s", ex_sub)
+
+                # Movimiento de Kardex Entrada (IN) por Reabastecimiento
+                m_item = {
+                    "id": str(uuid.uuid4()),
+                    "user_id": current_uid,
+                    "item_id": existing_item['id'],
+                    "type": "IN",
+                    "quantity": qty,
+                    "previous_stock": prev_q,
+                    "new_stock": new_q,
+                    "reason": "Reabastecimiento masivo vía importación Excel/CSV",
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+                _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
+                if supabase:
+                    try:
+                        supabase.table('stock_movements').insert(m_item).execute()
                     except Exception:
                         pass
 
-            _LOCAL_STOCK_ITEMS.insert(0, new_item)
+                reabastecidos_count += 1
+            else:
+                # CREACIÓN DE NUEVO INSUMO
+                code = _generate_next_sku(raw_code, current_uid=current_uid)
+                item_id = str(uuid.uuid4())
+                new_item = {
+                    "id": item_id,
+                    "user_id": current_uid,
+                    "code": code,
+                    "name": name,
+                    "category": cat_val,
+                    "unit": unit_val,
+                    "stock_quantity": qty,
+                    "min_stock": min_qty,
+                    "cost_price": cost_price,
+                    "sale_price": sale_price,
+                    "supplier": supplier,
+                    "location": location,
+                    "batch_number": batch,
+                    "expiry_date": expiry,
+                    "notes": notes,
+                    "status": _calc_item_status(qty, min_qty),
+                    "created_at": datetime.now(timezone.utc).isoformat()
+                }
+
+                if supabase:
+                    try:
+                        supabase.table('stock_items').insert(new_item).execute()
+                    except Exception:
+                        try:
+                            fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
+                            supabase.table('stock_items').insert(fallback_item).execute()
+                        except Exception:
+                            pass
+
+                _LOCAL_STOCK_ITEMS.insert(0, new_item)
+
+                # Kardex de Creación Inicial
+                if qty > 0:
+                    m_item = {
+                        "id": str(uuid.uuid4()),
+                        "user_id": current_uid,
+                        "item_id": item_id,
+                        "type": "IN",
+                        "quantity": qty,
+                        "previous_stock": 0,
+                        "new_stock": qty,
+                        "reason": "Stock inicial por importación Excel/CSV",
+                        "created_at": datetime.now(timezone.utc).isoformat()
+                    }
+                    _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
+                    if supabase:
+                        try:
+                            supabase.table('stock_movements').insert(m_item).execute()
+                        except Exception:
+                            pass
+
+                nuevos_count += 1
+
             imported_count += 1
         except Exception as e_row:
             errors_list.append(f"Fila {r_num}: {str(e_row)}")
 
     _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
+    _save_persisted_stock_movements(_LOCAL_STOCK_MOVEMENTS)
     _invalidate_dashboard_cache()
 
     return jsonify({
         "success": True,
         "imported_count": imported_count,
+        "reabastecidos_count": reabastecidos_count,
+        "nuevos_count": nuevos_count,
         "errors": errors_list,
-        "message": f"Se importaron {imported_count} insumos correctamente al inventario."
+        "message": f"Se procesaron {imported_count} insumos ({reabastecidos_count} reabastecidos y {nuevos_count} nuevos registros)."
     }), 201
 
 # --- MÓDULO DE VENTAS (POS CLÍNICO & COMPROBANTES) ---

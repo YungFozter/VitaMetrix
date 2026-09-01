@@ -10250,10 +10250,22 @@ function initImportStockExcelModal() {
         items.forEach(item => {
             const tr = document.createElement('tr');
             let rowHtml = `<td class="font-monospace text-navy fw-semibold text-nowrap px-3 py-2.5">${escapeHtml(item.code || '')}</td>`;
-            rowHtml += `<td class="fw-bold text-navy px-3 py-2.5" style="min-width: 250px;">${escapeHtml(item.name || '')}</td>`;
+            
+            if (item.is_reabastecimiento) {
+                rowHtml += `<td class="fw-bold text-navy px-3 py-2.5" style="min-width: 250px;">${escapeHtml(item.name || '')} <span class="badge bg-primary-subtle text-primary border border-primary border-opacity-25 ms-1.5 fw-semibold" style="font-size: 0.7rem;"><i class="bi bi-arrow-repeat me-1"></i>Reabastecer</span></td>`;
+            } else {
+                rowHtml += `<td class="fw-bold text-navy px-3 py-2.5" style="min-width: 250px;">${escapeHtml(item.name || '')} <span class="badge bg-success-subtle text-success border border-success border-opacity-25 ms-1.5 fw-semibold" style="font-size: 0.7rem;"><i class="bi bi-plus-circle me-1"></i>Nuevo</span></td>`;
+            }
+
             if (hasCat) rowHtml += `<td class="text-nowrap px-3 py-2.5"><span class="badge bg-light text-secondary border small px-2.5 py-1">${escapeHtml(item.category || 'Sin Categoría')}</span></td>`;
             if (hasUnit) rowHtml += `<td class="text-nowrap px-3 py-2.5"><span class="badge bg-light text-secondary border small px-2.5 py-1">${escapeHtml(item.unit || 'Unidad (u)')}</span></td>`;
-            rowHtml += `<td class="text-center font-monospace fw-bold text-success text-nowrap px-3 py-2.5">${item.stock_quantity ?? 0}</td>`;
+            
+            if (item.is_reabastecimiento) {
+                rowHtml += `<td class="text-center font-monospace fw-bold text-primary text-nowrap px-3 py-2.5">+${item.stock_quantity ?? 0} <span class="text-muted fw-normal" style="font-size:0.75rem;">(Total: ${item.total_after_stock})</span></td>`;
+            } else {
+                rowHtml += `<td class="text-center font-monospace fw-bold text-success text-nowrap px-3 py-2.5">${item.stock_quantity ?? 0}</td>`;
+            }
+
             if (hasMin) rowHtml += `<td class="text-center font-monospace text-muted text-nowrap px-3 py-2.5">${item.min_stock ?? 5}</td>`;
             if (hasCost) rowHtml += `<td class="text-end font-monospace text-muted text-nowrap px-3 py-2.5">Bs ${Number(item.cost_price || 0).toFixed(2)}</td>`;
             if (hasSale) rowHtml += `<td class="text-end font-monospace fw-bold text-navy text-nowrap px-3 py-2.5">Bs ${Number(item.sale_price || 0).toFixed(2)}</td>`;
