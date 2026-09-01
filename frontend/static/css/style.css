@@ -14,6 +14,12 @@
 /* Componentes reutilizables (Botones, Modales, Cards base, Toasts) */
 @import url('components.css');
 
+/* Módulo de Autenticación & Login Stitch */
+@import url('auth.css');
+
+/* Módulo SuperAdmin Panel & PINs */
+@import url('superadmin.css');
+
 /* Vista Dashboard */
 @import url('dashboard.css');
 

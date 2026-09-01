@@ -1,0 +1,74 @@
+/* ============================================================
+   VITAMETRIX - MÓDULO CSS: SUPERADMIN PANEL & PINS
+   Archivo: frontend/static/css/superadmin.css
+   ============================================================ */
+
+.bg-purple {
+    background-color: #6366f1 !important;
+}
+.text-purple {
+    color: #6366f1 !important;
+}
+.btn-xs {
+    padding: 0.22rem 0.55rem;
+    font-size: 0.75rem;
+    border-radius: 0.375rem;
+}
+
+/* Modales Globales & SuperAdmin: Centrado Perfecto en Viewport y Adaptabilidad Móvil */
+.admin-modal-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    border-radius: 1.25rem !important;
+    box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35) !important;
+    margin: auto !important;
+    max-height: 92vh !important;
+    overflow-y: auto !important;
+    animation: modalPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalPopIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.94) translateY(10px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Pestañas de Navegación SuperAdmin */
+.admin-nav-tab-btn {
+    border: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+    color: #64748b;
+    transition: all 0.2s ease;
+}
+
+.admin-nav-tab-btn:hover {
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+.admin-nav-tab-btn.active {
+    background-color: #005bbf !important;
+    color: #ffffff !important;
+    border-color: #005bbf !important;
+    box-shadow: 0 4px 12px rgba(0, 91, 191, 0.25) !important;
+}
+
+.admin-nav-tab-btn.active.btn-warning {
+    background-color: #f59e0b !important;
+    color: #0f172a !important;
+    border-color: #f59e0b !important;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25) !important;
+}
+
+@media (max-width: 576px) {
+    .admin-modal-card {
+        padding: 1.25rem !important;
+        border-radius: 1rem !important;
+        max-width: 100% !important;
+    }
+}
