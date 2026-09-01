@@ -29,79 +29,101 @@ def dashboard_stats():
     recent_evals = []
     cell_buckets = {"Óptimo": 0, "Límite": 0, "Bajo": 0}
 
+    evals_data = []
+    clients_data = []
+
     if supabase:
         try:
             res_c = supabase.table('clients').select('id, user_id', count='exact').execute()
             if res_c and res_c.data is not None:
-                if current_uid and current_user.get('role') != 'admin':
-                    total_clients = len([c for c in res_c.data if c.get('user_id') == current_uid or not c.get('user_id')])
-                else:
-                    total_clients = len(res_c.data)
+                clients_data = res_c.data
 
             res_e = supabase.table('evaluations').select('*').order('created_at', desc=True).limit(50).execute()
             if res_e and res_e.data is not None:
                 evals_data = res_e.data
-                if current_uid and current_user.get('role') != 'admin':
-                    evals_data = [e for e in evals_data if e.get('user_id') == current_uid or not e.get('user_id')]
-
-                total_evals = len(evals_data)
-                for ev in evals_data:
-                    sc = ev.get('global_score')
-                    if sc is not None and isinstance(sc, (int, float)):
-                        scores.append(float(sc))
-
-                    report = ev.get('report') or {}
-                    biva = report.get('biva') or {}
-                    pa = biva.get('phase_angle')
-                    valid = biva.get('valid', True)
-                    b = _cell_bucket(pa, valid)
-                    cell_buckets[b] += 1
-
-                for ev in evals_data[:5]:
-                    recent_evals.append({
-                        "id": ev.get('id'),
-                        "patient_name": ev.get('patient_name', 'Paciente'),
-                        "code": ev.get('code', 'N/A'),
-                        "date": (ev.get('created_at') or '')[:10],
-                        "global_score": ev.get('global_score', 0)
-                    })
         except Exception as e:
             logging.warning("Error al calcular dashboard desde Supabase: %s", e)
 
-    if total_evals == 0:
-        evals_local = _load_persisted_evaluations()
-        clients_local = _load_persisted_clients()
+    if not clients_data:
+        clients_data = _load_persisted_clients()
+    if not evals_data:
+        evals_data = _load_persisted_evaluations()
 
-        if current_uid and current_user.get('role') != 'admin':
-            evals_local = [e for e in evals_local if isinstance(e, dict) and (e.get('user_id') == current_uid or not e.get('user_id'))]
-            clients_local = [c for c in clients_local if isinstance(c, dict) and (c.get('user_id') == current_uid or not c.get('user_id'))]
+    if current_uid and current_user.get('role') != 'admin':
+        filtered_c = []
+        for c in clients_data:
+            if not isinstance(c, dict):
+                continue
+            c_uid = c.get('user_id')
+            if not c_uid or c_uid in ('usr-doctor-001', 'None', 'null', ''):
+                c_uid = current_uid
+            if c_uid == current_uid:
+                filtered_c.append(c)
+        clients_data = filtered_c
 
-        total_clients = len(clients_local)
-        total_evals = len(evals_local)
+        filtered_e = []
+        for e in evals_data:
+            if not isinstance(e, dict):
+                continue
+            e_uid = e.get('user_id')
+            if not e_uid or e_uid in ('usr-doctor-001', 'None', 'null', ''):
+                e_uid = current_uid
+            if e_uid == current_uid:
+                filtered_e.append(e)
+        evals_data = filtered_e
 
-        for ev in evals_local:
-            report = ev.get('report') or {}
-            scores_dict = report.get('scores') or {}
+    total_clients = len(clients_data)
+    total_evals = len(evals_data)
+
+    for ev in evals_data:
+        report = ev.get('report') or {}
+        scores_dict = report.get('scores') or {}
+        biva_dict = report.get('biva') or {}
+
+        sc = ev.get('global_score')
+        if sc is None:
             sc = scores_dict.get('global_score')
-            if sc is not None:
+        if sc is not None:
+            try:
                 scores.append(float(sc))
+            except (ValueError, TypeError):
+                pass
 
-            biva = report.get('biva') or {}
-            pa = biva.get('phase_angle')
-            valid = biva.get('valid', True)
-            b = _cell_bucket(pa, valid)
-            cell_buckets[b] += 1
+        pa = ev.get('phase_angle')
+        if pa is None:
+            pa = biva_dict.get('phase_angle')
+        valid = biva_dict.get('valid', True)
+        b = _cell_bucket(pa, valid)
+        cell_buckets[b] += 1
 
-        for ev in evals_local[:5]:
-            report = ev.get('report') or {}
-            sc_obj = report.get('scores') or {}
-            recent_evals.append({
-                "id": ev.get('id'),
-                "patient_name": ev.get('patient_name', 'Paciente'),
-                "code": ev.get('code', 'N/A'),
-                "date": (ev.get('created_at') or '')[:10],
-                "global_score": sc_obj.get('global_score', 0)
-            })
+    for ev in evals_data[:5]:
+        report = ev.get('report') or {}
+        scores_dict = report.get('scores') or {}
+        biva_dict = report.get('biva') or {}
+
+        p_name = ev.get('patient_name') or ev.get('name') or "Paciente sin registrar"
+        p_idp = ev.get('patient_idp') or ev.get('idp') or "N/A"
+
+        sc_val = ev.get('global_score')
+        if sc_val is None:
+            sc_val = scores_dict.get('global_score', 0)
+
+        pa_val = ev.get('phase_angle')
+        if pa_val is None:
+            pa_val = biva_dict.get('phase_angle', 0)
+
+        recent_evals.append({
+            "id": ev.get('id'),
+            "name": p_name,
+            "patient_name": p_name,
+            "idp": p_idp,
+            "patient_idp": p_idp,
+            "code": ev.get('code', 'N/A'),
+            "date": (ev.get('created_at') or '')[:10],
+            "score": float(sc_val or 0),
+            "global_score": float(sc_val or 0),
+            "phase_angle": float(pa_val or 0)
+        })
 
     avg_score = round(sum(scores) / len(scores), 1) if scores else 0
 
