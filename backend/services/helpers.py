@@ -52,7 +52,19 @@ def _load_persisted_clients():
     if os.path.exists(_CLIENTS_USERS_PATH):
         try:
             with open(_CLIENTS_USERS_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+                elif isinstance(data, dict):
+                    if "clients" in data and isinstance(data["clients"], list):
+                        return data["clients"]
+                    flattened = []
+                    for k, v in data.items():
+                        if isinstance(v, list):
+                            flattened.extend(v)
+                        elif isinstance(v, dict):
+                            flattened.append(v)
+                    return flattened
         except Exception as e:
             logging.warning("Error al leer clients_users.json: %s", e)
     return []
@@ -60,6 +72,8 @@ def _load_persisted_clients():
 def _save_persisted_clients(clients):
     try:
         os.makedirs(os.path.dirname(_CLIENTS_USERS_PATH), exist_ok=True)
+        if not isinstance(clients, list):
+            clients = list(clients) if hasattr(clients, '__iter__') else []
         with open(_CLIENTS_USERS_PATH, 'w', encoding='utf-8') as f:
             json.dump(clients, f, indent=2, ensure_ascii=False)
         return True
@@ -71,7 +85,19 @@ def _load_persisted_evaluations():
     if os.path.exists(_EVALUATIONS_USERS_PATH):
         try:
             with open(_EVALUATIONS_USERS_PATH, 'r', encoding='utf-8') as f:
-                return json.load(f)
+                data = json.load(f)
+                if isinstance(data, list):
+                    return data
+                elif isinstance(data, dict):
+                    if "evaluations" in data and isinstance(data["evaluations"], list):
+                        return data["evaluations"]
+                    flattened = []
+                    for k, v in data.items():
+                        if isinstance(v, list):
+                            flattened.extend(v)
+                        elif isinstance(v, dict):
+                            flattened.append(v)
+                    return flattened
         except Exception as e:
             logging.warning("Error al leer evaluations_users.json: %s", e)
     return []
@@ -850,14 +876,24 @@ def _ensure_category_and_unit_persisted(category_name, unit_name=None):
         logging.warning("Error al asegurar taxonomías persistidas: %s", e)
 
 def _get_stock_item_by_id(item_id):
+    if not item_id:
+        return None
+    target_str = str(item_id).strip()
+    for item in _LOCAL_STOCK_ITEMS:
+        if str(item.get('id')).strip() == target_str:
+            return item
+
     if supabase:
         try:
-            res = supabase.table('stock_items').select('*').eq('id', str(item_id)).execute()
-            if res.data:
+            res = supabase.table('stock_items').select('*').eq('id', target_str).execute()
+            if res and res.data:
                 return res.data[0]
         except Exception:
             pass
-    for item in _LOCAL_STOCK_ITEMS:
-        if str(item.get('id')) == str(item_id):
+
+    disk_items = _load_persisted_stock_items()
+    for item in disk_items:
+        if str(item.get('id')).strip() == target_str:
             return item
+
     return None

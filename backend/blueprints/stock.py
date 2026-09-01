@@ -940,3 +940,23 @@ def import_stock_excel():
         "errors": errors_list,
         "message": f"Se procesaron {imported_count} insumos ({reabastecidos_count} reabastecidos y {nuevos_count} nuevos registros)."
     }), 201
+
+@stock_bp.route('/api/stock/movements', methods=['GET'])
+def get_all_stock_movements():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    movements = []
+    if supabase:
+        try:
+            res = supabase.table('stock_movements').select('*').order('created_at', desc=True).limit(200).execute()
+            if res and res.data:
+                movements = res.data
+        except Exception as e:
+            logging.warning("Error consultando movimientos en Supabase: %s", e)
+
+    if not movements:
+        movements = _load_persisted_stock_movements()
+
+    return jsonify(movements)

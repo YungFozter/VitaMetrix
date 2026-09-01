@@ -15,6 +15,8 @@ from services.helpers import (
 dashboard_bp = Blueprint('dashboard_bp', __name__)
 
 @dashboard_bp.route('/api/dashboard/stats', methods=['GET'])
+@dashboard_bp.route('/api/dashboard-stats', methods=['GET'])
+@dashboard_bp.route('/api/dashboard-data', methods=['GET'])
 def dashboard_stats():
     current_user = _get_current_user()
     current_uid = current_user.get('id') if current_user else None
@@ -71,8 +73,8 @@ def dashboard_stats():
         clients_local = _load_persisted_clients()
 
         if current_uid and current_user.get('role') != 'admin':
-            evals_local = [e for e in evals_local if e.get('user_id') == current_uid or not e.get('user_id')]
-            clients_local = [c for c in clients_local if c.get('user_id') == current_uid or not c.get('user_id')]
+            evals_local = [e for e in evals_local if isinstance(e, dict) and (e.get('user_id') == current_uid or not e.get('user_id'))]
+            clients_local = [c for c in clients_local if isinstance(c, dict) and (c.get('user_id') == current_uid or not c.get('user_id'))]
 
         total_clients = len(clients_local)
         total_evals = len(evals_local)

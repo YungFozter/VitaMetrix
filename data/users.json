@@ -38,9 +38,9 @@
     "email": "ianortizsandoval@gmail.com",
     "password_hash": "scrypt:32768:8:1$V9lwScNPDpiFFYdM$c040d12f151b5f6c51c166c51b3261c138e30686d45b1498510bced0083d2cbd1b42656d6a59b3d69f0af28e718c91ec22fadabd5ebe8ad1614344e24dc9b187",
     "full_name": "Ian Ortiz",
-    "professional_title": "Nutricionista Clínico",
+    "professional_title": "Nutricionista Clínico VitaMetrix",
     "clinic_name": "Consultorio AzPlus",
-    "phone": "",
+    "phone": "72125280",
     "role": "user",
     "subscription_status": "trial",
     "subscription_plan": "Plan de Prueba (7 días)",
@@ -52,6 +52,7 @@
     "pdf_disclaimer": "Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.",
     "clinic_address": "Pampa de la Isla, Santa Cruz de la Sierra, Provincia Andrés Ibáñez",
     "unit_weight": "kg",
-    "pha_optimal": "6.0"
+    "pha_optimal": "6.0",
+    "pdf_footer_address": "Condominio Icaraí - Av. Virgen de Cotoca, 7mo Anillo."
   }
 ]

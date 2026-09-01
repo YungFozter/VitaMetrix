@@ -18,6 +18,8 @@ from services.helpers import (
 clients_bp = Blueprint('clients_bp', __name__)
 
 _LOCAL_CLIENTS = _load_persisted_clients()
+if not isinstance(_LOCAL_CLIENTS, list):
+    _LOCAL_CLIENTS = []
 
 @clients_bp.route('/api/clients', methods=['GET'])
 def list_clients():
@@ -36,9 +38,14 @@ def list_clients():
     if not clients:
         clients = _load_persisted_clients()
 
+    if not isinstance(clients, list):
+        clients = []
+
     if current_uid and current_user.get('role') != 'admin':
         filtered = []
         for c in clients:
+            if not isinstance(c, dict):
+                continue
             c_uid = c.get('user_id')
             if not c_uid or c_uid in ('usr-doctor-001', 'None', 'null', ''):
                 c['user_id'] = current_uid
@@ -92,6 +99,9 @@ def create_client():
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
+    global _LOCAL_CLIENTS
+    if not isinstance(_LOCAL_CLIENTS, list):
+        _LOCAL_CLIENTS = []
     _LOCAL_CLIENTS.insert(0, new_client)
     _save_persisted_clients(_LOCAL_CLIENTS)
 

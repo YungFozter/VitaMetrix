@@ -320,3 +320,62 @@ def cancel_sale(sale_id):
 
     _invalidate_dashboard_cache()
     return jsonify({"success": True, "message": f"Venta #{target_sale.get('receipt_number')} anulada y stock devuelto al inventario."})
+
+@sales_bp.route('/api/sales/stats', methods=['GET'])
+def get_sales_stats():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    current_uid = current_user.get('id')
+    user_role = current_user.get('role', 'user')
+
+    sales = []
+    if supabase:
+        try:
+            res = supabase.table('sales').select('*').execute()
+            if res and res.data:
+                sales = res.data
+        except Exception as e:
+            logging.warning("Error consultando ventas en Supabase: %s", e)
+
+    if not sales:
+        sales = _LOCAL_SALES
+
+    if user_role != 'admin':
+        sales = [s for s in sales if s.get('user_id') in (current_uid, 'usr-doctor-001', None)]
+
+    total_sales_amount = 0.0
+    total_profit = 0.0
+    today_sales_amount = 0.0
+    today_sales_count = 0
+    today_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+
+    for s in sales:
+        if s.get('status') == 'CANCELLED':
+            continue
+
+        tot = float(s.get('total') or 0)
+        total_sales_amount += tot
+
+        for item in (s.get('items') or []):
+            qty = float(item.get('qty') or 1)
+            cost = float(item.get('cost_price') or 0)
+            price = float(item.get('unit_price') or item.get('sale_price') or 0)
+            total_profit += (price - cost) * qty
+
+        created_at = str(s.get('created_at') or '')
+        if today_str in created_at:
+            today_sales_amount += tot
+            today_sales_count += 1
+
+    valid_count = len([s for s in sales if s.get('status') != 'CANCELLED'])
+    avg_ticket = (total_sales_amount / valid_count) if valid_count > 0 else 0.0
+
+    return jsonify({
+        "total_sales_amount": total_sales_amount,
+        "total_profit": total_profit,
+        "today_sales_amount": today_sales_amount,
+        "today_sales_count": today_sales_count,
+        "avg_ticket": avg_ticket
+    })

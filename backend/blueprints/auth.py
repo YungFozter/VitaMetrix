@@ -158,6 +158,22 @@ def update_user_profile():
         "message": "Perfil actualizado exitosamente"
     })
 
+@auth_bp.route('/api/subscription/status', methods=['GET'])
+def get_subscription_status():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    is_active = _is_subscription_active(current_user)
+    return jsonify({
+        "status": current_user.get("subscription_status", "active"),
+        "plan": current_user.get("subscription_plan", "Plan Pro"),
+        "expires_at": current_user.get("subscription_expires_at"),
+        "is_active": is_active,
+        "user": _user_to_public_dict(current_user)
+    })
+
+@auth_bp.route('/api/subscription/redeem', methods=['POST'])
 @auth_bp.route('/api/subscription/redeem-pin', methods=['POST'])
 def redeem_subscription_pin():
     current_user = _get_current_user()
@@ -232,3 +248,112 @@ def list_subscription_licenses():
     if not current_user or current_user.get('role') != 'admin':
         return jsonify({"error": "Acceso restringido a administradores"}), 403
     return jsonify(_load_licenses())
+
+@auth_bp.route('/api/admin/users', methods=['GET'])
+def admin_list_users():
+    current_user = _get_current_user()
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({"error": "Acceso restringido a administradores"}), 403
+
+    users = _load_users()
+    return jsonify([_user_to_public_dict(u) for u in users])
+
+@auth_bp.route('/api/admin/users/create', methods=['POST'])
+def admin_create_user():
+    current_user = _get_current_user()
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({"error": "Acceso restringido a administradores"}), 403
+
+    data = request.json or {}
+    email = _clean_str(data.get('email'), max_len=100)
+    password = str(data.get('password') or '').strip()
+    name = _clean_str(data.get('name'), max_len=100)
+    role = _clean_str(data.get('role'), max_len=20) or 'user'
+    plan = _clean_str(data.get('plan'), max_len=50) or 'Plan Pro Mensual'
+    duration_days = int(data.get('duration_days') or 30)
+
+    if not email or not password or not name:
+        return jsonify({"error": "Nombre, correo y contraseña son obligatorios"}), 400
+
+    users = _load_users()
+    if any(u.get('email', '').lower() == email.lower() for u in users):
+        return jsonify({"error": "El correo ya se encuentra registrado"}), 400
+
+    now_utc = datetime.now(timezone.utc)
+    expires_at = (now_utc + timedelta(days=duration_days)).isoformat() if duration_days < 90000 else None
+
+    new_user = {
+        "id": _generate_next_user_id(users),
+        "email": email,
+        "password_hash": generate_password_hash(password),
+        "name": name,
+        "title": _clean_str(data.get('title'), max_len=100) or "Especialista Nutricional",
+        "clinic": _clean_str(data.get('clinic'), max_len=100) or "Mi Consultorio VitaMetrix",
+        "phone": _clean_str(data.get('phone'), max_len=30),
+        "role": role,
+        "subscription_status": "active" if duration_days > 0 else "expired",
+        "subscription_plan": plan,
+        "subscription_expires_at": expires_at,
+        "created_at": now_utc.isoformat(),
+        "updated_at": now_utc.isoformat()
+    }
+
+    users.append(new_user)
+    _save_users(users)
+    return jsonify({"success": True, "user": _user_to_public_dict(new_user)}), 201
+
+@auth_bp.route('/api/admin/users/batch-delete', methods=['POST'])
+def admin_batch_delete_users():
+    current_user = _get_current_user()
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({"error": "Acceso restringido a administradores"}), 403
+
+    data = request.json or {}
+    user_ids = data.get('user_ids', [])
+    if not isinstance(user_ids, list) or not user_ids:
+        return jsonify({"error": "No se especificaron usuarios a eliminar"}), 400
+
+    users = _load_users()
+    users = [u for u in users if u.get('id') not in user_ids or u.get('role') == 'admin']
+    _save_users(users)
+    return jsonify({"success": True, "message": "Usuarios eliminados correctamente"})
+
+@auth_bp.route('/api/admin/pins', methods=['GET'])
+def admin_list_pins():
+    current_user = _get_current_user()
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({"error": "Acceso restringido a administradores"}), 403
+
+    return jsonify(_load_licenses())
+
+@auth_bp.route('/api/admin/pins/create', methods=['POST'])
+def admin_create_pin():
+    current_user = _get_current_user()
+    if not current_user or current_user.get('role') != 'admin':
+        return jsonify({"error": "Acceso restringido a administradores"}), 403
+
+    data = request.json or {}
+    duration_days = int(data.get('duration_days') or 30)
+    count = int(data.get('count') or 1)
+    custom_pin = _clean_str(data.get('custom_pin'), max_len=50)
+    note = _clean_str(data.get('note'), max_len=200)
+
+    licenses = _load_licenses()
+    created_pins = []
+
+    for i in range(count):
+        pin_code = custom_pin if (custom_pin and count == 1) else f"VITA-{uuid.uuid4().hex[:8].upper()}"
+        lic = {
+            "id": str(uuid.uuid4()),
+            "license_key": pin_code,
+            "duration_days": duration_days,
+            "plan_name": f"Plan Pro ({duration_days} días)",
+            "is_used": False,
+            "note": note,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        licenses.append(lic)
+        created_pins.append(lic)
+
+    _save_licenses(licenses)
+    return jsonify({"success": True, "pins": created_pins}), 201

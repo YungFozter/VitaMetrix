@@ -1,1 +1,46 @@
-[]
+[
+  {
+    "id": "b3b77bf0-86c4-4ea3-aa2d-db48f92fd79f",
+    "user_id": "usr-doctor-001",
+    "item_id": "122c6764-488f-4e7d-8481-285c0d6a38bd",
+    "type": "IN",
+    "quantity": 10.0,
+    "previous_stock": 50.0,
+    "new_stock": 60.0,
+    "reason": "Compra lote adicional E2E",
+    "created_at": "2026-09-01T17:04:37.639668+00:00"
+  },
+  {
+    "id": "b2b7b62f-0032-4b64-b74d-dbcf205df05e",
+    "user_id": "usr-doctor-001",
+    "item_id": "122c6764-488f-4e7d-8481-285c0d6a38bd",
+    "type": "IN",
+    "quantity": 50.0,
+    "previous_stock": 0.0,
+    "new_stock": 50.0,
+    "reason": "Inventario Inicial al registrar insumo",
+    "created_at": "2026-09-01T17:04:33.493941+00:00"
+  },
+  {
+    "id": "be3983de-f027-433b-80c1-fe5afb2d19c1",
+    "user_id": "usr-doctor-001",
+    "item_id": "1f744ab9-e923-4620-9b70-e4ad2253123f",
+    "type": "IN",
+    "quantity": 50.0,
+    "previous_stock": 0.0,
+    "new_stock": 50.0,
+    "reason": "Inventario Inicial al registrar insumo",
+    "created_at": "2026-09-01T17:03:41.084616+00:00"
+  },
+  {
+    "id": "8ec141f3-93b6-4b16-9889-863e8364261e",
+    "user_id": "usr-doctor-001",
+    "item_id": "048bfe59-ce90-4826-9d87-fefaf19bdf20",
+    "type": "IN",
+    "quantity": 50.0,
+    "previous_stock": 0.0,
+    "new_stock": 50.0,
+    "reason": "Inventario Inicial al registrar insumo",
+    "created_at": "2026-09-01T17:02:24.377705+00:00"
+  }
+]
