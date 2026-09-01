@@ -2800,6 +2800,92 @@ def _calc_item_status(qty, min_qty):
         return "low" # Stock Bajo / Alerta
     return "optimal" # Óptimo
 
+def _supabase_insert_stock_item(item_dict):
+    if not supabase or not item_dict:
+        return False
+    # Intento 1: Todos los campos
+    try:
+        res = supabase.table('stock_items').insert(item_dict).execute()
+        if res and res.data:
+            return True
+    except Exception as e1:
+        logging.warning("Supabase insert tier 1 fallo: %s", e1)
+    # Intento 2: Sin campos opcionales extendidos
+    try:
+        t2 = {k: v for k, v in item_dict.items() if k not in ['batch_number', 'expiry_date', 'notes', 'status', 'location', 'supplier']}
+        res = supabase.table('stock_items').insert(t2).execute()
+        if res and res.data:
+            return True
+    except Exception as e2:
+        logging.warning("Supabase insert tier 2 fallo: %s", e2)
+    # Intento 3: Campos esenciales obligatorios
+    try:
+        t3 = {k: v for k, v in item_dict.items() if k in ['id', 'user_id', 'code', 'name', 'category', 'unit', 'stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'created_at']}
+        res = supabase.table('stock_items').insert(t3).execute()
+        if res and res.data:
+            return True
+    except Exception as e3:
+        logging.warning("Supabase insert tier 3 fallo: %s", e3)
+    # Intento 4: Mínimo indispensable
+    try:
+        t4 = {k: v for k, v in item_dict.items() if k in ['id', 'code', 'name', 'category', 'unit', 'stock_quantity', 'cost_price', 'sale_price']}
+        res = supabase.table('stock_items').insert(t4).execute()
+        if res and res.data:
+            return True
+    except Exception as e4:
+        logging.error("CRITICAL: Supabase insert tier 4 fallo: %s", e4)
+    return False
+
+def _supabase_update_stock_item(item_id, update_payload):
+    if not supabase or not item_id or not update_payload:
+        return False
+    # Intento 1: Payload completo
+    try:
+        res = supabase.table('stock_items').update(update_payload).eq('id', item_id).execute()
+        if res and res.data:
+            return True
+    except Exception as e1:
+        logging.warning("Supabase update tier 1 fallo: %s", e1)
+    # Intento 2: Sin campos opcionales extendidos
+    try:
+        t2 = {k: v for k, v in update_payload.items() if k not in ['batch_number', 'expiry_date', 'notes', 'status', 'location', 'supplier']}
+        res = supabase.table('stock_items').update(t2).eq('id', item_id).execute()
+        if res and res.data:
+            return True
+    except Exception as e2:
+        logging.warning("Supabase update tier 2 fallo: %s", e2)
+    # Intento 3: Mínimo indispensable de actualización
+    try:
+        t3 = {k: v for k, v in update_payload.items() if k in ['stock_quantity', 'min_stock', 'cost_price', 'sale_price', 'user_id', 'updated_at']}
+        res = supabase.table('stock_items').update(t3).eq('id', item_id).execute()
+        if res and res.data:
+            return True
+    except Exception as e3:
+        logging.error("CRITICAL: Supabase update tier 3 fallo: %s", e3)
+    return False
+
+def _supabase_insert_stock_movement(m_item):
+    if not supabase or not m_item:
+        return False
+    try:
+        res = supabase.table('stock_movements').insert(m_item).execute()
+        if res and res.data:
+            return True
+    except Exception as e1:
+        try:
+            t2 = {k: v for k, v in m_item.items() if k in ['id', 'user_id', 'item_id', 'type', 'quantity', 'previous_stock', 'new_stock', 'reason', 'created_at']}
+            res = supabase.table('stock_movements').insert(t2).execute()
+            if res and res.data:
+                return True
+        except Exception as e2:
+            try:
+                t3 = {k: v for k, v in m_item.items() if k in ['id', 'item_id', 'type', 'quantity', 'created_at']}
+                supabase.table('stock_movements').insert(t3).execute()
+                return True
+            except Exception:
+                pass
+    return False
+
 @app.route('/api/stock', methods=['GET'])
 def get_stock_items():
     current_user = _get_current_user()
@@ -2814,32 +2900,26 @@ def get_stock_items():
         except Exception as e:
             logging.warning("No se pudo consultar Supabase stock_items (usando local): %s", e)
 
-    # Combinar registros locales y remotos asegurando persistencia y user_id
+    # Combinar registros locales y remotos dando PRECEDENCIA TOTAL A SUPABASE
+    remote_map = {str(it.get('id')): dict(it) for it in remote_items if it.get('id')}
     local_items = _load_persisted_stock_items()
-    local_map = {str(it.get('id')): it for it in local_items if it.get('id')}
     seen_ids = set()
     combined_items = []
 
-    for it in local_items:
-        it_copy = dict(it)
-        it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
-        if it_copy.get('id'):
-            seen_ids.add(str(it_copy.get('id')))
-        combined_items.append(it_copy)
+    for r_id, r_item in remote_map.items():
+        seen_ids.add(r_id)
+        r_item['status'] = _calc_item_status(r_item.get('stock_quantity'), r_item.get('min_stock'))
+        combined_items.append(r_item)
 
-    for it in remote_items:
-        it_id = str(it.get('id')) if it.get('id') else None
-        it_copy = dict(it)
-        local_match = local_map.get(it_id) if it_id else None
-        if local_match and local_match.get('user_id') and not it_copy.get('user_id'):
-            it_copy['user_id'] = local_match.get('user_id')
-        it_copy['status'] = _calc_item_status(it_copy.get('stock_quantity'), it_copy.get('min_stock'))
+    for l_item in local_items:
+        l_id = str(l_item.get('id')) if l_item.get('id') else None
+        if l_id and l_id not in seen_ids:
+            seen_ids.add(l_id)
+            l_copy = dict(l_item)
+            l_copy['status'] = _calc_item_status(l_copy.get('stock_quantity'), l_copy.get('min_stock'))
+            combined_items.append(l_copy)
 
-        if it_id and it_id not in seen_ids:
-            seen_ids.add(it_id)
-            combined_items.append(it_copy)
-            local_items.append(it_copy)
-            _save_persisted_stock_items(local_items)
+    _save_persisted_stock_items(combined_items)
 
     # Excluir registros de almacenamiento de sistema (backups resilientes)
     clinical_items = [
@@ -2852,18 +2932,13 @@ def get_stock_items():
         filtered_items = []
         for it in clinical_items:
             it_uid = it.get('user_id')
-            if not it_uid or it_uid == 'usr-doctor-001':
+            if not it_uid or it_uid in ('usr-doctor-001', 'None', 'null', ''):
                 it['user_id'] = current_uid
                 it_uid = current_uid
-                if supabase and it.get('id'):
-                    try:
-                        supabase.table('stock_items').update({'user_id': current_uid}).eq('id', it['id']).execute()
-                    except Exception:
-                        pass
+                _supabase_update_stock_item(it.get('id'), {'user_id': current_uid})
             if it_uid == current_uid:
                 filtered_items.append(it)
         return jsonify(filtered_items)
-
     return jsonify(clinical_items)
 
 def _get_stock_item_by_id(item_id):
@@ -3023,34 +3098,9 @@ def create_stock_item():
         "created_at": datetime.now(timezone.utc).isoformat()
     }
 
-    # Auto-registrar categoría y unidad en taxonomías persistidas
     _ensure_category_and_unit_persisted(category, unit)
 
-    if supabase:
-        try:
-            res = supabase.table('stock_items').insert(new_item).execute()
-            if res.data:
-                item_res = res.data[0]
-                item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
-                _LOCAL_STOCK_ITEMS.insert(0, item_res)
-                _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
-                return jsonify({"success": True, "data": item_res}), 201
-        except Exception:
-            try:
-                # Reintento sin columnas adicionales si el esquema remoto aún no fue migrado
-                fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date', 'user_id']}
-                res = supabase.table('stock_items').insert(fallback_item).execute()
-                if res.data:
-                    item_res = res.data[0]
-                    item_res['user_id'] = new_item.get('user_id')
-                    item_res['batch_number'] = new_item.get('batch_number')
-                    item_res['expiry_date'] = new_item.get('expiry_date')
-                    item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
-                    _LOCAL_STOCK_ITEMS.insert(0, item_res)
-                    _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
-                    return jsonify({"success": True, "data": item_res}), 201
-            except Exception as e:
-                logging.warning("Error al insertar en Supabase stock_items: %s", e)
+    _supabase_insert_stock_item(new_item)
 
     _LOCAL_STOCK_ITEMS.insert(0, new_item)
     new_item['status'] = _calc_item_status(qty, min_qty)
@@ -3113,23 +3163,9 @@ def update_stock_item(item_id):
 
     updated['updated_at'] = datetime.now(timezone.utc).isoformat()
 
-    # Auto-registrar categoría y unidad en taxonomías
     _ensure_category_and_unit_persisted(updated.get('category'), updated.get('unit'))
 
-    if supabase:
-        try:
-            res = supabase.table('stock_items').update(updated).eq('id', item_id).execute()
-            if res.data:
-                item_res = res.data[0]
-                item_res['status'] = _calc_item_status(item_res.get('stock_quantity'), item_res.get('min_stock'))
-                for local_it in _LOCAL_STOCK_ITEMS:
-                    if local_it.get('id') == item_id:
-                        local_it.update(item_res)
-                        break
-                _save_persisted_stock_items(_LOCAL_STOCK_ITEMS)
-                return jsonify({"success": True, "data": item_res})
-        except Exception as e:
-            logging.warning("Error al actualizar en Supabase stock_items: %s", e)
+    _supabase_update_stock_item(item_id, updated)
 
     for item in _LOCAL_STOCK_ITEMS:
         if item.get('id') == item_id:
@@ -4154,24 +4190,21 @@ def import_stock_excel():
                 if notes:
                     existing_item['notes'] = notes
 
-                if supabase:
-                    try:
-                        update_payload = {
-                            "stock_quantity": new_q,
-                            "status": existing_item['status'],
-                            "updated_at": existing_item['updated_at']
-                        }
-                        if cost_price > 0: update_payload["cost_price"] = cost_price
-                        if sale_price > 0: update_payload["sale_price"] = sale_price
-                        if batch: update_payload["batch_number"] = batch
-                        if expiry: update_payload["expiry_date"] = expiry
-                        if location: update_payload["location"] = location
-                        if supplier: update_payload["supplier"] = supplier
-                        if notes: update_payload["notes"] = notes
+                update_payload = {
+                    "stock_quantity": new_q,
+                    "status": existing_item['status'],
+                    "updated_at": existing_item['updated_at']
+                }
+                if cost_price > 0: update_payload["cost_price"] = cost_price
+                if sale_price > 0: update_payload["sale_price"] = sale_price
+                if batch: update_payload["batch_number"] = batch
+                if expiry: update_payload["expiry_date"] = expiry
+                if location: update_payload["location"] = location
+                if supplier: update_payload["supplier"] = supplier
+                if notes: update_payload["notes"] = notes
+                if current_uid: update_payload["user_id"] = current_uid
 
-                        supabase.table('stock_items').update(update_payload).eq('id', existing_item['id']).execute()
-                    except Exception as ex_sub:
-                        logging.warning("Error al actualizar insumo en Supabase: %s", ex_sub)
+                _supabase_update_stock_item(existing_item['id'], update_payload)
 
                 # Movimiento de Kardex Entrada (IN) por Reabastecimiento
                 m_item = {
@@ -4186,11 +4219,7 @@ def import_stock_excel():
                     "created_at": datetime.now(timezone.utc).isoformat()
                 }
                 _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
-                if supabase:
-                    try:
-                        supabase.table('stock_movements').insert(m_item).execute()
-                    except Exception:
-                        pass
+                _supabase_insert_stock_movement(m_item)
 
                 reabastecidos_count += 1
             else:
@@ -4217,16 +4246,7 @@ def import_stock_excel():
                     "created_at": datetime.now(timezone.utc).isoformat()
                 }
 
-                if supabase:
-                    try:
-                        supabase.table('stock_items').insert(new_item).execute()
-                    except Exception:
-                        try:
-                            fallback_item = {k: v for k, v in new_item.items() if k not in ['batch_number', 'expiry_date']}
-                            supabase.table('stock_items').insert(fallback_item).execute()
-                        except Exception:
-                            pass
-
+                _supabase_insert_stock_item(new_item)
                 _LOCAL_STOCK_ITEMS.insert(0, new_item)
 
                 # Kardex de Creación Inicial
@@ -4243,11 +4263,7 @@ def import_stock_excel():
                         "created_at": datetime.now(timezone.utc).isoformat()
                     }
                     _LOCAL_STOCK_MOVEMENTS.insert(0, m_item)
-                    if supabase:
-                        try:
-                            supabase.table('stock_movements').insert(m_item).execute()
-                        except Exception:
-                            pass
+                    _supabase_insert_stock_movement(m_item)
 
                 nuevos_count += 1
 
