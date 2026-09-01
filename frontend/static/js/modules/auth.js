@@ -339,6 +339,42 @@ function initAuthSystem() {
         });
     }
 
+    let regErrorTimer = null;
+    function hideRegisterError() {
+        if (regError) {
+            regError.classList.add('d-none');
+            regError.classList.remove('d-flex');
+        }
+        if (regErrorTimer) {
+            clearTimeout(regErrorTimer);
+            regErrorTimer = null;
+        }
+    }
+
+    function showRegisterError(msg) {
+        if (!regError) return;
+        const textEl = document.getElementById('register-error-text');
+        if (textEl) {
+            textEl.textContent = msg;
+        } else {
+            regError.textContent = msg;
+        }
+        regError.classList.remove('d-none');
+        regError.classList.add('d-flex');
+
+        if (regErrorTimer) clearTimeout(regErrorTimer);
+        regErrorTimer = setTimeout(() => {
+            hideRegisterError();
+        }, 5000);
+    }
+
+    const btnCloseRegAlert = document.getElementById('btn-close-register-alert');
+    if (btnCloseRegAlert) {
+        btnCloseRegAlert.addEventListener('click', () => {
+            hideRegisterError();
+        });
+    }
+
     if (formRegister) {
         formRegister.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -349,7 +385,7 @@ function initAuthSystem() {
             const clinic = document.getElementById('reg-clinic').value.trim();
             const btnSubmit = document.getElementById('btn-submit-register');
 
-            if (regError) regError.classList.add('d-none');
+            hideRegisterError();
             if (btnSubmit) btnSubmit.disabled = true;
 
             try {
@@ -367,10 +403,7 @@ function initAuthSystem() {
                 const data = await res.json();
 
                 if (!res.ok || !data.success) {
-                    if (regError) {
-                        regError.textContent = data.error || 'Error al registrar cuenta';
-                        regError.classList.remove('d-none');
-                    }
+                    showRegisterError(data.error || 'Error al registrar cuenta');
                     return;
                 }
 
@@ -387,10 +420,7 @@ function initAuthSystem() {
 
                 showToast('🎉 ¡Cuenta creada con éxito! Ingresa tu contraseña para iniciar sesión.', 'success');
             } catch (err) {
-                if (regError) {
-                    regError.textContent = 'Error de conexión al registrar.';
-                    regError.classList.remove('d-none');
-                }
+                showRegisterError('Error de conexión al registrar.');
             } finally {
                 if (btnSubmit) btnSubmit.disabled = false;
             }

@@ -216,6 +216,11 @@
 
                     <!-- FORMULARIO 2: REGISTRO -->
                     <form id="form-auth-register" class="d-none d-flex flex-column gap-2.5">
+                        <div id="register-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-1 rounded-3 align-items-center justify-content-between gap-2 border-danger border-opacity-25" role="alert">
+                            <span id="register-error-text" class="lh-sm"></span>
+                            <button type="button" class="btn-close ms-auto flex-shrink-0" id="btn-close-register-alert" aria-label="Cerrar" style="font-size: 0.7rem;"></button>
+                        </div>
+
                         <div>
                             <label for="reg-full-name"
                                 class="form-label d-block text-secondary small fw-bold text-uppercase mb-1 ml-1"
@@ -286,8 +291,7 @@
                             </div>
                         </div>
 
-                        <div id="register-error-alert" class="alert alert-danger py-2 px-3 small d-none mb-0 rounded-3">
-                        </div>
+
 
                         <button type="submit" id="btn-submit-register" class="btn-auth-success mt-1.5">
                             <i class="bi bi-check-circle-fill fs-5"></i>

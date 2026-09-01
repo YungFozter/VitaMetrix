@@ -40,7 +40,7 @@ def auth_register():
     users = _load_users()
     for u in users:
         if u.get('email', '').lower() == email:
-            return jsonify({"error": "Este correo ya se encuentra registrado. Inicia sesión."}), 400
+            return jsonify({"error": "Este correo ya se encuentra registrado. Por favor intenta con otro correo distinto o añade más caracteres."}), 400
 
     new_id = _generate_next_user_id(role='user')
     now_bolivia = _now_bolivia()
