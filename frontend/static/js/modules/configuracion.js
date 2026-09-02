@@ -351,7 +351,11 @@ function loadAllSettings() {
     if (cfgClinic) cfgClinic.value = clinic;
     if (cfgMp) cfgMp.value = mp;
     if (cfgPhone) cfgPhone.value = phone;
-    if (cfgLogoUrl) cfgLogoUrl.value = logoUrl;
+    let displayLogoInputUrl = logoUrl || '';
+    if (displayLogoInputUrl.includes('ui-avatars.com')) {
+        displayLogoInputUrl = '';
+    }
+    if (cfgLogoUrl) cfgLogoUrl.value = displayLogoInputUrl;
     if (cfgLogoPreview) cfgLogoPreview.src = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
     if (cfgFooterAddress) cfgFooterAddress.value = footerAddress;
     if (cfgDisclaimer) cfgDisclaimer.value = disclaimer;
