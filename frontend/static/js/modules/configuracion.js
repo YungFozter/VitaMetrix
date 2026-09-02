@@ -351,8 +351,8 @@ function loadAllSettings() {
     if (cfgClinic) cfgClinic.value = clinic;
     if (cfgMp) cfgMp.value = mp;
     if (cfgPhone) cfgPhone.value = phone;
-    if (cfgLogoUrl) cfgLogoUrl.value = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
-    if (cfgLogoPreview) cfgLogoPreview.src = (cfgLogoUrl && cfgLogoUrl.value) ? cfgLogoUrl.value : `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
+    if (cfgLogoUrl) cfgLogoUrl.value = logoUrl;
+    if (cfgLogoPreview) cfgLogoPreview.src = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
     if (cfgFooterAddress) cfgFooterAddress.value = footerAddress;
     if (cfgDisclaimer) cfgDisclaimer.value = disclaimer;
     if (cfgUnitWeight) cfgUnitWeight.value = unitWeight;
