@@ -315,6 +315,73 @@ function initSystemMenuListeners() {
         });
     }
 
+    // Listener para subir archivo de logo de clínica (PNG, JPG, WebP)
+    const logoFileInput = document.getElementById('cfg-logo-file-input');
+    if (logoFileInput) {
+        logoFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                showToast('⚠️ Por favor selecciona un archivo de imagen válido (PNG, JPG, WebP).', 'warning');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showToast('⚠️ La imagen de logo no debe superar los 5 MB de tamaño.', 'warning');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const dataUrl = event.target.result;
+                const cfgLogoUrl = document.getElementById('cfg-pdf-logo-url');
+                const cfgLogoPreview = document.getElementById('cfg-logo-preview');
+
+                if (cfgLogoUrl) cfgLogoUrl.value = dataUrl;
+                if (cfgLogoPreview) cfgLogoPreview.src = dataUrl;
+
+                showToast('🖼️ Imagen de logo cargada. Haz clic en "Guardar Cambios" para confirmar.', 'success');
+            };
+            reader.onerror = () => {
+                showToast('🔴 Error al procesar el archivo de imagen.', 'error');
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Listener para cambio en vivo de URL de logo al escribir
+    const cfgLogoUrlInput = document.getElementById('cfg-pdf-logo-url');
+    if (cfgLogoUrlInput) {
+        cfgLogoUrlInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim();
+            const cfgLogoPreview = document.getElementById('cfg-logo-preview');
+            if (cfgLogoPreview) {
+                cfgLogoPreview.src = val || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentAuthUser?.clinic_name || 'VitaMetrix')}&background=00b4d8&color=fff`;
+            }
+        });
+    }
+
+    // Listener para importar respaldo JSON
+    const jsonFileInput = document.getElementById('cfg-json-file-input');
+    if (jsonFileInput) {
+        jsonFileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+                    showToast('📦 Respaldo JSON decodificado. Procesando actualización...', 'info');
+                } catch (err) {
+                    showToast('🔴 El archivo seleccionado no es un JSON de respaldo válido.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        });
+    }
+
     loadAllSettings();
 }
 
