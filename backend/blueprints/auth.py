@@ -144,9 +144,9 @@ def update_user_profile():
             if 'professional_license' in data:
                 u['professional_license'] = _clean_str(data['professional_license'], max_len=50)
             if 'clinic_logo_url' in data:
-                u['clinic_logo_url'] = _clean_str(data['clinic_logo_url'], max_len=500)
+                u['clinic_logo_url'] = _clean_str(data['clinic_logo_url'], max_len=2000000)
             if 'pdf_disclaimer' in data:
-                u['pdf_disclaimer'] = _clean_str(data['pdf_disclaimer'], max_len=500)
+                u['pdf_disclaimer'] = _clean_str(data['pdf_disclaimer'], max_len=1000)
             if 'pdf_footer_address' in data:
                 u['pdf_footer_address'] = _clean_str(data['pdf_footer_address'], max_len=250)
             if 'clinic_address' in data:
