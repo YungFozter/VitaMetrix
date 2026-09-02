@@ -193,7 +193,7 @@ def _cell_bucket(phase_angle, valid=True):
 
 _DEFAULT_INITIAL_USERS = [
     {
-        "id": "usr-admin-001",
+        "id": "a1b2c3d4-e5f6-7890-abcd-1234567890ab",
         "email": "admin@vitametrix.com",
         "password_hash": generate_password_hash("AdminVita2026!"),
         "full_name": "Administrador General",
@@ -264,15 +264,27 @@ def _load_users():
                 logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
 
     user_map = {}
-    for u in local_users + remote_users:
+    for u in _DEFAULT_INITIAL_USERS + local_users:
         if isinstance(u, dict) and u.get('email'):
             email_key = str(u.get('email')).lower().strip()
-            if email_key not in user_map or (u.get('password_hash') and not user_map[email_key].get('password_hash')):
+            user_map[email_key] = u
+
+    for u in remote_users:
+        if isinstance(u, dict) and u.get('email'):
+            email_key = str(u.get('email')).lower().strip()
+            if email_key in user_map:
+                user_map[email_key].update(u)
+            else:
                 user_map[email_key] = u
 
     all_users = list(user_map.values())
     if not all_users:
         all_users = list(_DEFAULT_INITIAL_USERS)
+
+    for u in all_users:
+        if u.get('email') == 'admin@vitametrix.com':
+            u['role'] = 'admin'
+            u['subscription_status'] = 'lifetime'
 
     _save_users_disk_only(all_users)
     return all_users

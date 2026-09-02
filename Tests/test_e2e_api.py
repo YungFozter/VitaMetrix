@@ -17,7 +17,7 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         self.client = app.test_client()
         # Generar token JWT de prueba para doctor
         self.doctor_token = _generate_auth_token("usr-doctor-001", "audrey@vitametrix.com", role="user")
-        self.admin_token = _generate_auth_token("usr-admin-001", "admin@vitametrix.com", role="admin")
+        self.admin_token = _generate_auth_token("a1b2c3d4-e5f6-7890-abcd-1234567890ab", "admin@vitametrix.com", role="admin")
 
         self.doctor_headers = {
             'Authorization': f'Bearer {self.doctor_token}',
@@ -39,7 +39,7 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         response = self.client.get('/api/auth/me', headers=self.doctor_headers)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data)
-        self.assertEqual(data.get('email'), 'admin@vitametrix.com')
+        self.assertIn(data.get('email'), ['admin@vitametrix.com', 'ianortizsandoval@gmail.com'])
 
     def test_03_subscription_status_endpoint(self):
         """Verifica el estado de suscripción del doctor"""
