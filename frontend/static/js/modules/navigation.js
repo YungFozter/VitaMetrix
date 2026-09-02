@@ -62,6 +62,7 @@ function navigateToView(targetId, updateHistory = true) {
             if (typeof fetchStockTaxonomies === 'function') fetchStockTaxonomies();
         }
     } else if (cleanId === 'configuracion-view') {
+        if (typeof window.loadAllSettings === 'function') window.loadAllSettings();
         setTimeout(() => {
             if (typeof initClinicMap === 'function') initClinicMap();
         }, 120);

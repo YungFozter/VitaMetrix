@@ -307,9 +307,130 @@ function initSystemMenuListeners() {
         });
     }
 
+    const btnSaveAll = document.getElementById('btn-save-all-settings');
+    if (btnSaveAll) {
+        btnSaveAll.addEventListener('click', (e) => {
+            e.preventDefault();
+            saveAllSettings();
+        });
+    }
+
+    loadAllSettings();
+}
+
+function loadAllSettings() {
+    const user = currentAuthUser || {};
+    const userId = user.id || 'guest';
+    const isAdmin = user.role === 'admin';
+
+    const name = user.full_name || localStorage.getItem(`vm_user_name_${userId}`) || (isAdmin ? 'Administrador General' : '');
+    const title = user.professional_title || localStorage.getItem(`vm_user_title_${userId}`) || (isAdmin ? 'Director / Administrador' : 'Especialista BIA');
+    const clinic = user.clinic_name || localStorage.getItem(`vm_clinic_name_${userId}`) || (isAdmin ? 'Sede Central VitaMetrix' : 'Mi Consultorio VitaMetrix');
+    const phone = (user.phone !== undefined && user.phone !== null) ? user.phone : (localStorage.getItem(`vm_pdf_phone_${userId}`) || '');
+    const mp = (user.professional_license !== undefined && user.professional_license !== null) ? user.professional_license : (localStorage.getItem(`vm_pdf_mp_${userId}`) || '');
+    const logoUrl = user.clinic_logo_url || localStorage.getItem(`vm_pdf_logo_url_${userId}`) || '';
+    const footerAddress = user.pdf_footer_address || user.clinic_address || localStorage.getItem(`vm_clinic_address_${userId}`) || '';
+    const disclaimer = user.pdf_disclaimer || localStorage.getItem(`vm_pdf_disclaimer_${userId}`) || '';
+    const unitWeight = user.unit_weight || 'kg';
+    const phaOptimal = user.pha_optimal || '6.0';
+
+    const cfgName = document.getElementById('cfg-user-name');
+    const cfgTitle = document.getElementById('cfg-user-title');
+    const cfgClinic = document.getElementById('cfg-clinic-name');
+    const cfgMp = document.getElementById('cfg-pdf-mp');
+    const cfgPhone = document.getElementById('cfg-pdf-phone');
+    const cfgLogoUrl = document.getElementById('cfg-pdf-logo-url');
+    const cfgLogoPreview = document.getElementById('cfg-logo-preview');
+    const cfgFooterAddress = document.getElementById('cfg-pdf-footer-address');
+    const cfgDisclaimer = document.getElementById('cfg-pdf-disclaimer');
+    const cfgUnitWeight = document.getElementById('cfg-unit-weight');
+    const cfgPhaOptimal = document.getElementById('cfg-pha-optimal');
+
+    if (cfgName) cfgName.value = name;
+    if (cfgTitle) cfgTitle.value = title;
+    if (cfgClinic) cfgClinic.value = clinic;
+    if (cfgMp) cfgMp.value = mp;
+    if (cfgPhone) cfgPhone.value = phone;
+    if (cfgLogoUrl) cfgLogoUrl.value = logoUrl || `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
+    if (cfgLogoPreview) cfgLogoPreview.src = cfgLogoUrl ? cfgLogoUrl : `https://ui-avatars.com/api/?name=${encodeURIComponent(clinic || 'VitaMetrix')}&background=00b4d8&color=fff`;
+    if (cfgFooterAddress) cfgFooterAddress.value = footerAddress;
+    if (cfgDisclaimer) cfgDisclaimer.value = disclaimer;
+    if (cfgUnitWeight) cfgUnitWeight.value = unitWeight;
+    if (cfgPhaOptimal) cfgPhaOptimal.value = phaOptimal;
+
     updateUserProfileUI();
 }
 
+async function saveAllSettings() {
+    const btnSave = document.getElementById('btn-save-all-settings');
+    if (btnSave) btnSave.disabled = true;
+
+    const name = (document.getElementById('cfg-user-name')?.value || '').trim();
+    const title = (document.getElementById('cfg-user-title')?.value || '').trim();
+    const clinic = (document.getElementById('cfg-clinic-name')?.value || '').trim();
+    const mp = (document.getElementById('cfg-pdf-mp')?.value || '').trim();
+    const phone = (document.getElementById('cfg-pdf-phone')?.value || '').trim();
+    const logoUrl = (document.getElementById('cfg-pdf-logo-url')?.value || '').trim();
+    const footerAddress = (document.getElementById('cfg-pdf-footer-address')?.value || '').trim();
+    const disclaimer = (document.getElementById('cfg-pdf-disclaimer')?.value || '').trim();
+    const unitWeight = document.getElementById('cfg-unit-weight')?.value || 'kg';
+    const phaOptimal = document.getElementById('cfg-pha-optimal')?.value || '6.0';
+
+    if (!name) {
+        showToast('⚠️ El Nombre del Profesional es obligatorio.', 'warning');
+        if (btnSave) btnSave.disabled = false;
+        return;
+    }
+
+    const payload = {
+        full_name: name,
+        professional_title: title,
+        clinic_name: clinic,
+        professional_license: mp,
+        phone: phone,
+        clinic_logo_url: logoUrl,
+        pdf_footer_address: footerAddress,
+        clinic_address: footerAddress,
+        pdf_disclaimer: disclaimer,
+        unit_weight: unitWeight,
+        pha_optimal: phaOptimal
+    };
+
+    try {
+        const res = await fetch('/api/users/profile', {
+            method: 'PUT',
+            headers: getAuthHeaders(),
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.user) {
+            currentAuthUser = { ...currentAuthUser, ...data.user };
+            const userId = currentAuthUser.id || 'guest';
+            localStorage.setItem(`vm_user_name_${userId}`, name);
+            localStorage.setItem(`vm_user_title_${userId}`, title);
+            localStorage.setItem(`vm_clinic_name_${userId}`, clinic);
+            localStorage.setItem(`vm_pdf_phone_${userId}`, phone);
+            localStorage.setItem(`vm_pdf_mp_${userId}`, mp);
+            localStorage.setItem(`vm_pdf_logo_url_${userId}`, logoUrl);
+            localStorage.setItem(`vm_clinic_address_${userId}`, footerAddress);
+            localStorage.setItem(`vm_pdf_disclaimer_${userId}`, disclaimer);
+
+            updateUserProfileUI();
+            showToast('✅ Perfil Profesional y Preferencias Clínicas guardados correctamente.', 'success');
+        } else {
+            showToast(`⚠️ ${data.error || 'No se pudo guardar la configuración'}`, 'error');
+        }
+    } catch (err) {
+        showToast('🔴 Error de conexión al guardar configuración.', 'error');
+    } finally {
+        if (btnSave) btnSave.disabled = false;
+    }
+}
+
+window.loadAllSettings = loadAllSettings;
+window.saveAllSettings = saveAllSettings;
+
 function initConfiguracionView() {
-    // Inicializador de la vista de configuración
+    loadAllSettings();
 }

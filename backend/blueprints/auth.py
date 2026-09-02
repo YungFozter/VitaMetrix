@@ -155,7 +155,7 @@ def update_user_profile():
                 u['unit_weight'] = _clean_str(data['unit_weight'], max_len=10)
             if 'pha_optimal' in data:
                 u['pha_optimal'] = _clean_str(data['pha_optimal'], max_len=10)
-            u['updated_at'] = datetime.now(timezone.utc).isoformat()
+            u['updated_at'] = _now_bolivia().isoformat()
             break
 
     _save_users(users)
