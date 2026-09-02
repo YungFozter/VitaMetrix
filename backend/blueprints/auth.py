@@ -155,6 +155,10 @@ def update_user_profile():
                 u['unit_weight'] = _clean_str(data['unit_weight'], max_len=10)
             if 'pha_optimal' in data:
                 u['pha_optimal'] = _clean_str(data['pha_optimal'], max_len=10)
+            if 'clinic_lat' in data:
+                u['clinic_lat'] = _clean_str(data['clinic_lat'], max_len=30)
+            if 'clinic_lng' in data:
+                u['clinic_lng'] = _clean_str(data['clinic_lng'], max_len=30)
             u['updated_at'] = _now_bolivia().isoformat()
             break
 

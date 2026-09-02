@@ -334,6 +334,10 @@ function loadAllSettings() {
     const unitWeight = user.unit_weight || 'kg';
     const phaOptimal = user.pha_optimal || '6.0';
 
+    const clinicAddress = user.clinic_address || localStorage.getItem(`vm_clinic_address_physical_${userId}`) || '';
+    const clinicLat = user.clinic_lat || localStorage.getItem(`vm_clinic_lat_${userId}`) || '-17.7833';
+    const clinicLng = user.clinic_lng || localStorage.getItem(`vm_clinic_lng_${userId}`) || '-63.1821';
+
     const cfgName = document.getElementById('cfg-user-name');
     const cfgTitle = document.getElementById('cfg-user-title');
     const cfgClinic = document.getElementById('cfg-clinic-name');
@@ -345,6 +349,9 @@ function loadAllSettings() {
     const cfgDisclaimer = document.getElementById('cfg-pdf-disclaimer');
     const cfgUnitWeight = document.getElementById('cfg-unit-weight');
     const cfgPhaOptimal = document.getElementById('cfg-pha-optimal');
+    const cfgClinicAddressInput = document.getElementById('cfg-clinic-address');
+    const cfgClinicLatInput = document.getElementById('cfg-clinic-lat');
+    const cfgClinicLngInput = document.getElementById('cfg-clinic-lng');
 
     if (cfgName) cfgName.value = name;
     if (cfgTitle) cfgTitle.value = title;
@@ -362,7 +369,14 @@ function loadAllSettings() {
     if (cfgUnitWeight) cfgUnitWeight.value = unitWeight;
     if (cfgPhaOptimal) cfgPhaOptimal.value = phaOptimal;
 
+    if (cfgClinicAddressInput) cfgClinicAddressInput.value = clinicAddress;
+    if (cfgClinicLatInput) cfgClinicLatInput.value = clinicLat;
+    if (cfgClinicLngInput) cfgClinicLngInput.value = clinicLng;
+
     updateUserProfileUI();
+    setTimeout(() => {
+        initClinicMap();
+    }, 150);
 }
 
 async function saveAllSettings() {
@@ -379,6 +393,9 @@ async function saveAllSettings() {
     const disclaimer = (document.getElementById('cfg-pdf-disclaimer')?.value || '').trim();
     const unitWeight = document.getElementById('cfg-unit-weight')?.value || 'kg';
     const phaOptimal = document.getElementById('cfg-pha-optimal')?.value || '6.0';
+    const clinicAddress = (document.getElementById('cfg-clinic-address')?.value || '').trim();
+    const clinicLat = (document.getElementById('cfg-clinic-lat')?.value || '').trim();
+    const clinicLng = (document.getElementById('cfg-clinic-lng')?.value || '').trim();
 
     if (!name) {
         showToast('⚠️ El Nombre del Profesional es obligatorio.', 'warning');
@@ -393,8 +410,10 @@ async function saveAllSettings() {
         professional_license: mp,
         phone: phone,
         clinic_logo_url: logoUrl,
-        pdf_footer_address: footerAddress,
-        clinic_address: footerAddress,
+        pdf_footer_address: footerAddress || clinicAddress,
+        clinic_address: clinicAddress || footerAddress,
+        clinic_lat: clinicLat,
+        clinic_lng: clinicLng,
         pdf_disclaimer: disclaimer,
         unit_weight: unitWeight,
         pha_optimal: phaOptimal
@@ -417,11 +436,14 @@ async function saveAllSettings() {
             localStorage.setItem(`vm_pdf_phone_${userId}`, phone);
             localStorage.setItem(`vm_pdf_mp_${userId}`, mp);
             localStorage.setItem(`vm_pdf_logo_url_${userId}`, logoUrl);
-            localStorage.setItem(`vm_clinic_address_${userId}`, footerAddress);
+            localStorage.setItem(`vm_clinic_address_${userId}`, clinicAddress || footerAddress);
+            localStorage.setItem(`vm_clinic_address_physical_${userId}`, clinicAddress);
+            localStorage.setItem(`vm_clinic_lat_${userId}`, clinicLat);
+            localStorage.setItem(`vm_clinic_lng_${userId}`, clinicLng);
             localStorage.setItem(`vm_pdf_disclaimer_${userId}`, disclaimer);
 
             updateUserProfileUI();
-            showToast('✅ Perfil Profesional y Preferencias Clínicas guardados correctamente.', 'success');
+            showToast('✅ Perfil Profesional, Ubicación GPS y Configuración guardados correctamente.', 'success');
         } else {
             showToast(`⚠️ ${data.error || 'No se pudo guardar la configuración'}`, 'error');
         }
@@ -432,8 +454,252 @@ async function saveAllSettings() {
     }
 }
 
+// ============================================================
+// LÓGICA DE MAPAS OPENSTREETMAP, LEAFLET Y GPS GEOLOCALIZACIÓN
+// ============================================================
+let clinicMap = null;
+let clinicMarker = null;
+
+function initClinicMap() {
+    const mapContainer = document.getElementById('clinic-map');
+    if (!mapContainer) return;
+
+    if (typeof L === 'undefined') {
+        console.warn('Leaflet JS no está cargado todavía.');
+        return;
+    }
+
+    const latInput = document.getElementById('cfg-clinic-lat');
+    const lngInput = document.getElementById('cfg-clinic-lng');
+    const addressInput = document.getElementById('cfg-clinic-address');
+
+    let initialLat = parseFloat(latInput?.value) || -17.7833;
+    let initialLng = parseFloat(lngInput?.value) || -63.1821;
+
+    if (clinicMap) {
+        clinicMap.invalidateSize();
+        clinicMap.setView([initialLat, initialLng], clinicMap.getZoom() || 16);
+        if (clinicMarker) {
+            clinicMarker.setLatLng([initialLat, initialLng]);
+        }
+        updateGoogleMapsBtn(initialLat, initialLng);
+        return;
+    }
+
+    try {
+        clinicMap = L.map('clinic-map', {
+            zoomControl: true,
+            scrollWheelZoom: true
+        }).setView([initialLat, initialLng], 16);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank">OpenStreetMap</a>'
+        }).addTo(clinicMap);
+
+        clinicMarker = L.marker([initialLat, initialLng], {
+            draggable: true,
+            title: 'Arrastra para ajustar la ubicación exacta del consultorio'
+        }).addTo(clinicMap);
+
+        clinicMarker.bindPopup('<b>Ubicación del Consultorio</b><br>Arrastra este marcador o haz clic en el mapa para marcar tu consultorio.').openPopup();
+
+        clinicMarker.on('dragend', function (e) {
+            const pos = clinicMarker.getLatLng();
+            updateMapCoordinatesInputs(pos.lat, pos.lng);
+            reverseGeocode(pos.lat, pos.lng);
+        });
+
+        clinicMap.on('click', function (e) {
+            clinicMarker.setLatLng(e.latlng);
+            updateMapCoordinatesInputs(e.latlng.lat, e.latlng.lng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng);
+        });
+
+        if (latInput) latInput.addEventListener('change', syncMapFromInputs);
+        if (lngInput) lngInput.addEventListener('change', syncMapFromInputs);
+
+        const btnLocate = document.getElementById('btn-locate-me');
+        if (btnLocate) {
+            btnLocate.onclick = (e) => {
+                e.preventDefault();
+                getUserGPSLocation();
+            };
+        }
+
+        const btnSearch = document.getElementById('btn-search-address');
+        if (btnSearch) {
+            btnSearch.onclick = (e) => {
+                e.preventDefault();
+                searchAddressOnMap();
+            };
+        }
+        if (addressInput) {
+            addressInput.onkeypress = (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    searchAddressOnMap();
+                }
+            };
+        }
+
+        const btnLeaflet = document.getElementById('btn-map-type-leaflet');
+        const btnGoogle = document.getElementById('btn-map-type-google');
+        const googleIframe = document.getElementById('google-map-iframe');
+
+        if (btnLeaflet && btnGoogle && googleIframe) {
+            btnLeaflet.onclick = (e) => {
+                e.preventDefault();
+                btnLeaflet.classList.add('active');
+                btnGoogle.classList.remove('active');
+                mapContainer.classList.remove('d-none');
+                googleIframe.classList.add('d-none');
+                if (clinicMap) clinicMap.invalidateSize();
+            };
+
+            btnGoogle.onclick = (e) => {
+                e.preventDefault();
+                btnGoogle.classList.add('active');
+                btnLeaflet.classList.remove('active');
+                mapContainer.classList.add('d-none');
+                googleIframe.classList.remove('d-none');
+                const curLat = latInput?.value || -17.7833;
+                const curLng = lngInput?.value || -63.1821;
+                googleIframe.src = `https://maps.google.com/maps?q=${curLat},${curLng}&z=16&output=embed`;
+            };
+        }
+
+        updateGoogleMapsBtn(initialLat, initialLng);
+        setTimeout(() => {
+            if (clinicMap) clinicMap.invalidateSize();
+        }, 300);
+
+    } catch (err) {
+        console.error('Error inicializando OpenStreetMap Leaflet:', err);
+    }
+}
+
+function updateMapCoordinatesInputs(lat, lng) {
+    const latInput = document.getElementById('cfg-clinic-lat');
+    const lngInput = document.getElementById('cfg-clinic-lng');
+    if (latInput) latInput.value = Number(lat).toFixed(6);
+    if (lngInput) lngInput.value = Number(lng).toFixed(6);
+    updateGoogleMapsBtn(lat, lng);
+}
+
+function updateGoogleMapsBtn(lat, lng) {
+    const btnGmaps = document.getElementById('btn-open-google-maps');
+    if (btnGmaps) {
+        btnGmaps.href = `https://www.google.com/maps?q=${lat},${lng}`;
+    }
+}
+
+function syncMapFromInputs() {
+    const latInput = document.getElementById('cfg-clinic-lat');
+    const lngInput = document.getElementById('cfg-clinic-lng');
+    const lat = parseFloat(latInput?.value);
+    const lng = parseFloat(lngInput?.value);
+
+    if (!isNaN(lat) && !isNaN(lng) && clinicMap && clinicMarker) {
+        clinicMap.setView([lat, lng], clinicMap.getZoom() || 16);
+        clinicMarker.setLatLng([lat, lng]);
+        updateGoogleMapsBtn(lat, lng);
+    }
+}
+
+function getUserGPSLocation() {
+    if (!navigator.geolocation) {
+        showToast('⚠️ Tu navegador no soporta la geolocalización GPS.', 'warning');
+        return;
+    }
+
+    showToast('📡 Obteniendo tu posición GPS precisa...', 'info');
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            updateMapCoordinatesInputs(lat, lng);
+            if (clinicMap && clinicMarker) {
+                clinicMap.setView([lat, lng], 17);
+                clinicMarker.setLatLng([lat, lng]);
+                clinicMarker.bindPopup('<b>📍 Tu Ubicación GPS Actual</b><br>Obtenida por hardware GPS del dispositivo.').openPopup();
+            }
+
+            reverseGeocode(lat, lng);
+            showToast('📍 ¡Ubicación GPS obtenida con éxito!', 'success');
+        },
+        (error) => {
+            let errorMsg = 'No se pudo obtener la ubicación GPS.';
+            if (error.code === error.PERMISSION_DENIED) {
+                errorMsg = 'Permiso de ubicación denegado en el navegador.';
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                errorMsg = 'Señal GPS no disponible temporalmente.';
+            } else if (error.code === error.TIMEOUT) {
+                errorMsg = 'Tiempo de espera agotado al buscar señal GPS.';
+            }
+            showToast(`⚠️ ${errorMsg} Ingresa tu dirección manualmente o busca en el mapa.`, 'warning');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+async function reverseGeocode(lat, lng) {
+    const addressInput = document.getElementById('cfg-clinic-address');
+    if (!addressInput) return;
+
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+            headers: { 'Accept-Language': 'es' }
+        });
+        const data = await res.json();
+        if (data && data.display_name) {
+            addressInput.value = data.display_name;
+        }
+    } catch (e) {
+        console.warn('Geocodificación inversa Nominatim fallida:', e);
+    }
+}
+
+async function searchAddressOnMap() {
+    const addressInput = document.getElementById('cfg-clinic-address');
+    const query = (addressInput?.value || '').trim();
+    if (!query) {
+        showToast('⚠️ Ingresa una dirección para buscar.', 'warning');
+        return;
+    }
+
+    showToast('🔍 Buscando dirección en el mapa...', 'info');
+
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`, {
+            headers: { 'Accept-Language': 'es' }
+        });
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+            const result = data[0];
+            const lat = parseFloat(result.lat);
+            const lng = parseFloat(result.lon);
+
+            updateMapCoordinatesInputs(lat, lng);
+            if (clinicMap && clinicMarker) {
+                clinicMap.setView([lat, lng], 16);
+                clinicMarker.setLatLng([lat, lng]);
+                clinicMarker.bindPopup(`<b>${result.display_name.split(',')[0]}</b><br>${result.display_name}`).openPopup();
+            }
+            showToast('📍 Dirección encontrada en el mapa.', 'success');
+        } else {
+            showToast('⚠️ No se encontró la dirección. Intenta agregar tu ciudad (ej: Santa Cruz, Bolivia).', 'warning');
+        }
+    } catch (e) {
+        showToast('🔴 Error al buscar dirección.', 'error');
+    }
+}
+
 window.loadAllSettings = loadAllSettings;
 window.saveAllSettings = saveAllSettings;
+window.initClinicMap = initClinicMap;
 
 function initConfiguracionView() {
     loadAllSettings();

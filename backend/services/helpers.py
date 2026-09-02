@@ -496,6 +496,8 @@ def _user_to_public_dict(user):
         "clinic_logo_url": user.get('clinic_logo_url', ''),
         "pdf_disclaimer": user.get('pdf_disclaimer', 'Consulte con su profesional de la salud antes de iniciar cualquier plan nutricional o de entrenamiento.'),
         "clinic_address": user.get('clinic_address', ''),
+        "clinic_lat": user.get('clinic_lat', '-17.7833'),
+        "clinic_lng": user.get('clinic_lng', '-63.1821'),
         "pdf_footer_address": user.get('pdf_footer_address', ''),
         "unit_weight": user.get('unit_weight', 'kg'),
         "pha_optimal": user.get('pha_optimal', '6.0'),
