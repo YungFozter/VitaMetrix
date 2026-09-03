@@ -19,22 +19,25 @@
     "id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "email": "ianortizsandoval@gmail.com",
     "password_hash": "scrypt:32768:8:1$9bDIDf8PPpzlV5js$46ecfaa849b96d354f9e93563c9a0ef47b9f05013b4f2b1727524f8ed9e9d5748768c7f930c7f25144a634e2992eb0a30a9c52cf92fd529c2a26d725f3342898",
-    "full_name": "Ian Ortiz",
-    "professional_title": "Nutricionista",
-    "clinic_name": "AzPlus",
+    "full_name": "Dr. Ian Ortiz Sandoval",
+    "professional_title": "Especialista BIA &amp; Nutrición Clínica",
+    "clinic_name": "Centro Clínico AzPlus",
     "phone": "+591 72125280",
     "role": "user",
     "subscription_status": "active",
     "subscription_plan": "Plan Pro (30 días)",
-    "subscription_expires_at": "2026-10-08T23:22:13.277907+00:00",
+    "subscription_expires_at": "2027-02-05T19:22:13.277907-04:00",
     "trial_started_at": "2026-09-01T23:22:13.277907+00:00",
     "created_at": "2026-09-01T23:22:13.277907+00:00",
-    "updated_at": "2026-09-03T19:46:49.536435+00:00"
+    "updated_at": "2026-09-03T16:15:19.391752-04:00",
+    "pdf_disclaimer": "Informe confidencial para uso clínico y nutricional.",
+    "pdf_footer_address": "Santa Cruz de la Sierra, Bolivia",
+    "clinic_address": "Av. San Martín 123, Equipetrol, Santa Cruz"
   },
   {
     "id": "5dce691d-2db6-4d69-8ee0-8b341db3a00e",
     "email": "siarapedriel@gmail.com",
-    "password_hash": "scrypt:32768:8:1$vvZthjjbBfI3Tqqy$9655693e392acca538757344192a3a4fab9d9a16677ae13ffafa3de4048b40a5a56594d7b8dd99baa7b8c0a8cf84d94550dfe152dc8f60991465b35527752828",
+    "password_hash": "scrypt:32768:8:1$DLDKLA2MZ2NOcMm8$f64c43456c5c5593088253189c51594124c2a4716e61e78567e556478b4a6a4db8ee0f5a8c47ad9e352d2d803b7729a081c30dbad4c9c8a6aa34a4bdb7a4a240",
     "full_name": "Siara Pedriel",
     "professional_title": "Nutricionista",
     "clinic_name": "Consultorio Zento",
@@ -45,6 +48,6 @@
     "subscription_expires_at": "2026-09-08T23:47:31.775273+00:00",
     "trial_started_at": "2026-09-01T23:47:31.775273+00:00",
     "created_at": "2026-09-01T23:47:31.775273+00:00",
-    "updated_at": "2026-09-01T23:47:31.775273+00:00"
+    "updated_at": "2026-09-03T16:14:01.205642-04:00"
   }
 ]

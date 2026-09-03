@@ -13,8 +13,13 @@ from services.helpers import (
     _generate_next_user_id,
     _load_licenses,
     _save_licenses,
+    _load_persisted_clients,
+    _load_persisted_evaluations,
+    _load_persisted_sales,
+    _load_persisted_stock_items,
     _now_bolivia,
-    BOLIVIA_TZ
+    BOLIVIA_TZ,
+    supabase
 )
 
 superadmin_bp = Blueprint('superadmin_bp', __name__)
@@ -102,6 +107,62 @@ def admin_batch_delete_users():
     _save_users(remaining_users)
     return jsonify({"success": True, "message": f"{deleted_count} usuario(s) eliminado(s) correctamente."}), 200
 
+@superadmin_bp.route('/api/admin/stats', methods=['GET'])
+def admin_get_system_stats():
+    if not _require_admin():
+        return jsonify({"error": "Acceso restringido a administradores", "success": False}), 403
+
+    users = _load_users()
+    total_users = len(users)
+    active_users = 0
+    trial_users = 0
+    expired_users = 0
+
+    for u in users:
+        st = u.get('subscription_status', 'expired')
+        if st in ('lifetime', 'active'):
+            active_users += 1
+        elif st == 'trial':
+            trial_users += 1
+        else:
+            expired_users += 1
+
+    clients = _load_persisted_clients()
+    total_clients = len(clients) if isinstance(clients, list) else 0
+
+    evals = _load_persisted_evaluations()
+    total_evals = len(evals) if isinstance(evals, list) else 0
+
+    stock = _load_persisted_stock_items()
+    total_stock = len(stock) if isinstance(stock, list) else 0
+
+    sales = _load_persisted_sales()
+    total_sales_amount = sum(float(s.get('total') or 0) for s in sales) if isinstance(sales, list) else 0.0
+    total_sales_count = len(sales) if isinstance(sales, list) else 0
+
+    licenses = _load_licenses()
+    total_pins = len(licenses)
+    used_pins = sum(1 for l in licenses if l.get('is_used'))
+    available_pins = total_pins - used_pins
+
+    return jsonify({
+        "success": True,
+        "total_users": total_users,
+        "active_users": active_users,
+        "trial_users": trial_users,
+        "expired_users": expired_users,
+        "total_patients": total_clients,
+        "total_evaluations": total_evals,
+        "total_stock_items": total_stock,
+        "total_sales_amount": round(total_sales_amount, 2),
+        "total_sales_count": total_sales_count,
+        "total_pins": total_pins,
+        "available_pins": available_pins,
+        "used_pins": used_pins,
+        "db_status": "Supabase PostgreSQL Conectado" if supabase else "Almacenamiento Híbrido Local"
+    }), 200
+
+@superadmin_bp.route('/api/admin/users/<user_id>', methods=['PUT', 'PATCH'])
 @superadmin_bp.route('/api/admin/users/<user_id>/status', methods=['POST', 'PUT'])
 def admin_update_user_status(user_id):
     if not _require_admin():
@@ -119,17 +180,58 @@ def admin_update_user_status(user_id):
     if not target_user:
         return jsonify({"error": "Usuario no encontrado.", "success": False}), 404
 
-    if 'status' in data:
-        target_user['subscription_status'] = _clean_str(data['status'], max_len=20)
-    if 'plan' in data:
-        target_user['subscription_plan'] = _clean_str(data['plan'], max_len=50)
-    if 'expires_at' in data:
-        target_user['subscription_expires_at'] = data['expires_at']
+    if 'full_name' in data or 'name' in data:
+        target_user['full_name'] = _clean_str(data.get('full_name') or data.get('name'), max_len=100)
+    if 'professional_title' in data or 'title' in data:
+        target_user['professional_title'] = _clean_str(data.get('professional_title') or data.get('title'), max_len=100)
+    if 'clinic_name' in data or 'clinic' in data:
+        target_user['clinic_name'] = _clean_str(data.get('clinic_name') or data.get('clinic'), max_len=100)
+    if 'phone' in data:
+        target_user['phone'] = _clean_str(data.get('phone'), max_len=30)
+    if 'role' in data:
+        target_user['role'] = _clean_str(data.get('role'), max_len=20)
+    if 'status' in data or 'subscription_status' in data:
+        target_user['subscription_status'] = _clean_str(data.get('status') or data.get('subscription_status'), max_len=20)
+    if 'plan' in data or 'subscription_plan' in data:
+        target_user['subscription_plan'] = _clean_str(data.get('plan') or data.get('subscription_plan'), max_len=50)
+    if 'expires_at' in data or 'subscription_expires_at' in data:
+        target_user['subscription_expires_at'] = data.get('expires_at') or data.get('subscription_expires_at')
 
     target_user['updated_at'] = _now_bolivia().isoformat()
     _save_users(users)
 
-    return jsonify({"success": True, "user": _user_to_public_dict(target_user), "message": "Estado de usuario actualizado con éxito."}), 200
+    return jsonify({"success": True, "user": _user_to_public_dict(target_user), "message": "Datos de usuario actualizados con éxito."}), 200
+
+@superadmin_bp.route('/api/admin/users/<user_id>/reset-password', methods=['POST'])
+def admin_reset_user_password(user_id):
+    if not _require_admin():
+        return jsonify({"error": "Acceso restringido a administradores", "success": False}), 403
+
+    data = request.json or {}
+    new_password = str(data.get('password') or '').strip()
+    if len(new_password) < 6:
+        return jsonify({"error": "La nueva contraseña debe contener al menos 6 caracteres.", "success": False}), 400
+
+    users = _load_users()
+    target_user = None
+
+    for u in users:
+        if str(u.get('id')) == str(user_id):
+            target_user = u
+            break
+
+    if not target_user:
+        return jsonify({"error": "Usuario no encontrado.", "success": False}), 404
+
+    target_user['password_hash'] = generate_password_hash(new_password)
+    target_user['updated_at'] = _now_bolivia().isoformat()
+    _save_users(users)
+
+    return jsonify({
+        "success": True,
+        "message": f"Contraseña actualizada con éxito para {target_user.get('email')}.",
+        "user": _user_to_public_dict(target_user)
+    }), 200
 
 @superadmin_bp.route('/api/admin/users/<user_id>/extend', methods=['POST'])
 def admin_extend_user_subscription(user_id):

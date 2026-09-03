@@ -84,7 +84,7 @@ function initEvaluaciones() {
 }
 
 async function fetchEvaluaciones(force = false) {
-    if (evalsDataLoaded && !force) return;
+    if (evalsDataLoaded && !force && allEvaluationsData.length > 0) return;
 
     const tbody = document.getElementById('evaluaciones-tbody');
     try {

@@ -55,7 +55,7 @@ function navigateToView(targetId, updateHistory = true) {
     } else if (cleanId === 'clientes-view') {
         if ((!clientsDataLoaded || (typeof allClientsData !== 'undefined' && allClientsData.length === 0)) && typeof fetchClients === 'function') fetchClients();
     } else if (cleanId === 'evaluaciones-view') {
-        if ((!evalsDataLoaded || (typeof allEvaluationsData !== 'undefined' && allEvaluationsData.length === 0)) && typeof fetchEvaluaciones === 'function') fetchEvaluaciones();
+        if (typeof fetchEvaluaciones === 'function') fetchEvaluaciones(true);
     } else if (cleanId === 'stock-view') {
         if ((!stockDataLoaded || (typeof allStockItems !== 'undefined' && allStockItems.length === 0))) {
             if (typeof fetchStockItems === 'function') fetchStockItems();

@@ -436,3 +436,179 @@ function renderTaxonomyModalLists() {
         `).join('');
     }
 }
+
+// ============================================================================
+// NAVEGACIÓN ENTRE SUB-MÓDULOS DE STOCK (CATÁLOGO, POS, VENTAS, KARDEX)
+// ============================================================================
+
+let stockMovementsData = [];
+
+function initStockNavigationTabs() {
+    const tabBtns = document.querySelectorAll('.stock-main-tab-btn');
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const targetPanelId = btn.getAttribute('data-panel');
+            if (targetPanelId) {
+                switchStockTab(targetPanelId);
+            }
+        });
+    });
+
+    const kardexSearch = document.getElementById('kardex-search-input');
+    const kardexFilter = document.getElementById('kardex-filter-type');
+    const kardexRefreshBtn = document.getElementById('btn-refresh-kardex');
+
+    if (kardexSearch) kardexSearch.addEventListener('input', () => renderKardexTable());
+    if (kardexFilter) kardexFilter.addEventListener('change', () => renderKardexTable());
+    if (kardexRefreshBtn) kardexRefreshBtn.addEventListener('click', () => fetchStockMovements(true));
+
+    const savedTab = localStorage.getItem('vm_active_stock_tab') || 'stock-panel-catalog';
+    switchStockTab(savedTab);
+}
+
+function switchStockTab(targetPanelId) {
+    if (!targetPanelId) return;
+
+    const tabBtns = document.querySelectorAll('.stock-main-tab-btn');
+    const panels = document.querySelectorAll('.stock-panel-content');
+
+    tabBtns.forEach(btn => {
+        if (btn.getAttribute('data-panel') === targetPanelId) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+
+    panels.forEach(panel => {
+        if (panel.id === targetPanelId) {
+            panel.classList.remove('d-none');
+        } else {
+            panel.classList.add('d-none');
+        }
+    });
+
+    try {
+        localStorage.setItem('vm_active_stock_tab', targetPanelId);
+    } catch (e) {}
+
+    // Carga reactiva según la pestaña elegida
+    if (targetPanelId === 'stock-panel-catalog') {
+        filterAndRenderStock(false);
+    } else if (targetPanelId === 'stock-panel-pos') {
+        if (typeof renderPosProductGrid === 'function') renderPosProductGrid();
+    } else if (targetPanelId === 'stock-panel-sales') {
+        if (typeof fetchSalesHistory === 'function') fetchSalesHistory(true);
+        if (typeof fetchSalesKPIs === 'function') fetchSalesKPIs();
+    } else if (targetPanelId === 'stock-panel-kardex') {
+        fetchStockMovements();
+    }
+}
+
+async function fetchStockMovements(force = false) {
+    const tbody = document.getElementById('kardex-tbody');
+    if (!tbody) return;
+
+    try {
+        const res = await fetch('/api/stock/movements', { headers: getAuthHeaders() });
+        if (!res.ok) return;
+        const data = await res.json();
+        stockMovementsData = Array.isArray(data) ? data : (data.movements || []);
+        renderKardexTable();
+    } catch (e) {
+        console.warn('Error al cargar movimientos de kardex:', e);
+        if (tbody) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-danger">Error al cargar registros de auditoría Kardex.</td></tr>';
+        }
+    }
+}
+
+function renderKardexTable() {
+    const tbody = document.getElementById('kardex-tbody');
+    if (!tbody) return;
+
+    const search = (document.getElementById('kardex-search-input')?.value || '').toLowerCase().trim();
+    const typeFilter = document.getElementById('kardex-filter-type')?.value || 'all';
+
+    let filtered = [...stockMovementsData];
+
+    if (search) {
+        filtered = filtered.filter(m => 
+            (m.product_name || m.item_name || '').toLowerCase().includes(search) ||
+            (m.reason || '').toLowerCase().includes(search) ||
+            (m.reference || m.code || '').toLowerCase().includes(search)
+        );
+    }
+
+    if (typeFilter !== 'all') {
+        filtered = filtered.filter(m => (m.type || '') === typeFilter);
+    }
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="7" class="text-center py-5 text-muted">
+                    <i class="bi bi-clock-history fs-2 d-block mb-2 text-secondary opacity-50"></i>
+                    No se encontraron movimientos registrados en el Kardex.
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(m => {
+        const dtStr = (m.created_at || '').substring(0, 16).replace('T', ' ');
+        const prodName = escapeHtml(m.product_name || m.item_name || 'Insumo / Producto');
+        const mType = m.type || 'IN';
+        const qty = parseFloat(m.quantity || 0);
+        const prev = parseFloat(m.previous_stock || 0);
+        const next = parseFloat(m.new_stock || (prev + (mType === 'IN' ? qty : -qty)));
+        const reason = escapeHtml(m.reason || 'Sin observación');
+
+        let typeBadge = '<span class="badge bg-success-subtle text-success border border-success-subtle">📥 Entrada (IN)</span>';
+        if (mType === 'OUT') typeBadge = '<span class="badge bg-warning-subtle text-warning border border-warning-subtle">📤 Salida (OUT)</span>';
+        else if (mType === 'SALE') typeBadge = '<span class="badge bg-primary-subtle text-primary border border-primary-subtle">🛒 Venta POS</span>';
+        else if (mType === 'SALE_CANCEL') typeBadge = '<span class="badge bg-info-subtle text-info border border-info-subtle">↩️ Reversa Venta</span>';
+        else if (mType === 'ADJUST') typeBadge = '<span class="badge bg-secondary-subtle text-secondary border">⚡ Ajuste</span>';
+
+        return `
+            <tr>
+                <td class="small text-muted font-monospace">${dtStr}</td>
+                <td class="fw-bold text-navy">${prodName}</td>
+                <td>${typeBadge}</td>
+                <td class="font-monospace fw-bold ${mType === 'IN' || mType === 'SALE_CANCEL' ? 'text-success' : 'text-danger'}">
+                    ${mType === 'IN' || mType === 'SALE_CANCEL' ? '+' : '-'}${qty}
+                </td>
+                <td class="font-monospace text-muted">${prev}</td>
+                <td class="font-monospace fw-bold text-navy">${next}</td>
+                <td class="small text-muted text-truncate" style="max-width: 220px;" title="${reason}">${reason}</td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// Inicializador del Módulo
+function initStockModule() {
+    initStockNavigationTabs();
+
+    const searchInput = document.getElementById('stock-search-input');
+    const catFilter = document.getElementById('stock-filter-category');
+    const statusFilter = document.getElementById('stock-filter-status');
+
+    if (searchInput) searchInput.addEventListener('input', () => filterAndRenderStock());
+    if (catFilter) catFilter.addEventListener('change', () => filterAndRenderStock());
+    if (statusFilter) statusFilter.addEventListener('change', () => filterAndRenderStock());
+
+    fetchStockItems();
+    fetchStockTaxonomies();
+}
+
+// Exportación global
+window.initStockModule = initStockModule;
+window.initStockNavigationTabs = initStockNavigationTabs;
+window.switchStockTab = switchStockTab;
+window.fetchStockMovements = fetchStockMovements;
+window.renderKardexTable = renderKardexTable;
+

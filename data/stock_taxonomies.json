@@ -115,6 +115,10 @@
     },
     {
       "name": "Vial Test (v)"
+    },
+    {
+      "name": "paquete",
+      "description": "Unidad de medida personalizada"
     }
   ]
 }

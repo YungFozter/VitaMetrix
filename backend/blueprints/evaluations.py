@@ -171,31 +171,84 @@ def compute_full_bia_analysis(data):
 def list_evaluations():
     current_user = _get_current_user()
     current_uid = current_user.get('id') if current_user else None
+    current_email = (current_user.get('email') or '').lower().strip() if current_user else None
+    is_admin = current_user and current_user.get('role') == 'admin'
 
-    evals = []
+    remote_evals = []
     if supabase:
         try:
             res = supabase.table('evaluations').select('*').order('created_at', desc=True).execute()
-            if res.data is not None:
-                evals = res.data
+            if res.data is not None and isinstance(res.data, list):
+                remote_evals = res.data
         except Exception as e:
             logging.warning("No se pudo obtener evaluaciones desde Supabase: %s", e)
 
-    if not evals:
-        evals = _load_persisted_evaluations()
+    local_evals = _load_persisted_evaluations()
+    if not isinstance(local_evals, list):
+        local_evals = []
 
-    if current_uid and current_user.get('role') != 'admin':
-        filtered = []
-        for e in evals:
+    eval_map = {}
+    for e in local_evals:
+        if isinstance(e, dict):
+            key = str(e.get('id') or e.get('code') or '')
+            if key:
+                eval_map[key] = dict(e)
+
+    for e in remote_evals:
+        if isinstance(e, dict):
+            key = str(e.get('id') or e.get('code') or '')
+            if key in eval_map:
+                for k, v in e.items():
+                    if v is not None and (k not in eval_map[key] or eval_map[key][k] is None):
+                        eval_map[key][k] = v
+            elif key:
+                eval_map[key] = dict(e)
+
+    all_evals = list(eval_map.values())
+
+    for e in all_evals:
+        r = float(e.get('resistance') or 0)
+        xc = float(e.get('reactance') or 0)
+
+        pha = e.get('phase_angle')
+        if pha is None or float(pha) == 0:
+            if r > 0 and xc > 0:
+                e['phase_angle'] = calculate_phase_angle(r, xc)
+            else:
+                e['phase_angle'] = 5.5
+
+        if not e.get('report') or e.get('global_score') is None or e.get('score') is None:
+            rep = compute_full_bia_analysis(e)
+            e['report'] = rep
+            e['score'] = rep.get('score', 80)
+            e['global_score'] = rep.get('global_score', 80)
+            e['cell_status'] = rep.get('biva', {}).get('cell_status', 'Adecuada')
+            e['rank'] = rep.get('rank', 'BRONCE')
+
+    all_evals.sort(key=lambda x: str(x.get('created_at') or ''), reverse=True)
+
+    if not is_admin and current_uid:
+        doctor_evals = []
+        for e in all_evals:
             e_uid = e.get('user_id')
-            if not e_uid or e_uid in ('usr-doctor-001', 'None', 'null', ''):
+            e_email = str(e.get('user_email') or '').lower().strip()
+
+            match_uid = e_uid and str(e_uid) == str(current_uid)
+            match_email = current_email and e_email == current_email
+            is_unassigned = not e_uid or str(e_uid) in ('usr-doctor-001', 'None', 'null', '')
+
+            if match_uid or match_email or is_unassigned:
                 e['user_id'] = current_uid
-                e_uid = current_uid
-            if e_uid == current_uid:
-                filtered.append(e)
+                doctor_evals.append(e)
+
+        return jsonify(doctor_evals)
+
+    doc_filter = request.args.get('doctor_id')
+    if is_admin and doc_filter:
+        filtered = [e for e in all_evals if str(e.get('user_id')) == str(doc_filter)]
         return jsonify(filtered)
 
-    return jsonify(evals)
+    return jsonify(all_evals)
 
 @evaluations_bp.route('/api/evaluations', methods=['POST'])
 def create_evaluation():

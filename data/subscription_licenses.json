@@ -1,1 +1,54 @@
-[]
+[
+  {
+    "id": "73ff480b-8ead-4da0-bafd-c036234cbc94",
+    "license_key": "VITA-2DC59398",
+    "pin_code": "VITA-2DC59398",
+    "duration_days": 60,
+    "plan_name": "Plan Pro (60 días)",
+    "is_used": true,
+    "note": "Auditoría PIN 60 días",
+    "created_at": "2026-09-03T15:54:48.015829-04:00",
+    "used_by_user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "used_by_email": "ianortizsandoval@gmail.com",
+    "used_at": "2026-09-03T15:54:49.438748-04:00"
+  },
+  {
+    "id": "7af97798-c950-46e7-8aa1-cd6c8a96b37f",
+    "license_key": "VITA-1BA9B1D9",
+    "pin_code": "VITA-1BA9B1D9",
+    "duration_days": 60,
+    "plan_name": "Plan Pro (60 días)",
+    "is_used": true,
+    "note": "Test 60",
+    "created_at": "2026-09-03T15:56:35.009907-04:00",
+    "used_by_user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "used_by_email": "ianortizsandoval@gmail.com",
+    "used_at": "2026-09-03T15:56:44.166364-04:00"
+  },
+  {
+    "id": "655d6201-3621-4745-9393-d5ecdff6184c",
+    "license_key": "VITA-37005415",
+    "pin_code": "VITA-37005415",
+    "duration_days": 30,
+    "plan_name": "Plan Pro (30 días)",
+    "is_used": true,
+    "note": "Auditoría PIN 30 días",
+    "created_at": "2026-09-03T15:58:43.031468-04:00",
+    "used_by_user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "used_by_email": "ianortizsandoval@gmail.com",
+    "used_at": "2026-09-03T15:58:44.457087-04:00"
+  },
+  {
+    "id": "68035948-028d-4321-9ee2-6407e1fa1137",
+    "license_key": "VITA-4896A050",
+    "pin_code": "VITA-4896A050",
+    "duration_days": 30,
+    "plan_name": "Plan Pro (30 días)",
+    "is_used": true,
+    "note": "Auditoría PIN 30 días",
+    "created_at": "2026-09-03T16:15:17.849147-04:00",
+    "used_by_user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "used_by_email": "ianortizsandoval@gmail.com",
+    "used_at": "2026-09-03T16:15:19.391752-04:00"
+  }
+]

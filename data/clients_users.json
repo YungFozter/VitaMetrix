@@ -1,1 +1,50 @@
-[]
+[
+  {
+    "id": "247549ad-bdce-4d16-92b8-ab7240bb627c",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": 3,
+    "patient_idp": "IDP-0003",
+    "idp": "IDP-0003",
+    "name": "Mariana Gómez Silva",
+    "phone": "+591 77012345",
+    "email": "mariana.gomez@test.com",
+    "gender": "female",
+    "age": 28,
+    "weight": 57.0,
+    "height": 164.0,
+    "notes": "Paciente de prueba auditoría.",
+    "created_at": "2026-09-03T16:15:06.772572-04:00"
+  },
+  {
+    "id": "e075dda4-8f63-427d-9eda-ea30ff019527",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": 2,
+    "patient_idp": "IDP-0002",
+    "idp": "IDP-0002",
+    "name": "Mariana Gómez Silva",
+    "phone": "+591 77012345",
+    "email": "mariana.gomez@test.com",
+    "gender": "female",
+    "age": 28,
+    "weight": 57.0,
+    "height": 164.0,
+    "notes": "Paciente de prueba auditoría.",
+    "created_at": "2026-09-03T15:58:30.297089-04:00"
+  },
+  {
+    "id": "9df2e4de-ace2-4f65-85c5-4df6460dd72a",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": 1,
+    "patient_idp": "IDP-0001",
+    "idp": "IDP-0001",
+    "name": "Mariana Gómez Silva",
+    "phone": "+591 77012345",
+    "email": "mariana.gomez@test.com",
+    "gender": "female",
+    "age": 28,
+    "weight": 57.0,
+    "height": 164.0,
+    "notes": "Paciente de prueba auditoría.",
+    "created_at": "2026-09-03T15:54:40.469143-04:00"
+  }
+]

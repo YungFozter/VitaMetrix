@@ -384,6 +384,65 @@ function initSuperAdminView() {
         });
     }
 
+    // Modal de Reseteo de Contraseña
+    const closeResetPassBtn = document.getElementById('btn-close-admin-reset-pass');
+    const cancelResetPassBtn = document.getElementById('btn-cancel-admin-reset-pass');
+    const formResetPass = document.getElementById('form-admin-reset-password');
+    const resetPassError = document.getElementById('admin-reset-pass-error');
+
+    if (closeResetPassBtn) closeResetPassBtn.addEventListener('click', closeAdminResetPasswordModal);
+    if (cancelResetPassBtn) cancelResetPassBtn.addEventListener('click', closeAdminResetPasswordModal);
+
+    if (formResetPass) {
+        formResetPass.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const userId = document.getElementById('admin-reset-user-id')?.value;
+            const newPassword = document.getElementById('admin-reset-new-pass')?.value?.trim();
+            const btnSubmit = document.getElementById('btn-submit-admin-reset-pass');
+
+            if (!userId || !newPassword || newPassword.length < 6) {
+                if (resetPassError) {
+                    resetPassError.textContent = 'La nueva contraseña debe tener un mínimo de 6 caracteres.';
+                    resetPassError.classList.remove('d-none');
+                }
+                return;
+            }
+
+            if (resetPassError) resetPassError.classList.add('d-none');
+            if (btnSubmit) btnSubmit.disabled = true;
+
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify({ password: newPassword })
+                });
+                const data = await res.json();
+
+                if (!res.ok || !data.success) {
+                    if (resetPassError) {
+                        resetPassError.textContent = data.error || 'Error al actualizar contraseña.';
+                        resetPassError.classList.remove('d-none');
+                    }
+                    return;
+                }
+
+                closeAdminResetPasswordModal();
+                showToast(data.message || 'Contraseña actualizada con éxito.', 'success');
+            } catch (err) {
+                if (resetPassError) {
+                    resetPassError.textContent = 'Error de conexión con el servidor.';
+                    resetPassError.classList.remove('d-none');
+                }
+            } finally {
+                if (btnSubmit) btnSubmit.disabled = false;
+            }
+        });
+    }
+
     const savedAdminTab = localStorage.getItem('vm_admin_active_tab');
     if (savedAdminTab === 'pins') {
         switchAdminTab('pins');
@@ -669,6 +728,9 @@ function renderAdminUsers() {
                         <button type="button" class="btn btn-outline-primary btn-xs py-1 px-2 fw-semibold" onclick="quickExtendUserDirect('${u.id}', 30)" title="Extender +30 días de suscripción">+30d</button>
                         <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-secondary" onclick="openAdminManageUserModal('${u.id}')" title="Gestionar cuenta">
                             <i class="bi bi-gear-fill"></i>
+                        </button>
+                        <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-primary" onclick="openAdminResetPasswordModal('${u.id}', '${escapeHtml(u.email)}')" title="Restablecer Contraseña">
+                            <i class="bi bi-key-fill"></i>
                         </button>
                         ${!isAdmin ? `
                             <button type="button" class="btn btn-light btn-xs border py-1 px-2 text-warning" onclick="deactivateUserSubscriptionDirect('${u.id}', '${escapeHtml(u.full_name)}')" title="Desactivar Suscripción (0 días / Vencida)">
@@ -1041,6 +1103,32 @@ function openAdminManageUserModal(userId) {
     }
 }
 
+function openAdminResetPasswordModal(userId, email) {
+    const modal = document.getElementById('modal-admin-reset-password');
+    const inputId = document.getElementById('admin-reset-user-id');
+    const emailEl = document.getElementById('admin-reset-user-email');
+    const passInput = document.getElementById('admin-reset-new-pass');
+    const errorEl = document.getElementById('admin-reset-pass-error');
+
+    if (inputId) inputId.value = userId;
+    if (emailEl) emailEl.textContent = `Usuario: ${email}`;
+    if (passInput) passInput.value = '';
+    if (errorEl) errorEl.classList.add('d-none');
+
+    if (modal) {
+        modal.classList.remove('hidden', 'd-none');
+        modal.style.display = 'flex';
+    }
+}
+
+function closeAdminResetPasswordModal() {
+    const modal = document.getElementById('modal-admin-reset-password');
+    if (modal) {
+        modal.classList.add('hidden', 'd-none');
+        modal.style.display = 'none';
+    }
+}
+
 async function quickExtendDays(days) {
     const userId = document.getElementById('admin-manage-user-id').value;
     if (!userId) return;
@@ -1150,3 +1238,20 @@ function deleteAdminUser(userId, userName) {
         { confirmText: 'Eliminar Usuario', type: 'danger', icon: 'bi bi-trash-fill' }
     );
 }
+
+// Exportación global de funciones SuperAdmin
+window.openAdminResetPasswordModal = openAdminResetPasswordModal;
+window.closeAdminResetPasswordModal = closeAdminResetPasswordModal;
+window.switchAdminTab = switchAdminTab;
+window.initSuperAdminView = initSuperAdminView;
+window.fetchAdminUsers = fetchAdminUsers;
+window.fetchAdminPins = fetchAdminPins;
+window.openAdminManageUserModal = openAdminManageUserModal;
+window.quickExtendDays = quickExtendDays;
+window.quickExtendUserDirect = quickExtendUserDirect;
+window.deactivateUserSubscriptionDirect = deactivateUserSubscriptionDirect;
+window.removeUserSubscriptionDirect = removeUserSubscriptionDirect;
+window.quickDeactivateCurrentModalUser = quickDeactivateCurrentModalUser;
+window.quickRemoveCurrentModalUserSubscription = quickRemoveCurrentModalUserSubscription;
+window.deleteAdminUser = deleteAdminUser;
+

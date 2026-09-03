@@ -1,1 +1,64 @@
-[]
+[
+  {
+    "id": "7fa1b43c-5831-4bfc-a978-b6522e95c64c",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "receipt_number": "REC-1788466514",
+    "patient_name": "Mariana Gómez Silva",
+    "patient_idp": "IDP-0003",
+    "patient_phone": "+591 77012345",
+    "subtotal": 25.0,
+    "discount": 5.0,
+    "total": 20.0,
+    "total_cost": 12.0,
+    "profit": 8.0,
+    "payment_method": "Efectivo",
+    "amount_received": 50.0,
+    "change_given": 30.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-09-03T16:15:14.346492-04:00",
+    "sale_items": [
+      {
+        "stock_item_id": "bb088410-a89f-4259-8b77-b4c060c8ebfb",
+        "code": "ELBIA-003",
+        "name": "Electrodos Adhesivos BIA Ag/AgCl",
+        "unit": "paquete",
+        "quantity": 1.0,
+        "unit_price": 25.0,
+        "cost_price": 12.0,
+        "subtotal": 25.0
+      }
+    ]
+  },
+  {
+    "id": "1bd053bb-7467-485d-b9b4-80ed8c8e59f3",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "receipt_number": "REC-1788465519",
+    "patient_name": "Mariana Gómez Silva",
+    "patient_idp": "IDP-0002",
+    "patient_phone": "+591 77012345",
+    "subtotal": 25.0,
+    "discount": 5.0,
+    "total": 20.0,
+    "total_cost": 12.0,
+    "profit": 8.0,
+    "payment_method": "Efectivo",
+    "amount_received": 50.0,
+    "change_given": 30.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-09-03T15:58:39.206687-04:00",
+    "sale_items": [
+      {
+        "stock_item_id": "d8397909-12f4-423a-a351-d9c8781073de",
+        "code": "ELBIA-002",
+        "name": "Electrodos Adhesivos BIA Ag/AgCl",
+        "unit": "paquete",
+        "quantity": 1.0,
+        "unit_price": 25.0,
+        "cost_price": 12.0,
+        "subtotal": 25.0
+      }
+    ]
+  }
+]
