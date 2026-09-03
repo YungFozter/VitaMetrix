@@ -36,6 +36,8 @@ def set_security_headers(response):
 
 # Registro de Blueprints Modulares por Dominio de Negocio
 from blueprints.auth import auth_bp
+from blueprints.subscriptions import subscriptions_bp
+from blueprints.superadmin import superadmin_bp
 from blueprints.stock import stock_bp
 from blueprints.evaluations import evaluations_bp
 from blueprints.clients import clients_bp
@@ -44,6 +46,8 @@ from blueprints.sales import sales_bp
 from blueprints.dashboard import dashboard_bp
 
 app.register_blueprint(auth_bp)
+app.register_blueprint(subscriptions_bp)
+app.register_blueprint(superadmin_bp)
 app.register_blueprint(stock_bp)
 app.register_blueprint(evaluations_bp)
 app.register_blueprint(clients_bp)

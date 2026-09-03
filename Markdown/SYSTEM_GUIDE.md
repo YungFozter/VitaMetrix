@@ -67,6 +67,7 @@ VitaMetrix/
 │               ├── utils.js          <-- Sanitización XSS, toasters, alertas y reloj
 │               ├── auth.js           <-- JWT, sesiones y control de acceso
 │               ├── navigation.js     <-- Enrutador SPA, pestañas y sidebar
+│               ├── dashboard.js      <-- Métricas reactivas Dashboard y recientes
 │               ├── bioimpedancia.js  <-- Formulario BIA, gráficos BIVA/PAL/BCC y PDF
 │               ├── pacientes.js     <-- Directorio de pacientes y mensajería
 │               ├── evaluaciones.js   <-- Historial clínico y modal de detalle
@@ -81,7 +82,7 @@ VitaMetrix/
 │   ├── reference_tables.json         <-- Tablas de referencia bioeléctrica y percentiles
 │   └── users.json                    <-- Almacenamiento local persistente
 └── Tests/
-    └── test_e2e_api.py               <-- Suite completa de pruebas de integración E2E (13/13 OK)
+    └── test_e2e_api.py               <-- Suite completa de pruebas de integración E2E (14/14 OK)
 ```
 
 ---

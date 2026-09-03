@@ -1360,11 +1360,12 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODALES PARCIALES MODULARES (STOCK, COMPROBANTES Y SUPERADMIN) -->
+    <!-- MODALES PARCIALES MODULARES (STOCK, COMPROBANTES, SUPERADMIN Y CITAS) -->
     <!-- ========================================================================= -->
     {% include 'partials/stock_modals.html' %}
     {% include 'partials/receipt_modal.html' %}
     {% include 'partials/admin_modals.html' %}
+    {% include 'partials/appointment_modal.html' %}
 
     <!-- Chart.js (gráficos: doughnut, scatter) -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1378,6 +1379,7 @@
     <script src="{{ url_for('static', filename='js/modules/subscriptions.js') }}?v=193"></script>
     <script src="{{ url_for('static', filename='js/modules/superadmin.js') }}?v=193"></script>
     <script src="{{ url_for('static', filename='js/modules/navigation.js') }}?v=193"></script>
+    <script src="{{ url_for('static', filename='js/modules/dashboard.js') }}?v=193"></script>
     <script src="{{ url_for('static', filename='js/modules/configuracion.js') }}?v=193"></script>
     <script src="{{ url_for('static', filename='js/modules/bioimpedancia.js') }}?v=193"></script>
     <script src="{{ url_for('static', filename='js/modules/pacientes.js') }}?v=193"></script>

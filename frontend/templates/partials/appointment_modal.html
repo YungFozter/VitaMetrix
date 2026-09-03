@@ -1,0 +1,96 @@
+<!-- MODAL: AGENDAR / EDITAR CITA CLÍNICA BIA -->
+<div id="modal-appointment" class="modal-overlay hidden d-none" style="display: none; z-index: 1080;">
+    <div class="modal-card bg-white rounded-4 shadow-xl p-0 overflow-hidden" style="max-width: 520px; width: 95%; margin: auto;">
+        
+        <!-- Header -->
+        <div class="p-3.5 px-4 bg-light border-bottom d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-2">
+                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 d-inline-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="bi bi-calendar-plus-fill fs-5"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold text-navy mb-0" id="appointment-modal-title">Agendar Cita Médica</h5>
+                    <small class="text-muted">Turnos clínicos y evaluaciones bioeléctricas</small>
+                </div>
+            </div>
+            <button type="button" class="btn-close shadow-none" id="btn-close-appointment-modal" aria-label="Cerrar"></button>
+        </div>
+
+        <!-- Form -->
+        <form id="form-appointment" class="p-4">
+            <input type="hidden" id="app-id">
+
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase mb-1">Paciente / Cliente *</label>
+                <div class="position-relative">
+                    <input type="text" id="app-patient-name" class="form-control shadow-none fw-semibold" placeholder="Nombre completo del paciente" required autocomplete="off">
+                    <input type="hidden" id="app-patient-idp">
+                    <div id="app-patient-dropdown" class="stock-custom-dropdown stock-custom-scrollbar"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase mb-1">Teléfono (WhatsApp)</label>
+                <div class="input-group input-group-sm">
+                    <span class="input-group-text bg-light text-success"><i class="bi bi-whatsapp"></i></span>
+                    <input type="tel" id="app-patient-phone" class="form-control shadow-none font-monospace" placeholder="+591 XXXXXXXX">
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1">Fecha *</label>
+                    <input type="date" id="app-date" class="form-control form-control-sm shadow-none font-monospace" required>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1">Hora *</label>
+                    <input type="time" id="app-time" class="form-control form-control-sm shadow-none font-monospace" required value="09:00">
+                </div>
+            </div>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1">Tipo de Consulta</label>
+                    <select id="app-type" class="form-select form-select-sm shadow-none">
+                        <option value="Evaluación Inicial BIA" selected>⚡ Evaluación Inicial BIA</option>
+                        <option value="Control Mensual BIA">📊 Control Mensual BIA</option>
+                        <option value="Consulta Nutricional">🥗 Consulta Nutricional</option>
+                        <option value="Entrega de Plan & Dieta">📋 Entrega de Plan & Dieta</option>
+                        <option value="Control de Peso">⚖️ Control de Peso</option>
+                    </select>
+                </div>
+                <div class="col-6">
+                    <label class="form-label text-muted small fw-bold text-uppercase mb-1">Estado</label>
+                    <select id="app-status" class="form-select form-select-sm shadow-none">
+                        <option value="confirmed" selected>🟢 Confirmada</option>
+                        <option value="pending">🟡 Pendiente</option>
+                        <option value="attended">🔵 Atendida</option>
+                        <option value="cancelled">🔴 Cancelada</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label text-muted small fw-bold text-uppercase mb-1">Notas / Motivo de Consulta</label>
+                <textarea id="app-notes" class="form-control shadow-none small" rows="2" placeholder="Observaciones clínicas, metas del paciente..."></textarea>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="d-flex align-items-center justify-content-between pt-3 border-top mt-4">
+                <button type="button" id="btn-delete-appointment" class="btn btn-sm btn-outline-danger d-none fw-semibold">
+                    <i class="bi bi-trash-fill me-1"></i> Eliminar Cita
+                </button>
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    <button type="button" id="btn-cancel-appointment" class="btn btn-sm btn-light border px-3 py-1.5 rounded-3 text-secondary fw-semibold">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-save-appointment" class="btn btn-sm btn-primary px-4 py-1.5 rounded-3 fw-bold shadow-sm d-inline-flex align-items-center gap-1.5">
+                        <i class="bi bi-check-lg fs-6"></i>
+                        <span id="btn-save-app-text">Guardar Cita</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+
+    </div>
+</div>

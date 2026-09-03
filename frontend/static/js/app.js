@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof initAuthSystem === 'function') initAuthSystem();
 
     // 4. Inicialización de módulos clínicos y de negocio
+    if (typeof initDashboard === 'function') initDashboard();
     if (typeof initSubscriptionView === 'function') initSubscriptionView();
     if (typeof initSuperAdminView === 'function') initSuperAdminView();
     if (typeof initBioForm === 'function') initBioForm();

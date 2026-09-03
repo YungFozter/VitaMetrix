@@ -211,12 +211,62 @@ class VitaMetrixE2ETestCase(unittest.TestCase):
         self.assertIn('today_sales_amount', data)
 
     def test_12_admin_endpoints(self):
-        """Verifica los paneles de administración de superadmin"""
+        """Verifica los paneles de administración de superadmin y ciclo de vida de PINs"""
         res_users = self.client.get('/api/admin/users', headers=self.admin_headers)
         self.assertEqual(res_users.status_code, 200)
 
-        res_pins = self.client.get('/api/admin/pins', headers=self.admin_headers)
-        self.assertEqual(res_pins.status_code, 200)
+        # 1. Crear un PIN nuevo como admin
+        pin_payload = {"duration_days": 30, "count": 1, "note": "Test PIN E2E"}
+        res_pin_create = self.client.post('/api/admin/pins/create', data=json.dumps(pin_payload), headers=self.admin_headers)
+        self.assertEqual(res_pin_create.status_code, 201)
+        pin_data = json.loads(res_pin_create.data)
+        self.assertTrue(pin_data.get('success'))
+        created_pins = pin_data.get('pins', [])
+        self.assertGreaterEqual(len(created_pins), 1)
+        test_pin_key = created_pins[0].get('license_key')
+        test_pin_id = created_pins[0].get('id')
+
+        # 2. Canjear el PIN generado usando el endpoint de suscripciones
+        redeem_payload = {"license_key": test_pin_key}
+        res_redeem = self.client.post('/api/subscription/redeem', data=json.dumps(redeem_payload), headers=self.doctor_headers)
+        self.assertEqual(res_redeem.status_code, 200)
+        redeem_res = json.loads(res_redeem.data)
+        self.assertTrue(redeem_res.get('success'))
+
+        # 3. Eliminar / revocar PIN de prueba
+        if test_pin_id:
+            res_del_pin = self.client.delete(f'/api/admin/pins/{test_pin_id}', headers=self.admin_headers)
+            self.assertIn(res_del_pin.status_code, [200, 404])
+
+        # 4. Probar extensión directa de suscripción a un usuario
+        extend_payload = {"days": 15}
+        res_extend = self.client.post('/api/admin/users/usr-doctor-001/extend', data=json.dumps(extend_payload), headers=self.admin_headers)
+        self.assertIn(res_extend.status_code, [200, 404])
+
+    def test_13_appointments_crud(self):
+        """Verifica el ciclo de vida de agendamiento y cancelación de citas"""
+        app_payload = {
+            "patient_name": "Paciente Cita Test E2E",
+            "patient_phone": "+591 70001234",
+            "date": "2026-09-15",
+            "time": "10:30",
+            "type": "Control Mensual BIA",
+            "status": "confirmed",
+            "notes": "Test de agenda automatizado"
+        }
+        res_create = self.client.post('/api/appointments', data=json.dumps(app_payload), headers=self.doctor_headers)
+        self.assertEqual(res_create.status_code, 201)
+        created_app = json.loads(res_create.data)
+        app_id = created_app.get('id') or (created_app.get('appointment') or {}).get('id')
+        self.assertIsNotNone(app_id)
+
+        # Modificar estado
+        res_update = self.client.put(f'/api/appointments/{app_id}', data=json.dumps({"status": "attended"}), headers=self.doctor_headers)
+        self.assertEqual(res_update.status_code, 200)
+
+        # Eliminar cita
+        res_delete = self.client.delete(f'/api/appointments/{app_id}', headers=self.doctor_headers)
+        self.assertEqual(res_delete.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()
