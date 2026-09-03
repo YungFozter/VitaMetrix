@@ -268,44 +268,48 @@ print(f"   [OK] 5. Stock Control: Ítem={stock_item.get('name')}, Kardex=OK, Exc
 print("--> [6/6] Verificando Periodo de Suscripción y Canje de PINs...")
 res_sub = client.get('/api/subscription/status', headers=doc_headers)
 sub_data = json.loads(res_sub.data) if res_sub.status_code == 200 else {}
-days_left_initial = sub_data.get('days_left')
+doctor_days_left = sub_data.get('days_left')
+
+# Usar doctor de prueba dedicado para no alterar la cuenta del Dr. Ian Ortiz
+test_doc_token = _generate_auth_token("test-audit-doc-001", "test_audit_doctor@vitametrix.com", role="user")
+test_doc_headers = {'Authorization': f'Bearer {test_doc_token}', 'Content-Type': 'application/json'}
 
 # 6.1 SuperAdmin crea un PIN de 30 días
 pin_create_payload = {
     "duration_days": 30,
     "count": 1,
-    "note": "Auditoría PIN 30 días"
+    "note": "Auditoría PIN de prueba"
 }
 res_admin_pin = client.post('/api/admin/pins/create', data=json.dumps(pin_create_payload), headers=admin_headers)
 pin_created = json.loads(res_admin_pin.data) if res_admin_pin.status_code == 201 else {}
 generated_key = pin_created.get('pins', [{}])[0].get('license_key')
 
-# 6.2 Doctor canjea el PIN
-res_redeem = client.post('/api/subscription/redeem', data=json.dumps({"license_key": generated_key}), headers=doc_headers)
+# 6.2 Doctor de prueba canjea el PIN
+res_redeem = client.post('/api/subscription/redeem', data=json.dumps({"license_key": generated_key}), headers=test_doc_headers)
 redeem_data = json.loads(res_redeem.data) if res_redeem.status_code == 200 else {}
 
-# 6.3 Verificar nueva vigencia
-res_sub_after = client.get('/api/subscription/status', headers=doc_headers)
+# 6.3 Verificar vigencia del doctor de prueba
+res_sub_after = client.get('/api/subscription/status', headers=test_doc_headers)
 sub_data_after = json.loads(res_sub_after.data) if res_sub_after.status_code == 200 else {}
-days_left_after = sub_data_after.get('days_left')
+test_days_left = sub_data_after.get('days_left')
 
 sub_ok = (
     res_sub.status_code == 200 and 
     sub_data.get('is_active') is True and 
     res_admin_pin.status_code == 201 and 
     redeem_data.get('success') is True and 
-    days_left_after >= days_left_initial
+    test_days_left is not None and test_days_left >= 28
 )
 
 results['6_suscripciones'] = {
     "status": "OPERATIVO (100%)" if sub_ok else "ERROR",
-    "initial_days": days_left_initial,
+    "doctor_ian_days": doctor_days_left,
+    "doctor_ian_status": sub_data.get('status'),
     "pin_generated": generated_key,
     "redeemed_ok": redeem_data.get('success'),
-    "days_after_redeem": days_left_after,
-    "plan_name": sub_data_after.get('plan')
+    "test_account_days": test_days_left
 }
-print(f"   [OK] 6. Suscripción: Inicial={days_left_initial} días -> PIN={generated_key} -> Actual={days_left_after} días.")
+print(f"   [OK] 6. Suscripción: Dr. Ian={doctor_days_left} días legítimos | PIN Test={generated_key} -> Activado {test_days_left} días.")
 
 print("\n=== RESUMEN FINAL DE LA AUDITORÍA ===")
 print(json.dumps(results, indent=2, ensure_ascii=False))

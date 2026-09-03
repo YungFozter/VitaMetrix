@@ -1,5 +1,36 @@
 [
   {
+    "id": "ca34940b-01db-4797-aeb5-4656226de399",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "receipt_number": "REC-1788467836",
+    "patient_name": "Mariana Gómez Silva",
+    "patient_idp": "IDP-0004",
+    "patient_phone": "+591 77012345",
+    "subtotal": 25.0,
+    "discount": 5.0,
+    "total": 20.0,
+    "total_cost": 12.0,
+    "profit": 8.0,
+    "payment_method": "Efectivo",
+    "amount_received": 50.0,
+    "change_given": 30.0,
+    "status": "COMPLETED",
+    "notes": "",
+    "created_at": "2026-09-03T16:37:16.769370-04:00",
+    "sale_items": [
+      {
+        "stock_item_id": "73465587-03e2-4ea3-93c4-18ba82213c2d",
+        "code": "ELBIA-004",
+        "name": "Electrodos Adhesivos BIA Ag/AgCl",
+        "unit": "paquete",
+        "quantity": 1.0,
+        "unit_price": 25.0,
+        "cost_price": 12.0,
+        "subtotal": 25.0
+      }
+    ]
+  },
+  {
     "id": "7fa1b43c-5831-4bfc-a978-b6522e95c64c",
     "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "receipt_number": "REC-1788466514",

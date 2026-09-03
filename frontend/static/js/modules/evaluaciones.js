@@ -8,7 +8,6 @@ let selectedEvaluationData = null;
 let selectedEvalIds = new Set();
 let evalCurrentPage = 1;
 let evalPageSize = 25;
-let evalsDataLoaded = false;
 
 function initEvaluaciones() {
     const searchInput = document.getElementById('eval-search-input');

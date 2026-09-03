@@ -1,5 +1,25 @@
 [
   {
+    "id": "73465587-03e2-4ea3-93c4-18ba82213c2d",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": "ELBIA-004",
+    "name": "Electrodos Adhesivos BIA Ag/AgCl",
+    "category": "Insumos BIA",
+    "unit": "paquete",
+    "stock_quantity": 74.0,
+    "min_stock": 10.0,
+    "cost_price": 12.0,
+    "sale_price": 25.0,
+    "supplier": "",
+    "location": "",
+    "batch_number": "LT-2026-A",
+    "expiry_date": null,
+    "notes": "",
+    "status": "optimal",
+    "created_at": "2026-09-03T16:37:11.235323-04:00",
+    "updated_at": "2026-09-03T16:37:16.769370-04:00"
+  },
+  {
     "id": "bb088410-a89f-4259-8b77-b4c060c8ebfb",
     "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "code": "ELBIA-003",

@@ -1,5 +1,21 @@
 [
   {
+    "id": "bf7438bc-cbaa-4ad9-a136-af6f107df264",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": 4,
+    "patient_idp": "IDP-0004",
+    "idp": "IDP-0004",
+    "name": "Mariana Gómez Silva",
+    "phone": "+591 77012345",
+    "email": "mariana.gomez@test.com",
+    "gender": "female",
+    "age": 28,
+    "weight": 57.0,
+    "height": 164.0,
+    "notes": "Paciente de prueba auditoría.",
+    "created_at": "2026-09-03T16:37:05.884877-04:00"
+  },
+  {
     "id": "247549ad-bdce-4d16-92b8-ab7240bb627c",
     "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "code": 3,

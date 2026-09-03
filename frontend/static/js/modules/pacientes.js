@@ -4,7 +4,6 @@
 // ============================================================
 
 let allClientsData = [];
-let clientsDataLoaded = false;
 let editingClientId = null;
 
 function initClients() {

@@ -1,5 +1,39 @@
 [
   {
+    "id": "56893e37-9b36-47c6-af56-f44713a3af11",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "item_id": "73465587-03e2-4ea3-93c4-18ba82213c2d",
+    "type": "SALE",
+    "quantity": 1.0,
+    "previous_stock": 75.0,
+    "new_stock": 74.0,
+    "reason": "Venta registrada en Recibo #REC-1788467836",
+    "reference_id": "ca34940b-01db-4797-aeb5-4656226de399",
+    "created_at": "2026-09-03T16:37:17.579268-04:00"
+  },
+  {
+    "id": "f0bfd9e7-a07e-4e3e-bc59-a3607b04f8ec",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "item_id": "73465587-03e2-4ea3-93c4-18ba82213c2d",
+    "type": "OUT",
+    "quantity": 5.0,
+    "previous_stock": 80.0,
+    "new_stock": 75.0,
+    "reason": "Uso en consulta clínica",
+    "created_at": "2026-09-03T16:37:14.514767-04:00"
+  },
+  {
+    "id": "ae6ad43f-7d86-4a59-840d-49a5ebdff081",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "item_id": "73465587-03e2-4ea3-93c4-18ba82213c2d",
+    "type": "IN",
+    "quantity": 80.0,
+    "previous_stock": 0.0,
+    "new_stock": 80.0,
+    "reason": "Inventario Inicial al registrar insumo",
+    "created_at": "2026-09-03T16:37:12.426882-04:00"
+  },
+  {
     "id": "626027e9-bad2-429e-9da3-3b2716c6b806",
     "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "item_id": "bb088410-a89f-4259-8b77-b4c060c8ebfb",

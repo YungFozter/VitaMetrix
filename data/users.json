@@ -26,10 +26,10 @@
     "role": "user",
     "subscription_status": "active",
     "subscription_plan": "Plan Pro (30 días)",
-    "subscription_expires_at": "2027-02-05T19:22:13.277907-04:00",
+    "subscription_expires_at": "2026-11-07T19:22:13.277907-04:00",
     "trial_started_at": "2026-09-01T23:22:13.277907+00:00",
     "created_at": "2026-09-01T23:22:13.277907+00:00",
-    "updated_at": "2026-09-03T16:15:19.391752-04:00",
+    "updated_at": "2026-09-03T16:37:25.523907-04:00",
     "pdf_disclaimer": "Informe confidencial para uso clínico y nutricional.",
     "pdf_footer_address": "Santa Cruz de la Sierra, Bolivia",
     "clinic_address": "Av. San Martín 123, Equipetrol, Santa Cruz"

@@ -1,5 +1,88 @@
 [
   {
+    "id": "0968f352-04ff-416f-b8a2-2cf35da46e90",
+    "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
+    "code": "EVA-004",
+    "patient_name": "Mariana Gómez Silva",
+    "patient_idp": "IDP-0004",
+    "resistance": 495.0,
+    "reactance": 58.0,
+    "weight": 70.0,
+    "height": 172.0,
+    "age": 30,
+    "gender": "male",
+    "report": {
+      "score": 83,
+      "global_score": 83,
+      "muscle_score": 74,
+      "fat_score": 28,
+      "rank": "BRONCE",
+      "ree_kcal": 1732,
+      "tee_kcal": 2598,
+      "phase_angle": 6.68,
+      "cell_status": "Excelente salud celular (sobrepromedio)",
+      "biva": {
+        "phase_angle": 6.68,
+        "cell_status": "Excelente salud celular (sobrepromedio)",
+        "hydration": "Posible exceso de agua / edema",
+        "valid": true
+      },
+      "scores": {
+        "score": 83,
+        "muscle_score": 74,
+        "fat_score": 28,
+        "rank": "BRONCE"
+      },
+      "hydration": {
+        "available": true,
+        "tbw": 42.0,
+        "ecw": 17.5,
+        "icw": 24.5,
+        "ecw_tbw_ratio": 41.7,
+        "status": "Rango saludable normal",
+        "alert": false
+      },
+      "visceral": {
+        "available": true,
+        "waist_risk": "Normal",
+        "visceral_alert": true,
+        "status": "Alerta de riesgo cardiovascular (grasa visceral)"
+      },
+      "energy": {
+        "ree_kcal": 1732,
+        "tee_kcal": 2598
+      },
+      "bcc": {
+        "available": true,
+        "muscle_pct": 46.4,
+        "fat_pct": 20.0,
+        "smm_kg": 32.5,
+        "fat_kg": 14.0
+      },
+      "clinical_findings": [
+        "Composición corporal dentro de rangos saludables. Mantener hábitos actuales y repetición de la evaluación en 3 meses."
+      ],
+      "body_comp": {
+        "smm_kg": 32.5,
+        "fat_kg": 14.0,
+        "tbw_l": 42.0,
+        "ecw_l": 17.5,
+        "visceral_level": 5.0
+      },
+      "inputs": {
+        "resistance": 495.0,
+        "reactance": 58.0,
+        "weight": 70.0,
+        "height": 172.0,
+        "age": 30,
+        "gender": "male",
+        "pal": 1.5,
+        "waist": 82.0
+      }
+    },
+    "created_at": "2026-09-03T16:37:08.812333-04:00"
+  },
+  {
     "id": "34085545-268c-4d1f-aa9a-1b94e14ac016",
     "user_id": "1c81943f-e3cf-4508-ad8f-d525df9ef2ca",
     "code": "EVA-003",
