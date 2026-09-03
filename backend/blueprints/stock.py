@@ -541,6 +541,96 @@ def generate_stock_excel_template():
         logging.warning("Error al generar plantilla Excel: %s", e_gen)
         return jsonify({"error": "No se pudo generar la plantilla Excel"}), 500
 
+@stock_bp.route('/api/stock/export', methods=['GET'])
+@stock_bp.route('/api/stock/export-excel', methods=['GET'])
+def export_stock_excel():
+    current_user = _get_current_user()
+    if not current_user:
+        return jsonify({"error": "No autorizado"}), 401
+
+    try:
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Inventario de Insumos"
+        ws.views.sheetView[0].showGridLines = True
+
+        headers = [
+            "SKU", "Nombre Producto / Insumo", "Categoría", "U. Medida",
+            "Stock", "St. Mínimo", "P. Costo (Bs)", "PVP (Bs)",
+            "Lote", "Vencimiento", "Ubicación", "Proveedor", "Notas", "Estado"
+        ]
+
+        header_fill = PatternFill(start_color="107C41", end_color="107C41", fill_type="solid")
+        header_font = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+        header_alignment = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(
+            left=Side(style='thin', color='D9D9D9'),
+            right=Side(style='thin', color='D9D9D9'),
+            top=Side(style='thin', color='D9D9D9'),
+            bottom=Side(style='thin', color='D9D9D9')
+        )
+
+        ws.append(headers)
+        ws.row_dimensions[1].height = 28
+
+        for col_num, _ in enumerate(headers, 1):
+            cell = ws.cell(row=1, column=col_num)
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = header_alignment
+            cell.border = thin_border
+
+        items = _load_persisted_stock_items()
+        row_font = Font(name="Arial", size=9.5)
+
+        for r_idx, item in enumerate(items, 2):
+            row_vals = [
+                item.get('code', ''),
+                item.get('name', ''),
+                item.get('category', ''),
+                item.get('unit', ''),
+                float(item.get('stock_quantity') or 0),
+                float(item.get('min_stock') or 0),
+                float(item.get('cost_price') or 0),
+                float(item.get('sale_price') or 0),
+                item.get('batch_number', ''),
+                item.get('expiry_date', ''),
+                item.get('location', ''),
+                item.get('supplier', ''),
+                item.get('notes', ''),
+                item.get('status', 'OK')
+            ]
+            ws.append(row_vals)
+            ws.row_dimensions[r_idx].height = 22
+            for c_idx in range(1, len(row_vals) + 1):
+                cell = ws.cell(row=r_idx, column=c_idx)
+                cell.font = row_font
+                cell.border = thin_border
+                if c_idx in (5, 6):
+                    cell.number_format = '#,##0.00'
+                elif c_idx in (7, 8):
+                    cell.number_format = 'Bs #,##0.00'
+
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(max_len + 4, 12)
+
+        output = io.BytesIO()
+        wb.save(output)
+        output.seek(0)
+
+        now_str = _now_bolivia().strftime("%Y%m%d_%H%M")
+        return send_file(
+            output,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True,
+            download_name=f"Inventario_VitaMetrix_{now_str}.xlsx"
+        )
+    except Exception as e:
+        logging.error("Error al exportar inventario: %s", e)
+        return jsonify({"error": f"No se pudo exportar inventario: {str(e)}"}), 500
+
 @stock_bp.route('/api/stock/preview-excel', methods=['POST'])
 def preview_stock_excel():
     current_user = _get_current_user()

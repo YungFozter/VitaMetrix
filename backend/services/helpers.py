@@ -264,10 +264,10 @@ def _load_users():
                 logging.warning("Error al leer respaldo de usuarios en Supabase: %s", e)
 
     user_map = {}
-    for u in _DEFAULT_INITIAL_USERS + local_users:
+    for u in _DEFAULT_INITIAL_USERS:
         if isinstance(u, dict) and u.get('email'):
             email_key = str(u.get('email')).lower().strip()
-            user_map[email_key] = u
+            user_map[email_key] = dict(u)
 
     for u in remote_users:
         if isinstance(u, dict) and u.get('email'):
@@ -275,7 +275,25 @@ def _load_users():
             if email_key in user_map:
                 user_map[email_key].update(u)
             else:
-                user_map[email_key] = u
+                user_map[email_key] = dict(u)
+
+    for u in local_users:
+        if isinstance(u, dict) and u.get('email'):
+            email_key = str(u.get('email')).lower().strip()
+            if email_key in user_map:
+                existing = user_map[email_key]
+                loc_upd = str(u.get('updated_at') or '')
+                rem_upd = str(existing.get('updated_at') or '')
+                loc_exp = str(u.get('subscription_expires_at') or '')
+                rem_exp = str(existing.get('subscription_expires_at') or '')
+                if loc_upd >= rem_upd or loc_exp >= rem_exp:
+                    existing.update(u)
+                else:
+                    for k, v in u.items():
+                        if k not in existing or existing[k] is None:
+                            existing[k] = v
+            else:
+                user_map[email_key] = dict(u)
 
     all_users = list(user_map.values())
     if not all_users:
